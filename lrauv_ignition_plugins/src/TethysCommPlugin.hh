@@ -22,6 +22,8 @@
 #include <ignition/gazebo/System.hh>
 #include <ignition/transport/Node.hh>
 
+#include "lrauv_command.pb.h"
+
 namespace tethys_comm_plugin
 {
   class TethysCommPlugin:
@@ -55,7 +57,8 @@ namespace tethys_comm_plugin
 
     /// Callback function for command
     /// \param[in] _msg Command message
-    public: void CommandCallback(const ignition::msgs::Float &_msg);
+    // public: void CommandCallback(const ignition::msgs::Float &_msg);
+    void CommandCallback(const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg);
 
     /// Topic on which robot commands will be received
     private: std::string commandTopic{"command_topic"};
@@ -63,8 +66,10 @@ namespace tethys_comm_plugin
     /// Topic on which robot state will be published
     private: std::string stateTopic{"state_topic"};
 
-    /// TODO(mabelzhang) Remove when stable. Temporary counter and timer for state message sanity check
+    /// TODO(mabelzhang) Remove when stable. Temporary counter for state message sanity check
     private: int counter = 0;
+
+    /// TODO(mabelzhang) Remove when stable. Temporary timer for state message sanity check
     private: std::chrono::time_point<std::chrono::steady_clock> elapsed;
 
     /// Transport node for message passing

@@ -17,9 +17,12 @@
 
 #include <chrono>
 
-#include "TethysCommPlugin.hh"
-
 #include <ignition/plugin/Register.hh>
+
+#include "lrauv_command.pb.h"
+#include "lrauv_state.pb.h"
+
+#include "TethysCommPlugin.hh"
 
 using namespace tethys_comm_plugin;
 
@@ -54,7 +57,8 @@ void TethysCommPlugin::Configure(
     return;
   }
 
-  this->statePub = this->node.Advertise<ignition::msgs::Float>(
+  // this->statePub = this->node.Advertise<ignition::msgs::Float>(
+  this->statePub = this->node.Advertise<lrauv_ignition_plugins::msgs::LRAUVState>(
     this->stateTopic);
   if (!this->statePub)
   {
@@ -65,9 +69,11 @@ void TethysCommPlugin::Configure(
   this->elapsed = std::chrono::steady_clock::now();
 }
 
-void TethysCommPlugin::CommandCallback(const ignition::msgs::Float &_msg)
+// void TethysCommPlugin::CommandCallback(const ignition::msgs::Float &_msg)
+void TethysCommPlugin::CommandCallback(const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg)
 {
-  ignmsg << "Received command: " << _msg.data() << std::endl;
+  // ignmsg << "Received command: " << _msg.data() << std::endl;
+  ignmsg << "Received command: " << _msg.propomega_() << std::endl;
 }
 
 void TethysCommPlugin::PreUpdate(
@@ -86,12 +92,15 @@ void TethysCommPlugin::PostUpdate(
   if (std::chrono::steady_clock::now() - this->elapsed > std::chrono::seconds(1))
   {
     // Publish state
-    ignition::msgs::Float stateMsg;
-    stateMsg.set_data(counter);
+    // ignition::msgs::Float stateMsg;
+    lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
+    // stateMsg.set_data(counter);
+    stateMsg.set_propomega_(counter);
     counter++;
     this->statePub.Publish(stateMsg);
-    ignmsg << "Published state: " << stateMsg.data() << std::endl;
- 
+    // ignmsg << "Published state: " << stateMsg.data() << std::endl;
+    ignmsg << "Published state: " << stateMsg.propomega_() << std::endl;
+
     this->elapsed = std::chrono::steady_clock::now();
   }
 }
