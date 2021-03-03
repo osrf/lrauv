@@ -57,7 +57,6 @@ namespace tethys_comm_plugin
 
     /// Callback function for command
     /// \param[in] _msg Command message
-    // public: void CommandCallback(const ignition::msgs::Float &_msg);
     void CommandCallback(const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg);
 
     /// Topic on which robot commands will be received

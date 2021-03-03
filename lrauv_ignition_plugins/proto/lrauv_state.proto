@@ -16,7 +16,6 @@
 */
 
 syntax = "proto3";
-//package ignition.msgs;
 package lrauv_ignition_plugins.msgs;
 option java_package = "lrauv_ignition_plugins.msgs";
 option java_outer_classname = "LRAUVStateProtos";
