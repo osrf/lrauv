@@ -58,7 +58,8 @@ void TethysCommPlugin::Configure(
   }
 
   // this->statePub = this->node.Advertise<ignition::msgs::Float>(
-  this->statePub = this->node.Advertise<lrauv_ignition_plugins::msgs::LRAUVState>(
+  this->statePub =
+    this->node.Advertise<lrauv_ignition_plugins::msgs::LRAUVState>(
     this->stateTopic);
   if (!this->statePub)
   {
@@ -70,7 +71,8 @@ void TethysCommPlugin::Configure(
 }
 
 // void TethysCommPlugin::CommandCallback(const ignition::msgs::Float &_msg)
-void TethysCommPlugin::CommandCallback(const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg)
+void TethysCommPlugin::CommandCallback(
+  const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg)
 {
   // ignmsg << "Received command: " << _msg.data() << std::endl;
   ignmsg << "Received command: " << _msg.propomega_() << std::endl;
@@ -89,7 +91,8 @@ void TethysCommPlugin::PostUpdate(
 {
   // ignmsg << "TethysCommPlugin::PostUpdate" << std::endl;
 
-  if (std::chrono::steady_clock::now() - this->elapsed > std::chrono::seconds(1))
+  if (std::chrono::steady_clock::now() - this->elapsed
+      > std::chrono::seconds(1))
   {
     // Publish state
     // ignition::msgs::Float stateMsg;

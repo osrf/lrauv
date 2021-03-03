@@ -16,6 +16,9 @@ export IGN_LAUNCH_PLUGIN_PATH=$(pwd)/lib:$IGN_LAUNCH_PLUGIN_PATH
 export IGN_GAZEBO_RESOURCE_PATH=$(pwd)/worlds:$IGN_GAZEBO_RESOURCE_PATH
 export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=$(pwd)/lib:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
 
+# For protobuf generated libraries
+export LD_LIBRARY_PATH=$(pwd)/lib:$LD_LIBRARY_PATH
+
 cd $CURRENT_DIR
 unset CURRENT_DIR
 unset SOURCE
