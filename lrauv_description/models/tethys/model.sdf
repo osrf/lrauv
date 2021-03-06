@@ -57,6 +57,7 @@
 
     <!-- Horizontal fins -->
     <link name="horizontal_fins">
+      <pose>1.05 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 1.57 0 0.5</pose>
         <mass>0.2</mass>
@@ -79,6 +80,7 @@
       </collision> 
 
       <visual name= "visual">
+        <pose>-1.05 0 0 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
@@ -110,8 +112,8 @@
 
     <!-- Vertical fins -->
     <link name="vertical_fins">
+      <pose>1.05 0 0 0 0 0</pose>
       <inertial>
-        <pose>0 0 0 0 0.5 0</pose>
         <mass>0.2</mass>
         <inertia>
           <ixx>0.0007924568755</ixx>
@@ -132,6 +134,7 @@
       </collision>
 
       <visual name= "visual">
+        <pose>-1.05 0 0 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
@@ -163,6 +166,7 @@
 
     <!-- Propeller -->
     <link name="propeller">
+      <pose>1.43162 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.09</mass>
@@ -185,6 +189,7 @@
       </collision>
 
       <visual name= "visual">
+        <pose>-1.43162 0 0 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
@@ -217,7 +222,7 @@
 
     <!-- Joints -->
     <joint name="horizontal_fins_joint" type="revolute">
-      <pose>1.05 0 0 0 0 0</pose>
+      <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
       <child>horizontal_fins</child>
       <axis>
@@ -232,7 +237,7 @@
     </joint>
 
     <joint name="vertical_fins_joint" type="revolute">
-      <pose>1.05 0 0 0 0 0</pose>
+      <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
       <child>vertical_fins</child>
       <axis>
@@ -247,7 +252,7 @@
     </joint>
 
     <joint name="propeller_joint" type="revolute">
-      <pose>1.43162 0 0 0 0 0</pose>
+      <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
       <child>propeller</child>
       <axis>
@@ -286,26 +291,9 @@
     </plugin>
 
     <!-- Lift and drag -->
-    <!--<plugin
-      filename="ignition-gazebo-lift-drag-system"
-      name="ignition::gazebo::systems::LiftDrag">
-      <air_density>1000</air_density>
-      <cla>1.2535816618911175</cla>
-      <cla_stall>-1.4326647564469914</cla_stall>
-      <cda>0</cda>
-      <cda_stall>1.4326647564469914</cda_stall>
-      <alpha_stall>1.396</alpha_stall>
-      <a0>0</a0>
-      <area>0.032157</area>
-      <upward>0 0 1</upward>
-      <forward>1 0 0</forward>
-      <link_name>propeller</link_name>
-      <cp>0 0 0.0</cp>
-    </plugin>-->
-
 
     <!-- Vertical fin -->
-    <!--<plugin
+    <plugin
       filename="ignition-gazebo-lift-drag-system"
       name="ignition::gazebo::systems::LiftDrag">
       <air_density>1000</air_density>
@@ -315,15 +303,17 @@
       <cda_stall>0.03</cda_stall>
       <alpha_stall>0.17</alpha_stall>
       <a0>0</a0>
-      <area>0.0122</area>
+      <area>0.0244</area>
       <upward>0 1 0</upward>
       <forward>1 0 0</forward>
       <link_name>vertical_fins</link_name>
-      <cp>0 0 0.079</cp>
-    </plugin>-->
+      <control_joint_name>vertical_fins_joint</control_joint_name>
+      <control_joint_rad_to_cl>4.13</control_joint_rad_to_cl>
+      <cp>0 0 0</cp>
+    </plugin>
 
     <!-- Horizontal fin -->
-    <!--<plugin
+    <plugin
       filename="ignition-gazebo-lift-drag-system"
       name="ignition::gazebo::systems::LiftDrag">
       <air_density>1000</air_density>
@@ -333,11 +323,30 @@
       <cda_stall>0.03</cda_stall>
       <alpha_stall>0.17</alpha_stall>
       <a0>0</a0>
-      <area>0.0122</area>
+      <area>0.0244</area>
       <upward>0 0 1</upward>
       <forward>1 0 0</forward>
       <link_name>horizontal_fins</link_name>
-      <cp>0 0.079 0</cp>
-    </plugin>-->
+      <cp>0 0 0</cp>
+    </plugin>
+
+    <!-- Main body drag -->
+    <plugin
+      filename="ignition-gazebo-lift-drag-system"
+      name="ignition::gazebo::systems::LiftDrag">
+      <air_density>1000</air_density>
+      <cla>0</cla>
+      <cla_stall>0</cla_stall>
+      <cda>0.15</cda>
+      <cda_stall>0.15</cda_stall>
+      <alpha_stall>0.8</alpha_stall>
+      <a0>0.1</a0>
+      <area>1.0</area>
+      <upward>0 0 1</upward>
+      <forward>1 0 0</forward>
+      <link_name>base_link</link_name>
+      <cp>0 0 0</cp>
+    </plugin>
+
   </model>
 </sdf>
