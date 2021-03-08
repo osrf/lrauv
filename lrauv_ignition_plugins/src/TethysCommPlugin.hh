@@ -21,6 +21,13 @@
 
 #include <ignition/gazebo/System.hh>
 #include <ignition/transport/Node.hh>
+#include <ignition/math/SphericalCoordinates.hh>
+#include <ignition/gazebo/Model.hh>
+#include <ignition/gazebo/Util.hh>
+#include <ignition/gazebo/System.hh>
+#include <ignition/gazebo/Link.hh>
+#include <ignition/gazebo/components.hh>
+#include <ignition/math/SphericalCoordinates.hh>
 
 #include "lrauv_command.pb.h"
 
@@ -65,6 +72,18 @@ namespace tethys_comm_plugin
     /// Topic on which robot state will be published
     private: std::string stateTopic{"state_topic"};
 
+    /// Model name
+    private: std::string baseLinkName{"base_link"};
+
+    /// Propeller name
+    private: std::string propellerLinkName{"propeller"};
+
+    /// Propeller name
+    private: std::string rudderLinkName{"vertical_fin"};
+
+    /// Elevator name
+    private: std::string elevatorLinkName{"horizontal_fin"};
+
     /// TODO(mabelzhang) Remove when stable. Temporary counter for state message sanity check
     private: int counter = 0;
 
@@ -74,6 +93,21 @@ namespace tethys_comm_plugin
     /// Transport node for message passing
     private: ignition::transport::Node node;
 
+    /// Spherical coordinate handler
+    private: ignition::math::SphericalCoordinates sphericalCoords;
+
+    /// The model in question
+    private: ignition::gazebo::Entity modelLink;
+
+    /// The propeller link
+    private: ignition::gazebo::Entity propellerLink;
+
+    /// The elevator link
+    private: ignition::gazebo::Entity elevatorLink;
+
+    /// The rudder link
+    private: ignition::gazebo::Entity rudderLink;
+    
     /// Publisher of robot state
     private: ignition::transport::Node::Publisher statePub;
   };

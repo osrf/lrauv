@@ -36,6 +36,7 @@ void TethysCommPlugin::Configure(
   ignition::gazebo::EntityComponentManager &_ecm,
   ignition::gazebo::EventManager &_eventMgr)
 {
+  auto model = ignition::gazebo::Model(_entity);
   ignmsg << "TethysCommPlugin::Configure" << std::endl;
 
   // Parse SDF parameters
@@ -46,6 +47,10 @@ void TethysCommPlugin::Configure(
   if (_sdf->HasElement("state_topic"))
   {
     this->stateTopic = _sdf->Get<std::string>("state_topic");
+  }
+  if (_sdf->HasElement("model_link"))
+  {
+    this->base_link = _sdf->Get<std::string>("model_link");
   }
 
   // Initialize transport
@@ -91,10 +96,16 @@ void TethysCommPlugin::PostUpdate(
   if (std::chrono::steady_clock::now() - this->elapsed
       > std::chrono::seconds(1))
   {
+    auto model_pose = worldPose(modelLink);
+
     // Publish state
     lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
-    stateMsg.set_propomega_(counter);
-    counter++;
+    //stateMsg.set_propomega_(counter);
+    stateMsg.set_rph_(model_pose.Rot());
+    stateMsg.set_depth_(-model_pose.Pos().Z());
+
+
+
     this->statePub.Publish(stateMsg);
     ignmsg << "Published state: " << stateMsg.propomega_() << std::endl;
 
