@@ -41,12 +41,6 @@ target_link_libraries(ThrusterPlugin
   PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
   PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER})
 
-  add_library(SphericalCoordinatePlugin SHARED src/SphericalCoordinates.cc)
-  set_property(TARGET SphericalCoordinatePlugin PROPERTY CXX_STANDARD 17)
-  target_link_libraries(SphericalCoordinatePlugin
-    PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-    PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER})
-
 #============================================================================
 # Install
 
@@ -56,7 +50,6 @@ install(
     ThrusterPlugin
     lrauv_command
     lrauv_state
-    SphericalCoordinatePlugin
   DESTINATION share/lib)
 
 install(

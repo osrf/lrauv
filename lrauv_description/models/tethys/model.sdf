@@ -348,5 +348,12 @@
       <cp>0 0 0</cp>
     </plugin>
 
+
+    <!-- interfacing plugin-->
+    <plugin
+      filename="TethysCommPlugin"
+      name="tethys_comm_plugin::TethysCommPlugin">
+    </plugin>
+
   </model>
 </sdf>

@@ -26,6 +26,46 @@
 
 using namespace tethys_comm_plugin;
 
+void AddAngularVelocityComponent(
+  const ignition::gazebo::Entity &_entity,
+  ignition::gazebo::EntityComponentManager &_ecm)
+{
+  if (!_ecm.Component<ignition::gazebo::components::AngularVelocity>(
+      _entity))
+  {
+    _ecm.CreateComponent(_entity,
+      ignition::gazebo::components::AngularVelocity());
+  }
+    // Create an angular velocity component if one is not present.
+  if (!_ecm.Component<ignition::gazebo::components::WorldAngularVelocity>(
+      _entity))
+  {
+    _ecm.CreateComponent(_entity,
+      ignition::gazebo::components::WorldAngularVelocity());
+  }
+}
+
+void AddWorldPose (
+  const ignition::gazebo::Entity &_entity,
+  ignition::gazebo::EntityComponentManager &_ecm)
+{
+  if (!_ecm.Component<ignition::gazebo::components::WorldPose>(
+      _entity))
+  {
+    _ecm.CreateComponent(_entity,
+      ignition::gazebo::components::WorldPose());
+  }
+    // Create an angular velocity component if one is not present.
+  if (!_ecm.Component<ignition::gazebo::components::WorldPose>(
+      _entity))
+  {
+    _ecm.CreateComponent(_entity,
+      ignition::gazebo::components::WorldPose());
+  }
+}
+
+
+
 TethysCommPlugin::TethysCommPlugin()
 {
 }
@@ -36,7 +76,7 @@ void TethysCommPlugin::Configure(
   ignition::gazebo::EntityComponentManager &_ecm,
   ignition::gazebo::EventManager &_eventMgr)
 {
-  auto model = ignition::gazebo::Model(_entity);
+ 
   ignmsg << "TethysCommPlugin::Configure" << std::endl;
 
   // Parse SDF parameters
@@ -47,10 +87,6 @@ void TethysCommPlugin::Configure(
   if (_sdf->HasElement("state_topic"))
   {
     this->stateTopic = _sdf->Get<std::string>("state_topic");
-  }
-  if (_sdf->HasElement("model_link"))
-  {
-    this->base_link = _sdf->Get<std::string>("model_link");
   }
 
   // Initialize transport
@@ -72,7 +108,50 @@ void TethysCommPlugin::Configure(
   }
 
   this->elapsed = std::chrono::steady_clock::now();
+
+  SetupEntities(_entity, _sdf, _ecm, _eventMgr);
 }
+
+void TethysCommPlugin::SetupEntities( 
+  const ignition::gazebo::Entity &_entity,
+  const std::shared_ptr<const sdf::Element> &_sdf,
+  ignition::gazebo::EntityComponentManager &_ecm,
+  ignition::gazebo::EventManager &_eventMgr)
+{
+  if (_sdf->HasElement("model_link"))
+  {
+    this->baseLinkName = _sdf->Get<std::string>("model_link");
+  }
+
+  if (_sdf->HasElement("propeller_link"))
+  {
+    this->propellerLinkName = _sdf->Get<std::string>("propeller_link");
+  }
+
+  if (_sdf->HasElement("rudder_link"))
+  {
+    this->elevatorLinkName = _sdf->Get<std::string>("rudder_link");
+  }
+
+  if (_sdf->HasElement("elavator_link"))
+  {
+    this->propellerLinkName = _sdf->Get<std::string>("elavator_link");
+  }
+
+  auto model = ignition::gazebo::Model(_entity);
+  
+  this->modelLink = model.LinkByName(_ecm, this->baseLinkName);
+  this->rudderLink = model.LinkByName(_ecm, this->rudderLinkName);
+  this->elevatorLink = model.LinkByName(_ecm, this->elevatorLinkName);
+  this->propellerLink = model.LinkByName(_ecm, this->propellerLinkName);
+
+  AddAngularVelocityComponent(this->propellerLink, _ecm);
+  AddWorldPose(this->modelLink, _ecm);
+  AddWorldPose(this->rudderLink, _ecm);
+  AddWorldPose(this->elevatorLink, _ecm);
+}
+
+
 
 void TethysCommPlugin::CommandCallback(
   const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg)
@@ -94,20 +173,20 @@ void TethysCommPlugin::PostUpdate(
   // ignmsg << "TethysCommPlugin::PostUpdate" << std::endl;
 
   if (std::chrono::steady_clock::now() - this->elapsed
-      > std::chrono::seconds(1))
+      > std::chrono::milliseconds(100))
   {
-    auto model_pose = worldPose(modelLink);
-
+     ignition::gazebo::Link baseLink(modelLink);
+    auto model_pose = worldPose(modelLink, _ecm);
     // Publish state
     lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
-    //stateMsg.set_propomega_(counter);
-    stateMsg.set_rph_(model_pose.Rot());
+    auto rph = model_pose.Rot().Euler();
+    ignition::msgs::Vector3d* rph_msg = new ignition::msgs::Vector3d(ignition::msgs::Convert(rph));
+    stateMsg.set_allocated_rph_(rph_msg);
     stateMsg.set_depth_(-model_pose.Pos().Z());
-
-
+    stateMsg.set_speed_(baseLink.WorldLinearVelocity(_ecm)->Length());
 
     this->statePub.Publish(stateMsg);
-    ignmsg << "Published state: " << stateMsg.propomega_() << std::endl;
+    //ignmsg << "Published state: " << stateMsg.propomega_() << std::endl;
 
     this->elapsed = std::chrono::steady_clock::now();
   }

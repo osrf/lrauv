@@ -66,6 +66,11 @@ namespace tethys_comm_plugin
     /// \param[in] _msg Command message
     void CommandCallback(const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg);
 
+    private: void SetupEntities(  const ignition::gazebo::Entity &_entity,
+  const std::shared_ptr<const sdf::Element> &_sdf,
+  ignition::gazebo::EntityComponentManager &_ecm,
+  ignition::gazebo::EventManager &_eventMgr);
+
     /// Topic on which robot commands will be received
     private: std::string commandTopic{"command_topic"};
 
