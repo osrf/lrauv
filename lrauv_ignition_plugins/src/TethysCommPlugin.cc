@@ -175,7 +175,7 @@ void TethysCommPlugin::PostUpdate(
   if (std::chrono::steady_clock::now() - this->elapsed
       > std::chrono::milliseconds(100))
   {
-     ignition::gazebo::Link baseLink(modelLink);
+    ignition::gazebo::Link baseLink(modelLink);
     auto model_pose = worldPose(modelLink, _ecm);
     // Publish state
     lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
@@ -188,6 +188,10 @@ void TethysCommPlugin::PostUpdate(
     auto latlon = sphericalCoords.SphericalFromLocalPosition(model_pose.Pos());
     stateMsg.set_latitudedeg_(latlon.X());
     stateMsg.set_longitudedeg_(latlon.Y());
+
+    ignition::gazebo::Link propLink(propellerLink);
+    auto prop_omega = propLink.WorldAngularVelocity(_ecm)->Length();
+    stateMsg.set_propomega_(prop_omega);
 
     this->statePub.Publish(stateMsg);
     //ignmsg << "Published state: " << stateMsg.propomega_() << std::endl;
