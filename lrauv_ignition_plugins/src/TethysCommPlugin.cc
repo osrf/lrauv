@@ -185,6 +185,10 @@ void TethysCommPlugin::PostUpdate(
     stateMsg.set_depth_(-model_pose.Pos().Z());
     stateMsg.set_speed_(baseLink.WorldLinearVelocity(_ecm)->Length());
 
+    auto latlon = sphericalCoords.SphericalFromLocalPosition(model_pose.Pos());
+    stateMsg.set_latitudedeg_(latlon.X());
+    stateMsg.set_longitudedeg_(latlon.Y());
+
     this->statePub.Publish(stateMsg);
     //ignmsg << "Published state: " << stateMsg.propomega_() << std::endl;
 
