@@ -42,6 +42,17 @@ target_link_libraries(ThrusterPlugin
   PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER})
 
 #============================================================================
+# Test controller
+add_executable(TestController test/dumb_controller.cc)
+set_property(TARGET TestController PROPERTY CXX_STANDARD 17)
+target_include_directories(TestController
+  PUBLIC ${CMAKE_BINARY_DIR}/proto)
+target_link_libraries(TestController 
+  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
+  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+  PUBLIC lrauv_command)
+
+#============================================================================
 # Install
 
 install(

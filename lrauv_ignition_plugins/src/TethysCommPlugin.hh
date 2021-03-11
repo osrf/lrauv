@@ -66,10 +66,13 @@ namespace tethys_comm_plugin
     /// \param[in] _msg Command message
     void CommandCallback(const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg);
 
-    private: void SetupEntities(  const ignition::gazebo::Entity &_entity,
-  const std::shared_ptr<const sdf::Element> &_sdf,
-  ignition::gazebo::EntityComponentManager &_ecm,
-  ignition::gazebo::EventManager &_eventMgr);
+    private: void SetupEntities(
+      const ignition::gazebo::Entity &_entity,
+      const std::shared_ptr<const sdf::Element> &_sdf,
+      ignition::gazebo::EntityComponentManager &_ecm,
+      ignition::gazebo::EventManager &_eventMgr);
+
+    private: void SetupControlTopics();
 
     /// Topic on which robot commands will be received
     private: std::string commandTopic{"command_topic"};
@@ -79,6 +82,18 @@ namespace tethys_comm_plugin
 
     /// Model name
     private: std::string baseLinkName{"base_link"};
+
+    /// Topic to publish to for rudder
+    private: std::string rudderTopic
+      {"/model/tethys/joint/vertical_fins_joint/0/cmd_pos"};
+
+    /// Topic to publish to for elevator
+    private: std::string elevatorTopic
+      {"/model/tethys/joint/horizontal_fins_joint/0/cmd_pos"};
+
+
+    private: std::string thrusterTopic
+      {"/thruster_controls/propeller_joint"};
 
     /// Propeller name
     private: std::string propellerLinkName{"propeller"};
@@ -115,6 +130,15 @@ namespace tethys_comm_plugin
     
     /// Publisher of robot state
     private: ignition::transport::Node::Publisher statePub;
+
+    /// Publisher of elevator position
+    private: ignition::transport::Node::Publisher elevatorPub;
+    
+    /// Publisher of fin position
+    private: ignition::transport::Node::Publisher rudderPub;
+
+    /// Publisher of thruster
+    private: ignition::transport::Node::Publisher thrusterPub;
   };
 }
 

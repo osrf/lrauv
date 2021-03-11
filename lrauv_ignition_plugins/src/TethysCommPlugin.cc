@@ -107,9 +107,39 @@ void TethysCommPlugin::Configure(
       << std::endl;
   }
 
-  this->elapsed = std::chrono::steady_clock::now();
 
+ 
+  SetupControlTopics();
   SetupEntities(_entity, _sdf, _ecm, _eventMgr);
+
+  this->elapsed = std::chrono::steady_clock::now();
+}
+
+void TethysCommPlugin::SetupControlTopics()
+{
+  this->rudderPub =
+    this->node.Advertise<ignition::msgs::Double>(this->rudderTopic);
+  if (!this->rudderPub)
+  {
+    ignerr << "Error advertising topic [" << rudderTopic << "]"
+      << std::endl;
+  }
+
+  this->elevatorPub =
+    this->node.Advertise<ignition::msgs::Double>(this->elevatorTopic);
+  if (!this->elevatorPub)
+  {
+    ignerr << "Error advertising topic [" << elevatorTopic << "]"
+      << std::endl;
+  }
+
+  this->thrusterPub =
+    this->node.Advertise<ignition::msgs::Double>(this->thrusterTopic);
+  if(!this->thrusterPub)
+  {
+    ignerr << "Error advertising topic [" << thrusterTopic << "]"
+      << std::endl;
+  }
 }
 
 void TethysCommPlugin::SetupEntities( 
@@ -157,6 +187,25 @@ void TethysCommPlugin::CommandCallback(
   const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg)
 {
   ignmsg << "Received command: " << _msg.propomega_() << std::endl;
+  
+  // Rudder
+  ignition::msgs::Double rudderAngMsg;
+  rudderAngMsg.set_data(_msg.rudderangle_());
+  this->rudderPub.Publish(rudderAngMsg);
+
+  // Elevator
+  ignition::msgs::Double elevatorAngMsg;
+  elevatorAngMsg.set_data(_msg.elevatorangle_());
+  this->elevatorPub.Publish(elevatorAngMsg);
+
+  // Thruster
+  ignition::msgs::Double thrusterMsg;
+  //Conversion from rpm-> force b/c thruster plugin takes force
+  //Maybe we should change that?
+  auto ang_vel = _msg.propomega_()/(60*2*M_PI);
+  auto force = -7.879*1000*0.0016*ang_vel*ang_vel;
+  thrusterMsg.set_data(force);
+  this->thrusterPub.Publish(thrusterMsg);
 }
 
 void TethysCommPlugin::PreUpdate(
