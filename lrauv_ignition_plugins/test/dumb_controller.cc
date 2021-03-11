@@ -57,7 +57,7 @@ int main(int argc, char** argv)
     commandPub.Publish(thrust_msg);
     std::cout << "charging forward!\n";
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
     lrauv_ignition_plugins::msgs::LRAUVCommand thrust_msg2;
     thrust_msg2.set_propomega_(0);
     commandPub.Publish(thrust_msg2);
