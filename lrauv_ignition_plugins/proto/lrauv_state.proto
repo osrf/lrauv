@@ -67,5 +67,5 @@ message LRAUVState
   float temperature_              = 29;
   float salinity_                 = 30;
   float density_                  = 31;
-  repeated float values_          = 32;
+  repeated float values_          = 32;  // Size 4
 }
