@@ -15,7 +15,7 @@ int main(int argc, char** argv)
     ignition::transport::Node node;
     auto commandTopic = "command_topic";
     auto commandPub = 
-    node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(commandTopic);
+        node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(commandTopic);
 
     double angle = 0.17;
     
