@@ -51,8 +51,8 @@ class ThrusterPrivateData
 };
 
 ThrusterPlugin::ThrusterPlugin()
+  : dataPtr(std::make_unique<ThrusterPrivateData>())
 {
-    this->dataPtr = std::make_unique<ThrusterPrivateData>();
 }
 
 ThrusterPlugin::~ThrusterPlugin()
