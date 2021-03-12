@@ -151,6 +151,18 @@ This overwrites the controller and maintains the rudder at 15 degrees.
 
 A sample list of command variables:
 ```
+Config/Control-->HorizontalControl.loadAtStartup=1 bool
+Config/Control-->HorizontalControl.kdHeading=0.049999 s
+Config/Control-->HorizontalControl.kiHeading=0.001000 1/s
+Config/Control-->HorizontalControl.kiwpHeading=0.000500 rad/s/m
+Config/Control-->HorizontalControl.kpHeading=0.400000 n/a
+Config/Control-->HorizontalControl.kwpHeading=0.049999 rad/m
+Config/Control-->HorizontalControl.maxHdgAccel=7.499876 arcdeg/s2
+Config/Control-->HorizontalControl.maxHdgInt=0.087266 rad
+Config/Control-->HorizontalControl.maxHdgRate=11.999932 arcdeg/s
+Config/Control-->HorizontalControl.maxKxte=45.000001 arcdeg
+Config/Control-->HorizontalControl.rudDeadband=0.500000 arcdeg
+Config/Control-->HorizontalControl.rudLimit=15.000000 arcdeg
 VerticalControl-->VerticalControl.buoyancyAction=944.986938 cc
 VerticalControl-->VerticalControl.depthIntegralInternal=nan rad
 VerticalControl-->VerticalControl.depth2buoyIntInternal=nan cc
