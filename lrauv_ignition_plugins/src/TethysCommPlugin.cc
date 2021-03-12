@@ -64,8 +64,6 @@ void AddWorldPose (
   }
 }
 
-
-
 TethysCommPlugin::TethysCommPlugin()
 {
 }
@@ -155,7 +153,7 @@ void TethysCommPlugin::SetupEntities(
 
   if (_sdf->HasElement("propeller_link"))
   {
-    this->propellerLinkName = _sdf->Get<std::string>("propeller_link");
+    this->thrusterLinkName = _sdf->Get<std::string>("propeller_link");
   }
 
   if (_sdf->HasElement("rudder_link"))
@@ -165,7 +163,7 @@ void TethysCommPlugin::SetupEntities(
 
   if (_sdf->HasElement("elavator_link"))
   {
-    this->propellerLinkName = _sdf->Get<std::string>("elavator_link");
+    this->thrusterLinkName = _sdf->Get<std::string>("elavator_link");
   }
 
   auto model = ignition::gazebo::Model(_entity);
@@ -173,15 +171,13 @@ void TethysCommPlugin::SetupEntities(
   this->modelLink = model.LinkByName(_ecm, this->baseLinkName);
   this->rudderLink = model.LinkByName(_ecm, this->rudderLinkName);
   this->elevatorLink = model.LinkByName(_ecm, this->elevatorLinkName);
-  this->propellerLink = model.LinkByName(_ecm, this->propellerLinkName);
+  this->thrusterLink = model.LinkByName(_ecm, this->thrusterLinkName);
 
-  AddAngularVelocityComponent(this->propellerLink, _ecm);
+  AddAngularVelocityComponent(this->thrusterLink, _ecm);
   AddWorldPose(this->modelLink, _ecm);
   AddWorldPose(this->rudderLink, _ecm);
   AddWorldPose(this->elevatorLink, _ecm);
 }
-
-
 
 void TethysCommPlugin::CommandCallback(
   const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg)
@@ -200,8 +196,10 @@ void TethysCommPlugin::CommandCallback(
 
   // Thruster
   ignition::msgs::Double thrusterMsg;
-  //Conversion from rpm-> force b/c thruster plugin takes force
-  //Maybe we should change that?
+  
+  // TODO(arjo):
+  // Conversion from rpm-> force b/c thruster plugin takes force
+  // Maybe we should change that?
   auto ang_vel = _msg.propomega_()/(60*2*M_PI);
   auto force = -7.879*1000*0.0016*ang_vel*ang_vel;
   thrusterMsg.set_data(force);
@@ -226,6 +224,7 @@ void TethysCommPlugin::PostUpdate(
   {
     ignition::gazebo::Link baseLink(modelLink);
     auto model_pose = worldPose(modelLink, _ecm);
+
     // Publish state
     lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
     auto rph = model_pose.Rot().Euler();
@@ -234,11 +233,13 @@ void TethysCommPlugin::PostUpdate(
     stateMsg.set_depth_(-model_pose.Pos().Z());
     stateMsg.set_speed_(baseLink.WorldLinearVelocity(_ecm)->Length());
 
+    // TODO(anyone)
+    // Follow up https://github.com/ignitionrobotics/ign-gazebo/pull/519
     auto latlon = sphericalCoords.SphericalFromLocalPosition(model_pose.Pos());
     stateMsg.set_latitudedeg_(latlon.X());
     stateMsg.set_longitudedeg_(latlon.Y());
 
-    ignition::gazebo::Link propLink(propellerLink);
+    ignition::gazebo::Link propLink(thrusterLink);
     auto prop_omega = propLink.WorldAngularVelocity(_ecm)->Length();
     stateMsg.set_propomega_(prop_omega);
 

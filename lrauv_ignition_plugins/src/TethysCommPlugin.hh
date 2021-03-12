@@ -17,17 +17,15 @@
 #ifndef TETHYS_COMM_PLUGIN_H_
 #define TETHYS_COMM_PLUGIN_H_
 
-#include <chrono>
-
-#include <ignition/gazebo/System.hh>
-#include <ignition/transport/Node.hh>
-#include <ignition/math/SphericalCoordinates.hh>
-#include <ignition/gazebo/Model.hh>
-#include <ignition/gazebo/Util.hh>
-#include <ignition/gazebo/System.hh>
-#include <ignition/gazebo/Link.hh>
 #include <ignition/gazebo/components.hh>
+#include <ignition/gazebo/Link.hh>
+#include <ignition/gazebo/Model.hh>
+#include <ignition/gazebo/System.hh>
+#include <ignition/gazebo/Util.hh>
 #include <ignition/math/SphericalCoordinates.hh>
+#include <ignition/transport/Node.hh>
+
+#include <chrono>
 
 #include "lrauv_command.pb.h"
 
@@ -64,7 +62,7 @@ namespace tethys_comm_plugin
 
     /// Callback function for command
     /// \param[in] _msg Command message
-    void CommandCallback(const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg);
+    public: void CommandCallback(const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg);
 
     private: void SetupEntities(
       const ignition::gazebo::Entity &_entity,
@@ -80,9 +78,6 @@ namespace tethys_comm_plugin
     /// Topic on which robot state will be published
     private: std::string stateTopic{"state_topic"};
 
-    /// Model name
-    private: std::string baseLinkName{"base_link"};
-
     /// Topic to publish to for rudder
     private: std::string rudderTopic
       {"/model/tethys/joint/vertical_fins_joint/0/cmd_pos"};
@@ -95,15 +90,18 @@ namespace tethys_comm_plugin
     private: std::string thrusterTopic
       {"/thruster_controls/propeller_joint"};
 
-    /// Propeller name
-    private: std::string propellerLinkName{"propeller"};
+    /// Model name
+    private: std::string baseLinkName{"base_link"};
 
-    /// Propeller name
+    /// Rudder name
     private: std::string rudderLinkName{"vertical_fin"};
 
     /// Elevator name
     private: std::string elevatorLinkName{"horizontal_fin"};
 
+    /// Propeller name
+    private: std::string thrusterLinkName{"propeller"};
+    
     /// TODO(mabelzhang) Remove when stable. Temporary counter for state message sanity check
     private: int counter = 0;
 
@@ -119,24 +117,24 @@ namespace tethys_comm_plugin
     /// The model in question
     private: ignition::gazebo::Entity modelLink;
 
-    /// The propeller link
-    private: ignition::gazebo::Entity propellerLink;
+    /// The rudder link
+    private: ignition::gazebo::Entity rudderLink;
 
     /// The elevator link
     private: ignition::gazebo::Entity elevatorLink;
 
-    /// The rudder link
-    private: ignition::gazebo::Entity rudderLink;
+    /// The thruster link
+    private: ignition::gazebo::Entity thrusterLink;   
     
     /// Publisher of robot state
     private: ignition::transport::Node::Publisher statePub;
 
-    /// Publisher of elevator position
-    private: ignition::transport::Node::Publisher elevatorPub;
-    
     /// Publisher of fin position
     private: ignition::transport::Node::Publisher rudderPub;
 
+    /// Publisher of elevator position
+    private: ignition::transport::Node::Publisher elevatorPub;
+    
     /// Publisher of thruster
     private: ignition::transport::Node::Publisher thrusterPub;
   };

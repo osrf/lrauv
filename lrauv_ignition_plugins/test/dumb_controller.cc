@@ -3,12 +3,12 @@
  * that wiggles the fins a bit and then commands the robot
  * to charge forward.
  */ 
+#include <chrono>
+#include <thread>
 
 #include <ignition/msgs.hh>
 #include <ignition/transport.hh>
 #include "lrauv_command.pb.h"
-#include <chrono>
-#include <thread>
 
 int main(int argc, char** argv)
 {
@@ -23,44 +23,44 @@ int main(int argc, char** argv)
     for(int i = 0; i < 10; i++)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        lrauv_ignition_plugins::msgs::LRAUVCommand msg;
+        lrauv_ignition_plugins::msgs::LRAUVCommand rudderMsg;
         angle *= -1;
-        msg.set_rudderangle_(angle);
-        commandPub.Publish(msg);
+        rudderMsg.set_rudderangle_(angle);
+        commandPub.Publish(rudderMsg);
         std::cout << "moving rudder to " <<angle <<"\n";
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    lrauv_ignition_plugins::msgs::LRAUVCommand msg2;
-    msg2.set_rudderangle_(0);
-    commandPub.Publish(msg2);
+    lrauv_ignition_plugins::msgs::LRAUVCommand rudderStopMsg;
+    rudderStopMsg.set_rudderangle_(0);
+    commandPub.Publish(rudderStopMsg);
     std::cout << "moving rudder to " <<angle <<"\n";
 
-    // Wiggle rudder
+    // Wiggle elevator
     for(int i = 0; i < 10; i++)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        lrauv_ignition_plugins::msgs::LRAUVCommand msg;
+        lrauv_ignition_plugins::msgs::LRAUVCommand elevatorMsg;
         angle *= -1;
-        msg.set_elevatorangle_(angle);
-        commandPub.Publish(msg);
+        elevatorMsg.set_elevatorangle_(angle);
+        commandPub.Publish(elevatorMsg);
         std::cout << "moving elevator to " <<angle <<"\n";
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    lrauv_ignition_plugins::msgs::LRAUVCommand msg3;
-    msg3.set_elevatorangle_(0);
-    commandPub.Publish(msg3);
+    lrauv_ignition_plugins::msgs::LRAUVCommand elevatorStopMsg;
+    elevatorStopMsg.set_elevatorangle_(0);
+    commandPub.Publish(elevatorStopMsg);
     std::cout << "moving elevator to " <<angle <<"\n";
 
-    //Charge forward
-    lrauv_ignition_plugins::msgs::LRAUVCommand thrust_msg;
-    thrust_msg.set_propomega_(300);
-    commandPub.Publish(thrust_msg);
+    // Charge forward
+    lrauv_ignition_plugins::msgs::LRAUVCommand thrustMsg;
+    thrustMsg.set_propomega_(300);
+    commandPub.Publish(thrustMsg);
     std::cout << "charging forward!\n";
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-    lrauv_ignition_plugins::msgs::LRAUVCommand thrust_msg2;
-    thrust_msg2.set_propomega_(0);
-    commandPub.Publish(thrust_msg2);
+    lrauv_ignition_plugins::msgs::LRAUVCommand stopMsg;
+    stopMsg.set_propomega_(0);
+    commandPub.Publish(stopMsg);
     std::cout << "stop\n";    
 
 }
