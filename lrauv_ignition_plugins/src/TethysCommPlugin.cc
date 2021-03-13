@@ -182,16 +182,24 @@ void TethysCommPlugin::SetupEntities(
 void TethysCommPlugin::CommandCallback(
   const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg)
 {
-  ignmsg << "Received command: " << _msg.propomega_() << std::endl;
+  igndbg << "Received command: " << std::endl
+    << "propOmegaAction_: " << _msg.propomegaaction_() << std::endl
+    << "rudderAngleAction_: " << _msg.rudderangleaction_() << std::endl
+    << "elevatorAngleAction_: " << _msg.elevatorangleaction_() << std::endl
+    << "massPositionAction_: " << _msg.masspositionaction_() << std::endl
+    << "buoyancyAction_: " << _msg.buoyancyaction_() << std::endl
+    << "density_: " << _msg.density_() << std::endl
+    << "dt_: " << _msg.dt_() << std::endl
+    << "time_: " << _msg.time_() << std::endl;
   
   // Rudder
   ignition::msgs::Double rudderAngMsg;
-  rudderAngMsg.set_data(_msg.rudderangle_());
+  rudderAngMsg.set_data(_msg.rudderangleaction_());
   this->rudderPub.Publish(rudderAngMsg);
 
   // Elevator
   ignition::msgs::Double elevatorAngMsg;
-  elevatorAngMsg.set_data(_msg.elevatorangle_());
+  elevatorAngMsg.set_data(_msg.elevatorangleaction_());
   this->elevatorPub.Publish(elevatorAngMsg);
 
   // Thruster
@@ -200,7 +208,7 @@ void TethysCommPlugin::CommandCallback(
   // TODO(arjo):
   // Conversion from rpm-> force b/c thruster plugin takes force
   // Maybe we should change that?
-  auto ang_vel = _msg.propomega_()/(60*2*M_PI);
+  auto ang_vel = _msg.propomegaaction_()/(60*2*M_PI);
   auto force = -7.879*1000*0.0016*ang_vel*ang_vel;
   thrusterMsg.set_data(force);
   this->thrusterPub.Publish(thrusterMsg);
