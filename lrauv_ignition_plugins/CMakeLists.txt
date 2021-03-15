@@ -53,6 +53,18 @@ target_link_libraries(TestController
   PUBLIC lrauv_command)
 
 #============================================================================
+# Teleop
+add_executable(LRAUVTeleop test/teleop.cc)
+set_property(TARGET LRAUVTeleop  PROPERTY CXX_STANDARD 17)
+target_include_directories(LRAUVTeleop 
+  PUBLIC ${CMAKE_BINARY_DIR}/proto)
+target_link_libraries(LRAUVTeleop  
+  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
+  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+  PUBLIC lrauv_command)
+
+
+#============================================================================
 # Install
 
 install(
