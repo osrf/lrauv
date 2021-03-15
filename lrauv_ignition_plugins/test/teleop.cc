@@ -48,9 +48,9 @@ int main(int argc, char** argv)
 
     std::cout << "\033[2J";
     std::cout<< "Keyboard teleop for lrauv" << std::endl;
-    std::cout << "  w  <-- Control elevator to point up" <<std::endl;
+    std::cout << "  w  <-- Control elevator to point up (pitch down)" <<std::endl;
     std::cout << "a   d  <-- Control Rudder left/right" <<std::endl;
-    std::cout << "  s  <-- Point Elevator down" <<std::endl;
+    std::cout << "  s  <-- Point Elevator down (pitch up)" <<std::endl;
 
     std::cout << "Throttle control:" <<std::endl;
     std::cout << "\tj - increase thrust "<< std::endl;
