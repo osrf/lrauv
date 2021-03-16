@@ -18,6 +18,8 @@ set(IGN_MSGS_VER ${ignition-msgs6_VERSION_MAJOR})
 find_package(ignition-plugin1 REQUIRED COMPONENTS register)
 set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
 
+find_package (Eigen3 3.3 REQUIRED)
+
 #============================================================================
 # Build
 
@@ -40,6 +42,13 @@ set_property(TARGET ThrusterPlugin PROPERTY CXX_STANDARD 17)
 target_link_libraries(ThrusterPlugin
   PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
   PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER})
+
+add_library(HydrodynamicsPlugin SHARED src/HydrodynamicsPlugin.cc)
+set_property(TARGET HydrodynamicsPlugin PROPERTY CXX_STANDARD 17)
+target_link_libraries(HydrodynamicsPlugin
+  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
+  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+  Eigen3::Eigen)
 
 #============================================================================
 # Test controller
@@ -68,6 +77,7 @@ target_link_libraries(TeleopController
 
 install(
   TARGETS
+    HydrodynamicsPlugin
     TethysCommPlugin
     ThrusterPlugin
     lrauv_command
