@@ -8,12 +8,11 @@
 #include <iostream>
 #include <thread>
 
-#include <ignition/msgs.hh>
 #include <ignition/transport.hh>
 #include "lrauv_command.pb.h"
 
-
-char getch() {
+char getch() 
+{
   char buf = 0;
   struct termios old = {0};
   if (tcgetattr(0, &old) < 0)
@@ -53,8 +52,8 @@ int main(int argc, char** argv)
     std::cout << "  s  <-- Point Elevator down (pitch up)" <<std::endl;
 
     std::cout << "Throttle control:" <<std::endl;
-    std::cout << "\tj - increase thrust "<< std::endl;
-    std::cout << "\tk - decrease thrust "<< std::endl;
+    std::cout << "\tk - increase thrust "<< std::endl;
+    std::cout << "\tj - decrease thrust "<< std::endl;
 
     std::cout << "Current state:" << std::endl;
     std::cout << "\tThrust (rpm): " << thrust << std::endl;
@@ -67,11 +66,11 @@ int main(int argc, char** argv)
 
     switch(res)
     {
-      case 'j':
+      case 'k':
         thrust += 10;
         break;
 
-      case 'k':
+      case 'j':
         thrust -= 10;
         break;
 
