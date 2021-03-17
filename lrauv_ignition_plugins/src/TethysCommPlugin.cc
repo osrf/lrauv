@@ -78,7 +78,6 @@ void TethysCommPlugin::Configure(
   ignition::gazebo::EntityComponentManager &_ecm,
   ignition::gazebo::EventManager &_eventMgr)
 {
- 
   ignmsg << "TethysCommPlugin::Configure" << std::endl;
 
   // Parse SDF parameters
@@ -108,7 +107,7 @@ void TethysCommPlugin::Configure(
     ignerr << "Error advertising topic [" << stateTopic << "]"
       << std::endl;
   }
- 
+
   SetupControlTopics();
   SetupEntities(_entity, _sdf, _ecm, _eventMgr);
 
