@@ -106,7 +106,8 @@ namespace tethys_comm_plugin
     private: int counter = 0;
 
     /// TODO(mabelzhang) Remove when stable. Temporary timer for state message sanity check
-    private: std::chrono::time_point<std::chrono::steady_clock> elapsed;
+    private: std::chrono::steady_clock::duration prevPubPrintTime;
+    private: std::chrono::steady_clock::duration prevSubPrintTime;
 
     /// Transport node for message passing
     private: ignition::transport::Node node;

@@ -17,6 +17,10 @@
 
 #include <chrono>
 
+#include <ignition/msgs/double.pb.h>
+#include <ignition/msgs/header.pb.h>
+#include <ignition/msgs/time.pb.h>
+#include <ignition/msgs/vector3d.pb.h>
 #include <ignition/plugin/Register.hh>
 
 #include "lrauv_command.pb.h"
@@ -55,7 +59,7 @@ void AddWorldPose (
     _ecm.CreateComponent(_entity,
       ignition::gazebo::components::WorldPose());
   }
-    // Create an angular velocity component if one is not present.
+  // Create an angular velocity component if one is not present.
   if (!_ecm.Component<ignition::gazebo::components::WorldPose>(
       _entity))
   {
@@ -104,13 +108,12 @@ void TethysCommPlugin::Configure(
     ignerr << "Error advertising topic [" << stateTopic << "]"
       << std::endl;
   }
-
-
  
   SetupControlTopics();
   SetupEntities(_entity, _sdf, _ecm, _eventMgr);
 
-  this->elapsed = std::chrono::steady_clock::now();
+  this->prevPubPrintTime = std::chrono::steady_clock::duration::zero();
+  this->prevSubPrintTime = std::chrono::steady_clock::duration::zero();
 }
 
 void TethysCommPlugin::SetupControlTopics()
@@ -182,16 +185,22 @@ void TethysCommPlugin::SetupEntities(
 void TethysCommPlugin::CommandCallback(
   const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg)
 {
-  igndbg << "Received command: " << std::endl
-    << "propOmegaAction_: " << _msg.propomegaaction_() << std::endl
-    << "rudderAngleAction_: " << _msg.rudderangleaction_() << std::endl
-    << "elevatorAngleAction_: " << _msg.elevatorangleaction_() << std::endl
-    << "massPositionAction_: " << _msg.masspositionaction_() << std::endl
-    << "buoyancyAction_: " << _msg.buoyancyaction_() << std::endl
-    << "density_: " << _msg.density_() << std::endl
-    << "dt_: " << _msg.dt_() << std::endl
-    << "time_: " << _msg.time_() << std::endl;
+  // Lazy timestamp conversion just for printing
+  if (std::chrono::seconds(int(floor(_msg.time_()))) - this->prevSubPrintTime > std::chrono::milliseconds(1000))
+  {
+    igndbg << "Received command: " << std::endl
+      << "  propOmegaAction_: " << _msg.propomegaaction_() << std::endl
+      << "  rudderAngleAction_: " << _msg.rudderangleaction_() << std::endl
+      << "  elevatorAngleAction_: " << _msg.elevatorangleaction_() << std::endl
+      << "  massPositionAction_: " << _msg.masspositionaction_() << std::endl
+      << "  buoyancyAction_: " << _msg.buoyancyaction_() << std::endl
+      << "  density_: " << _msg.density_() << std::endl
+      << "  dt_: " << _msg.dt_() << std::endl
+      << "  time_: " << _msg.time_() << std::endl;
   
+    this->prevSubPrintTime = std::chrono::seconds(int(floor(_msg.time_())));
+  }
+
   // Rudder
   ignition::msgs::Double rudderAngMsg;
   rudderAngMsg.set_data(_msg.rudderangleaction_());
@@ -227,34 +236,42 @@ void TethysCommPlugin::PostUpdate(
 {
   // ignmsg << "TethysCommPlugin::PostUpdate" << std::endl;
 
-  if (std::chrono::steady_clock::now() - this->elapsed
-      > std::chrono::milliseconds(100))
+  ignition::gazebo::Link baseLink(modelLink);
+  // TODO: where is worldPose defined?
+  auto model_pose = worldPose(modelLink, _ecm);
+
+  // Publish state
+  lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
+
+  stateMsg.mutable_header()->mutable_stamp()->set_sec(
+    std::chrono::duration_cast<std::chrono::seconds>(_info.simTime).count());
+  stateMsg.mutable_header()->mutable_stamp()->set_nsec(
+    int(std::chrono::duration_cast<std::chrono::nanoseconds>(_info.simTime).count())
+    - stateMsg.header().stamp().sec() * 1000000000);
+
+  auto rph = model_pose.Rot().Euler();
+  ignition::msgs::Set(stateMsg.mutable_rph_(), rph);
+  stateMsg.set_depth_(-model_pose.Pos().Z());
+  stateMsg.set_speed_(baseLink.WorldLinearVelocity(_ecm)->Length());
+
+  // TODO(anyone)
+  // Follow up https://github.com/ignitionrobotics/ign-gazebo/pull/519
+  auto latlon = sphericalCoords.SphericalFromLocalPosition(model_pose.Pos());
+  stateMsg.set_latitudedeg_(latlon.X());
+  stateMsg.set_longitudedeg_(latlon.Y());
+
+  ignition::gazebo::Link propLink(thrusterLink);
+  auto prop_omega = propLink.WorldAngularVelocity(_ecm)->Length();
+  stateMsg.set_propomega_(prop_omega);
+
+  this->statePub.Publish(stateMsg);
+
+  if (_info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
   {
-    ignition::gazebo::Link baseLink(modelLink);
-    auto model_pose = worldPose(modelLink, _ecm);
+    igndbg << "Published state at time: " << stateMsg.header().stamp().sec()
+      << "." << stateMsg.header().stamp().nsec() << std::endl;
 
-    // Publish state
-    lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
-    auto rph = model_pose.Rot().Euler();
-    ignition::msgs::Vector3d* rph_msg = new ignition::msgs::Vector3d(ignition::msgs::Convert(rph));
-    stateMsg.set_allocated_rph_(rph_msg);
-    stateMsg.set_depth_(-model_pose.Pos().Z());
-    stateMsg.set_speed_(baseLink.WorldLinearVelocity(_ecm)->Length());
-
-    // TODO(anyone)
-    // Follow up https://github.com/ignitionrobotics/ign-gazebo/pull/519
-    auto latlon = sphericalCoords.SphericalFromLocalPosition(model_pose.Pos());
-    stateMsg.set_latitudedeg_(latlon.X());
-    stateMsg.set_longitudedeg_(latlon.Y());
-
-    ignition::gazebo::Link propLink(thrusterLink);
-    auto prop_omega = propLink.WorldAngularVelocity(_ecm)->Length();
-    stateMsg.set_propomega_(prop_omega);
-
-    this->statePub.Publish(stateMsg);
-    //ignmsg << "Published state: " << stateMsg.propomega_() << std::endl;
-
-    this->elapsed = std::chrono::steady_clock::now();
+    this->prevPubPrintTime = _info.simTime;
   }
 }
 
