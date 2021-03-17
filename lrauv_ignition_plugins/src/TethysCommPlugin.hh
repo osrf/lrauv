@@ -94,10 +94,10 @@ namespace tethys_comm_plugin
     private: std::string baseLinkName{"base_link"};
 
     /// Rudder name
-    private: std::string rudderLinkName{"vertical_fin"};
+    private: std::string rudderLinkName{"vertical_fins_joint"};
 
     /// Elevator name
-    private: std::string elevatorLinkName{"horizontal_fin"};
+    private: std::string elevatorLinkName{"horizontal_fins_joint"};
 
     /// Propeller name
     private: std::string thrusterLinkName{"propeller"};

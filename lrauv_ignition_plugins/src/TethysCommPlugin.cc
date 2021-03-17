@@ -68,6 +68,31 @@ void AddWorldPose (
   }
 }
 
+void AddJointPosition(
+  const ignition::gazebo::Entity &_entity,
+  ignition::gazebo::EntityComponentManager &_ecm)
+{
+  auto jointPosComp =
+      _ecm.Component<ignition::gazebo::components::JointPosition>(_entity);
+  if (jointPosComp == nullptr)
+  {
+    _ecm.CreateComponent(
+        _entity, ignition::gazebo::components::JointPosition());
+  }
+}
+
+void AddWorldLinearVelocity(
+  const ignition::gazebo::Entity &_entity,
+  ignition::gazebo::EntityComponentManager &_ecm)
+{
+  if (!_ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
+      _entity))
+  {
+    _ecm.CreateComponent(_entity,
+      ignition::gazebo::components::WorldLinearVelocity());
+  }
+}
+
 TethysCommPlugin::TethysCommPlugin()
 {
 }
@@ -171,14 +196,15 @@ void TethysCommPlugin::SetupEntities(
   auto model = ignition::gazebo::Model(_entity);
   
   this->modelLink = model.LinkByName(_ecm, this->baseLinkName);
-  this->rudderLink = model.LinkByName(_ecm, this->rudderLinkName);
-  this->elevatorLink = model.LinkByName(_ecm, this->elevatorLinkName);
+  this->rudderLink = model.JointByName(_ecm, this->rudderLinkName);
+  this->elevatorLink = model.JointByName(_ecm, this->elevatorLinkName);
   this->thrusterLink = model.LinkByName(_ecm, this->thrusterLinkName);
 
   AddAngularVelocityComponent(this->thrusterLink, _ecm);
   AddWorldPose(this->modelLink, _ecm);
-  AddWorldPose(this->rudderLink, _ecm);
-  AddWorldPose(this->elevatorLink, _ecm);
+  AddJointPosition(this->elevatorLink, _ecm);
+  AddJointPosition(this->rudderLink, _ecm);
+  AddWorldLinearVelocity(this->modelLink, _ecm);
 }
 
 void TethysCommPlugin::CommandCallback(
@@ -250,20 +276,44 @@ void TethysCommPlugin::PostUpdate(
     int(std::chrono::duration_cast<std::chrono::nanoseconds>(_info.simTime).count())
     - stateMsg.header().stamp().sec() * 1000000000);
 
-  auto rph = model_pose.Rot().Euler();
+  auto rph = modelPose.Rot().Euler();
   ignition::msgs::Set(stateMsg.mutable_rph_(), rph);
-  stateMsg.set_depth_(-model_pose.Pos().Z());
-  stateMsg.set_speed_(baseLink.WorldLinearVelocity(_ecm)->Length());
+  stateMsg.set_depth_(-modelPose.Pos().Z());
+  
+  // Linear velocity
+  auto linearVelocity =
+    _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(modelLink);
+  stateMsg.set_speed_(linearVelocity->Data().Length());
+
+  // Rudder position
+  auto rudderPosComp =
+    _ecm.Component<ignition::gazebo::components::JointPosition>(rudderLink);
+  if(rudderPosComp->Data().size() != 1) 
+  {
+    ignerr << "rudder joint has wrong size\n";
+    return; 
+  }
+  stateMsg.set_rudderangle_(rudderPosComp->Data()[0]);
+
+  // Elevator position
+  auto elevatorPosComp =
+    _ecm.Component<ignition::gazebo::components::JointPosition>(elevatorLink);
+  if(elevatorPosComp->Data().size() != 1) 
+  {
+    ignerr << "rudder joint has wrong size\n";
+    return; 
+  }
+  stateMsg.set_elevatorangle_(elevatorPosComp->Data()[0]);
 
   // TODO(anyone)
   // Follow up https://github.com/ignitionrobotics/ign-gazebo/pull/519
-  auto latlon = sphericalCoords.SphericalFromLocalPosition(model_pose.Pos());
+  auto latlon = sphericalCoords.SphericalFromLocalPosition(modelPose.Pos());
   stateMsg.set_latitudedeg_(latlon.X());
   stateMsg.set_longitudedeg_(latlon.Y());
 
   ignition::gazebo::Link propLink(thrusterLink);
-  auto prop_omega = propLink.WorldAngularVelocity(_ecm)->Length();
-  stateMsg.set_propomega_(prop_omega);
+  auto propOmega = propLink.WorldAngularVelocity(_ecm)->Length();
+  stateMsg.propOmega(prop_omega);
 
   this->statePub.Publish(stateMsg);
 
