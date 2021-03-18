@@ -62,6 +62,44 @@ bin/SimDaemon &
 bin/LRAUV
 ```
 
+### Control commands
+
+Control commands can be issued to overwrite mission controls.
+For example, the rudder can be held at a constant angle like so:
+```
+>maintain control horizontalcontrol.rudderangleaction 15 degree
+```
+This overwrites the controller and maintains the rudder at 15 degrees.
+
+A thruster command can then be issued to move the vehicle in a circle:
+```
+>maintain control SpeedControl.propOmegaAction 300 rpm
+```
+Currently, this is the tested and preferred method of control.
+
+A sample list of command variables:
+```
+Config/Control-->HorizontalControl.loadAtStartup=1 bool
+Config/Control-->HorizontalControl.kdHeading=0.049999 s
+Config/Control-->HorizontalControl.kiHeading=0.001000 1/s
+Config/Control-->HorizontalControl.kiwpHeading=0.000500 rad/s/m
+Config/Control-->HorizontalControl.kpHeading=0.400000 n/a
+Config/Control-->HorizontalControl.kwpHeading=0.049999 rad/m
+Config/Control-->HorizontalControl.maxHdgAccel=7.499876 arcdeg/s2
+Config/Control-->HorizontalControl.maxHdgInt=0.087266 rad
+Config/Control-->HorizontalControl.maxHdgRate=11.999932 arcdeg/s
+Config/Control-->HorizontalControl.maxKxte=45.000001 arcdeg
+Config/Control-->HorizontalControl.rudDeadband=0.500000 arcdeg
+Config/Control-->HorizontalControl.rudLimit=15.000000 arcdeg
+VerticalControl-->VerticalControl.buoyancyAction=944.986938 cc
+VerticalControl-->VerticalControl.depthIntegralInternal=nan rad
+VerticalControl-->VerticalControl.depth2buoyIntInternal=nan cc
+VerticalControl-->VerticalControl.massIntegralInternal=nan m
+VerticalControl-->VerticalControl.elevatorIntegralInternal=nan rad
+HorizontalControl-->HorizontalControl.rudderAngleAction=0.000000 rad
+SpeedControl-->SpeedControl.propOmegaAction=0.000000 rad/s
+```
+
 ### Run a mission
 
 Run the MBARI LRAUV SimDaemon, or replace it with the Ignition simulation when
@@ -138,38 +176,6 @@ Following the same basic steps as above, change the mission file:
 >load Engineering/circle_test.xml
 >set circle_test.Depth01 10 meter;set circle_test.Depth02 15 meter;set circle_test.RudderAngle01 15 degree;set circle_test.RudderAngle02 10 degree;set circle_test.WaitDuration 10 minute
 >run;quick off
-```
-
-### Other operation commands
-
-Control commands can be issued.
-For example, the rudder can be controlled like so:
-```
->maintain control horizontalcontrol.rudderangleaction 15 degree
-```
-This overwrites the controller and maintains the rudder at 15 degrees.
-
-A sample list of command variables:
-```
-Config/Control-->HorizontalControl.loadAtStartup=1 bool
-Config/Control-->HorizontalControl.kdHeading=0.049999 s
-Config/Control-->HorizontalControl.kiHeading=0.001000 1/s
-Config/Control-->HorizontalControl.kiwpHeading=0.000500 rad/s/m
-Config/Control-->HorizontalControl.kpHeading=0.400000 n/a
-Config/Control-->HorizontalControl.kwpHeading=0.049999 rad/m
-Config/Control-->HorizontalControl.maxHdgAccel=7.499876 arcdeg/s2
-Config/Control-->HorizontalControl.maxHdgInt=0.087266 rad
-Config/Control-->HorizontalControl.maxHdgRate=11.999932 arcdeg/s
-Config/Control-->HorizontalControl.maxKxte=45.000001 arcdeg
-Config/Control-->HorizontalControl.rudDeadband=0.500000 arcdeg
-Config/Control-->HorizontalControl.rudLimit=15.000000 arcdeg
-VerticalControl-->VerticalControl.buoyancyAction=944.986938 cc
-VerticalControl-->VerticalControl.depthIntegralInternal=nan rad
-VerticalControl-->VerticalControl.depth2buoyIntInternal=nan cc
-VerticalControl-->VerticalControl.massIntegralInternal=nan m
-VerticalControl-->VerticalControl.elevatorIntegralInternal=nan rad
-HorizontalControl-->HorizontalControl.rudderAngleAction=0.000000 rad
-SpeedControl-->SpeedControl.propOmegaAction=0.000000 rad/s
 ```
 
 ### LRAUV cheat sheet
