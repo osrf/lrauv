@@ -76,7 +76,7 @@
 
     <include>
       <!-- Uncomment if you use the ground plane for debugging -->
-      <!-- <pose>0 0 1 0 0 0</pose> -->
+      <pose>0 0 1 0 0 1.57</pose>
       <uri>tethys</uri>
     </include>
   </world>

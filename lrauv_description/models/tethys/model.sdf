@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <sdf version="1.6">
   <model name="tethys">
-    <pose>0 0 1 0 0 0</pose>
-
     <!-- Body -->
     <link name="base_link">
       <inertial>
@@ -354,7 +352,13 @@
       <yVV>-601.27</yVV>
       <yV>0</yV>
       <zWW>-601.27</zWW>
-      <zW>0<zW>
+      <zW>0</zW>
+      <kPP>-0.1916</kPP>
+      <kP>0</kP>
+      <mQQ>-632.698957</mQQ>
+      <mQ>0</mQ>
+      <nRR>-632.698957</nRR>
+      <nR>0</nR>
     </plugin>
 
   </model>
