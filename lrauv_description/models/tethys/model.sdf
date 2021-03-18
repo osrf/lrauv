@@ -294,7 +294,7 @@
     <!-- Lift and drag -->
 
     <!-- Vertical fin -->
-    <!--<plugin
+    <plugin
       filename="ignition-gazebo-lift-drag-system"
       name="ignition::gazebo::systems::LiftDrag">
       <air_density>1000</air_density>
@@ -308,13 +308,13 @@
       <upward>0 1 0</upward>
       <forward>1 0 0</forward>
       <link_name>vertical_fins</link_name>
-      <control_joint_name>vertical_fins_joint</control_joint_name>
-      <control_joint_rad_to_cl>4.13</control_joint_rad_to_cl>
+      <!--<control_joint_name>vertical_fins_joint</control_joint_name>
+      <control_joint_rad_to_cl>4.13</control_joint_rad_to_cl>-->?
       <cp>0 0 0</cp>
-    </plugin>-->
+    </plugin>
 
     <!-- Horizontal fin -->
-    <!--<plugin
+    <plugin
       filename="ignition-gazebo-lift-drag-system"
       name="ignition::gazebo::systems::LiftDrag">
       <air_density>1000</air_density>
@@ -329,7 +329,7 @@
       <forward>1 0 0</forward>
       <link_name>horizontal_fins</link_name>
       <cp>0 0 0</cp>
-    </plugin>-->
+    </plugin>
 
 
     <!-- interfacing plugin-->
@@ -343,6 +343,18 @@
       filename="HydrodynamicsPlugin"
       name="tethys_hydro::HydrodynamicsPlugin">
       <link_name>base_link</link_name>
+      <xDotU>-4.876161</xDotU>
+      <yDotV>-126.324739</yDotV>
+      <zDotW>-126.324739</zDotW>
+      <kDotP>0</kDotP>
+      <mDotQ>-33.46</mDotQ>
+      <nDotR>-33.46</nDotR>
+      <xUU>-6.2282</xUU>
+      <xU>0</xU>
+      <yVV>-601.27</yVV>
+      <yV>0</yV>
+      <zWW>-601.27</zWW>
+      <zW>0<zW>
     </plugin>
 
   </model>
