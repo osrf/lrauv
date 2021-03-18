@@ -321,7 +321,9 @@ void TethysCommPlugin::PostUpdate(
   {
     igndbg << "Published state at time: " << stateMsg.header().stamp().sec()
       << "." << stateMsg.header().stamp().nsec() << std::endl;
-
+    igndbg << "\tSpeed: " << stateMsg.speed_() << std::endl;
+    igndbg << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl;
+    igndbg << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl;
     this->prevPubPrintTime = _info.simTime;
   }
 }
