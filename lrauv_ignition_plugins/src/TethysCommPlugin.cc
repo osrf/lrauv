@@ -242,8 +242,8 @@ void TethysCommPlugin::CommandCallback(
   // TODO(arjo):
   // Conversion from rpm-> force b/c thruster plugin takes force
   // Maybe we should change that?
-  auto angVel = _msg.propomegaaction_()/(60*2*M_PI);
-  auto force = -7.879*1000*0.0016*angVel*angVel;
+  auto angVel = _msg.propomegaaction_();
+  auto force = -7.879 * 1000 * 0.0016 * angVel * angVel;
   if (angVel < 0)
     force *=-1;
   thrusterMsg.set_data(force);
