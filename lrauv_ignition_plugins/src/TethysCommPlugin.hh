@@ -88,6 +88,7 @@ namespace tethys_comm_plugin
     private: std::string elevatorTopic
       {"horizontal_fins_joint/0/cmd_pos"};
 
+    /// Topic to publish to for thruster
     private: std::string thrusterTopic
       {"propeller_joint/cmd_pos"};
 
