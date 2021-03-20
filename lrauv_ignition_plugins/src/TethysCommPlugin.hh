@@ -70,7 +70,9 @@ namespace tethys_comm_plugin
       ignition::gazebo::EntityComponentManager &_ecm,
       ignition::gazebo::EventManager &_eventMgr);
 
-    private: void SetupControlTopics();
+    /// Set up control message topics
+    /// \param[in] _ns Namespace to prepend to topic names
+    private: void SetupControlTopics(const std::string &_ns);
 
     /// Topic on which robot commands will be received
     private: std::string commandTopic{"command_topic"};
@@ -80,15 +82,14 @@ namespace tethys_comm_plugin
 
     /// Topic to publish to for rudder
     private: std::string rudderTopic
-      {"/model/tethys/joint/vertical_fins_joint/0/cmd_pos"};
+      {"vertical_fins_joint/0/cmd_pos"};
 
     /// Topic to publish to for elevator
     private: std::string elevatorTopic
-      {"/model/tethys/joint/horizontal_fins_joint/0/cmd_pos"};
-
+      {"horizontal_fins_joint/0/cmd_pos"};
 
     private: std::string thrusterTopic
-      {"/thruster_controls/propeller_joint"};
+      {"propeller_joint/cmd_pos"};
 
     /// Model name
     private: std::string baseLinkName{"base_link"};

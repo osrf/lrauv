@@ -22,6 +22,7 @@
 #include <ignition/msgs/time.pb.h>
 #include <ignition/msgs/vector3d.pb.h>
 #include <ignition/plugin/Register.hh>
+#include <ignition/transport/TopicUtils.hh>
 
 #include "lrauv_command.pb.h"
 #include "lrauv_state.pb.h"
@@ -105,6 +106,17 @@ void TethysCommPlugin::Configure(
 {
   ignmsg << "TethysCommPlugin::Configure" << std::endl;
 
+  // Get namespace
+  std::string ns {""};
+  if (_sdf->HasElement("namespace"))
+  {
+    ns = _sdf->Get<std::string>("namespace");
+  }
+  else
+  {
+    ns = "tethys";
+  }
+
   // Parse SDF parameters
   if (_sdf->HasElement("command_topic"))
   {
@@ -133,36 +145,42 @@ void TethysCommPlugin::Configure(
       << std::endl;
   }
 
-  SetupControlTopics();
+  SetupControlTopics(ns);
   SetupEntities(_entity, _sdf, _ecm, _eventMgr);
 
   this->prevPubPrintTime = std::chrono::steady_clock::duration::zero();
   this->prevSubPrintTime = std::chrono::steady_clock::duration::zero();
 }
 
-void TethysCommPlugin::SetupControlTopics()
+void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
 {
+  this->rudderTopic = ignition::transport::TopicUtils::AsValidTopic("/model/" +
+    _ns + "/joint/" + this->rudderTopic);
   this->rudderPub =
     this->node.Advertise<ignition::msgs::Double>(this->rudderTopic);
   if (!this->rudderPub)
   {
-    ignerr << "Error advertising topic [" << rudderTopic << "]"
+    ignerr << "Error advertising topic [" << this->rudderTopic << "]"
       << std::endl;
   }
 
+  this->elevatorTopic = ignition::transport::TopicUtils::AsValidTopic("/model/" +
+    _ns + "/joint/" + this->elevatorTopic);
   this->elevatorPub =
     this->node.Advertise<ignition::msgs::Double>(this->elevatorTopic);
   if (!this->elevatorPub)
   {
-    ignerr << "Error advertising topic [" << elevatorTopic << "]"
+    ignerr << "Error advertising topic [" << this->elevatorTopic << "]"
       << std::endl;
   }
 
+  this->thrusterTopic = ignition::transport::TopicUtils::AsValidTopic("/model/" +
+    _ns + "/joint/" + this->thrusterTopic);
   this->thrusterPub =
     this->node.Advertise<ignition::msgs::Double>(this->thrusterTopic);
   if(!this->thrusterPub)
   {
-    ignerr << "Error advertising topic [" << thrusterTopic << "]"
+    ignerr << "Error advertising topic [" << this->thrusterTopic << "]"
       << std::endl;
   }
 }
@@ -265,7 +283,7 @@ void TethysCommPlugin::PostUpdate(
 
   ignition::gazebo::Link baseLink(modelLink);
   // TODO: where is worldPose defined?
-  auto model_pose = worldPose(modelLink, _ecm);
+  auto modelPose = worldPose(modelLink, _ecm);
 
   // Publish state
   lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
@@ -313,7 +331,7 @@ void TethysCommPlugin::PostUpdate(
 
   ignition::gazebo::Link propLink(thrusterLink);
   auto propOmega = propLink.WorldAngularVelocity(_ecm)->Length();
-  stateMsg.propOmega(prop_omega);
+  stateMsg.set_propomega_(propOmega);
 
   this->statePub.Publish(stateMsg);
 
@@ -321,6 +339,7 @@ void TethysCommPlugin::PostUpdate(
   {
     igndbg << "Published state at time: " << stateMsg.header().stamp().sec()
       << "." << stateMsg.header().stamp().nsec() << std::endl;
+    igndbg << "\tpropOmega: " << stateMsg.propomega_() << std::endl;
     igndbg << "\tSpeed: " << stateMsg.speed_() << std::endl;
     igndbg << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl;
     igndbg << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl;

@@ -284,6 +284,7 @@
     <plugin
       filename="ThrusterPlugin"
       name="tethys_thrusters::ThrusterPlugin">     
+      <namespace>tethys</namespace>
       <joint_name>propeller_joint</joint_name>
       <thrust_coefficient>7.879</thrust_coefficient>
       <fluid_density>1000</fluid_density>
@@ -353,6 +354,7 @@
     <plugin
       filename="TethysCommPlugin"
       name="tethys_comm_plugin::TethysCommPlugin">
+      <namespace>tethys</namespace>
     </plugin>
 
   </model>
