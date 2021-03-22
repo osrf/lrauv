@@ -284,7 +284,7 @@
       name="tethys_thrusters::ThrusterPlugin">     
       <namespace>tethys</namespace>
       <joint_name>propeller_joint</joint_name>
-      <thrust_coefficient>7.879</thrust_coefficient>
+      <thrust_coefficient>0.004422</thrust_coefficient>
       <fluid_density>1000</fluid_density>
       <propeller_diameter>0.2</propeller_diameter>
     </plugin>
@@ -306,8 +306,6 @@
       <upward>0 1 0</upward>
       <forward>1 0 0</forward>
       <link_name>vertical_fins</link_name>
-      <!--<control_joint_name>vertical_fins_joint</control_joint_name>
-      <control_joint_rad_to_cl>4.13</control_joint_rad_to_cl>-->?
       <cp>0 0 0</cp>
     </plugin>
 

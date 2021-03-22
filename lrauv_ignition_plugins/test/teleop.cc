@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     std::cout << "\tj - decrease thrust "<< std::endl;
 
     std::cout << "Current state:" << std::endl;
-    std::cout << "\tThrust (rpm): " << thrust << std::endl;
+    std::cout << "\tThrust (radians per second): " << thrust << std::endl;
     std::cout << "\tRudder angle (radians): " << rudder_angle << std::endl;
     std::cout << "\tElevator angle (radians): " << elevator_angle << std::endl;
 
@@ -67,11 +67,11 @@ int main(int argc, char** argv)
     switch(res)
     {
       case 'k':
-        thrust += 10;
+        thrust += 0.5;
         break;
 
       case 'j':
-        thrust -= 10;
+        thrust -= 0.5;
         break;
 
       case 'w':
