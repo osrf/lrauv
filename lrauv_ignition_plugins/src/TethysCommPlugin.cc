@@ -282,8 +282,7 @@ void TethysCommPlugin::PostUpdate(
   // ignmsg << "TethysCommPlugin::PostUpdate" << std::endl;
 
   ignition::gazebo::Link baseLink(modelLink);
-  // TODO: where is worldPose defined?
-  auto modelPose = worldPose(modelLink, _ecm);
+  auto modelPose = ignition::gazebo::worldPose(modelLink, _ecm);
 
   // Publish state
   lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
