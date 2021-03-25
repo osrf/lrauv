@@ -2,8 +2,11 @@
 <sdf version="1.6">
   <world name="buoyant_tethys">
     <scene>
-      <ambient>1.0 1.0 1.0</ambient>
-      <background>0.8 0.8 0.8</background>
+      <!-- For turquoise ambient to match particle effect -->
+      <ambient>0.0 1.0 1.0</ambient>
+      <!-- For default gray ambient -->
+      <!--background>0.8 0.8 0.8</background-->
+      <background>0.0 0.7 0.8</background>
     </scene>
 
     <physics name="1ms" type="ode">
@@ -79,5 +82,37 @@
       <pose>0 0 1 0 0 1.57</pose>
       <uri>tethys</uri>
     </include>
+
+    <!-- Particle effect -->
+    <model name="turbidity_generator">
+      <pose>-5 0 0 0 0 0</pose>
+      <static>true</static>
+
+      <plugin filename="ignition-gazebo-particle-emitter-system"
+        name="ignition::gazebo::systems::ParticleEmitter">
+        <emitter_name>turbidity_generator</emitter_name>
+        <type>point</type>
+        <pose>0 1 0 0 0 0</pose>
+        <size>100 100 100</size>
+        <rate>1</rate>
+        <emitting>false</emitting>
+        <particle_size>200 200 200</particle_size>
+        <lifetime>10</lifetime>
+        <min_velocity>0</min_velocity>
+        <max_velocity>1</max_velocity>
+        <color_start>0 0.4 0.5 0.2</color_start>
+        <color_end>0 0.8 0.9 0.2</color_end>
+        <scale_rate>1</scale_rate>
+        <material>
+          <diffuse>0.7 0.7 0.7 0.5</diffuse>
+          <pbr>
+            <metal>
+              <albedo_map>smoke.png</albedo_map>
+            </metal>
+          </pbr>
+        </material>
+      </plugin>
+    </model>
+
   </world>
 </sdf>
