@@ -38,8 +38,7 @@ docker/build_and_run_docker.sh
 
 ## To test integration with MBARI LRAUV code base
 
-Pull the private Docker image on [OSRF DockerHub](https://hub.docker.com/u/osrf)
-containing Ignition, MBARI LRAUV code base, and this repository.
+Pull the Docker image on the [MBARI DockerHub](https://hub.docker.com/repository/docker/mbari/lrauv-ignition-sim) containing Ignition, MBARI LRAUV code base, and this repository.
 
 Once inside a container, source the colcon workspaces:
 ```
@@ -48,28 +47,60 @@ Once inside a container, source the colcon workspaces:
 ```
 This needs to be done for each terminal.
 
-### Basic test
+### Setting up for a run
 
-Test by launching a world in the LRAUV Ignition simulation, for example:
+Launch the Ignition simulation:
 ```
-ign launch lrauv_world.ign
+ign launch lrauv_world.ign --verbose 4
 ```
 
-Or run an executable the MBARI code base, for example:
+Launch the MBARI command prompt:
 ```
 cd ~/lrauv_ws/src/lrauv-application
-bin/SimDaemon &
 bin/LRAUV
 ```
+
+At the LRAUV command prompt:
+```
+>configset micromodem.loadatstartup 0 bool persist
+>restart app
+```
+This will pause for a bit, you might not be able to type right away.
+
+Speed up 100 times for a bit to finish loading, before returning to normal
+speed.
+This allows the commands to finish loading, before you overwrite them with
+control commands.
+Otherwise the preloaded commands can kick in after you issue control commands
+and make the vehicle go to unexpected places
+```
+>quick on
+>quick off
+```
+
+Verify that it is running the default `GoToSurface` app:
+```
+>show stack
+2021-03-03T18:24:46.699Z,1614795886.699 [Default](IMPORTANT): Priority 0: Default:B.GoToSurface
+```
+An app is always being run.
+If no missions are specified, then it is running the default.
 
 ### Control commands
 
 Control commands can be issued to overwrite mission controls.
 For example, the rudder can be held at a constant angle like so:
 ```
->maintain control horizontalcontrol.rudderangleaction 15 degree
+>maintain control horizontalcontrol.rudderangleaction -15 degree
 ```
-This overwrites the controller and maintains the rudder at 15 degrees.
+This overwrites the controller and maintains the rudder at -15 degrees
+(-0.261799 radians), which is the joint limit.
+
+Unit conversions are automatically done in the MBARI code.
+Alternatively, you can specify in radians.
+```
+>maintain control horizontalcontrol.rudderangleaction -0.2 radian
+```
 
 A thruster command can then be issued to move the vehicle in a circle:
 ```
@@ -100,82 +131,49 @@ HorizontalControl-->HorizontalControl.rudderAngleAction=0.000000 rad
 SpeedControl-->SpeedControl.propOmegaAction=0.000000 rad/s
 ```
 
-### Run a mission
+### Troubleshoot
 
-Run the MBARI LRAUV SimDaemon, or replace it with the Ignition simulation when
-it is fully functional:
+After issuing control commands, for example, rudder and thrust, if you then
+notice that the vehicle gets some commands by itself, such as a non-zero
+elevator angle, this is because a preloaded mission is being loaded, and you
+need to wait to issue the control commands after it is done loading.
+Make sure to use
 ```
-# Original LRAUV SimDaemon
-bin/SimDaemon &
+quick on
+```
+to let the system finish loading, before issuing control commands.
 
-# And/or launch Ignition simulation
-ign launch lrauv_world.ign
-```
+### Run the circle mission
 
-Run the vehicle code:
-```
-bin/LRAUV
-```
-This will bring you to a command prompt.
+This has not been tested thoroughly.
 
-At the LRAUV command prompt:
+Load the circle mission, which will perform two circles:
 ```
->configset micromodem.loadatstartup 0 bool persist
->restart app
-```
-This will pause for a bit, you might not be able to type right away.
-
-Speed up loading to 100 times the speed for a bit, before returning to normal
-speed:
-```
->quick on
->quick off
+load Engineering/circle_test.xml
 ```
 
-Verify that it is running the default `GoToSurface` app:
+Set some parameters as desired:
 ```
->show stack
-2021-03-03T18:24:46.699Z,1614795886.699 [Default](IMPORTANT): Priority 0: Default:B.GoToSurface
-```
-An app is always being run.
-If no missions are specified, then it is running the default.
-
-Load the yoyo mission, which will go into the water:
-```
->load Science/profile_station.xml
+set circle_test.Depth01 10 meter;set circle_test.Depth02 15 meter;set circle_test.RudderAngle01 15 degree;set circle_test.RudderAngle02 10 degree;set circle_test.WaitDuration 10 minute
+run;quick off
 ```
 
-Set the max depth to a desired number, and run the mission:
+You can check variables like depth:
 ```
->set profile_station.yoyomaxdepth 20 meter
->run;quick off
-```
-
-You should see the depth increasing to the max depth set above, and no more:
-```
->report touch depth
->quick on
+report touch depth
+quick on
 ```
 
 To clear the report and go back to normal speed:
 ```
->report clear
->quick off
+report clear
+quick off
 ```
 
 To stop the mission and terminate:
 ```
->stop
->quit
-```
-
-### Run the circle mission
-
-Following the same basic steps as above, change the mission file:
-```
->load Engineering/circle_test.xml
->set circle_test.Depth01 10 meter;set circle_test.Depth02 15 meter;set circle_test.RudderAngle01 15 degree;set circle_test.RudderAngle02 10 degree;set circle_test.WaitDuration 10 minute
->run;quick off
+stop
+quit
 ```
 
 ### LRAUV cheat sheet
