@@ -36,6 +36,12 @@
       <uniform_fluid_density>1000</uniform_fluid_density>
     </plugin>
 
+    <!-- Uncomment for time analysis -->
+    <!--plugin
+      filename="TimeAnalysisPlugin"
+      name="time_analysis_plugin::TimeAnalysisPlugin">
+    </plugin-->
+
     <light type="directional" name="sun">
       <cast_shadows>true</cast_shadows>
       <pose>0 0 10 0 0 0</pose>
@@ -78,7 +84,6 @@
     </model> -->
 
     <include>
-      <!-- Uncomment if you use the ground plane for debugging -->
       <pose>0 0 1 0 0 1.57</pose>
       <uri>tethys</uri>
 
@@ -144,7 +149,6 @@
         <link_name>horizontal_fins</link_name>
         <cp>0 0 0</cp>
       </plugin>
-
 
       <!-- interfacing plugin-->
       <plugin

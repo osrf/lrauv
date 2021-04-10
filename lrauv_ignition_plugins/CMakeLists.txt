@@ -26,6 +26,13 @@ find_package (Eigen3 3.3 REQUIRED)
 # Build protobuf messages
 add_subdirectory(proto)
 
+add_library(HydrodynamicsPlugin SHARED src/HydrodynamicsPlugin.cc)
+set_property(TARGET HydrodynamicsPlugin PROPERTY CXX_STANDARD 17)
+target_link_libraries(HydrodynamicsPlugin
+  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
+  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+  Eigen3::Eigen)
+
 add_library(TethysCommPlugin SHARED src/TethysCommPlugin.cc)
 set_property(TARGET TethysCommPlugin PROPERTY CXX_STANDARD 17)
 target_include_directories(TethysCommPlugin
@@ -43,12 +50,11 @@ target_link_libraries(ThrusterPlugin
   PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
   PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER})
 
-add_library(HydrodynamicsPlugin SHARED src/HydrodynamicsPlugin.cc)
-set_property(TARGET HydrodynamicsPlugin PROPERTY CXX_STANDARD 17)
-target_link_libraries(HydrodynamicsPlugin
-  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-  Eigen3::Eigen)
+add_library(TimeAnalysisPlugin SHARED src/TimeAnalysisPlugin.cc)
+set_property(TARGET TimeAnalysisPlugin PROPERTY CXX_STANDARD 17)
+target_link_libraries(TimeAnalysisPlugin
+  PUBLIC ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
+  PUBLIC ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER})
 
 #============================================================================
 # Test controller
@@ -80,6 +86,7 @@ install(
     HydrodynamicsPlugin
     TethysCommPlugin
     ThrusterPlugin
+    TimeAnalysisPlugin
     lrauv_command
     lrauv_state
   DESTINATION share/lib)
