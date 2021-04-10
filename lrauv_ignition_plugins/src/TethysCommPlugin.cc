@@ -41,7 +41,7 @@ void AddAngularVelocityComponent(
     _ecm.CreateComponent(_entity,
       ignition::gazebo::components::AngularVelocity());
   }
-    // Create an angular velocity component if one is not present.
+  // Create an angular velocity component if one is not present.
   if (!_ecm.Component<ignition::gazebo::components::WorldAngularVelocity>(
       _entity))
   {
@@ -147,9 +147,6 @@ void TethysCommPlugin::Configure(
 
   SetupControlTopics(ns);
   SetupEntities(_entity, _sdf, _ecm, _eventMgr);
-
-  this->prevPubPrintTime = std::chrono::steady_clock::duration::zero();
-  this->prevSubPrintTime = std::chrono::steady_clock::duration::zero();
 }
 
 void TethysCommPlugin::SetupControlTopics(const std::string &_ns)

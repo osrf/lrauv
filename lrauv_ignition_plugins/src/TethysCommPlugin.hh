@@ -62,7 +62,8 @@ namespace tethys_comm_plugin
 
     /// Callback function for command
     /// \param[in] _msg Command message
-    public: void CommandCallback(const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg);
+    public: void CommandCallback(
+                const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg);
 
     private: void SetupEntities(
       const ignition::gazebo::Entity &_entity,
@@ -104,12 +105,16 @@ namespace tethys_comm_plugin
     /// Propeller name
     private: std::string thrusterLinkName{"propeller"};
     
-    /// TODO(mabelzhang) Remove when stable. Temporary counter for state message sanity check
+    /// TODO(mabelzhang) Remove when stable. Temporary counter for state
+    ///  message sanity check
     private: int counter = 0;
 
-    /// TODO(mabelzhang) Remove when stable. Temporary timer for state message sanity check
-    private: std::chrono::steady_clock::duration prevPubPrintTime;
-    private: std::chrono::steady_clock::duration prevSubPrintTime;
+    /// TODO(mabelzhang) Remove when stable. Temporary timers for state message
+    /// sanity check
+    private: std::chrono::steady_clock::duration prevPubPrintTime =
+      std::chrono::steady_clock::duration::zero();
+    private: std::chrono::steady_clock::duration prevSubPrintTime =
+      std::chrono::steady_clock::duration::zero();
 
     /// Transport node for message passing
     private: ignition::transport::Node node;
