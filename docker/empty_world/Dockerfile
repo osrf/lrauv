@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-FROM nvidia/opengl:1.0-glvnd-devel-ubuntu18.04
+FROM nvidia/opengl:1.0-glvnd-devel-ubuntu20.04
 
 # setup timezone
 RUN echo 'Etc/UTC' > /etc/timezone && \
@@ -28,7 +28,7 @@ RUN apt-get update
 RUN apt-get install -y gnupg2 lsb-release
 
 # setup sources.list and keys
-RUN echo "deb http://packages.ros.org/ros/ubuntu bionic main" > /etc/apt/sources.list.d/ros1-latest.list \
+RUN echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/ros1-latest.list \
   && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 
 # install colcon for building packages
