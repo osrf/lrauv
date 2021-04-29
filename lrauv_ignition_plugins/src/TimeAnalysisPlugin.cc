@@ -77,7 +77,7 @@ void TimeAnalysisPlugin::PostUpdate(
   const ignition::gazebo::EntityComponentManager &_ecm)
 {
   // If paused or finished testing, do nothing
-  // Use >, not >=, because if nextStepSizeIdx == array size, still need to run 
+  // Use >, not >=, because if nextStepSizeIdx == array size, still need to run
   // last value in the array.
   if (_info.paused || nextStepSizeIdx > std::size(this->stepSizes))
     return;
@@ -109,7 +109,7 @@ void TimeAnalysisPlugin::PostUpdate(
       if (!_result)
         ignerr << "Error setting physics parameters" << std::endl;
     };
- 
+
     // Set physics parameters dynamically
     ignition::msgs::Physics req;
     req.set_max_step_size(nextStepSize);
