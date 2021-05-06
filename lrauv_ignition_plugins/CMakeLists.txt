@@ -7,13 +7,13 @@ project(lrauv_ignition_plugins)
 
 find_package(ignition-cmake2 REQUIRED)
 
-find_package(ignition-gazebo4 REQUIRED)
-set(IGN_GAZEBO_VER ${ignition-gazebo4_VERSION_MAJOR})
+find_package(ignition-gazebo6 REQUIRED)
+set(IGN_GAZEBO_VER ${ignition-gazebo6_VERSION_MAJOR})
 
-find_package(ignition-launch3 REQUIRED)
+find_package(ignition-launch5 REQUIRED)
 
-find_package(ignition-msgs6 REQUIRED)
-set(IGN_MSGS_VER ${ignition-msgs6_VERSION_MAJOR})
+find_package(ignition-msgs8 REQUIRED)
+set(IGN_MSGS_VER ${ignition-msgs8_VERSION_MAJOR})
 
 find_package(ignition-plugin1 REQUIRED COMPONENTS register)
 set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
