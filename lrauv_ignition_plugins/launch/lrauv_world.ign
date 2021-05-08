@@ -3,7 +3,8 @@
   
   <plugin name="ignition::launch::GazeboServer"
           filename="libignition-launch-gazebo.so">
-    <world_file>buoyant_tethys.sdf</world_file>
+    <!--world_file>buoyant_tethys.sdf</world_file-->
+    <world_file>multi_lrauv.sdf</world_file>
   </plugin>
 
   
@@ -74,6 +75,13 @@
       <plugin filename="EntityTree" name="Entity tree">
         <ignition-gui>
           <title>Entity tree</title>
+        </ignition-gui>
+      </plugin>
+
+      <!-- Component Inspector -->
+      <plugin filename="ComponentInspector" name="Component Inspector">
+        <ignition-gui>
+          <title>Component Inspector</title>
         </ignition-gui>
       </plugin>
 

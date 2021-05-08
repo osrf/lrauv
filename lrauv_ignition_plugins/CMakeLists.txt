@@ -58,7 +58,7 @@ target_link_libraries(TimeAnalysisPlugin
 
 #============================================================================
 # Test controller
-add_executable(TestController test/dumb_controller.cc)
+add_executable(TestController test/test_controller.cc)
 set_property(TARGET TestController PROPERTY CXX_STANDARD 17)
 target_include_directories(TestController
   PUBLIC ${CMAKE_BINARY_DIR}/proto)
@@ -69,11 +69,22 @@ target_link_libraries(TestController
 
 #============================================================================
 # Teleop
-add_executable(TeleopController test/teleop.cc)
-set_property(TARGET TeleopController PROPERTY CXX_STANDARD 17)
-target_include_directories(TeleopController 
+add_executable(KeyboardTeleop test/keyboard_teleop.cc)
+set_property(TARGET KeyboardTeleop PROPERTY CXX_STANDARD 17)
+target_include_directories(KeyboardTeleop
   PUBLIC ${CMAKE_BINARY_DIR}/proto)
-target_link_libraries(TeleopController  
+target_link_libraries(KeyboardTeleop
+  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
+  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+  PUBLIC lrauv_command)
+
+#============================================================================
+# Multi-LRAUV race
+add_executable(MultiLRAUVRace test/multi_lrauv_race.cc)
+set_property(TARGET MultiLRAUVRace PROPERTY CXX_STANDARD 17)
+target_include_directories(MultiLRAUVRace
+  PUBLIC ${CMAKE_BINARY_DIR}/proto)
+target_link_libraries(MultiLRAUVRace
   PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
   PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
   PUBLIC lrauv_command)

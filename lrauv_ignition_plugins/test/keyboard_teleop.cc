@@ -34,8 +34,15 @@ char getch()
 
 int main(int argc, char** argv)
 {
+  // Robot namespace, to allow multiple vehicles
+  std::string ns = "tethys";
+  for (int i = 1; i < argc; i++)
+  {
+    ns = argv[i];
+  }
+
   ignition::transport::Node node;
-  auto commandTopic = "command_topic";
+  std::string commandTopic = ns + "/command_topic";
   auto commandPub = 
     node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(commandTopic);
 
@@ -44,9 +51,9 @@ int main(int argc, char** argv)
   double thrust = 0;
   while(true)
   {
-
     std::cout << "\033[2J";
-    std::cout<< "Keyboard teleop for lrauv" << std::endl;
+    std::cout << "Keyboard teleop for lrauv" << std::endl;
+    std::cout << "Robot namespace set to [" << ns << "]" << std::endl;
     std::cout << "  w  <-- Control elevator to point up (pitch down)" <<std::endl;
     std::cout << "a   d  <-- Control Rudder left/right" <<std::endl;
     std::cout << "  s  <-- Point Elevator down (pitch up)" <<std::endl;
@@ -97,5 +104,4 @@ int main(int argc, char** argv)
     cmd.set_rudderangleaction_(rudder_angle);
     commandPub.Publish(cmd);
   }
-
 }
