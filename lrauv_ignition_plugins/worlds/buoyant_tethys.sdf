@@ -186,6 +186,8 @@
         filename="TethysCommPlugin"
         name="tethys_comm_plugin::TethysCommPlugin">
         <namespace>tethys</namespace>
+        <command_topic>tethys/command_topic</command_topic>
+        <state_topic>tethys/state_topic</state_topic>
       </plugin>
 
       <plugin

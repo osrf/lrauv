@@ -333,7 +333,8 @@ void TethysCommPlugin::PostUpdate(
 
   if (_info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
   {
-    igndbg << "Published state at time: " << stateMsg.header().stamp().sec()
+    igndbg << "Published state to " << this->stateTopic
+      << " at time: " << stateMsg.header().stamp().sec()
       << "." << stateMsg.header().stamp().nsec() << std::endl;
     igndbg << "\tpropOmega: " << stateMsg.propomega_() << std::endl;
     igndbg << "\tSpeed: " << stateMsg.speed_() << std::endl;
