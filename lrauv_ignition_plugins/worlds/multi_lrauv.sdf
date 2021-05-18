@@ -95,7 +95,7 @@
         <pose>0 1 0 0 0 0</pose>
         <size>100 100 100</size>
         <rate>1</rate>
-        <emitting>false</emitting>
+        <emitting>true</emitting>
         <particle_size>200 200 200</particle_size>
         <lifetime>10</lifetime>
         <min_velocity>0</min_velocity>
@@ -422,7 +422,7 @@
 
     </include>
 
-    <!-- For demo only. Prohibited for serious purposes. -->
+    <!-- Swimming race lane signs -->
     <include>
       <pose>0 0 -1 0 0 3.1415926</pose>
       <uri>ABCSign</uri>

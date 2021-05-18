@@ -106,5 +106,6 @@ install(
   DIRECTORY
     hooks
     launch
+    models
     worlds
   DESTINATION share)

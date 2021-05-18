@@ -3,8 +3,9 @@
   
   <plugin name="ignition::launch::GazeboServer"
           filename="libignition-launch-gazebo.so">
-    <!--world_file>buoyant_tethys.sdf</world_file-->
-    <world_file>multi_lrauv.sdf</world_file>
+    <world_file>buoyant_tethys.sdf</world_file>
+    <!-- Multi-LRAUV race demo -->
+    <!--world_file>multi_lrauv.sdf</world_file-->
   </plugin>
 
   
