@@ -56,7 +56,7 @@ cd $DIR
 docker build -t mbari_lrauv -f $DIR/empty_world/Dockerfile ..
 
 # Run the image
-docker  run -it \
+docker run -it \
   -e DISPLAY \
   -e QT_X11_NO_MITSHM=1 \
   -e XAUTHORITY=$XAUTH \

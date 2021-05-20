@@ -4,7 +4,7 @@ This repository contains packages for simulating the MBARI Tethys.
 
 ## Instructions to build
 
-Make sure you have [ignition-dome](https://ignitionrobotics.org/docs/dome) and
+Make sure you have [ignition-fortress](https://ignitionrobotics.org/docs/fortress) and
 [colcon](https://colcon.readthedocs.io/en/released/). 
 
 Clone this repository then run
@@ -21,9 +21,14 @@ source the colcon workspace and run:
 ign launch lrauv_world.ign
 ```
 
-To run the integration world for testing communication with the LRAUV code base:
+Send test commands to move some joints:
 ```
-ign gazebo -v 4 -r tethys_comm.sdf
+./build/lrauv_ignition_plugins/TestController
+```
+
+Keyboard teleop:
+```
+./build/lrauv_ignition_plugins/TeleopController
 ```
 
 ## Using docker
@@ -34,6 +39,13 @@ a recent version of [docker](https://docs.docker.com/) and
 installed. Next to get started simply run the following command.
 ```
 docker/build_and_run_docker.sh
+```
+
+To join in a separate terminal, remember to source Ignition and the workspace:
+```
+docker/join.sh mbari_lrauv
+. /home/ign_ws/install/setup.bash
+. /home/colcon_ws/install/setup.bash
 ```
 
 ## To test integration with MBARI LRAUV code base
@@ -51,8 +63,9 @@ This needs to be done for each terminal.
 
 Launch the Ignition simulation:
 ```
-ign launch lrauv_world.ign --verbose 4
+ign launch lrauv_world.ign
 ```
+For verbose debug output, add `--verbose 4`.
 
 Launch the MBARI command prompt:
 ```
@@ -65,7 +78,9 @@ At the LRAUV command prompt:
 >configset micromodem.loadatstartup 0 bool persist
 >restart app
 ```
-This will pause for a bit, you might not be able to type right away.
+This sets the micromodem to not load at startup. `persist` means you only need
+to do this once.
+It will pause for a bit, you might not be able to type right away.
 
 Speed up 100 times for a bit to finish loading, before returning to normal
 speed.
@@ -77,6 +92,9 @@ and make the vehicle go to unexpected places
 >quick on
 >quick off
 ```
+Alternatively, if you have access to the config files, set SBIT.loadAtStartup
+to 0 bool in Config/BIT.cfg. This might already be set for you in the Docker
+image on MBARI DockerHub.
 
 Verify that it is running the default `GoToSurface` app:
 ```
