@@ -86,6 +86,8 @@ RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable
 # Build Ignition
 RUN cd ${IGN_WS} \
  && colcon build --merge-install
+ # If needed, disable tests to speed up build
+ #&& colcon build --merge-install --cmake-args -DBUILD_TESTING=OFF
 
 RUN mkdir -p /home/colcon_ws/src
 COPY . /home/colcon_ws/src
