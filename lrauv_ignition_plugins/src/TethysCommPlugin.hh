@@ -34,7 +34,6 @@ namespace tethys_comm_plugin
   class TethysCommPlugin:
     public ignition::gazebo::System,
     public ignition::gazebo::ISystemConfigure,
-    public ignition::gazebo::ISystemPreUpdate,
     public ignition::gazebo::ISystemPostUpdate
   {
     /// Constructor
@@ -49,11 +48,6 @@ namespace tethys_comm_plugin
                 const std::shared_ptr<const sdf::Element> &_sdf,
                 ignition::gazebo::EntityComponentManager &_ecm,
                 ignition::gazebo::EventManager &_eventMgr) override;
-
-    // Documentation inherited
-    public: void PreUpdate(
-                const ignition::gazebo::UpdateInfo &_info,
-                ignition::gazebo::EntityComponentManager &_ecm) override;
 
     // Documentation inherited
     public: void PostUpdate(
@@ -81,6 +75,10 @@ namespace tethys_comm_plugin
     /// Topic on which robot state will be published
     private: std::string stateTopic{"state_topic"};
 
+    /// Topic to publish to for thruster
+    private: std::string thrusterTopic
+      {"propeller_joint/cmd_pos"};
+
     /// Topic to publish to for rudder
     private: std::string rudderTopic
       {"vertical_fins_joint/0/cmd_pos"};
@@ -89,21 +87,24 @@ namespace tethys_comm_plugin
     private: std::string elevatorTopic
       {"horizontal_fins_joint/0/cmd_pos"};
 
-    /// Topic to publish to for thruster
-    private: std::string thrusterTopic
-      {"propeller_joint/cmd_pos"};
+    /// Topic to publish to for mass shifter
+    private: std::string massShifterTopic
+      {"battery_joint/0/cmd_pos"};
 
     /// Model name
     private: std::string baseLinkName{"base_link"};
 
-    /// Rudder name
-    private: std::string rudderLinkName{"vertical_fins_joint"};
-
-    /// Elevator name
-    private: std::string elevatorLinkName{"horizontal_fins_joint"};
-
-    /// Propeller name
+    /// Propeller link name
     private: std::string thrusterLinkName{"propeller"};
+
+    /// Rudder joint name
+    private: std::string rudderJointName{"vertical_fins_joint"};
+
+    /// Elevator joint name
+    private: std::string elevatorJointName{"horizontal_fins_joint"};
+
+    /// Mass shifter joint name
+    private: std::string massShifterJointName{"battery_joint"};
     
     /// TODO(mabelzhang) Remove when stable. Temporary counter for state
     ///  message sanity check
@@ -125,26 +126,32 @@ namespace tethys_comm_plugin
     /// The model in question
     private: ignition::gazebo::Entity modelLink;
 
-    /// The rudder link
-    private: ignition::gazebo::Entity rudderLink;
-
-    /// The elevator link
-    private: ignition::gazebo::Entity elevatorLink;
-
     /// The thruster link
     private: ignition::gazebo::Entity thrusterLink;   
     
+    /// The rudder joint
+    private: ignition::gazebo::Entity rudderJoint;
+
+    /// The elevator joint
+    private: ignition::gazebo::Entity elevatorJoint;
+
+    /// The mass shifter joint
+    private: ignition::gazebo::Entity massShifterJoint;
+
     /// Publisher of robot state
     private: ignition::transport::Node::Publisher statePub;
 
-    /// Publisher of fin position
+    /// Publisher of thruster
+    private: ignition::transport::Node::Publisher thrusterPub;
+
+    /// Publisher of rudder position
     private: ignition::transport::Node::Publisher rudderPub;
 
     /// Publisher of elevator position
     private: ignition::transport::Node::Publisher elevatorPub;
-    
-    /// Publisher of thruster
-    private: ignition::transport::Node::Publisher thrusterPub;
+
+    /// Publisher of mass shifter position
+    private: ignition::transport::Node::Publisher massShifterPub;
   };
 }
 

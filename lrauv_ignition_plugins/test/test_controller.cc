@@ -13,44 +13,44 @@
 int main(int argc, char** argv)
 {
   ignition::transport::Node node;
-  auto commandTopic = "command_topic";
+  auto commandTopic = "/tethys/command_topic";
   auto commandPub = 
     node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(commandTopic);
   double angle = 0.17;
 
   // Wiggle rudder
-  for(int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; i++)
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     lrauv_ignition_plugins::msgs::LRAUVCommand rudderMsg;
     angle *= -1;
     rudderMsg.set_rudderangleaction_(angle);
     commandPub.Publish(rudderMsg);
-    std::cout << "moving rudder to " <<angle <<"\n";
+    std::cout << "moving rudder to " << angle << "\n";
   }
 
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   lrauv_ignition_plugins::msgs::LRAUVCommand rudderStopMsg;
   rudderStopMsg.set_rudderangleaction_(0);
   commandPub.Publish(rudderStopMsg);
-  std::cout << "moving rudder to " <<angle <<"\n";
+  std::cout << "moving rudder to " << angle << "\n";
 
   // Wiggle elevator
-  for(int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; i++)
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     lrauv_ignition_plugins::msgs::LRAUVCommand elevatorMsg;
     angle *= -1;
     elevatorMsg.set_elevatorangleaction_(angle);
     commandPub.Publish(elevatorMsg);
-    std::cout << "moving elevator to " <<angle <<"\n";
+    std::cout << "moving elevator to " << angle << "\n";
   }
-  
+
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   lrauv_ignition_plugins::msgs::LRAUVCommand elevatorStopMsg;
   elevatorStopMsg.set_elevatorangleaction_(0);
   commandPub.Publish(elevatorStopMsg);
-  std::cout << "moving elevator to " <<angle <<"\n";
+  std::cout << "moving elevator to " << angle << "\n";
 
   // Charge forward
   lrauv_ignition_plugins::msgs::LRAUVCommand thrustMsg;
@@ -63,5 +63,4 @@ int main(int argc, char** argv)
   stopMsg.set_propomegaaction_(0);
   commandPub.Publish(stopMsg);
   std::cout << "stop\n";    
-
 }

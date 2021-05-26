@@ -78,7 +78,7 @@ void AddJointPosition(
   if (jointPosComp == nullptr)
   {
     _ecm.CreateComponent(
-        _entity, ignition::gazebo::components::JointPosition());
+      _entity, ignition::gazebo::components::JointPosition());
   }
 }
 
@@ -104,8 +104,6 @@ void TethysCommPlugin::Configure(
   ignition::gazebo::EntityComponentManager &_ecm,
   ignition::gazebo::EventManager &_eventMgr)
 {
-  ignmsg << "TethysCommPlugin::Configure" << std::endl;
-
   // Get namespace
   std::string ns {""};
   if (_sdf->HasElement("namespace"))
@@ -151,8 +149,18 @@ void TethysCommPlugin::Configure(
 
 void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
 {
-  this->rudderTopic = ignition::transport::TopicUtils::AsValidTopic("/model/" +
-    _ns + "/joint/" + this->rudderTopic);
+  this->thrusterTopic = ignition::transport::TopicUtils::AsValidTopic(
+    "/model/" + _ns + "/joint/" + this->thrusterTopic);
+  this->thrusterPub =
+    this->node.Advertise<ignition::msgs::Double>(this->thrusterTopic);
+  if (!this->thrusterPub)
+  {
+    ignerr << "Error advertising topic [" << this->thrusterTopic << "]"
+      << std::endl;
+  }
+
+  this->rudderTopic = ignition::transport::TopicUtils::AsValidTopic(
+    "/model/" + _ns + "/joint/" + this->rudderTopic);
   this->rudderPub =
     this->node.Advertise<ignition::msgs::Double>(this->rudderTopic);
   if (!this->rudderPub)
@@ -161,8 +169,8 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
       << std::endl;
   }
 
-  this->elevatorTopic = ignition::transport::TopicUtils::AsValidTopic("/model/" +
-    _ns + "/joint/" + this->elevatorTopic);
+  this->elevatorTopic = ignition::transport::TopicUtils::AsValidTopic(
+    "/model/" + _ns + "/joint/" + this->elevatorTopic);
   this->elevatorPub =
     this->node.Advertise<ignition::msgs::Double>(this->elevatorTopic);
   if (!this->elevatorPub)
@@ -171,13 +179,13 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
       << std::endl;
   }
 
-  this->thrusterTopic = ignition::transport::TopicUtils::AsValidTopic("/model/" +
-    _ns + "/joint/" + this->thrusterTopic);
-  this->thrusterPub =
-    this->node.Advertise<ignition::msgs::Double>(this->thrusterTopic);
-  if(!this->thrusterPub)
+  this->massShifterTopic = ignition::transport::TopicUtils::AsValidTopic(
+    "/model/" + _ns + "/joint/" + this->massShifterTopic);
+  this->massShifterPub =
+    this->node.Advertise<ignition::msgs::Double>(this->massShifterTopic);
+  if (!this->massShifterPub)
   {
-    ignerr << "Error advertising topic [" << this->thrusterTopic << "]"
+    ignerr << "Error advertising topic [" << this->massShifterTopic << "]"
       << std::endl;
   }
 }
@@ -198,27 +206,34 @@ void TethysCommPlugin::SetupEntities(
     this->thrusterLinkName = _sdf->Get<std::string>("propeller_link");
   }
 
-  if (_sdf->HasElement("rudder_link"))
+  if (_sdf->HasElement("rudder_joint"))
   {
-    this->elevatorLinkName = _sdf->Get<std::string>("rudder_link");
+    this->rudderJointName = _sdf->Get<std::string>("rudder_joint");
   }
 
-  if (_sdf->HasElement("elavator_link"))
+  if (_sdf->HasElement("elavator_joint"))
   {
-    this->thrusterLinkName = _sdf->Get<std::string>("elavator_link");
+    this->elevatorJointName = _sdf->Get<std::string>("elavator_joint");
+  }
+
+  if (_sdf->HasElement("mass_shifter_joint"))
+  {
+    this->massShifterJointName = _sdf->Get<std::string>("mass_shifter_joint");
   }
 
   auto model = ignition::gazebo::Model(_entity);
   
   this->modelLink = model.LinkByName(_ecm, this->baseLinkName);
-  this->rudderLink = model.JointByName(_ecm, this->rudderLinkName);
-  this->elevatorLink = model.JointByName(_ecm, this->elevatorLinkName);
   this->thrusterLink = model.LinkByName(_ecm, this->thrusterLinkName);
+  this->rudderJoint = model.JointByName(_ecm, this->rudderJointName);
+  this->elevatorJoint = model.JointByName(_ecm, this->elevatorJointName);
+  this->massShifterJoint = model.JointByName(_ecm, this->massShifterJointName);
 
   AddAngularVelocityComponent(this->thrusterLink, _ecm);
   AddWorldPose(this->modelLink, _ecm);
-  AddJointPosition(this->elevatorLink, _ecm);
-  AddJointPosition(this->rudderLink, _ecm);
+  AddJointPosition(this->rudderJoint, _ecm);
+  AddJointPosition(this->elevatorJoint, _ecm);
+  AddJointPosition(this->massShifterJoint, _ecm);
   AddWorldLinearVelocity(this->modelLink, _ecm);
 }
 
@@ -226,7 +241,8 @@ void TethysCommPlugin::CommandCallback(
   const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg)
 {
   // Lazy timestamp conversion just for printing
-  if (std::chrono::seconds(int(floor(_msg.time_()))) - this->prevSubPrintTime > std::chrono::milliseconds(1000))
+  //if (std::chrono::seconds(int(floor(_msg.time_()))) - this->prevSubPrintTime
+  //    > std::chrono::milliseconds(1000))
   {
     igndbg << "Received command: " << std::endl
       << "  propOmegaAction_: " << _msg.propomegaaction_() << std::endl
@@ -260,24 +276,22 @@ void TethysCommPlugin::CommandCallback(
   auto angVel = _msg.propomegaaction_();
   auto force = -0.004422 * 1000 * 0.0016 * angVel * angVel;
   if (angVel < 0)
+  {
     force *=-1;
+  }
   thrusterMsg.set_data(force);
   this->thrusterPub.Publish(thrusterMsg);
-}
 
-void TethysCommPlugin::PreUpdate(
-  const ignition::gazebo::UpdateInfo &_info,
-  ignition::gazebo::EntityComponentManager &_ecm)
-{
-  // ignmsg << "TethysCommPlugin::PreUpdate" << std::endl;
+  // Mass shifter
+  ignition::msgs::Double massShifterMsg;
+  massShifterMsg.set_data(_msg.masspositionaction_());
+  this->massShifterPub.Publish(massShifterMsg);
 }
 
 void TethysCommPlugin::PostUpdate(
   const ignition::gazebo::UpdateInfo &_info,
   const ignition::gazebo::EntityComponentManager &_ecm)
 {
-  // ignmsg << "TethysCommPlugin::PostUpdate" << std::endl;
-
   ignition::gazebo::Link baseLink(modelLink);
   auto modelPose = ignition::gazebo::worldPose(modelLink, _ecm);
 
@@ -287,8 +301,8 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.mutable_header()->mutable_stamp()->set_sec(
     std::chrono::duration_cast<std::chrono::seconds>(_info.simTime).count());
   stateMsg.mutable_header()->mutable_stamp()->set_nsec(
-    int(std::chrono::duration_cast<std::chrono::nanoseconds>(_info.simTime).count())
-    - stateMsg.header().stamp().sec() * 1000000000);
+    int(std::chrono::duration_cast<std::chrono::nanoseconds>(
+    _info.simTime).count()) - stateMsg.header().stamp().sec() * 1000000000);
 
   auto rph = modelPose.Rot().Euler();
   ignition::msgs::Set(stateMsg.mutable_rph_(), rph);
@@ -296,28 +310,41 @@ void TethysCommPlugin::PostUpdate(
   
   // Linear velocity
   auto linearVelocity =
-    _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(modelLink);
+    _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
+    modelLink);
   stateMsg.set_speed_(linearVelocity->Data().Length());
 
   // Rudder position
   auto rudderPosComp =
-    _ecm.Component<ignition::gazebo::components::JointPosition>(rudderLink);
-  if(rudderPosComp->Data().size() != 1) 
+    _ecm.Component<ignition::gazebo::components::JointPosition>(rudderJoint);
+  if (rudderPosComp->Data().size() != 1) 
   {
-    ignerr << "rudder joint has wrong size\n";
+    ignerr << "Rudder joint has wrong size\n";
     return; 
   }
   stateMsg.set_rudderangle_(rudderPosComp->Data()[0]);
 
   // Elevator position
   auto elevatorPosComp =
-    _ecm.Component<ignition::gazebo::components::JointPosition>(elevatorLink);
-  if(elevatorPosComp->Data().size() != 1) 
+    _ecm.Component<ignition::gazebo::components::JointPosition>(elevatorJoint);
+  if (elevatorPosComp->Data().size() != 1) 
   {
-    ignerr << "rudder joint has wrong size\n";
+    ignerr << "Elavator joint has wrong size\n";
     return; 
   }
   stateMsg.set_elevatorangle_(elevatorPosComp->Data()[0]);
+
+  // Mass shifter position
+  auto massShifterPosComp =
+    _ecm.Component<ignition::gazebo::components::JointPosition>(
+    massShifterJoint);
+  if (massShifterPosComp->Data().size() != 1) 
+  {
+    ignerr << "Mass shifter joint component has the wrong size ("
+      << massShifterPosComp->Data().size() << "), expected 1\n";
+    return; 
+  }
+  stateMsg.set_massposition_(massShifterPosComp->Data()[0]);
 
   // TODO(anyone)
   // Follow up https://github.com/ignitionrobotics/ign-gazebo/pull/519
@@ -335,11 +362,12 @@ void TethysCommPlugin::PostUpdate(
   {
     igndbg << "Published state to " << this->stateTopic
       << " at time: " << stateMsg.header().stamp().sec()
-      << "." << stateMsg.header().stamp().nsec() << std::endl;
-    igndbg << "\tpropOmega: " << stateMsg.propomega_() << std::endl;
-    igndbg << "\tSpeed: " << stateMsg.speed_() << std::endl;
-    igndbg << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl;
-    igndbg << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl;
+      << "." << stateMsg.header().stamp().nsec() << std::endl
+      << "\tpropOmega: " << stateMsg.propomega_() << std::endl
+      << "\tSpeed: " << stateMsg.speed_() << std::endl
+      << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl
+      << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl
+      << "\tMass shifter (m): " << stateMsg.massposition_() << std::endl;
     this->prevPubPrintTime = _info.simTime;
   }
 }
@@ -348,5 +376,4 @@ IGNITION_ADD_PLUGIN(
   tethys_comm_plugin::TethysCommPlugin,
   ignition::gazebo::System,
   tethys_comm_plugin::TethysCommPlugin::ISystemConfigure,
-  tethys_comm_plugin::TethysCommPlugin::ISystemPreUpdate,
   tethys_comm_plugin::TethysCommPlugin::ISystemPostUpdate)

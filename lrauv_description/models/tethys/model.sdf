@@ -4,14 +4,26 @@
     <!-- Body -->
     <link name="base_link">
       <inertial>
-        <mass>147.8671</mass>
+        <!--pose>0 0.0236 0 0 0 0</pose--> <!-- to offset battery CoM before getting real parameters for vehicle without battery -->
+        <!--mass>147.8671</mass-->
+        <mass>116.1364</mass> <!-- Fudged empirically with battery added --> 
+        <!-- TODO: Get inertial matrix of base link WITHOUT battery -->
         <inertia>
-          <ixx>3.000000</ixx>
+          <!--ixx>3.000000</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
           <iyy>41.980233</iyy>
           <iyz>0</iyz>
-          <izz>41.980233</izz>
+          <izz>41.980233</izz-->
+
+          <!-- Guesstimate to account for battery -->
+          <ixx>2.7673</ixx>
+          <ixy>0</ixy>
+          <ixz>0.0004</ixz>
+          <iyy>40.887233</iyy>
+          <iyz>0</iyz>
+          <izz>40.945833</izz>
+
         </inertia>
       </inertial>
 
@@ -27,6 +39,8 @@
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
+            <!-- Just for visualizing inertia in Gazebo-classic, comment out line above, uncomment next line -->
+            <!--uri>/home/master/data/ws/sim/mbari/lrauv_ws/src/lrauv/lrauv_description/models/tethys/meshes/tethys.dae</uri-->
             <submesh>
               <name>Body</name>
               <center>false</center>
@@ -34,9 +48,9 @@
           </mesh>
         </geometry>
         <material>
-          <diffuse>1.0 1.0 1.0</diffuse>
-          <specular>1.0 1.0 1.0</specular>
-          <pbr>
+          <diffuse>1.0 1.0 1.0 0.3</diffuse>
+          <specular>1.0 1.0 1.0 0.3</specular>
+          <!--pbr>
             <metal>
               <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
               <normal_map>materials/textures/Tethys_Normal.png</normal_map>
@@ -48,7 +62,7 @@
             <uri>materials/scripts/</uri>
             <uri>materials/textures/</uri>
             <name>tethys/Tethys_Diffuse</name>
-          </script>
+          </script-->
         </material>
       </visual>
     </link>
@@ -82,6 +96,8 @@
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
+            <!-- Just for visualizing inertia in Gazebo-classic, comment out line above, uncomment next line -->
+            <!--uri>/home/master/data/ws/sim/mbari/lrauv_ws/src/lrauv/lrauv_description/models/tethys/meshes/tethys.dae</uri-->
             <submesh>
               <name>Fins_Horizontal</name>
               <center>false</center>
@@ -91,7 +107,7 @@
         <material>
           <diffuse>1.0 1.0 1.0</diffuse>
           <specular>1.0 1.0 1.0</specular>
-          <pbr>
+          <!--pbr>
             <metal>
               <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
               <normal_map>materials/textures/Tethys_Normal.png</normal_map>
@@ -103,7 +119,7 @@
             <uri>materials/scripts/</uri>
             <uri>materials/textures/</uri>
             <name>tethys/Tethys_Diffuse</name>
-          </script>
+          </script-->
         </material>
       </visual>
     </link>
@@ -136,6 +152,8 @@
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
+            <!-- Just for visualizing inertia in Gazebo-classic, comment out line above, uncomment next line -->
+            <!--uri>/home/master/data/ws/sim/mbari/lrauv_ws/src/lrauv/lrauv_description/models/tethys/meshes/tethys.dae</uri-->
             <submesh>
               <name>Fins_vertical</name>
               <center>false</center>
@@ -145,7 +163,7 @@
         <material>
           <diffuse>1.0 1.0 1.0</diffuse>
           <specular>1.0 1.0 1.0</specular>
-          <pbr>
+          <!--pbr>
             <metal>
               <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
               <normal_map>materials/textures/Tethys_Normal.png</normal_map>
@@ -157,7 +175,7 @@
             <uri>materials/scripts/</uri>
             <uri>materials/textures/</uri>
             <name>tethys/Tethys_Diffuse</name>
-          </script>
+          </script-->
         </material>
       </visual>
     </link>
@@ -191,6 +209,8 @@
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
+            <!-- Just for visualizing inertia in Gazebo-classic, comment out line above, uncomment next line -->
+            <!--uri>/home/master/data/ws/sim/mbari/lrauv_ws/src/lrauv/lrauv_description/models/tethys/meshes/tethys.dae</uri-->
             <submesh>
               <name>Prop</name>
               <center>false</center>
@@ -200,7 +220,7 @@
         <material>
           <diffuse>1.0 1.0 1.0</diffuse>
           <specular>1.0 1.0 1.0</specular>
-          <pbr>
+          <!--pbr>
             <metal>
               <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
               <normal_map>materials/textures/Tethys_Normal.png</normal_map>
@@ -212,7 +232,42 @@
             <uri>materials/scripts/</uri>
             <uri>materials/textures/</uri>
             <name>tethys/Tethys_Diffuse</name>
-          </script>
+          </script-->
+        </material>
+      </visual>
+
+    </link>
+
+    <!-- Battery -->
+    <!-- No separate collision for battery, because it is inside the vehicle -->
+    <link name="battery">
+
+      <!-- TODO(mabelzhang): Ask for pose. Also on hold till mesh center adjusted to aft dome. -->
+      <pose>0 0 0 0 0 0</pose>
+      <inertial>
+        <!--pose>0 -0.0236 0 0 0 0</pose--> <!-- Non-zero y creates roll. Not fun to tune without actual base link inertia minus battery-->
+        <mass>31.7307</mass>
+        <inertia>
+          <ixx>0.2327</ixx>
+          <ixy>0</ixy>
+          <ixz>-0.0004</ixz>
+          <iyy>1.0930</iyy>
+          <iyz>0</iyz>
+          <izz>1.0344</izz>
+        </inertia>
+      </inertial>
+
+      <visual name= "visual">
+        <!--pose>0 0 0 0 0 0</pose-->
+        <geometry>
+          <box>
+            <!-- TODO(mabelzhang): Semi-guessed z. Ask for actual dimensions. -->
+            <size>0.6489446 0.24638 0.18415</size>
+          </box>
+        </geometry>
+        <material>
+          <diffuse>0.0 0.0 1.0 1.0</diffuse>
+          <specular>0.0 0.0 1.0 1.0</specular>
         </material>
       </visual>
 
@@ -260,6 +315,24 @@
           <upper>1e+12</upper>
           <effort>-1</effort>
           <velocity>-1</velocity>
+        </limit>
+      </axis>
+    </joint>
+
+    <joint name="battery_joint" type="prismatic">
+      <pose>0 0 0 0 0 0</pose>
+      <parent>base_link</parent>
+      <child>battery</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-0.03</lower>
+          <upper>0.03</upper>
+          <!-- TODO(mabelzhang) temporarily using big numbers for testing -->
+          <!--lower>-0.5</lower>
+          <upper>0.5</upper-->
+          <effort>-1</effort>
+          <velocity>0.0007</velocity>
         </limit>
       </axis>
     </joint>

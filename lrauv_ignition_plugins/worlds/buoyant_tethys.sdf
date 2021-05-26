@@ -115,7 +115,7 @@
     </model>
 
     <include>
-      <pose>0 0 1 0 0 1.57</pose>
+      <pose>0 0 1 0 0 0</pose>
       <uri>tethys</uri>
 
       <!-- Joint controllers -->
@@ -141,6 +141,13 @@
         <thrust_coefficient>0.004422</thrust_coefficient>
         <fluid_density>1000</fluid_density>
         <propeller_diameter>0.2</propeller_diameter>
+      </plugin>
+
+      <plugin
+        filename="ignition-gazebo-joint-position-controller-system"
+        name="ignition::gazebo::systems::JointPositionController">
+        <joint_name>battery_joint</joint_name>
+        <p_gain>0.01</p_gain>
       </plugin>
 
       <!-- Lift and drag -->

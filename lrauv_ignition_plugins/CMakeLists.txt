@@ -67,6 +67,16 @@ target_link_libraries(TestController
   PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
   PUBLIC lrauv_command)
 
+# Test mass shifter
+add_executable(TestMassShifter test/test_mass_shifter.cc)
+set_property(TARGET TestMassShifter PROPERTY CXX_STANDARD 17)
+target_include_directories(TestMassShifter
+  PUBLIC ${CMAKE_BINARY_DIR}/proto)
+target_link_libraries(TestMassShifter
+  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
+  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+  PUBLIC lrauv_command)
+
 #============================================================================
 # Teleop
 add_executable(KeyboardTeleop test/keyboard_teleop.cc)
