@@ -33,65 +33,66 @@
 // Fin joint limits from tethys model.sdf
 double random_angle_within_limits(double min=-0.261799, double max=0.261799)
 {
-  return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (max - min)));
+  return min + static_cast<float>(rand()) /
+    (static_cast<float>(RAND_MAX / (max - min)));
 }
 
 // Nominal speed is thruster 300 rpm = 31.4 radians
 double random_thrust_within_limits(double min=-31.4, double max=31.4)
 {
-  return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (max - min)));
+  return min + static_cast<float>(rand()) /
+    (static_cast<float>(RAND_MAX / (max - min)));
 }
 
 int main(int argc, char** argv)
 {
   // Initialize random seed
-  srand (time(NULL));
+  srand(time(NULL));
 
-  std::string ns1 = "tethys";
-  std::string ns2 = "triton";
-  std::string ns3 = "daphne";
+  std::vector<std::string> ns;
+  ns.push_back("tethys");
+  ns.push_back("triton");
+  ns.push_back("daphne");
 
   ignition::transport::Node node;
-  auto commandPub1 = 
-    node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(ns1 + "/command_topic");
-  auto commandPub2 = 
-    node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(ns2 + "/command_topic");
-  auto commandPub3 = 
-    node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(ns3 + "/command_topic");
 
-  double rudder1 = 0, rudder2 = 0, rudder3 = 0;
-  double thrust1 = 0, thrust2 = 0, thrust3 = 0;
+  std::vector<std::string> cmdTopics;
+  cmdTopics.resize(ns.size(), "");
+  std::vector<ignition::transport::Node::Publisher> cmdPubs;
+  cmdPubs.resize(ns.size());
+
+  // Set up topic names and publishers
+  for (int i = 0; i < ns.size(); i++)
+  {
+    cmdTopics[i] = ignition::transport::TopicUtils::AsValidTopic(
+      ns[i] + "/command_topic");
+    cmdPubs[i] = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(
+      cmdTopics[i]);
+  }
+
+  std::vector<double> rudderCmds;
+  rudderCmds.resize(ns.size(), 0.0);
+  std::vector<double> propellerCmds;
+  propellerCmds.resize(ns.size(), 0.0);
 
   float artificial_speedup = 1;
   
   while (true)
   {
-    rudder1 = random_angle_within_limits(-0.01, 0.01);
-    thrust1 = random_thrust_within_limits(0, 31.4 * artificial_speedup);
-    lrauv_ignition_plugins::msgs::LRAUVCommand cmd1;
-    cmd1.set_rudderangleaction_(rudder1);
-    cmd1.set_propomegaaction_(thrust1);
-    //cmd1.set_elevatorangleaction_(0);
-    std::cout << "Commanding " << ns1 << " rudder angle " << rudder1 << ", thrust " << thrust1 << std::endl;
-    commandPub1.Publish(cmd1);
- 
-    rudder2 = random_angle_within_limits(-0.01, 0.01);
-    thrust2 = random_thrust_within_limits(0, 31.4 * artificial_speedup);
-    lrauv_ignition_plugins::msgs::LRAUVCommand cmd2;
-    cmd2.set_rudderangleaction_(rudder2);
-    cmd2.set_propomegaaction_(thrust2);
-    //cmd2.set_elevatorangleaction_(0);
-    std::cout << "Commanding " << ns2 << " rudder angle " << rudder2 << ", thrust " << thrust2 << std::endl;
-    commandPub2.Publish(cmd2);
- 
-    rudder3 = random_angle_within_limits(-0.01, 0.01);
-    thrust3 = random_thrust_within_limits(0, 31.4 * artificial_speedup);
-    lrauv_ignition_plugins::msgs::LRAUVCommand cmd3;
-    cmd3.set_rudderangleaction_(rudder3);
-    cmd3.set_propomegaaction_(thrust3);
-    //cmd3.set_elevatorangleaction_(0);
-    std::cout << "Commanding " << ns3 << " rudder angle " << rudder3 << ", thrust " << thrust3 << std::endl;
-    commandPub3.Publish(cmd3);
+    for (int i = 0; i < ns.size(); i++)
+    {
+      rudderCmds[i] = random_angle_within_limits(-0.01, 0.01);
+
+      propellerCmds[i] = random_thrust_within_limits(0,
+        31.4 * artificial_speedup);
+
+      lrauv_ignition_plugins::msgs::LRAUVCommand cmdMsg;
+      cmdMsg.set_rudderangleaction_(rudderCmds[i]);
+      cmdMsg.set_propomegaaction_(propellerCmds[i]);
+      std::cout << "Commanding " << ns[i] << " rudder angle " << rudderCmds[i]
+        << ", thrust " << propellerCmds[i] << std::endl;
+      cmdPubs[i].Publish(cmdMsg);
+    }
  
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }

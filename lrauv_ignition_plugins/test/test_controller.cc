@@ -1,8 +1,8 @@
 /**
- * This is a stupidly simple test controller 
+ * This is a stupidly simple test controller
  * that wiggles the fins a bit and then commands the robot
  * to charge forward.
- */ 
+ */
 #include <chrono>
 #include <thread>
 
@@ -14,8 +14,9 @@ int main(int argc, char** argv)
 {
   ignition::transport::Node node;
   auto commandTopic = "/tethys/command_topic";
-  auto commandPub = 
+  auto commandPub =
     node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(commandTopic);
+
   double angle = 0.17;
 
   // Wiggle rudder
@@ -62,5 +63,5 @@ int main(int argc, char** argv)
   lrauv_ignition_plugins::msgs::LRAUVCommand stopMsg;
   stopMsg.set_propomegaaction_(0);
   commandPub.Publish(stopMsg);
-  std::cout << "stop\n";    
+  std::cout << "stop\n";
 }
