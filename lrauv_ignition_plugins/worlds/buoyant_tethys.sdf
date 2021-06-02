@@ -11,7 +11,8 @@
 
     <physics name="1ms" type="ode">
       <max_step_size>0.001</max_step_size>
-      <real_time_factor>1.0</real_time_factor>
+      <!-- TODO(mabelzhang) temporarily set to 0 for quicker tuning -->
+      <real_time_factor>0.0</real_time_factor>
     </physics>
     <plugin
       filename="ignition-gazebo-physics-system"
@@ -133,7 +134,11 @@
         filename="ignition-gazebo-joint-position-controller-system"
         name="ignition::gazebo::systems::JointPositionController">
         <joint_name>battery_joint</joint_name>
-        <p_gain>0.01</p_gain>
+        <p_gain>10000000</p_gain>
+        <i_gain>1000000</i_gain>
+        <d_gain>100</d_gain>
+        <cmd_max>10000000</cmd_max>
+        <cmd_min>-10000000</cmd_min>
       </plugin>
 
       <!-- Lift and drag -->

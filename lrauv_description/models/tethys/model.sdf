@@ -242,7 +242,7 @@
     <!-- No separate collision for battery, because it is inside the vehicle -->
     <link name="battery">
 
-      <!-- TODO(mabelzhang): Ask for pose. Also on hold till mesh center adjusted to aft dome. -->
+      <!-- TODO: On hold till mesh center adjusted to aft dome, then it will be 0.563, 0, 0.024. -->
       <pose>0 0 0 0 0 0</pose>
       <inertial>
         <!--pose>0 -0.0236 0 0 0 0</pose--> <!-- Non-zero y creates roll. Not fun to tune without actual base link inertia minus battery-->
@@ -326,11 +326,11 @@
       <axis>
         <xyz>1 0 0</xyz>
         <limit>
+          <!-- TODO(mabelzhang) temp: testing fixed joint without joint being optimized out, for ECM expects size 1 -->
+          <!--lower>0.0</lower>
+          <upper>0.0</upper-->
           <lower>-0.03</lower>
           <upper>0.03</upper>
-          <!-- TODO(mabelzhang) temporarily using big numbers for testing -->
-          <!--lower>-0.5</lower>
-          <upper>0.5</upper-->
           <effort>-1</effort>
           <velocity>0.0007</velocity>
         </limit>
