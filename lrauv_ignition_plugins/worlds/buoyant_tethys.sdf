@@ -91,14 +91,14 @@
       </link>
     </model> -->
 
-    <!-- Particle effect
+    <!-- Uncomment for particle effect
       Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
       to ParticleEmitter in Ignition G.
       See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
-    <include>
+    <!--include>
       <pose>-5 0 0 0 0 0</pose>
       <uri>turbidity_generator</uri>
-    </include>
+    </include-->
 
     <include>
       <pose>0 0 1 0 0 0</pose>
