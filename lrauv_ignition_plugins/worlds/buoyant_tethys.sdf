@@ -11,8 +11,7 @@
 
     <physics name="1ms" type="ode">
       <max_step_size>0.001</max_step_size>
-      <!-- TODO(mabelzhang) temporarily set to 0 for quicker tuning -->
-      <real_time_factor>0.0</real_time_factor>
+      <real_time_factor>1.0</real_time_factor>
     </physics>
     <plugin
       filename="ignition-gazebo-physics-system"
