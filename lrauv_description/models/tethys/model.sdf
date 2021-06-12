@@ -4,9 +4,10 @@
     <!-- Body -->
     <link name="base_link">
       <inertial>
-        <!--pose>0 0.0236 0 0 0 0</pose--> <!-- to offset battery CoM before getting real parameters for vehicle without battery -->
-        <!--mass>147.8671</mass-->
-        <mass>116.1364</mass> <!-- Fudged empirically with battery added --> 
+        <!-- to offset battery CoM before getting real parameters for vehicle without battery -->
+        <!--pose>0 0.0236 0 0 0 0</pose-->
+        <!-- 147.8671 subtracted by battery mass -->
+        <mass>116.1364</mass>
         <!-- TODO: Get inertial matrix of base link WITHOUT battery -->
         <inertia>
           <!--ixx>3.000000</ixx>
@@ -16,13 +17,13 @@
           <iyz>0</iyz>
           <izz>41.980233</izz-->
 
-          <!-- Guesstimate to account for battery -->
-          <ixx>2.7673</ixx>
+          <!-- Guesstimated (decreased by 1/5) to account for battery -->
+          <ixx>2.4</ixx>
           <ixy>0</ixy>
           <ixz>0.0004</ixz>
-          <iyy>40.887233</iyy>
+          <iyy>33.5841864</iyy>
           <iyz>0</iyz>
-          <izz>40.945833</izz>
+          <izz>33.5841864</izz>
 
         </inertia>
       </inertial>
@@ -39,8 +40,6 @@
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
-            <!-- Just for visualizing inertia in Gazebo-classic, comment out line above, uncomment next line -->
-            <!--uri>/home/master/data/ws/sim/mbari/lrauv_ws/src/lrauv/lrauv_description/models/tethys/meshes/tethys.dae</uri-->
             <submesh>
               <name>Body</name>
               <center>false</center>
@@ -48,9 +47,9 @@
           </mesh>
         </geometry>
         <material>
-          <diffuse>1.0 1.0 1.0 0.3</diffuse>
-          <specular>1.0 1.0 1.0 0.3</specular>
-          <!--pbr>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+          <pbr>
             <metal>
               <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
               <normal_map>materials/textures/Tethys_Normal.png</normal_map>
@@ -62,7 +61,7 @@
             <uri>materials/scripts/</uri>
             <uri>materials/textures/</uri>
             <name>tethys/Tethys_Diffuse</name>
-          </script-->
+          </script>
         </material>
       </visual>
     </link>
@@ -96,8 +95,6 @@
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
-            <!-- Just for visualizing inertia in Gazebo-classic, comment out line above, uncomment next line -->
-            <!--uri>/home/master/data/ws/sim/mbari/lrauv_ws/src/lrauv/lrauv_description/models/tethys/meshes/tethys.dae</uri-->
             <submesh>
               <name>Fins_Horizontal</name>
               <center>false</center>
@@ -107,7 +104,7 @@
         <material>
           <diffuse>1.0 1.0 1.0</diffuse>
           <specular>1.0 1.0 1.0</specular>
-          <!--pbr>
+          <pbr>
             <metal>
               <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
               <normal_map>materials/textures/Tethys_Normal.png</normal_map>
@@ -119,7 +116,7 @@
             <uri>materials/scripts/</uri>
             <uri>materials/textures/</uri>
             <name>tethys/Tethys_Diffuse</name>
-          </script-->
+          </script>
         </material>
       </visual>
     </link>
@@ -152,8 +149,6 @@
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
-            <!-- Just for visualizing inertia in Gazebo-classic, comment out line above, uncomment next line -->
-            <!--uri>/home/master/data/ws/sim/mbari/lrauv_ws/src/lrauv/lrauv_description/models/tethys/meshes/tethys.dae</uri-->
             <submesh>
               <name>Fins_vertical</name>
               <center>false</center>
@@ -163,7 +158,7 @@
         <material>
           <diffuse>1.0 1.0 1.0</diffuse>
           <specular>1.0 1.0 1.0</specular>
-          <!--pbr>
+          <pbr>
             <metal>
               <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
               <normal_map>materials/textures/Tethys_Normal.png</normal_map>
@@ -175,7 +170,7 @@
             <uri>materials/scripts/</uri>
             <uri>materials/textures/</uri>
             <name>tethys/Tethys_Diffuse</name>
-          </script-->
+          </script>
         </material>
       </visual>
     </link>
@@ -209,8 +204,6 @@
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
-            <!-- Just for visualizing inertia in Gazebo-classic, comment out line above, uncomment next line -->
-            <!--uri>/home/master/data/ws/sim/mbari/lrauv_ws/src/lrauv/lrauv_description/models/tethys/meshes/tethys.dae</uri-->
             <submesh>
               <name>Prop</name>
               <center>false</center>
@@ -220,7 +213,7 @@
         <material>
           <diffuse>1.0 1.0 1.0</diffuse>
           <specular>1.0 1.0 1.0</specular>
-          <!--pbr>
+          <pbr>
             <metal>
               <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
               <normal_map>materials/textures/Tethys_Normal.png</normal_map>
@@ -232,20 +225,22 @@
             <uri>materials/scripts/</uri>
             <uri>materials/textures/</uri>
             <name>tethys/Tethys_Diffuse</name>
-          </script-->
+          </script>
         </material>
       </visual>
 
     </link>
 
     <!-- Battery -->
-    <!-- No separate collision for battery, because it is inside the vehicle -->
+    <!-- No separate collision for battery, because it is inside the vehicle.
+         Additional collision requires buoyancy volume recalculation. -->
     <link name="battery">
 
       <!-- TODO: On hold till mesh center adjusted to aft dome, then it will be 0.563, 0, 0.024. -->
       <pose>0 0 0 0 0 0</pose>
       <inertial>
-        <!--pose>0 -0.0236 0 0 0 0</pose--> <!-- Non-zero y creates roll. Not fun to tune without actual base link inertia minus battery-->
+        <!-- Non-zero y creates roll. Not fun to tune without actual base link inertia minus battery-->
+        <!--pose>0 -0.0236 0 0 0 0</pose-->
         <mass>31.7307</mass>
         <inertia>
           <ixx>0.2327</ixx>
@@ -258,10 +253,9 @@
       </inertial>
 
       <visual name= "visual">
-        <!--pose>0 0 0 0 0 0</pose-->
         <geometry>
           <box>
-            <!-- TODO(mabelzhang): Semi-guessed z. Ask for actual dimensions. -->
+            <!-- z is guesstimated from schematics. Visual doesn't matter. -->
             <size>0.6489446 0.24638 0.18415</size>
           </box>
         </geometry>
@@ -326,9 +320,6 @@
       <axis>
         <xyz>1 0 0</xyz>
         <limit>
-          <!-- TODO(mabelzhang) temp: testing fixed joint without joint being optimized out, for ECM expects size 1 -->
-          <!--lower>0.0</lower>
-          <upper>0.0</upper-->
           <lower>-0.03</lower>
           <upper>0.03</upper>
           <effort>-1</effort>

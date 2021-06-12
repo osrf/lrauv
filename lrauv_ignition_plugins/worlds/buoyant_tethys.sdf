@@ -137,8 +137,6 @@
         <p_gain>10000000</p_gain>
         <i_gain>1000000</i_gain>
         <d_gain>100</d_gain>
-        <cmd_max>10000000</cmd_max>
-        <cmd_min>-10000000</cmd_min>
       </plugin>
 
       <!-- Lift and drag -->
