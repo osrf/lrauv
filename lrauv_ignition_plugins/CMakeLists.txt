@@ -63,13 +63,6 @@ target_link_libraries(TimeAnalysisPlugin
   PUBLIC ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
   PUBLIC ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER})
 
-add_library(BuoyancyEnginePlugin SHARED src/BuoyancyEnginePlugin.cc)
-set_property(TARGET BuoyancyEnginePlugin PROPERTY CXX_STANDARD 17)
-target_link_libraries(BuoyancyEnginePlugin
-  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-  Eigen3::Eigen)
-
 #============================================================================
 # Test controller
 add_executable(TestController test/test_controller.cc)
