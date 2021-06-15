@@ -219,6 +219,16 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
     ignerr << "Error advertising topic [" << this->dropWeightTopic << "]"
       << std::endl;
   }
+
+  this->dropWeightTopic = ignition::transport::TopicUtils::AsValidTopic("/model/" +
+    _ns + this->dropWeightTopic);
+  this->dropWeightPub =
+    this->node.Advertise<ignition::msgs::Double>(this->dropWeightTopic);
+  if(!this->dropWeightPub)
+  {
+    ignerr << "Error advertising topic [" << this->dropWeightTopic << "]"
+      << std::endl;
+  }
 }
 
 void TethysCommPlugin::SetupEntities(

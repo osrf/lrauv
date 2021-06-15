@@ -108,6 +108,10 @@ namespace tethys_comm_plugin
     private: std::string dropWeightTopic
       {"drop_weight"};
 
+    /// Topic to publish for dropweight
+    private: std::string dropWeightTopic
+      {"/drop_weight"};
+
     /// Model name
     private: std::string baseLinkName{"base_link"};
 
