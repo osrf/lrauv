@@ -221,7 +221,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   }
 
   this->dropWeightTopic = ignition::transport::TopicUtils::AsValidTopic("/model/" +
-    _ns + this->dropWeightTopic);
+    _ns + "/" + this->dropWeightTopic);
   this->dropWeightPub =
     this->node.Advertise<ignition::msgs::Double>(this->dropWeightTopic);
   if(!this->dropWeightPub)
