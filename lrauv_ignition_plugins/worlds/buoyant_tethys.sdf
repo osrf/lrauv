@@ -126,7 +126,6 @@
         <joint_name>propeller_joint</joint_name>
         <thrust_coefficient>0.004422</thrust_coefficient>
         <fluid_density>1000</fluid_density>
-        <max_inflation_rate>3</max_inflation_rate>
         <propeller_diameter>0.2</propeller_diameter>
       </plugin>
 
