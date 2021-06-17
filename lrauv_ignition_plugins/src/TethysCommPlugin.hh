@@ -59,11 +59,16 @@ namespace tethys_comm_plugin
     public: void CommandCallback(
                 const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg);
 
+    /// Callback function for buoyancy bladder state
+    /// \param[in] _msg Bladder volume
+    public: void BuoyancyStateCallback(
+                const ignition::msgs::Double &_msg);
+
     private: void SetupEntities(
-      const ignition::gazebo::Entity &_entity,
-      const std::shared_ptr<const sdf::Element> &_sdf,
-      ignition::gazebo::EntityComponentManager &_ecm,
-      ignition::gazebo::EventManager &_eventMgr);
+                const ignition::gazebo::Entity &_entity,
+                const std::shared_ptr<const sdf::Element> &_sdf,
+                ignition::gazebo::EntityComponentManager &_ecm,
+                ignition::gazebo::EventManager &_eventMgr);
 
     /// Set up control message topics
     /// \param[in] _ns Namespace to prepend to topic names
@@ -91,6 +96,18 @@ namespace tethys_comm_plugin
     private: std::string massShifterTopic
       {"battery_joint/0/cmd_pos"};
 
+    /// Topic to write buoyancy engine's set point to
+    private: std::string buoyancyEngineCmdTopic
+      {"buoyancy_engine"};
+
+    /// Topic to read buoyancy engine state from
+    private: std::string buoyancyEngineStateTopic
+      {"buoyancy_engine/current_volume"};
+
+    /// Topic to publish for dropweight
+    private: std::string dropWeightTopic
+      {"drop_weight"};
+
     /// Model name
     private: std::string baseLinkName{"base_link"};
 
@@ -109,6 +126,9 @@ namespace tethys_comm_plugin
     /// TODO(mabelzhang) Remove when stable. Temporary counter for state
     ///  message sanity check
     private: int counter = 0;
+
+    /// Buoyancy bladder size in cc
+    private: double buoyancyBladderVolume = 300;
 
     /// TODO(mabelzhang) Remove when stable. Temporary timers for state message
     /// sanity check
@@ -152,6 +172,12 @@ namespace tethys_comm_plugin
 
     /// Publisher of mass shifter position
     private: ignition::transport::Node::Publisher massShifterPub;
+
+    /// Publisher of buoyancy engine
+    private: ignition::transport::Node::Publisher buoyancyEnginePub;
+
+    /// Publisher of drop weight release
+    private: ignition::transport::Node::Publisher dropWeightPub;
   };
 }
 

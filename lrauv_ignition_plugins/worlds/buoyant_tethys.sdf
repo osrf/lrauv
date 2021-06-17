@@ -209,6 +209,26 @@
         <nR>0</nR>
       </plugin>
 
+      <plugin
+        filename="BuoyancyEnginePlugin"
+        name="tethys::BuoyancyEnginePlugin">
+        <link_name>buoyancy_engine</link_name>
+        <namespace>tethys</namespace>
+        <min_volume>30</min_volume>
+        <neutral_volume>300</neutral_volume>
+        <default_volume>300</default_volume>
+        <max_volume>990</max_volume>
+        <max_inflation_rate>3</max_inflation_rate>
+      </plugin>
+
+      <plugin
+        filename="ignition-gazebo-detachable-joint-system"
+        name="ignition::gazebo::systems::DetachableJoint">
+        <parent_link>base_link</parent_link>
+        <child_model>drop_weight</child_model>
+        <child_link>drop_weight</child_link>
+        <topic>/model/tethys/drop_weight</topic>
+      </plugin>
     </include>
 
   </world>

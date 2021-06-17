@@ -31,7 +31,7 @@
       <collision name="main_body_buoyancy">
         <geometry>
           <box>
-            <size>2 0.3 0.246445166667</size>
+            <size>2 0.3 0.245945166667</size>
           </box>
         </geometry>
       </collision>
@@ -179,7 +179,7 @@
     <link name="propeller">
       <pose>1.43162 0 0 0 0 0</pose>
       <inertial>
-        <pose>0 0 0 0 0 0</pose>
+        <pose>0 0 0 1.570796 0 0</pose>
         <mass>0.09</mass>
         <inertia>
           <ixx>0.000143971303</ixx>
@@ -228,14 +228,12 @@
           </script>
         </material>
       </visual>
-
     </link>
 
     <!-- Battery -->
     <!-- No separate collision for battery, because it is inside the vehicle.
          Additional collision requires buoyancy volume recalculation. -->
     <link name="battery">
-
       <!-- TODO: On hold till mesh center adjusted to aft dome, then it will be 0.563, 0, 0.024. -->
       <pose>0 0 0 0 0 0</pose>
       <inertial>
@@ -264,10 +262,43 @@
           <specular>0.0 0.0 1.0 1.0</specular>
         </material>
       </visual>
+    </link>
 
+    <link name="buoyancy_engine">
+      <!-- TODO: Determine location of buoyancy engine -->
+      <pose>1.2 0 0 0 0 0</pose>
+
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <!-- Ignition requires a mass assigned to the link otherwise weird
+        and wonderful segfaults may happen. So we create a neutral buoyancy link
+        and then use the plugin to emulate the weight-->
+        <mass>0.3</mass>
+        <inertia>
+          <ixx>0.000143971303</ixx>
+          <ixy>0.000000000008</ixy>
+          <ixz>-0.000000000224</ixz>
+          <iyy>0.000140915448</iyy>
+          <iyz>-0.000025236433</iyz>
+          <izz>0.000033571862</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.03 0.1 0.1</size>
+          </box>
+        </geometry>
+      </collision>
     </link>
 
     <!-- Joints -->
+    <joint name="buoyancy_engine_joint" type="fixed">
+      <pose>0 0 0 0 0 0</pose>
+      <parent>base_link</parent>
+      <child>buoyancy_engine</child>
+      <namespace>tethys</namespace>
+    </joint>
     <joint name="horizontal_fins_joint" type="revolute">
       <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
@@ -327,5 +358,25 @@
         </limit>
       </axis>
     </joint>
+
+    <!-- Drop weight -->
+    <model name="drop_weight">
+      <link name="drop_weight">
+        <pose>0 0 0 0 0 0</pose>
+        <inertial>
+          <pose>0 0 0 0 0 0</pose>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.000143971303</ixx>
+            <ixy>0.000000000008</ixy>
+            <ixz>-0.000000000224</ixz>
+            <iyy>0.000140915448</iyy>
+            <iyz>-0.000025236433</iyz>
+            <izz>0.000033571862</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+
   </model>
 </sdf>

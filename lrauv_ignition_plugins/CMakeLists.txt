@@ -26,6 +26,13 @@ find_package (Eigen3 3.3 REQUIRED)
 # Build protobuf messages
 add_subdirectory(proto)
 
+add_library(BuoyancyEnginePlugin SHARED src/BuoyancyEnginePlugin.cc)
+set_property(TARGET BuoyancyEnginePlugin PROPERTY CXX_STANDARD 17)
+target_link_libraries(BuoyancyEnginePlugin
+  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
+  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+  Eigen3::Eigen)
+
 add_library(HydrodynamicsPlugin SHARED src/HydrodynamicsPlugin.cc)
 set_property(TARGET HydrodynamicsPlugin PROPERTY CXX_STANDARD 17)
 target_link_libraries(HydrodynamicsPlugin
@@ -104,6 +111,7 @@ target_link_libraries(MultiLRAUVRace
 
 install(
   TARGETS
+    BuoyancyEnginePlugin
     HydrodynamicsPlugin
     TethysCommPlugin
     ThrusterPlugin

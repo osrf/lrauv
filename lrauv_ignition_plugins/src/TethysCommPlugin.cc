@@ -21,6 +21,7 @@
 #include <ignition/msgs/header.pb.h>
 #include <ignition/msgs/time.pb.h>
 #include <ignition/msgs/vector3d.pb.h>
+#include <ignition/msgs/empty.pb.h>
 #include <ignition/plugin/Register.hh>
 #include <ignition/transport/TopicUtils.hh>
 
@@ -188,6 +189,36 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
     ignerr << "Error advertising topic [" << this->massShifterTopic << "]"
       << std::endl;
   }
+
+  this->buoyancyEngineCmdTopic = ignition::transport::TopicUtils::AsValidTopic(
+    "/model/" + _ns + "/" + this->buoyancyEngineCmdTopic);
+  this->buoyancyEnginePub =
+    this->node.Advertise<ignition::msgs::Double>(this->buoyancyEngineCmdTopic);
+  if (!this->buoyancyEnginePub)
+  {
+    ignerr << "Error advertising topic [" << this->buoyancyEngineCmdTopic << "]"
+      << std::endl;
+  }
+
+  this->buoyancyEngineStateTopic = ignition::transport::TopicUtils::AsValidTopic(
+    "/model/" + _ns + "/" + this->buoyancyEngineStateTopic);
+  if (!this->node.Subscribe(this->buoyancyEngineStateTopic,
+      &TethysCommPlugin::BuoyancyStateCallback, this))
+  {
+    ignerr << "Error subscribing to topic " << "["
+      << this->buoyancyEngineStateTopic << "]. " << std::endl;
+    return;
+  }
+  
+  this->dropWeightTopic = ignition::transport::TopicUtils::AsValidTopic("/model/" +
+    _ns + "/" + this->dropWeightTopic);
+  this->dropWeightPub =
+    this->node.Advertise<ignition::msgs::Double>(this->dropWeightTopic);
+  if(!this->dropWeightPub)
+  {
+    ignerr << "Error advertising topic [" << this->dropWeightTopic << "]"
+      << std::endl;
+  }
 }
 
 void TethysCommPlugin::SetupEntities( 
@@ -222,7 +253,7 @@ void TethysCommPlugin::SetupEntities(
   }
 
   auto model = ignition::gazebo::Model(_entity);
-  
+
   this->modelLink = model.LinkByName(_ecm, this->baseLinkName);
   this->thrusterLink = model.LinkByName(_ecm, this->thrusterLinkName);
   this->rudderJoint = model.JointByName(_ecm, this->rudderJointName);
@@ -253,7 +284,7 @@ void TethysCommPlugin::CommandCallback(
       << "  density_: " << _msg.density_() << std::endl
       << "  dt_: " << _msg.dt_() << std::endl
       << "  time_: " << _msg.time_() << std::endl;
-  
+
     this->prevSubPrintTime = std::chrono::seconds(int(floor(_msg.time_())));
   }
 
@@ -269,7 +300,6 @@ void TethysCommPlugin::CommandCallback(
 
   // Thruster
   ignition::msgs::Double thrusterMsg;
-  
   // TODO(arjo):
   // Conversion from rpm-> force b/c thruster plugin takes force
   // Maybe we should change that?
@@ -286,6 +316,25 @@ void TethysCommPlugin::CommandCallback(
   ignition::msgs::Double massShifterMsg;
   massShifterMsg.set_data(_msg.masspositionaction_());
   this->massShifterPub.Publish(massShifterMsg);
+
+  // Buoyancy Engine
+  ignition::msgs::Double buoyancyEngineMsg;
+  buoyancyEngineMsg.set_data(this->buoyancyBladderVolume);
+  this->buoyancyEnginePub.Publish(buoyancyEngineMsg);
+
+  // Drop weight
+  auto dropweight = _msg.dropweightstate_();
+  if(dropweight != 0)
+  {
+    ignition::msgs::Empty dropWeightCmd;
+    this->dropWeightPub.Publish(dropWeightCmd);
+  }
+}
+
+void TethysCommPlugin::BuoyancyStateCallback(
+  const ignition::msgs::Double &_msg)
+{
+  this->buoyancyBladderVolume = _msg.data();
 }
 
 void TethysCommPlugin::PostUpdate(
@@ -355,7 +404,7 @@ void TethysCommPlugin::PostUpdate(
   ignition::gazebo::Link propLink(thrusterLink);
   auto propOmega = propLink.WorldAngularVelocity(_ecm)->Length();
   stateMsg.set_propomega_(propOmega);
-
+  stateMsg.set_buoyancyposition_(buoyancyBladderVolume);
   this->statePub.Publish(stateMsg);
 
   if (_info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
