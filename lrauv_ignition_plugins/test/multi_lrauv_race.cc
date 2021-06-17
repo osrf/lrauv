@@ -76,7 +76,7 @@ int main(int argc, char** argv)
   propellerCmds.resize(ns.size(), 0.0);
 
   float artificial_speedup = 1;
-  
+
   while (true)
   {
     for (int i = 0; i < ns.size(); i++)
@@ -93,7 +93,7 @@ int main(int argc, char** argv)
         << " rad, thrust " << propellerCmds[i] << " rad/s" << std::endl;
       cmdPubs[i].Publish(cmdMsg);
     }
- 
+
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
 }

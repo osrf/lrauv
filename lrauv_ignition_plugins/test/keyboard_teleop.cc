@@ -1,6 +1,6 @@
 /**
  * Keyboard teleop controller
- */ 
+ */
 #include <unistd.h>
 #include <termios.h>
 
@@ -11,7 +11,7 @@
 #include <ignition/transport.hh>
 #include "lrauv_command.pb.h"
 
-char getch() 
+char getch()
 {
   char buf = 0;
   struct termios old = {0};
@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 
   ignition::transport::Node node;
   std::string commandTopic = ns + "/command_topic";
-  auto commandPub = 
+  auto commandPub =
     node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(commandTopic);
 
   double rudder_angle = 0;
@@ -84,11 +84,11 @@ int main(int argc, char** argv)
       case 'w':
         elevator_angle += 0.01;
         break;
-        
+
       case 's':
         elevator_angle -= 0.01;
         break;
-      
+
       case 'a':
         rudder_angle -= 0.01;
         break;

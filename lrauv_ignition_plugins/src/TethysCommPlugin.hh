@@ -122,7 +122,7 @@ namespace tethys_comm_plugin
 
     /// Mass shifter joint name
     private: std::string massShifterJointName{"battery_joint"};
-    
+
     /// TODO(mabelzhang) Remove when stable. Temporary counter for state
     ///  message sanity check
     private: int counter = 0;
@@ -147,8 +147,8 @@ namespace tethys_comm_plugin
     private: ignition::gazebo::Entity modelLink;
 
     /// The thruster link
-    private: ignition::gazebo::Entity thrusterLink;   
-    
+    private: ignition::gazebo::Entity thrusterLink;
+
     /// The rudder joint
     private: ignition::gazebo::Entity rudderJoint;
 

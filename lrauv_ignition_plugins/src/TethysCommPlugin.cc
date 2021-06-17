@@ -209,7 +209,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
       << this->buoyancyEngineStateTopic << "]. " << std::endl;
     return;
   }
-  
+
   this->dropWeightTopic = ignition::transport::TopicUtils::AsValidTopic("/model/" +
     _ns + "/" + this->dropWeightTopic);
   this->dropWeightPub =
@@ -221,7 +221,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   }
 }
 
-void TethysCommPlugin::SetupEntities( 
+void TethysCommPlugin::SetupEntities(
   const ignition::gazebo::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
   ignition::gazebo::EntityComponentManager &_ecm,
@@ -356,7 +356,7 @@ void TethysCommPlugin::PostUpdate(
   auto rph = modelPose.Rot().Euler();
   ignition::msgs::Set(stateMsg.mutable_rph_(), rph);
   stateMsg.set_depth_(-modelPose.Pos().Z());
-  
+
   // Linear velocity
   auto linearVelocity =
     _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
@@ -366,20 +366,20 @@ void TethysCommPlugin::PostUpdate(
   // Rudder position
   auto rudderPosComp =
     _ecm.Component<ignition::gazebo::components::JointPosition>(rudderJoint);
-  if (rudderPosComp->Data().size() != 1) 
+  if (rudderPosComp->Data().size() != 1)
   {
     ignerr << "Rudder joint has wrong size\n";
-    return; 
+    return;
   }
   stateMsg.set_rudderangle_(rudderPosComp->Data()[0]);
 
   // Elevator position
   auto elevatorPosComp =
     _ecm.Component<ignition::gazebo::components::JointPosition>(elevatorJoint);
-  if (elevatorPosComp->Data().size() != 1) 
+  if (elevatorPosComp->Data().size() != 1)
   {
     ignerr << "Elavator joint has wrong size\n";
-    return; 
+    return;
   }
   stateMsg.set_elevatorangle_(elevatorPosComp->Data()[0]);
 
@@ -387,11 +387,11 @@ void TethysCommPlugin::PostUpdate(
   auto massShifterPosComp =
     _ecm.Component<ignition::gazebo::components::JointPosition>(
     massShifterJoint);
-  if (massShifterPosComp->Data().size() != 1) 
+  if (massShifterPosComp->Data().size() != 1)
   {
     ignerr << "Mass shifter joint component has the wrong size ("
       << massShifterPosComp->Data().size() << "), expected 1\n";
-    return; 
+    return;
   }
   stateMsg.set_massposition_(massShifterPosComp->Data()[0]);
 
