@@ -6,8 +6,8 @@
       <inertial>
         <!-- to offset battery CoM before getting real parameters for vehicle without battery -->
         <!--pose>0 0.0236 0 0 0 0</pose-->
-        <!-- 147.8671 subtracted by battery mass -->
-        <mass>116.1364</mass>
+        <!-- 146.5671 subtracted by battery mass -->
+        <mass>114.8364</mass>
         <!-- TODO: Get inertial matrix of base link WITHOUT battery -->
         <inertia>
           <!--ixx>3.000000</ixx>
@@ -254,7 +254,7 @@
         <geometry>
           <box>
             <!-- z is guesstimated from schematics. Visual doesn't matter. -->
-            <size>0.6489446 0.24638 0.18415</size>
+            <size>0.6489446 0.24638 0.17415</size>
           </box>
         </geometry>
         <material>
