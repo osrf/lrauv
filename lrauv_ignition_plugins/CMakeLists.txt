@@ -74,12 +74,13 @@ target_link_libraries(TestController
   PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
   PUBLIC lrauv_command)
 
-# Test mass shifter
-add_executable(TestMassShifter test/test_mass_shifter.cc)
-set_property(TARGET TestMassShifter PROPERTY CXX_STANDARD 17)
-target_include_directories(TestMassShifter
+#============================================================================
+# Test Buoyancy
+add_executable(TestBuoyancy test/test_buoyancy.cc)
+set_property(TARGET TestBuoyancy PROPERTY CXX_STANDARD 17)
+target_include_directories(TestBuoyancy
   PUBLIC ${CMAKE_BINARY_DIR}/proto)
-target_link_libraries(TestMassShifter
+target_link_libraries(TestBuoyancy
   PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
   PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
   PUBLIC lrauv_command)

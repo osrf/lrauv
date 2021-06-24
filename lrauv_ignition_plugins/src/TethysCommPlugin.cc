@@ -285,7 +285,7 @@ void TethysCommPlugin::CommandCallback(
   //if (std::chrono::seconds(int(floor(_msg.time_()))) - this->prevSubPrintTime
   //    > std::chrono::milliseconds(1000))
   {
-    igndbg << "Received command: " << std::endl
+    ignerr << "Received command: " << std::endl
       << "  propOmegaAction_: " << _msg.propomegaaction_() << std::endl
       << "  rudderAngleAction_: " << _msg.rudderangleaction_() << std::endl
       << "  elevatorAngleAction_: " << _msg.elevatorangleaction_() << std::endl
@@ -329,7 +329,7 @@ void TethysCommPlugin::CommandCallback(
 
   // Buoyancy Engine
   ignition::msgs::Double buoyancyEngineMsg;
-  buoyancyEngineMsg.set_data(this->buoyancyBladderVolume);
+  buoyancyEngineMsg.set_data(_msg.buoyancyaction_());
   this->buoyancyEnginePub.Publish(buoyancyEngineMsg);
 
   // Drop weight
