@@ -30,7 +30,7 @@ int main(int argc, char** argv)
     node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(commandTopic);
 
   lrauv_ignition_plugins::msgs::LRAUVCommand buoyancyMessage;
-  std::cout << "Expect to vehicle move up \n";
+  std::cout << "Expect vehicle to move up \n";
   for (int i = 0 ; i < 10; i++)
   {
     buoyancyMessage.set_buoyancyaction_(400);
