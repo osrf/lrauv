@@ -285,7 +285,7 @@ void TethysCommPlugin::CommandCallback(
   //if (std::chrono::seconds(int(floor(_msg.time_()))) - this->prevSubPrintTime
   //    > std::chrono::milliseconds(1000))
   {
-    ignerr << "Received command: " << std::endl
+    igndbg << "Received command: " << std::endl
       << "  propOmegaAction_: " << _msg.propomegaaction_() << std::endl
       << "  rudderAngleAction_: " << _msg.rudderangleaction_() << std::endl
       << "  elevatorAngleAction_: " << _msg.elevatorangleaction_() << std::endl
