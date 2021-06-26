@@ -17,6 +17,7 @@
 
 #include <chrono>
 
+#include <ignition/gazebo/World.hh>
 #include <ignition/msgs/double.pb.h>
 #include <ignition/msgs/header.pb.h>
 #include <ignition/msgs/time.pb.h>
@@ -36,9 +37,9 @@ TimeAnalysisPlugin::TimeAnalysisPlugin()
 
 void TimeAnalysisPlugin::Configure(
   const ignition::gazebo::Entity &_entity,
-  const std::shared_ptr<const sdf::Element> &_sdf,
+  const std::shared_ptr<const sdf::Element> &,
   ignition::gazebo::EntityComponentManager &_ecm,
-  ignition::gazebo::EventManager &_eventMgr)
+  ignition::gazebo::EventManager &)
 {
   ignmsg << "TimeAnalysisPlugin::Configure" << std::endl;
 
@@ -51,9 +52,18 @@ void TimeAnalysisPlugin::Configure(
     return;
   }
 
+  // Get world name
+  ignition::gazebo::World world(_entity);
+  if (!world.Valid(_ecm))
+  {
+    ignerr << "Time analysis plugin must be attached to the world."
+           << std::endl;
+    return;
+  }
+
   // Service for setting max step size and RTF dynamically
-  // TODO(anyone) Get world name from ECM instead of hard coding
-  this->physicsCmdService = "/world/buoyant_tethys/set_physics";
+  this->physicsCmdService = "/world/" + world.Name(_ecm).value() +
+      "/set_physics";
   this->physicsCmdService = ignition::transport::TopicUtils::AsValidTopic(
     this->physicsCmdService);
   if (this->physicsCmdService.empty())
@@ -74,7 +84,7 @@ void TimeAnalysisPlugin::RTFCallback(
 
 void TimeAnalysisPlugin::PostUpdate(
   const ignition::gazebo::UpdateInfo &_info,
-  const ignition::gazebo::EntityComponentManager &_ecm)
+  const ignition::gazebo::EntityComponentManager &)
 {
   // If paused or finished testing, do nothing
   // Use >, not >=, because if nextStepSizeIdx == array size, still need to run
