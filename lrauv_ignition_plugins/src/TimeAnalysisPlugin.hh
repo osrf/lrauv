@@ -34,12 +34,6 @@ namespace time_analysis_plugin
     public ignition::gazebo::ISystemConfigure,
     public ignition::gazebo::ISystemPostUpdate
   {
-    /// Constructor
-    public: TimeAnalysisPlugin();
-
-    /// Destructor
-    public: ~TimeAnalysisPlugin() override = default;
-
     // Documentation inherited
     public: void Configure(
                 const ignition::gazebo::Entity &_entity,

@@ -37,8 +37,6 @@ namespace tethys_thrusters
   {
     public: ThrusterPlugin();
 
-    public: ~ThrusterPlugin() override;
-
     public: void Configure(
         const ignition::gazebo::Entity &_entity,
         const std::shared_ptr<const sdf::Element> &_sdf,

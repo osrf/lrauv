@@ -36,12 +36,6 @@ namespace tethys_comm_plugin
     public ignition::gazebo::ISystemConfigure,
     public ignition::gazebo::ISystemPostUpdate
   {
-    /// Constructor
-    public: TethysCommPlugin();
-
-    /// Destructor
-    public: ~TethysCommPlugin() override = default;
-
     // Documentation inherited
     public: void Configure(
                 const ignition::gazebo::Entity &_entity,

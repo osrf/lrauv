@@ -31,10 +31,6 @@
 
 using namespace time_analysis_plugin;
 
-TimeAnalysisPlugin::TimeAnalysisPlugin()
-{
-}
-
 void TimeAnalysisPlugin::Configure(
   const ignition::gazebo::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &,

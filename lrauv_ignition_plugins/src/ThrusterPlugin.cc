@@ -55,11 +55,6 @@ ThrusterPlugin::ThrusterPlugin()
 {
 }
 
-ThrusterPlugin::~ThrusterPlugin()
-{
-
-}
-
 void ThrusterPlugin::Configure(
   const ignition::gazebo::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
@@ -176,8 +171,8 @@ double ThrusterPrivateData::ThrustToAngularVec(double thrust)
   // See Thor I Fossen's  "Guidance and Control of ocean vehicles" p. 246
   auto propAngularVelocity = sqrt(abs(
     thrust / 
-      (this->_fluid_density 
-      * this->_thrust_coefficient * pow(this->_propeller_diameter, 4))));
+      (this->fluidDensity 
+      * this->thrustCoefficient * pow(this->propellerDiameter, 4))));
   
   propAngularVelocity *= (thrust > 0) ? 1: -1;
 

@@ -81,12 +81,7 @@ void BuoyancyEnginePrivateData::OnCmdBuoyancyEngine(
 
 //////////////////////////////////////////////////
 BuoyancyEnginePlugin::BuoyancyEnginePlugin()
-{
-  this->dataPtr = std::make_unique<BuoyancyEnginePrivateData>();
-}
-
-//////////////////////////////////////////////////
-BuoyancyEnginePlugin::~BuoyancyEnginePlugin()
+  : dataPtr(std::make_unique<BuoyancyEnginePrivateData>())
 {
 }
 

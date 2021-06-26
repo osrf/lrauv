@@ -68,8 +68,6 @@ namespace tethys
   {
     public: BuoyancyEnginePlugin();
 
-    public: ~BuoyancyEnginePlugin() override;
-
     /// Inherits documentation from parent class
     public: void Configure(
         const ignition::gazebo::Entity &_entity,

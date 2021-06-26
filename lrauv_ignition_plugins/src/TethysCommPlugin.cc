@@ -95,10 +95,6 @@ void AddWorldLinearVelocity(
   }
 }
 
-TethysCommPlugin::TethysCommPlugin()
-{
-}
-
 void TethysCommPlugin::Configure(
   const ignition::gazebo::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
