@@ -21,7 +21,6 @@
 #include <ignition/msgs/double.pb.h>
 #include <ignition/msgs/header.pb.h>
 #include <ignition/msgs/time.pb.h>
-#include <ignition/msgs/vector3d.pb.h>
 #include <ignition/msgs/world_stats.pb.h>
 #include <ignition/plugin/Register.hh>
 #include <ignition/transport/Node.hh>

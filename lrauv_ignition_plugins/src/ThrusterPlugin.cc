@@ -15,7 +15,19 @@
  *
  */
 
+#include <mutex>
+
+#include <ignition/gazebo/Link.hh>
+#include <ignition/gazebo/Model.hh>
+#include <ignition/gazebo/Util.hh>
+#include <ignition/gazebo/components/AngularVelocity.hh>
+#include <ignition/gazebo/components/ChildLinkName.hh>
+#include <ignition/gazebo/components/JointAxis.hh>
 #include <ignition/math/Helpers.hh>
+#include <ignition/math/PID.hh>
+#include <ignition/math/Vector3.hh>
+#include <ignition/plugin/Register.hh>
+#include <ignition/transport/Node.hh>
 
 #include "ThrusterPlugin.hh"
 
@@ -26,11 +38,11 @@ class ThrusterPrivateData
   public: std::mutex mtx;
 
   public: double thrust = 0.0;
-  
+
   public: ignition::gazebo::Entity linkEntity;
-  
+
   public: ignition::math::Vector3d jointAxis;
-  
+
   public: ignition::transport::Node node;
 
   public: ignition::math::PID rpmController;
@@ -69,7 +81,7 @@ void ThrusterPlugin::Configure(
   }
 
   // Get joint name
-  if (!_sdf->HasElement("joint_name")) 
+  if (!_sdf->HasElement("joint_name"))
   {
     ignerr << "No joint to treat as propeller found \n";
     return;
@@ -142,15 +154,15 @@ void ThrusterPlugin::Configure(
   double cmdMin    = this->dataPtr->ThrustToAngularVec(this->dataPtr->cmdMin);
   double cmdOffset =  0;
 
-  if (_sdf->HasElement("p_gain")) 
+  if (_sdf->HasElement("p_gain"))
   {
     p = _sdf->Get<double>("p_gain");
   }
-  if (!_sdf->HasElement("i_gain")) 
+  if (!_sdf->HasElement("i_gain"))
   {
     i = _sdf->Get<double>("i_gain");
   }
-  if (!_sdf->HasElement("d_gain")) 
+  if (!_sdf->HasElement("d_gain"))
   {
     d = _sdf->Get<double>("d_gain");
   }
@@ -170,10 +182,10 @@ double ThrusterPrivateData::ThrustToAngularVec(double thrust)
   // Thrust is proprtional to the Rotation Rate squared
   // See Thor I Fossen's  "Guidance and Control of ocean vehicles" p. 246
   auto propAngularVelocity = sqrt(abs(
-    thrust / 
-      (this->fluidDensity 
+    thrust /
+      (this->fluidDensity
       * this->thrustCoefficient * pow(this->propellerDiameter, 4))));
-  
+
   propAngularVelocity *= (thrust > 0) ? 1: -1;
 
   return propAngularVelocity;

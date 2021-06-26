@@ -17,15 +17,11 @@
 #ifndef TIME_ANALYSIS_PLUGIN_H_
 #define TIME_ANALYSIS_PLUGIN_H_
 
-#include <ignition/gazebo/components.hh>
-#include <ignition/gazebo/Link.hh>
-#include <ignition/gazebo/Model.hh>
+#include <chrono>
+
 #include <ignition/gazebo/System.hh>
-#include <ignition/gazebo/Util.hh>
 #include <ignition/msgs/world_stats.pb.h>
 #include <ignition/transport/Node.hh>
-
-#include <chrono>
 
 namespace time_analysis_plugin
 {

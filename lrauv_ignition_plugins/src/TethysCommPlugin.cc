@@ -17,11 +17,16 @@
 
 #include <chrono>
 
+#include <ignition/gazebo/Util.hh>
+#include <ignition/gazebo/components/AngularVelocity.hh>
+#include <ignition/gazebo/components/JointPosition.hh>
+#include <ignition/gazebo/components/LinearVelocity.hh>
+#include <ignition/gazebo/components/Pose.hh>
 #include <ignition/msgs/double.pb.h>
+#include <ignition/msgs/empty.pb.h>
 #include <ignition/msgs/header.pb.h>
 #include <ignition/msgs/time.pb.h>
 #include <ignition/msgs/vector3d.pb.h>
-#include <ignition/msgs/empty.pb.h>
 #include <ignition/plugin/Register.hh>
 #include <ignition/transport/TopicUtils.hh>
 

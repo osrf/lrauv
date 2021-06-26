@@ -15,8 +15,15 @@
  *
  */
 
-#include "BuoyancyEnginePlugin.hh"
 #include <chrono>
+#include <mutex>
+
+#include <ignition/gazebo/Link.hh>
+#include <ignition/msgs/double.pb.h>
+#include <ignition/plugin/Register.hh>
+#include <ignition/transport/Node.hh>
+
+#include "BuoyancyEnginePlugin.hh"
 
 namespace tethys
 {
@@ -60,8 +67,6 @@ class BuoyancyEnginePrivateData
 
   /// \brief Get bladder status
   public: ignition::transport::Node::Publisher statusPub;
-
-  
 
   /// \brief mutex
   public: std::mutex mtx;
@@ -194,7 +199,7 @@ void BuoyancyEnginePlugin::PreUpdate(
     msg.set_data(this->dataPtr->bladderVolume);
     this->dataPtr->statusPub.Publish(msg);
 
-    // Simply use Archimede's principal to apply a force at the desired link
+    // Simply use Archimede's principle to apply a force at the desired link
     // position. We take off the neutral buoyancy element in order to simulate
     // the mass of the oil in the bladder.
     forceMag = this->dataPtr->gravity * this->dataPtr->fluidDensity

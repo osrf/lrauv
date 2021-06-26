@@ -17,17 +17,7 @@
 #ifndef TETHYS_BUOYANCY_ENGINE_
 #define TETHYS_BUOYANCY_ENGINE_
 
-#include <ignition/gazebo/components.hh>
-#include <ignition/gazebo/Link.hh>
-#include <ignition/gazebo/Model.hh>
 #include <ignition/gazebo/System.hh>
-#include <ignition/gazebo/Util.hh>
-#include <ignition/msgs.hh>
-#include <ignition/plugin/Register.hh>
-#include <ignition/transport/Node.hh>
-
-#include <mutex>
-#include <string>
 
 namespace tethys
 {

@@ -17,15 +17,12 @@
 #ifndef TETHYS_COMM_PLUGIN_H_
 #define TETHYS_COMM_PLUGIN_H_
 
-#include <ignition/gazebo/components.hh>
+#include <chrono>
+
 #include <ignition/gazebo/Link.hh>
-#include <ignition/gazebo/Model.hh>
 #include <ignition/gazebo/System.hh>
-#include <ignition/gazebo/Util.hh>
 #include <ignition/math/SphericalCoordinates.hh>
 #include <ignition/transport/Node.hh>
-
-#include <chrono>
 
 #include "lrauv_command.pb.h"
 
