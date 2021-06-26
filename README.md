@@ -5,7 +5,7 @@ This repository contains packages for simulating the MBARI Tethys.
 ## Instructions to build
 
 Make sure you have [ignition-fortress](https://ignitionrobotics.org/docs/fortress) and
-[colcon](https://colcon.readthedocs.io/en/released/). 
+[colcon](https://colcon.readthedocs.io/en/released/), on Ubuntu Focal or higher.
 
 Clone this repository then run
 ```
@@ -33,8 +33,8 @@ Keyboard teleop:
 
 ## Using docker
 
-You may also choose to use docker for convenience. Make sure you have 
-a recent version of [docker](https://docs.docker.com/) and 
+You may also choose to use docker for convenience. Make sure you have
+a recent version of [docker](https://docs.docker.com/) and
 [nvidia-docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
 installed. Next to get started simply run the following command.
 ```
