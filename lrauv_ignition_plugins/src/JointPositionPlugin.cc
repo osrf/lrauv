@@ -161,26 +161,28 @@ void TethysJointPlugin::PreUpdate(
   auto maxPositionChange = delta_t.count() * dataPtr->maxVelocity;
 
   double desiredVelocity = 0;
-  if(cmdPos < currentPos[dataPtr->jointIndex])
+  if (cmdPos < currentPos[dataPtr->jointIndex])
   {
-    if(currentPos[dataPtr->jointIndex] - cmdPos > maxPositionChange)
+    if (currentPos[dataPtr->jointIndex] - cmdPos > maxPositionChange)
     {
-      desiredVelocity = cmdPos - currentPos[dataPtr->jointIndex];
+      desiredVelocity = 
+        (cmdPos - currentPos[dataPtr->jointIndex])/delta_t.count();
     }
     else
     {
-      desiredVelocity = -maxPositionChange;
+      desiredVelocity = -dataPtr->maxVelocity;
     }
   }
   else if (cmdPos > currentPos[dataPtr->jointIndex])
   {
-    if(cmdPos - currentPos[dataPtr->jointIndex] > maxPositionChange)
+    if (cmdPos - currentPos[dataPtr->jointIndex] > maxPositionChange)
     {
-      desiredVelocity = cmdPos - currentPos[dataPtr->jointIndex];
+      desiredVelocity =
+        (cmdPos - currentPos[dataPtr->jointIndex])/delta_t.count();
     }
     else
     {
-      desiredVelocity = maxPositionChange;
+      desiredVelocity = dataPtr->maxVelocity;
     }
   }
 
