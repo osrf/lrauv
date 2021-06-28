@@ -40,6 +40,13 @@ target_link_libraries(HydrodynamicsPlugin
   PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
   Eigen3::Eigen)
 
+add_library(JointPositionPlugin SHARED src/JointPositionPlugin.cc)
+set_property(TARGET JointPositionPlugin PROPERTY CXX_STANDARD 17)
+target_link_libraries(JointPositionPlugin
+  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
+  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+  Eigen3::Eigen)
+
 add_library(TethysCommPlugin SHARED src/TethysCommPlugin.cc)
 set_property(TARGET TethysCommPlugin PROPERTY CXX_STANDARD 17)
 target_include_directories(TethysCommPlugin
@@ -124,6 +131,7 @@ install(
   TARGETS
     BuoyancyEnginePlugin
     HydrodynamicsPlugin
+    JointPositionPlugin
     TethysCommPlugin
     ThrusterPlugin
     TimeAnalysisPlugin

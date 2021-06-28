@@ -130,12 +130,9 @@
       </plugin>
 
       <plugin
-        filename="ignition-gazebo-joint-position-controller-system"
-        name="ignition::gazebo::systems::JointPositionController">
+        filename="JointPositionPlugin"
+        name="tethys::TethysJointPlugin">
         <joint_name>battery_joint</joint_name>
-        <p_gain>10000000</p_gain>
-        <i_gain>1000000</i_gain>
-        <d_gain>100</d_gain>
       </plugin>
 
       <!-- Lift and drag -->
