@@ -29,6 +29,7 @@
       </inertial>
 
       <collision name="main_body_buoyancy">
+        <pose>0 0 0.007 0 0 0</pose>
         <geometry>
           <box>
             <size>2 0.3 0.245945166667</size>
@@ -266,7 +267,7 @@
 
     <link name="buoyancy_engine">
       <!-- TODO: Determine location of buoyancy engine -->
-      <pose>1.2 0 0 0 0 0</pose>
+      <pose>0.4 0 0 0 0 0</pose>
 
       <inertial>
         <pose>0 0 0 0 0 0</pose>
