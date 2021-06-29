@@ -21,6 +21,8 @@ namespace tethys
 {
 class TethysJointPrivateData
 {
+  /// \brief tThe max velocity at which the joint can move.
+  /// TODO(arjo): Load this from the SDFormat joint properties.
   public: double maxVelocity{0.07};
 
   /// \brief Callback for position subscription
@@ -99,12 +101,7 @@ void TethysJointPlugin::Configure(
     ignition::transport::TopicUtils::AsValidTopic("/model/" +
     this->dataPtr->model.Name(_ecm) + "/joint/" + this->dataPtr->jointName +
     "/" + std::to_string(this->dataPtr->jointIndex) + "/cmd_pos");
-  if (topic.empty())
-  {
-    ignerr << "Failed to create topic for joint [" << this->dataPtr->jointName
-          << "]" << std::endl;
-    return;
-  }
+
   if (_sdf->HasElement("topic"))
   {
     topic = ignition::transport::TopicUtils::AsValidTopic(
@@ -153,42 +150,43 @@ void TethysJointPlugin::PreUpdate(
   // Get command position
   double cmdPos;
   {
-    std::lock_guard<std::mutex> lock(dataPtr->jointCmdMutex);
-    cmdPos = dataPtr->jointPosCmd;
+    std::lock_guard<std::mutex> lock(this->dataPtr->jointCmdMutex);
+    cmdPos = this->dataPtr->jointPosCmd;
   }
 
   std::chrono::duration<double, std::ratio<1,1>> delta_t = _info.dt;
-  auto maxPositionChange = delta_t.count() * dataPtr->maxVelocity;
+  auto maxPositionChange = delta_t.count() * this->dataPtr->maxVelocity;
 
   double desiredVelocity = 0;
-  if (cmdPos < currentPos[dataPtr->jointIndex])
+  if (cmdPos < currentPos[this->dataPtr->jointIndex])
   {
-    if (currentPos[dataPtr->jointIndex] - cmdPos > maxPositionChange)
-    {
-      desiredVelocity = 
-        (cmdPos - currentPos[dataPtr->jointIndex])/delta_t.count();
-    }
-    else
-    {
-      desiredVelocity = -dataPtr->maxVelocity;
-    }
-  }
-  else if (cmdPos > currentPos[dataPtr->jointIndex])
-  {
-    if (cmdPos - currentPos[dataPtr->jointIndex] > maxPositionChange)
+    if (currentPos[this->dataPtr->jointIndex] - cmdPos > maxPositionChange)
     {
       desiredVelocity =
-        (cmdPos - currentPos[dataPtr->jointIndex])/delta_t.count();
+        (cmdPos - currentPos[this->dataPtr->jointIndex])/delta_t.count();
     }
     else
     {
-      desiredVelocity = dataPtr->maxVelocity;
+      desiredVelocity = -this->dataPtr->maxVelocity;
+    }
+  }
+  else if (cmdPos > currentPos[this->dataPtr->jointIndex])
+  {
+    if (cmdPos - currentPos[this->dataPtr->jointIndex] > maxPositionChange)
+    {
+      desiredVelocity =
+        (cmdPos - currentPos[this->dataPtr->jointIndex])/delta_t.count();
+    }
+    else
+    {
+      desiredVelocity = this->dataPtr->maxVelocity;
     }
   }
 
   // Set Command velocity
   auto velocityComp =
-    _ecm.Component<ignition::gazebo::components::JointVelocityCmd>(this->dataPtr->jointEntity);
+    _ecm.Component<ignition::gazebo::components::JointVelocityCmd>(
+      this->dataPtr->jointEntity);
   if (velocityComp == nullptr)
   {
     _ecm.CreateComponent(this->dataPtr->jointEntity,
@@ -196,7 +194,7 @@ void TethysJointPlugin::PreUpdate(
   }
   else
   {
-    velocityComp->Data()[dataPtr->jointIndex] = desiredVelocity;
+    velocityComp->Data()[this->dataPtr->jointIndex] = desiredVelocity;
   }
 }
 }

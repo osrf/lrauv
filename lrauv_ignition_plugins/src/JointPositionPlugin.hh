@@ -30,6 +30,12 @@ namespace tethys
 {
   class TethysJointPrivateData;
 
+  /// This adds the ability to command a joint to a fix position, bypassing the
+  /// Physics engine. The required parameters are as follows:
+  /// * <joint_name> - The name of the joint being controlled [Required]
+  /// * <joint_index> - The index of the joint being controlled [Optional,
+  ///   default =0]
+  /// * <topic> - The topic on which to listen. [Optional]
   class TethysJointPlugin:
     public ignition::gazebo::System,
     public ignition::gazebo::ISystemConfigure,
