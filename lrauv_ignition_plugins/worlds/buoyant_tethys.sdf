@@ -101,7 +101,7 @@
     </include-->
 
     <include>
-      <pose>0 0 1 0 0 0</pose>
+      <pose>0 0 0 0 0 0</pose>
       <uri>tethys</uri>
 
       <!-- Joint controllers -->
