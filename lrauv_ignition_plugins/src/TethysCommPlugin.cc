@@ -364,15 +364,10 @@ void TethysCommPlugin::PostUpdate(
     int(std::chrono::duration_cast<std::chrono::nanoseconds>(
     _info.simTime).count()) - stateMsg.header().stamp().sec() * 1000000000);
 
-  auto rph = modelPose.Rot().Euler();
-  ignition::msgs::Set(stateMsg.mutable_rph_(), rph);
-  stateMsg.set_depth_(-modelPose.Pos().Z());
-
-  // Linear velocity
-  auto linearVelocity =
-    _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
-    modelLink);
-  stateMsg.set_speed_(linearVelocity->Data().Length());
+  // Propeller
+  ignition::gazebo::Link propLink(thrusterLink);
+  auto propOmega = propLink.WorldAngularVelocity(_ecm)->Length();
+  stateMsg.set_propomega_(propOmega);
 
   // Rudder position
   auto rudderPosComp =
@@ -406,16 +401,29 @@ void TethysCommPlugin::PostUpdate(
   }
   stateMsg.set_massposition_(massShifterPosComp->Data()[0]);
 
+  // Buoyancy position
+  stateMsg.set_buoyancyposition_(buoyancyBladderVolume);
+
+  // Depth
+  stateMsg.set_depth_(-modelPose.Pos().Z());
+
+  // Roll, pitch, heading
+  auto rph = modelPose.Rot().Euler();
+  ignition::msgs::Set(stateMsg.mutable_rph_(), rph);
+
+  // Speed
+  auto linearVelocity =
+    _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
+    modelLink);
+  stateMsg.set_speed_(linearVelocity->Data().Length());
+
+  // Lat long
   // TODO(anyone)
   // Follow up https://github.com/ignitionrobotics/ign-gazebo/pull/519
   auto latlon = sphericalCoords.SphericalFromLocalPosition(modelPose.Pos());
   stateMsg.set_latitudedeg_(latlon.X());
   stateMsg.set_longitudedeg_(latlon.Y());
 
-  ignition::gazebo::Link propLink(thrusterLink);
-  auto propOmega = propLink.WorldAngularVelocity(_ecm)->Length();
-  stateMsg.set_propomega_(propOmega);
-  stateMsg.set_buoyancyposition_(buoyancyBladderVolume);
   this->statePub.Publish(stateMsg);
 
   if (_info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))

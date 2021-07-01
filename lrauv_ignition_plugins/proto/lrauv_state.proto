@@ -28,6 +28,8 @@ import "ignition/msgs/header.proto";
 import "ignition/msgs/vector3d.proto";
 
 // Mirrors SimResultStruct
+// Note coordinate frame convention for all pose fields:
+//   FSK (x fore or forward, y starboard or right, z keel or down)
 message LRAUVState
 {
   /// \brief Optional header data
@@ -45,19 +47,19 @@ message LRAUVState
   float buoyancyPosition_         = 11;
   float depth_                    = 12;
 
-  ignition.msgs.Vector3d rph_     = 13;  // Corresponds to SimResultStruct roll_, pitch_, heading_
+  ignition.msgs.Vector3d rph_     = 13;  // roll_, pitch_, heading_ in SimResultStruct
 
   float speed_                    = 14;
   double latitudeDeg_             = 15;
   double longitudeDeg_            = 16;
   float netBuoy_                  = 17;
 
-  ignition.msgs.Vector3d force_   = 18;  // Corresponds to SimResultStruct forceX_, forceY_, forceZ_
-  ignition.msgs.Vector3d pos_     = 19;  // Corresponds to SimResultStruct posX_, posY_, posZ_
-  ignition.msgs.Vector3d posRPH_  = 20;  // Corresponds to SimResultStruct posRoll_, posPitch_, posHeading_
-  ignition.msgs.Vector3d posDot_  = 21;  // Corresponds to SimResultStruct posXDot_, posYDot_, posZDot_
-  ignition.msgs.Vector3d rateUVW_ = 22;  // Corresponds to SimResultStruct rateU_, rateV_, rateW_
-  ignition.msgs.Vector3d ratePQR_ = 23;  // Corresponds to SimResultStruct rateP_, rateQ_, rateR_
+  ignition.msgs.Vector3d force_   = 18;  // forceX_, forceY_, forceZ_ in SimResultStruct
+  ignition.msgs.Vector3d pos_     = 19;  // posX_, posY_, posZ_ in SimResultStruct
+  ignition.msgs.Vector3d posRPH_  = 20;  // posRoll_, posPitch_, posHeading_ in SimResultStruct
+  ignition.msgs.Vector3d posDot_  = 21;  // posXDot_, posYDot_, posZDot_ in SimResultStruct
+  ignition.msgs.Vector3d rateUVW_ = 22;  // rateU_, rateV_, rateW_ in SimResultStruct
+  ignition.msgs.Vector3d ratePQR_ = 23;  // rateP_, rateQ_, rateR_ in SimResultStruct
 
   float northCurrent_             = 24;
   float eastCurrent_              = 25;
