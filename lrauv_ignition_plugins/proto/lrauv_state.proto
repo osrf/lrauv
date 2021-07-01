@@ -58,8 +58,11 @@ message LRAUVState
   ignition.msgs.Vector3d pos_     = 19;  // posX_, posY_, posZ_ in SimResultStruct
   ignition.msgs.Vector3d posRPH_  = 20;  // posRoll_, posPitch_, posHeading_ in SimResultStruct
   ignition.msgs.Vector3d posDot_  = 21;  // posXDot_, posYDot_, posZDot_ in SimResultStruct
+                                         // Velocity wrt ground
   ignition.msgs.Vector3d rateUVW_ = 22;  // rateU_, rateV_, rateW_ in SimResultStruct
+                                         // Water velocity
   ignition.msgs.Vector3d ratePQR_ = 23;  // rateP_, rateQ_, rateR_ in SimResultStruct
+                                         // for roll, pitch, yaw rates, respectively
 
   float northCurrent_             = 24;
   float eastCurrent_              = 25;
