@@ -154,32 +154,44 @@ void TethysJointPlugin::PreUpdate(
     cmdPos = this->dataPtr->jointPosCmd;
   }
 
-  std::chrono::duration<double, std::ratio<1,1>> delta_t = _info.dt;
-  auto maxPositionChange = delta_t.count() * this->dataPtr->maxVelocity;
-
+  std::chrono::duration<double, std::ratio<1,1>> deltaT = _info.dt;
+  auto maxPositionChange = deltaT.count() * this->dataPtr->maxVelocity;
+  
   double desiredVelocity = 0;
   if (cmdPos < currentPos[this->dataPtr->jointIndex])
   {
     if (currentPos[this->dataPtr->jointIndex] - cmdPos > maxPositionChange)
     {
-      desiredVelocity =
-        (cmdPos - currentPos[this->dataPtr->jointIndex])/delta_t.count();
+      // If the gap between the current position and the command position is
+      // more than the max change in one clock cycle then we want to move the
+      // joint at the max velocity.
+      desiredVelocity = -this->dataPtr->maxVelocity;
     }
     else
     {
-      desiredVelocity = -this->dataPtr->maxVelocity;
+      // Otherwise if the joint gap is less than the max change in one clock
+      // cycle, move it to the correct position within the clock cycle to
+      // prevent overshoot.
+      desiredVelocity =
+        (cmdPos - currentPos[this->dataPtr->jointIndex])/deltaT.count();
     }
   }
   else if (cmdPos > currentPos[this->dataPtr->jointIndex])
   {
     if (cmdPos - currentPos[this->dataPtr->jointIndex] > maxPositionChange)
     {
-      desiredVelocity =
-        (cmdPos - currentPos[this->dataPtr->jointIndex])/delta_t.count();
+      // If the gap between the current position and the command position is
+      // more than the max change in one clock cycle then we want to move the
+      // joint at the max velocity.
+      desiredVelocity = this->dataPtr->maxVelocity;
     }
     else
     {
-      desiredVelocity = this->dataPtr->maxVelocity;
+      // Otherwise if the joint gap is less than the max change in one clock
+      // cycle, move it to the correct position within the clock cycle to
+      // prevent overshoot.
+      desiredVelocity =
+        (cmdPos - currentPos[this->dataPtr->jointIndex])/deltaT.count();
     }
   }
 
