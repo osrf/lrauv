@@ -146,6 +146,13 @@ void TethysJointPlugin::PreUpdate(
     return;
 
   auto currentPos = jointPosComp->Data();
+  if (currentPos.size() == 0)
+  {
+    ignerr << "Joint ["
+      << this->dataPtr->jointName
+      << "] unable to get position" <<std::endl;
+    return;
+  }
 
   // Get command position
   double cmdPos;
