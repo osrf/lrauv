@@ -120,13 +120,14 @@
       </plugin>
 
       <plugin
-        filename="ignition-gazebo-thruster-system"
-        name="ignition::gazebo::systems::Thruster">
+        filename="ThrusterPlugin"
+        name="tethys::Thruster">
         <namespace>tethys</namespace>
         <joint_name>propeller_joint</joint_name>
         <thrust_coefficient>0.004422</thrust_coefficient>
         <fluid_density>1000</fluid_density>
         <propeller_diameter>0.2</propeller_diameter>
+        <velocity_control>true</velocity_control>
       </plugin>
 
       <plugin

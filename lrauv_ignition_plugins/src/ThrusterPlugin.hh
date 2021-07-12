@@ -17,16 +17,18 @@
 
 #include <ignition/gazebo/System.hh>
 
-namespace tethys_thrusters
+namespace tethys
 {
   class ThrusterPrivateData;
 
-  class ThrusterPlugin:
+  class Thruster:
     public ignition::gazebo::System,
     public ignition::gazebo::ISystemConfigure,
     public ignition::gazebo::ISystemPreUpdate
   {
-    public: ThrusterPlugin();
+    public: Thruster();
+
+    public: ~Thruster();
 
     public: void Configure(
         const ignition::gazebo::Entity &_entity,
