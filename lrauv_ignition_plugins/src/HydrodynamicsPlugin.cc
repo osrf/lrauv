@@ -78,7 +78,11 @@ class HydrodynamicsPrivateData
   
   /// \brief Plugin Parameter: Quadratic drag in yaw.
   public: double paramNrr;
-  
+
+  /// \brief Plugin Parameter: Disable coriolis as part of equation. This is
+  /// occasionally useful for testing.
+  public: bool disableCoriolis = false;
+
   /// \brief Water density [kg/m^3].
   public: double waterDensity;
 
@@ -144,6 +148,18 @@ double SdfParamDouble(
   return _sdf->Get<double>(_field);
 }
 
+bool SdfParamBool(
+    const std::shared_ptr<const sdf::Element> &_sdf,
+    const std::string& _field,
+    bool _default = false)
+{
+  if(!_sdf->HasElement(_field))
+  {
+    return _default;
+  }
+  return _sdf->Get<bool>(_field);
+}
+
 HydrodynamicsPlugin::HydrodynamicsPlugin()
 {
   this->dataPtr = std::make_unique<HydrodynamicsPrivateData>();
@@ -151,7 +167,7 @@ HydrodynamicsPlugin::HydrodynamicsPlugin()
 
 HydrodynamicsPlugin::~HydrodynamicsPlugin()
 {
-    
+
 }
 
 void HydrodynamicsPlugin::Configure(
@@ -180,6 +196,8 @@ void HydrodynamicsPlugin::Configure(
   this->dataPtr->paramMqq         = SdfParamDouble(_sdf, "mQQ"         , 0);
   this->dataPtr->paramNr          = SdfParamDouble(_sdf, "nR"          , 20);
   this->dataPtr->paramNrr         = SdfParamDouble(_sdf, "nRR"         , 0);
+
+  this->dataPtr->disableCoriolis = SdfParamBool(_sdf, "disable_coriolis", false);
 
   // Create model object, to access convenient functions
   auto model = ignition::gazebo::Model(_entity);
@@ -218,7 +236,7 @@ void HydrodynamicsPlugin::PreUpdate(
   auto linearVelocity =
     _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(this->dataPtr->linkEntity);
   auto rotationalVelocity = baseLink.WorldAngularVelocity(_ecm);
-  
+
   if(!linearVelocity)
   {
     ignerr <<"no linear vel" <<"\n";
@@ -231,7 +249,7 @@ void HydrodynamicsPlugin::PreUpdate(
   // rotation
   auto localLinearVelocity = pose->Rot().Inverse() * linearVelocity->Data();
   auto localRotationalVelocity = pose->Rot().Inverse() * *rotationalVelocity;
-  
+
   state(0) = localLinearVelocity.X();
   state(1) = localLinearVelocity.Y();
   state(2) = localLinearVelocity.Z();
@@ -287,7 +305,10 @@ void HydrodynamicsPlugin::PreUpdate(
 
   const Eigen::VectorXd kDvec = Dmat * state;
 
-  const Eigen::VectorXd kTotalWrench = kAmassVec + kDvec /*+ kCmatVec*/;
+  Eigen::VectorXd kTotalWrench = kAmassVec + kDvec;
+
+  if (!this->dataPtr->disableCoriolis)
+    kTotalWrench += kCmatVec;
 
   ignition::math::Vector3d totalForce(-kTotalWrench(0),  -kTotalWrench(1), -kTotalWrench(2));
   ignition::math::Vector3d totalTorque(-kTotalWrench(3),  -kTotalWrench(4), -kTotalWrench(5)); 
