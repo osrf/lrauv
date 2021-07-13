@@ -37,13 +37,14 @@ message LRAUVCommand
   float elevatorAngle_         = 4;
   float massPosition_          = 5;
   float buoyancyPosition_      = 6;
-  int32 dropWeightState_       = 7;
+  bool dropWeightState_        = 7;  // Indicator "dropweight OK"
+                                     // 1 = in place, 0 = dropped
 
   float propOmegaAction_       = 8;
   float rudderAngleAction_     = 9;
   float elevatorAngleAction_   = 10;
   float massPositionAction_    = 11;
-  float buoyancyAction_        = 12;
+  float buoyancyAction_        = 12;  // Volume in cubic meters
 
   float density_               = 13;
   float dt_                    = 14;

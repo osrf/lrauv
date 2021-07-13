@@ -73,18 +73,18 @@
       </plugin>
 
       <!-- Entity tree -->
-      <plugin filename="EntityTree" name="Entity tree">
+      <!--plugin filename="EntityTree" name="Entity tree">
         <ignition-gui>
           <title>Entity tree</title>
         </ignition-gui>
-      </plugin>
+      </plugin-->
 
       <!-- Component Inspector -->
-      <plugin filename="ComponentInspector" name="Component Inspector">
+      <!--plugin filename="ComponentInspector" name="Component Inspector">
         <ignition-gui>
           <title>Component Inspector</title>
         </ignition-gui>
-      </plugin>
+      </plugin-->
 
     </plugin>
   </executable_wrapper>

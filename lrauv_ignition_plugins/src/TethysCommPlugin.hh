@@ -26,7 +26,7 @@
 
 #include "lrauv_command.pb.h"
 
-namespace tethys_comm_plugin
+namespace tethys
 {
   class TethysCommPlugin:
     public ignition::gazebo::System,
@@ -45,7 +45,7 @@ namespace tethys_comm_plugin
                 const ignition::gazebo::UpdateInfo &_info,
                 const ignition::gazebo::EntityComponentManager &_ecm) override;
 
-    /// Callback function for command
+    /// Callback function for command from LRAUV Main Vehicle Application
     /// \param[in] _msg Command message
     public: void CommandCallback(
                 const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg);
@@ -55,6 +55,7 @@ namespace tethys_comm_plugin
     public: void BuoyancyStateCallback(
                 const ignition::msgs::Double &_msg);
 
+    /// Parse SDF parameters and create components
     private: void SetupEntities(
                 const ignition::gazebo::Entity &_entity,
                 const std::shared_ptr<const sdf::Element> &_sdf,
@@ -109,6 +110,9 @@ namespace tethys_comm_plugin
     /// Propeller link name
     private: std::string thrusterLinkName{"propeller"};
 
+    /// Propeller joint name
+    private: std::string thrusterJointName{"propeller_joint"};
+
     /// Rudder joint name
     private: std::string rudderJointName{"vertical_fins_joint"};
 
@@ -144,6 +148,9 @@ namespace tethys_comm_plugin
     /// The thruster link
     private: ignition::gazebo::Entity thrusterLink;
 
+    /// The thruster joint
+    private: ignition::gazebo::Entity thrusterJoint;
+
     /// The rudder joint
     private: ignition::gazebo::Entity rudderJoint;
 
@@ -176,4 +183,4 @@ namespace tethys_comm_plugin
   };
 }
 
-#endif /*TETHYS_COMM_PLUGIN_H_*/
+#endif

@@ -20,6 +20,7 @@
 #include <ignition/gazebo/Util.hh>
 #include <ignition/gazebo/components/AngularVelocity.hh>
 #include <ignition/gazebo/components/JointPosition.hh>
+#include <ignition/gazebo/components/JointVelocity.hh>
 #include <ignition/gazebo/components/LinearVelocity.hh>
 #include <ignition/gazebo/components/Pose.hh>
 #include <ignition/msgs/double.pb.h>
@@ -35,7 +36,7 @@
 
 #include "TethysCommPlugin.hh"
 
-using namespace tethys_comm_plugin;
+using namespace tethys;
 
 void AddAngularVelocityComponent(
   const ignition::gazebo::Entity &_entity,
@@ -47,6 +48,7 @@ void AddAngularVelocityComponent(
     _ecm.CreateComponent(_entity,
       ignition::gazebo::components::AngularVelocity());
   }
+
   // Create an angular velocity component if one is not present.
   if (!_ecm.Component<ignition::gazebo::components::WorldAngularVelocity>(
       _entity))
@@ -60,13 +62,6 @@ void AddWorldPose (
   const ignition::gazebo::Entity &_entity,
   ignition::gazebo::EntityComponentManager &_ecm)
 {
-  if (!_ecm.Component<ignition::gazebo::components::WorldPose>(
-      _entity))
-  {
-    _ecm.CreateComponent(_entity,
-      ignition::gazebo::components::WorldPose());
-  }
-  // Create an angular velocity component if one is not present.
   if (!_ecm.Component<ignition::gazebo::components::WorldPose>(
       _entity))
   {
@@ -88,6 +83,19 @@ void AddJointPosition(
   }
 }
 
+void AddJointVelocity(
+  const ignition::gazebo::Entity &_entity,
+  ignition::gazebo::EntityComponentManager &_ecm)
+{
+  auto jointPosComp =
+      _ecm.Component<ignition::gazebo::components::JointVelocity>(_entity);
+  if (jointPosComp == nullptr)
+  {
+    _ecm.CreateComponent(
+      _entity, ignition::gazebo::components::JointVelocity());
+  }
+}
+
 void AddWorldLinearVelocity(
   const ignition::gazebo::Entity &_entity,
   ignition::gazebo::EntityComponentManager &_ecm)
@@ -98,6 +106,15 @@ void AddWorldLinearVelocity(
     _ecm.CreateComponent(_entity,
       ignition::gazebo::components::WorldLinearVelocity());
   }
+}
+
+// Convert ROS coordinate frame convention (x forward, y left, z up) to
+// FSK (x fore, y starboard right, z keel down). A 180 degree rotation wrt
+// x (roll axis), i.e. flip signs on y (pitch axis) and z (heading axis).
+void ROSToFSK(ignition::math::Vector3d &_vec)
+{
+  _vec.Y(-_vec.Y());
+  _vec.Z(-_vec.Z());
 }
 
 void TethysCommPlugin::Configure(
@@ -191,6 +208,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
       << std::endl;
   }
 
+  // Publisher for command to buoyancy engine plugin
   this->buoyancyEngineCmdTopic = ignition::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/" + this->buoyancyEngineCmdTopic);
   this->buoyancyEnginePub =
@@ -201,6 +219,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
       << std::endl;
   }
 
+  // Subscribe to requests for buoyancy state
   this->buoyancyEngineStateTopic = ignition::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/" + this->buoyancyEngineStateTopic);
   if (!this->node.Subscribe(this->buoyancyEngineStateTopic,
@@ -266,7 +285,10 @@ void TethysCommPlugin::SetupEntities(
   auto model = ignition::gazebo::Model(_entity);
 
   this->modelLink = model.LinkByName(_ecm, this->baseLinkName);
+
   this->thrusterLink = model.LinkByName(_ecm, this->thrusterLinkName);
+  this->thrusterJoint = model.JointByName(_ecm, thrusterJointName);
+
   this->rudderJoint = model.JointByName(_ecm, this->rudderJointName);
   this->elevatorJoint = model.JointByName(_ecm, this->elevatorJointName);
   this->massShifterJoint = model.JointByName(_ecm, this->massShifterJointName);
@@ -276,6 +298,7 @@ void TethysCommPlugin::SetupEntities(
   AddJointPosition(this->rudderJoint, _ecm);
   AddJointPosition(this->elevatorJoint, _ecm);
   AddJointPosition(this->massShifterJoint, _ecm);
+  AddJointVelocity(this->thrusterJoint, _ecm);
   AddWorldLinearVelocity(this->modelLink, _ecm);
 }
 
@@ -330,12 +353,14 @@ void TethysCommPlugin::CommandCallback(
 
   // Buoyancy Engine
   ignition::msgs::Double buoyancyEngineMsg;
-  buoyancyEngineMsg.set_data(_msg.buoyancyaction_());
+  // Convert from cubic meters to cubic centimeters
+  buoyancyEngineMsg.set_data(_msg.buoyancyaction_() * 1000000);
   this->buoyancyEnginePub.Publish(buoyancyEngineMsg);
 
   // Drop weight
   auto dropweight = _msg.dropweightstate_();
-  if(dropweight != 0)
+  // Indicator is true (1) for dropweight OK in place, false (0) for dropped
+  if (!dropweight)
   {
     ignition::msgs::Empty dropWeightCmd;
     this->dropWeightPub.Publish(dropWeightCmd);
@@ -345,6 +370,7 @@ void TethysCommPlugin::CommandCallback(
 void TethysCommPlugin::BuoyancyStateCallback(
   const ignition::msgs::Double &_msg)
 {
+  // Units: cubic centimeters
   this->buoyancyBladderVolume = _msg.data();
 }
 
@@ -364,12 +390,18 @@ void TethysCommPlugin::PostUpdate(
     int(std::chrono::duration_cast<std::chrono::nanoseconds>(
     _info.simTime).count()) - stateMsg.header().stamp().sec() * 1000000000);
 
-  // Propeller
-  ignition::gazebo::Link propLink(thrusterLink);
-  auto propOmega = propLink.WorldAngularVelocity(_ecm)->Length();
-  stateMsg.set_propomega_(propOmega);
+  // TODO(anyone) Maybe angular velocity should come from ThrusterPlugin
+  // Propeller angular velocity
+  auto propAngVelComp =
+    _ecm.Component<ignition::gazebo::components::JointVelocity>(thrusterJoint);
+  if (propAngVelComp->Data().size() != 1)
+  {
+    ignerr << "Propeller joint has wrong size\n";
+    return;
+  }
+  stateMsg.set_propomega_(propAngVelComp->Data()[0]);
 
-  // Rudder position
+  // Rudder joint position
   auto rudderPosComp =
     _ecm.Component<ignition::gazebo::components::JointPosition>(rudderJoint);
   if (rudderPosComp->Data().size() != 1)
@@ -379,7 +411,7 @@ void TethysCommPlugin::PostUpdate(
   }
   stateMsg.set_rudderangle_(rudderPosComp->Data()[0]);
 
-  // Elevator position
+  // Elevator joint position
   auto elevatorPosComp =
     _ecm.Component<ignition::gazebo::components::JointPosition>(elevatorJoint);
   if (elevatorPosComp->Data().size() != 1)
@@ -389,7 +421,7 @@ void TethysCommPlugin::PostUpdate(
   }
   stateMsg.set_elevatorangle_(elevatorPosComp->Data()[0]);
 
-  // Mass shifter position
+  // Mass shifter joint position
   auto massShifterPosComp =
     _ecm.Component<ignition::gazebo::components::JointPosition>(
     massShifterJoint);
@@ -402,13 +434,15 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.set_massposition_(massShifterPosComp->Data()[0]);
 
   // Buoyancy position
-  stateMsg.set_buoyancyposition_(buoyancyBladderVolume);
+  // Convert from cubic centimeters to cubic meters
+  stateMsg.set_buoyancyposition_(buoyancyBladderVolume / 1000000.0);
 
   // Depth
   stateMsg.set_depth_(-modelPose.Pos().Z());
 
   // Roll, pitch, heading
   auto rph = modelPose.Rot().Euler();
+  ROSToFSK(rph);
   ignition::msgs::Set(stateMsg.mutable_rph_(), rph);
 
   // Speed
@@ -423,6 +457,24 @@ void TethysCommPlugin::PostUpdate(
   auto latlon = sphericalCoords.SphericalFromLocalPosition(modelPose.Pos());
   stateMsg.set_latitudedeg_(latlon.X());
   stateMsg.set_longitudedeg_(latlon.Y());
+
+  // Robot position
+  ignition::math::Vector3d pos = modelPose.Pos();
+  ROSToFSK(pos);
+  ignition::msgs::Set(stateMsg.mutable_pos_(), pos);
+
+  // Robot linear velocity wrt ground
+  ignition::math::Vector3d veloGround = linearVelocity->Data();
+  ROSToFSK(veloGround);
+  ignition::msgs::Set(stateMsg.mutable_posdot_(), veloGround);
+
+  // Water velocity
+  // rateUVW
+  // TODO(anyone)
+
+  // Rate of robot roll, pitch, yaw
+  // ratePQR
+  // TODO(anyone)
 
   this->statePub.Publish(stateMsg);
 
@@ -441,7 +493,7 @@ void TethysCommPlugin::PostUpdate(
 }
 
 IGNITION_ADD_PLUGIN(
-  tethys_comm_plugin::TethysCommPlugin,
+  tethys::TethysCommPlugin,
   ignition::gazebo::System,
-  tethys_comm_plugin::TethysCommPlugin::ISystemConfigure,
-  tethys_comm_plugin::TethysCommPlugin::ISystemPostUpdate)
+  tethys::TethysCommPlugin::ISystemConfigure,
+  tethys::TethysCommPlugin::ISystemPostUpdate)

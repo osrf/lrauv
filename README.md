@@ -2,7 +2,7 @@
 
 This repository contains packages for simulating the MBARI Tethys.
 
-## Instructions to build
+## To build
 
 Make sure you have [ignition-fortress](https://ignitionrobotics.org/docs/fortress) and
 [colcon](https://colcon.readthedocs.io/en/released/), on Ubuntu Focal or higher.
@@ -12,7 +12,7 @@ Clone this repository then run
 colcon build
 ```
 
-## Instructions to test out
+## To test Ignition standalone (without MBARI integration)
 
 This package comes with an empty example world. To run this example world simply
 source the colcon workspace and run:
@@ -31,10 +31,10 @@ Keyboard teleop:
 ./build/lrauv_ignition_plugins/TeleopController
 ```
 
-## Using docker
+## Using Docker
 
-You may also choose to use docker for convenience. Make sure you have
-a recent version of [docker](https://docs.docker.com/) and
+You may also choose to use Docker for convenience. Make sure you have
+a recent version of [Docker](https://docs.docker.com/) and
 [nvidia-docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
 installed. Next to get started simply run the following command.
 ```
@@ -149,17 +149,28 @@ HorizontalControl-->HorizontalControl.rudderAngleAction=0.000000 rad
 SpeedControl-->SpeedControl.propOmegaAction=0.000000 rad/s
 ```
 
-### Troubleshoot
+### Run missions designed for Ignition integration tests
 
-After issuing control commands, for example, rudder and thrust, if you then
-notice that the vehicle gets some commands by itself, such as a non-zero
-elevator angle, this is because a preloaded mission is being loaded, and you
-need to wait to issue the control commands after it is done loading.
-Make sure to use
+The following missions are available. Run one at a time:
 ```
-quick on
+run RegressionTests/IgnitionTests/testDepthVBS.xml
+run RegressionTests/IgnitionTests/testPitchMass.xml
+run RegressionTests/IgnitionTests/testPitchAndDepthMassVBS.xml
+run RegressionTests/IgnitionTests/testYoYoCircle.xml
 ```
-to let the system finish loading, before issuing control commands.
+
+Some parameters can be adjusted - see the mission XML file.
+For example, to change the commanded depth in the `testDepthVBS.xml` mission:
+```
+load RegressionTests/IgnitionTests/testDepthVBS.xml
+set buoy_test_vbs.DepthCmd 20 meter
+run
+```
+
+To stop a mission, run
+```
+stop
+```
 
 ### Run the circle mission
 
@@ -270,3 +281,15 @@ To terminate:
 ```
 >quit
 ```
+
+### Troubleshoot
+
+After issuing control commands, for example, rudder and thrust, if you then
+notice that the vehicle gets some commands by itself, such as a non-zero
+elevator angle, this is because a preloaded mission is being loaded, and you
+need to wait to issue the control commands after it is done loading.
+Make sure to use
+```
+quick on
+```
+to let the system finish loading, before issuing control commands.

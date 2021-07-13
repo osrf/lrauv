@@ -44,7 +44,7 @@ message LRAUVState
   float rudderAngle_              = 8;
   float elevatorAngle_            = 9;
   float massPosition_             = 10;
-  float buoyancyPosition_         = 11;
+  float buoyancyPosition_         = 11;  // Volume in cubic meters
   float depth_                    = 12;
 
   ignition.msgs.Vector3d rph_     = 13;  // roll_, pitch_, heading_ in SimResultStruct

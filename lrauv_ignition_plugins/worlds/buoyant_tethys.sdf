@@ -174,10 +174,10 @@
         <cp>0 0 0</cp>
       </plugin>
 
-      <!-- interfacing plugin-->
+      <!-- Interface with LRAUV Main Vehicle Application -->
       <plugin
         filename="TethysCommPlugin"
-        name="tethys_comm_plugin::TethysCommPlugin">
+        name="tethys::TethysCommPlugin">
         <namespace>tethys</namespace>
         <command_topic>tethys/command_topic</command_topic>
         <state_topic>tethys/state_topic</state_topic>
@@ -213,10 +213,10 @@
         name="tethys::BuoyancyEnginePlugin">
         <link_name>buoyancy_engine</link_name>
         <namespace>tethys</namespace>
-        <min_volume>30</min_volume>
-        <neutral_volume>300</neutral_volume>
-        <default_volume>300</default_volume>
-        <max_volume>990</max_volume>
+        <min_volume>80</min_volume>
+        <neutral_volume>500</neutral_volume>
+        <default_volume>500</default_volume>
+        <max_volume>955</max_volume>
         <max_inflation_rate>3</max_inflation_rate>
       </plugin>
 
