@@ -88,6 +88,8 @@ class HydrodynamicsPrivateData
 
   public: Eigen::VectorXd prevState;
 
+  public: Eigen::VectorXd prevStateDot;
+
   /// Link entity
   public: ignition::gazebo::Entity linkEntity;
 };
@@ -204,7 +206,8 @@ void HydrodynamicsPlugin::Configure(
   auto link_name = _sdf->Get<std::string>("link_name");
   this->dataPtr->linkEntity = model.LinkByName(_ecm, link_name);
 
-  this->dataPtr->prevState = Eigen::VectorXd::Zero(6); 
+  this->dataPtr->prevState = Eigen::VectorXd::Zero(6);
+  this->dataPtr->prevStateDot = Eigen::VectorXd::Zero(6);
 
   AddWorldPose(this->dataPtr->linkEntity, _ecm);
   AddAngularVelocityComponent(this->dataPtr->linkEntity, _ecm);
@@ -248,7 +251,8 @@ void HydrodynamicsPlugin::PreUpdate(
   // Since we are transforming angular and linear velocity we only care about
   // rotation
   auto localLinearVelocity = pose->Rot().Inverse() * linearVelocity->Data();
-  auto localRotationalVelocity = pose->Rot().Inverse() * *rotationalVelocity;
+  auto localRotationalVelocity = pose->Rot().Inverse() * *rotationalVelocity /
+    (2 * IGN_PI);
 
   state(0) = localLinearVelocity.X();
   state(1) = localLinearVelocity.Y();
@@ -259,7 +263,12 @@ void HydrodynamicsPlugin::PreUpdate(
   state(5) = localRotationalVelocity.Z();
 
   auto dt = (double)_info.dt.count()/1e9;
-  stateDot = (state - this->dataPtr->prevState)/dt;
+
+  auto alpha = 0.9;
+  stateDot = alpha * (state - this->dataPtr->prevState)/dt
+    + (1-alpha) * this->dataPtr->prevStateDot;
+
+  this->dataPtr->prevStateDot = stateDot;
 
   this->dataPtr->prevState = state;
 
@@ -296,16 +305,17 @@ void HydrodynamicsPlugin::PreUpdate(
   const Eigen::VectorXd kCmatVec = - Cmat * state;
 
   // Damping forces (Fossen P. 43)
-  Dmat(1,1) = - this->dataPtr->paramYv - this->dataPtr->paramYvv * abs(state(1));
   Dmat(0,0) = - this->dataPtr->paramXu - this->dataPtr->paramXuu * abs(state(0));
+  Dmat(1,1) = - this->dataPtr->paramYv - this->dataPtr->paramYvv * abs(state(1));
   Dmat(2,2) = - this->dataPtr->paramZw - this->dataPtr->paramZww * abs(state(2));
   Dmat(3,3) = - this->dataPtr->paramKp - this->dataPtr->paramKpp * abs(state(3));
   Dmat(4,4) = - this->dataPtr->paramMq - this->dataPtr->paramMqq * abs(state(4));
   Dmat(5,5) = - this->dataPtr->paramNr - this->dataPtr->paramNrr * abs(state(5));
 
   const Eigen::VectorXd kDvec = Dmat * state;
+  
 
-  Eigen::VectorXd kTotalWrench = kAmassVec + kDvec;
+  Eigen::VectorXd kTotalWrench = -kAmassVec + kDvec;
 
   if (!this->dataPtr->disableCoriolis)
     kTotalWrench += kCmatVec;
@@ -314,6 +324,24 @@ void HydrodynamicsPlugin::PreUpdate(
   ignition::math::Vector3d totalTorque(-kTotalWrench(3),  -kTotalWrench(4), -kTotalWrench(5)); 
 
   baseLink.AddWorldWrench(_ecm, pose->Rot()*(totalForce), pose->Rot()*totalTorque);
+
+  static int count;
+  if(count % 100 == 0)
+  {
+    igndbg << 
+      this->dataPtr->paramXuu << 
+      ", " << 
+      state(0) << 
+      ", " << 
+      Dmat(0,0) << 
+      "\nDvec" << kDvec<<
+      "\nTotal force[bodyframe]" << totalForce.X()<<
+      "\nRotated force" << (pose->Rot() * (totalForce)).X() <<
+      "" << pose->Rot() <<
+      "\n";
+  }
+  count++;
+
 }
 
 };
