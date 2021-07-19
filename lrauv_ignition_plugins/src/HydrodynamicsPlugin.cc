@@ -318,26 +318,6 @@ void HydrodynamicsPlugin::PreUpdate(
   ignition::math::Vector3d totalTorque(-kTotalWrench(3),  -kTotalWrench(4), -kTotalWrench(5)); 
 
   baseLink.AddWorldWrench(_ecm, pose->Rot()*(totalForce), pose->Rot()*totalTorque);
-
-  static int count;
-  if(count % 100 == 0)
-  {
-    igndbg << 
-      this->dataPtr->paramXuu << 
-      ", " << 
-      state(0) << 
-      ", " << 
-      Dmat(0,0) << 
-      "\nDvec" << kDvec<<
-      "\nTotal force[bodyframe]" << totalForce <<
-      "\nRotated force" << (pose->Rot() * (totalForce)) <<
-      "\nRotation" << pose->Rot() <<
-      "\nLocal Velocity" << localLinearVelocity <<
-      "\nGlobal world velocity" << linearVelocity->Data() <<
-      "\n";
-  }
-  count++;
-
 }
 
 };
