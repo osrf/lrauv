@@ -28,9 +28,9 @@
 
 #include "ignition/gazebo/components/AngularVelocity.hh"
 #include "ignition/gazebo/components/ChildLinkName.hh"
-#include "ignition/gazebo/components/LinearVelocity.hh"
 #include "ignition/gazebo/components/JointAxis.hh"
 #include "ignition/gazebo/components/JointVelocityCmd.hh"
+#include "ignition/gazebo/components/LinearVelocity.hh"
 #include "ignition/gazebo/components/Pose.hh"
 #include "ignition/gazebo/components/World.hh"
 #include "ignition/gazebo/Link.hh"
@@ -94,14 +94,10 @@ class tethys::ThrusterPrivateData
 };
 
 /////////////////////////////////////////////////
-Thruster::Thruster()
+Thruster::Thruster():
+  dataPtr(std::make_unique<ThrusterPrivateData>())
 {
-  this->dataPtr = std::make_unique<ThrusterPrivateData>();
-}
-
-/////////////////////////////////////////////////
-Thruster::~Thruster()
-{
+  // do nothing
 }
 
 /////////////////////////////////////////////////

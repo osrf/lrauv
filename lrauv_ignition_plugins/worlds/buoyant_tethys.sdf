@@ -187,7 +187,7 @@
         filename="HydrodynamicsPlugin"
         name="tethys_hydro::HydrodynamicsPlugin">
         <link_name>base_link</link_name>
-        <disable_coriolis>true</disable_coriolis>
+        <enable_coriolis>false</enable_coriolis>
         <xDotU>-4.876161</xDotU>
         <yDotV>-126.324739</yDotV>
         <zDotW>-126.324739</zDotW>

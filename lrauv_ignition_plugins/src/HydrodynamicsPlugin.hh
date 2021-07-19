@@ -40,19 +40,19 @@ namespace tethys_hydro
   {
   public: HydrodynamicsPlugin();
 
-  public: ~HydrodynamicsPlugin() override;  
-  
+  public: ~HydrodynamicsPlugin() = default;
+
   public: void Configure(
       const ignition::gazebo::Entity &_entity,
       const std::shared_ptr<const sdf::Element> &_sdf,
       ignition::gazebo::EntityComponentManager &_ecm,
       ignition::gazebo::EventManager &/*_eventMgr*/
-      );  
-  
+      );
+
   public: void PreUpdate(
       const ignition::gazebo::UpdateInfo &_info,
-      ignition::gazebo::EntityComponentManager &_ecm);  
-  
+      ignition::gazebo::EntityComponentManager &_ecm);
+
   private: std::unique_ptr<HydrodynamicsPrivateData> dataPtr;
   };
 }

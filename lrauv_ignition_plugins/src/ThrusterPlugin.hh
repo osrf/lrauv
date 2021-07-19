@@ -28,7 +28,7 @@ namespace tethys
   {
     public: Thruster();
 
-    public: ~Thruster();
+    public: ~Thruster() = default;
 
     public: void Configure(
         const ignition::gazebo::Entity &_entity,

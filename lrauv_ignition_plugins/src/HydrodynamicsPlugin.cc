@@ -81,7 +81,7 @@ class HydrodynamicsPrivateData
 
   /// \brief Plugin Parameter: Disable coriolis as part of equation. This is
   /// occasionally useful for testing.
-  public: bool disableCoriolis = false;
+  public: bool enableCoriolis = true;
 
   /// \brief Water density [kg/m^3].
   public: double waterDensity;
@@ -152,7 +152,7 @@ double SdfParamDouble(
 
 bool SdfParamBool(
     const std::shared_ptr<const sdf::Element> &_sdf,
-    const std::string& _field,
+    const std::string &_field,
     bool _default = false)
 {
   if(!_sdf->HasElement(_field))
@@ -165,11 +165,6 @@ bool SdfParamBool(
 HydrodynamicsPlugin::HydrodynamicsPlugin()
 {
   this->dataPtr = std::make_unique<HydrodynamicsPrivateData>();
-}
-
-HydrodynamicsPlugin::~HydrodynamicsPlugin()
-{
-
 }
 
 void HydrodynamicsPlugin::Configure(
@@ -199,7 +194,7 @@ void HydrodynamicsPlugin::Configure(
   this->dataPtr->paramNr          = SdfParamDouble(_sdf, "nR"          , 20);
   this->dataPtr->paramNrr         = SdfParamDouble(_sdf, "nRR"         , 0);
 
-  this->dataPtr->disableCoriolis = SdfParamBool(_sdf, "disable_coriolis", false);
+  this->dataPtr->enableCoriolis = SdfParamBool(_sdf, "enable_coriolis", true);
 
   // Create model object, to access convenient functions
   auto model = ignition::gazebo::Model(_entity);
@@ -313,11 +308,10 @@ void HydrodynamicsPlugin::PreUpdate(
   Dmat(5,5) = - this->dataPtr->paramNr - this->dataPtr->paramNrr * abs(state(5));
 
   const Eigen::VectorXd kDvec = Dmat * state;
-  
 
-  Eigen::VectorXd kTotalWrench = -kAmassVec + kDvec;
+  Eigen::VectorXd kTotalWrench = kAmassVec +  kDvec;
 
-  if (!this->dataPtr->disableCoriolis)
+  if (this->dataPtr->enableCoriolis)
     kTotalWrench += kCmatVec;
 
   ignition::math::Vector3d totalForce(-kTotalWrench(0),  -kTotalWrench(1), -kTotalWrench(2));
@@ -335,9 +329,11 @@ void HydrodynamicsPlugin::PreUpdate(
       ", " << 
       Dmat(0,0) << 
       "\nDvec" << kDvec<<
-      "\nTotal force[bodyframe]" << totalForce.X()<<
-      "\nRotated force" << (pose->Rot() * (totalForce)).X() <<
-      "" << pose->Rot() <<
+      "\nTotal force[bodyframe]" << totalForce <<
+      "\nRotated force" << (pose->Rot() * (totalForce)) <<
+      "\nRotation" << pose->Rot() <<
+      "\nLocal Velocity" << localLinearVelocity <<
+      "\nGlobal world velocity" << linearVelocity->Data() <<
       "\n";
   }
   count++;
