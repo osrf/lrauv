@@ -140,7 +140,7 @@ void AddWorldLinearVelocity(
 
 double SdfParamDouble(
     const std::shared_ptr<const sdf::Element> &_sdf,
-    const std::string& _field,
+    const std::string &_field,
     double _default)
 {
   if(!_sdf->HasElement(_field))
@@ -150,17 +150,6 @@ double SdfParamDouble(
   return _sdf->Get<double>(_field);
 }
 
-bool SdfParamBool(
-    const std::shared_ptr<const sdf::Element> &_sdf,
-    const std::string &_field,
-    bool _default = false)
-{
-  if(!_sdf->HasElement(_field))
-  {
-    return _default;
-  }
-  return _sdf->Get<bool>(_field);
-}
 
 HydrodynamicsPlugin::HydrodynamicsPlugin()
 {
@@ -194,7 +183,7 @@ void HydrodynamicsPlugin::Configure(
   this->dataPtr->paramNr          = SdfParamDouble(_sdf, "nR"          , 20);
   this->dataPtr->paramNrr         = SdfParamDouble(_sdf, "nRR"         , 0);
 
-  this->dataPtr->enableCoriolis = SdfParamBool(_sdf, "enable_coriolis", true);
+  _sdf->Get<bool>("enable_coriolis", this->dataPtr->enableCoriolis, true);
 
   // Create model object, to access convenient functions
   auto model = ignition::gazebo::Model(_entity);
