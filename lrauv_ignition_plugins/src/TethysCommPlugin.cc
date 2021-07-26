@@ -399,7 +399,7 @@ void TethysCommPlugin::PostUpdate(
     ignerr << "Propeller joint has wrong size\n";
     return;
   }
-  stateMsg.set_propomega_(propAngVelComp->Data()[0]);
+  stateMsg.set_propomega_(-propAngVelComp->Data()[0]);
 
   // Rudder joint position
   auto rudderPosComp =
