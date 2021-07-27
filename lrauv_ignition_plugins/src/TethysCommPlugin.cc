@@ -442,7 +442,12 @@ void TethysCommPlugin::PostUpdate(
 
   // Roll, pitch, heading
   auto rph = modelPose.Rot().Euler();
-  //ROSToFSK(rph);
+  // The LRAUV application seems not to use standard FSK when defining rotation.
+  // In particular it uses the following convention:
+  // - pitch +Ve - up
+  // - roll +Ve - starboard
+  // - yaw +Ve - starboard // Ignition/ROS coordinates are +Ve - port
+  rph.Z(-rph.Z());
   ignition::msgs::Set(stateMsg.mutable_rph_(), rph);
 
   // Speed
