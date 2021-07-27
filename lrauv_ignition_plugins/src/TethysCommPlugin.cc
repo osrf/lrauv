@@ -442,7 +442,7 @@ void TethysCommPlugin::PostUpdate(
 
   // Roll, pitch, heading
   auto rph = modelPose.Rot().Euler();
-  ROSToFSK(rph);
+  //ROSToFSK(rph);
   ignition::msgs::Set(stateMsg.mutable_rph_(), rph);
 
   // Speed
