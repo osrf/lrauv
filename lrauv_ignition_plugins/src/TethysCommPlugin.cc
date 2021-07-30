@@ -353,8 +353,7 @@ void TethysCommPlugin::CommandCallback(
 
   // Buoyancy Engine
   ignition::msgs::Double buoyancyEngineMsg;
-  // Convert from cubic meters to cubic centimeters
-  buoyancyEngineMsg.set_data(_msg.buoyancyaction_() * 1000000);
+  buoyancyEngineMsg.set_data(_msg.buoyancyaction_());
   this->buoyancyEnginePub.Publish(buoyancyEngineMsg);
 
   // Drop weight
@@ -435,7 +434,7 @@ void TethysCommPlugin::PostUpdate(
 
   // Buoyancy position
   // Convert from cubic centimeters to cubic meters
-  stateMsg.set_buoyancyposition_(buoyancyBladderVolume / 1000000.0);
+  stateMsg.set_buoyancyposition_(buoyancyBladderVolume);
 
   // Depth
   stateMsg.set_depth_(-modelPose.Pos().Z());

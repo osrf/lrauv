@@ -35,15 +35,15 @@ namespace tethys
   ///   on `buoyancy_engine` otherwise it listens on
   ///   `/model/{namespace}/buoyancy_engine` [optional, string]
   /// <min_volume> - Minimum volume of the engine [optional, float,
-  ///   default=30cc]
+  ///   default=0.00003m^3]
   /// <neutral_volume> - At this volume the engine has neutral buoyancy. Used to
-  ///   estimate the weight of the engine [optional, float, default=300cc]
+  ///   estimate the weight of the engine [optional, float, default=300m^3]
   /// <default_volume> - The volume which the engine starts at [optional, float,
-  ///   default=300cc]
+  ///   default=0.0003m^3]
   /// <max_volume> - Maximum volume of the engine [optional, float,
-  ///   default=1000cc]
+  ///   default=0.000003m^3]
   /// <max_inflation_rate> - Maximum inflation rate for bladder [optional,
-  ///   float, default=3cc/s]
+  ///   float, default=0.0003cc/s]
   ///
   /// ## Topics
   /// * Subscribes to a ignition::msgs::Double on `buoyancy_engine` or

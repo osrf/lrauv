@@ -102,6 +102,7 @@ int main(int argc, char** argv)
     cmd.set_propomegaaction_(thrust);
     cmd.set_elevatorangleaction_(elevator_angle);
     cmd.set_rudderangleaction_(rudder_angle);
+    cmd.set_buoyancyaction_(0.0005);
     commandPub.Publish(cmd);
   }
 }

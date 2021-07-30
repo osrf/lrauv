@@ -33,7 +33,7 @@ int main(int argc, char** argv)
   std::cout << "Expect vehicle to move up \n";
   for (int i = 0 ; i < 10; i++)
   {
-    buoyancyMessage.set_buoyancyaction_(400);
+    buoyancyMessage.set_buoyancyaction_(0.0004);
     commandPub.Publish(buoyancyMessage);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }

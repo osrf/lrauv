@@ -35,20 +35,20 @@ class BuoyancyEnginePrivateData
   public: void OnCmdBuoyancyEngine(
     const ignition::msgs::Double& volumeSetPoint);
 
-  /// \brief current volume of bladder in cc
-  public: double bladderVolume = 30;
+  /// \brief current volume of bladder in m^3
+  public: double bladderVolume = 3e-5;
 
-  /// \brief Maximum inflation rate in cc*s^-1
-  public: double maxInflationRate = 3;
+  /// \brief Maximum inflation rate in m^3*s^-1
+  public: double maxInflationRate = 3e-6;
 
   /// \brief Set-point for volume
-  public: double volumeSetPoint = 30;
+  public: double volumeSetPoint = 0.000030;
 
-  /// \brief Minimum volume of bladder in cc
-  public: double minVolume = 30;
+  /// \brief Minimum volume of bladder in m^3
+  public: double minVolume = 0.000030;
 
-  /// \brief Maximum volume of bladder in cc
-  public: double maxVolume = 990;
+  /// \brief Maximum volume of bladder in m^3
+  public: double maxVolume = 0.000990;
 
   /// \brief The link which the bladder is attached to
   public: ignition::gazebo::Entity linkEntity;
@@ -59,8 +59,8 @@ class BuoyancyEnginePrivateData
   /// \brief The fluid density in kg*m^-3
   public: double fluidDensity = 1000;
 
-  /// \brief The neutral volume in cc
-  public: double neutralVolume = 300;
+  /// \brief The neutral volume in m^3
+  public: double neutralVolume = 0.0003;
 
   /// \brief Trasport node for control
   public: ignition::transport::Node node;
@@ -203,7 +203,7 @@ void BuoyancyEnginePlugin::PreUpdate(
     // position. We take off the neutral buoyancy element in order to simulate
     // the mass of the oil in the bladder.
     forceMag = this->dataPtr->gravity * this->dataPtr->fluidDensity
-      * (this->dataPtr->bladderVolume - this->dataPtr->neutralVolume) / 1e6;
+      * (this->dataPtr->bladderVolume - this->dataPtr->neutralVolume);
   }
   ignition::gazebo::Link link(this->dataPtr->linkEntity);
   link.AddWorldWrench(_ecm, {0, 0, forceMag}, {0, 0, 0});

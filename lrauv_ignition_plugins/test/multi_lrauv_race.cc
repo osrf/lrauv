@@ -89,6 +89,7 @@ int main(int argc, char** argv)
       lrauv_ignition_plugins::msgs::LRAUVCommand cmdMsg;
       cmdMsg.set_rudderangleaction_(rudderCmds[i]);
       cmdMsg.set_propomegaaction_(propellerCmds[i]);
+      cmdMsg.set_buoyancyaction_(0.0005);
       std::cout << "Commanding " << ns[i] << " rudder angle " << rudderCmds[i]
         << " rad, thrust " << propellerCmds[i] << " rad/s" << std::endl;
       cmdPubs[i].Publish(cmdMsg);

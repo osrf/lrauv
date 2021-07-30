@@ -43,12 +43,16 @@ int main(int argc, char** argv)
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   lrauv_ignition_plugins::msgs::LRAUVCommand batteryMsg;
   batteryMsg.set_masspositionaction_(dist);
+  batteryMsg.set_buoyancyaction_(0.0005);
+  batteryMsg.set_dropweightstate_(1);
   commandPub.Publish(batteryMsg);
   std::cout << "Commanding mass shifter to " << dist << std::endl;
 
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   lrauv_ignition_plugins::msgs::LRAUVCommand batteryReverseMsg;
   batteryReverseMsg.set_masspositionaction_(-dist);
+  batteryReverseMsg.set_dropweightstate_(1);
+  batteryReverseMsg.set_buoyancyaction_(0.0005);
   commandPub.Publish(batteryReverseMsg);
   std::cout << "Commanding mass shifter to " << -dist << std::endl;
 }

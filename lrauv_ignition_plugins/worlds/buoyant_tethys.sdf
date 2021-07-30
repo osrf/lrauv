@@ -278,11 +278,11 @@
         name="tethys::BuoyancyEnginePlugin">
         <link_name>buoyancy_engine</link_name>
         <namespace>tethys</namespace>
-        <min_volume>80</min_volume>
-        <neutral_volume>500</neutral_volume>
-        <default_volume>500</default_volume>
-        <max_volume>955</max_volume>
-        <max_inflation_rate>3</max_inflation_rate>
+        <min_volume>0.000080</min_volume>
+        <neutral_volume>0.0005</neutral_volume>
+        <default_volume>0.0005</default_volume>
+        <max_volume>0.000955</max_volume>
+        <max_inflation_rate>0.000003</max_inflation_rate>
       </plugin>
 
       <plugin
