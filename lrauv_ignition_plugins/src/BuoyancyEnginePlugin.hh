@@ -41,7 +41,7 @@ namespace tethys
   /// <default_volume> - The volume which the engine starts at [optional, float,
   ///   default=0.0003m^3]
   /// <max_volume> - Maximum volume of the engine [optional, float,
-  ///   default=0.000003m^3]
+  ///   default=0.00099m^3]
   /// <max_inflation_rate> - Maximum inflation rate for bladder [optional,
   ///   float, default=0.0003cc/s]
   ///
