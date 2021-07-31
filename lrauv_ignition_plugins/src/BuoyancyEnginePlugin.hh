@@ -37,7 +37,7 @@ namespace tethys
   /// <min_volume> - Minimum volume of the engine [optional, float,
   ///   default=0.00003m^3]
   /// <neutral_volume> - At this volume the engine has neutral buoyancy. Used to
-  ///   estimate the weight of the engine [optional, float, default=300m^3]
+  ///   estimate the weight of the engine [optional, float, default=0.0003m^3]
   /// <default_volume> - The volume which the engine starts at [optional, float,
   ///   default=0.0003m^3]
   /// <max_volume> - Maximum volume of the engine [optional, float,
