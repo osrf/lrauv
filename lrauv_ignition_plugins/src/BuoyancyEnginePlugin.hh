@@ -43,7 +43,7 @@ namespace tethys
   /// <max_volume> - Maximum volume of the engine [optional, float,
   ///   default=0.00099m^3]
   /// <max_inflation_rate> - Maximum inflation rate for bladder [optional,
-  ///   float, default=0.0003cc/s]
+  ///   float, default=0.000003m^3/s]
   ///
   /// ## Topics
   /// * Subscribes to a ignition::msgs::Double on `buoyancy_engine` or
