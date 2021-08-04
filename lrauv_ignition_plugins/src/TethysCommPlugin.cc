@@ -491,7 +491,9 @@ void TethysCommPlugin::PostUpdate(
       << "\tSpeed: " << stateMsg.speed_() << std::endl
       << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl
       << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl
-      << "\tMass shifter (m): " << stateMsg.massposition_() << std::endl;
+      << "\tMass shifter (m): " << stateMsg.massposition_() << std::endl
+      << "\tPitch angle (displayed in deg): "
+        << stateMsg.rph_().y() * 180 / M_PI << std::endl;
     this->prevPubPrintTime = _info.simTime;
   }
 }

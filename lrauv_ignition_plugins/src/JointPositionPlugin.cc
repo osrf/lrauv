@@ -15,6 +15,9 @@
  *
  */
 
+#include <ignition/gazebo/components/JointAxis.hh>
+#include <ignition/gazebo/components/JointVelocityCmd.hh>
+
 #include "JointPositionPlugin.hh"
 
 namespace tethys
@@ -22,8 +25,7 @@ namespace tethys
 class TethysJointPrivateData
 {
   /// \brief tThe max velocity at which the joint can move.
-  /// TODO(arjo): Load this from the SDFormat joint properties.
-  public: double maxVelocity{0.07};
+  public: double maxVelocity{0.0007};
 
   /// \brief Callback for position subscription
   /// \param[in] _msg Position message
@@ -124,10 +126,21 @@ void TethysJointPlugin::PreUpdate(
   const ignition::gazebo::UpdateInfo &_info,
   ignition::gazebo::EntityComponentManager &_ecm)
 {
+  // Access joint entity
   if (this->dataPtr->jointEntity == ignition::gazebo::kNullEntity)
   {
     this->dataPtr->jointEntity =
         this->dataPtr->model.JointByName(_ecm, this->dataPtr->jointName);
+
+    // Get joint velocity limit specified in SDF
+    auto jointAxisComp =
+      _ecm.Component<ignition::gazebo::components::JointAxis>(
+        this->dataPtr->jointEntity);
+    if (jointAxisComp != nullptr)
+    {
+      // Access max velocity in joint SDF
+      this->dataPtr->maxVelocity = jointAxisComp->Data().MaxVelocity();
+    }
   }
 
   if (_info.paused)
@@ -203,17 +216,24 @@ void TethysJointPlugin::PreUpdate(
   }
 
   // Set Command velocity
-  auto velocityComp =
+  auto velocityCmdComp =
     _ecm.Component<ignition::gazebo::components::JointVelocityCmd>(
       this->dataPtr->jointEntity);
-  if (velocityComp == nullptr)
+  if (velocityCmdComp == nullptr)
   {
     _ecm.CreateComponent(this->dataPtr->jointEntity,
       ignition::gazebo::components::JointVelocityCmd({desiredVelocity}));
   }
   else
   {
-    velocityComp->Data()[this->dataPtr->jointIndex] = desiredVelocity;
+    auto velocityCmd = velocityCmdComp->Data();
+    std::vector<double> velocityCmdNew = std::vector<double>(velocityCmd);
+    velocityCmdNew[this->dataPtr->jointIndex] = desiredVelocity;
+    velocityCmdComp->SetData(velocityCmdNew,
+      [](const std::vector<double> &v1, const std::vector<double> &v2) -> bool
+      {
+        return (v1 == v2);
+      });
   }
 }
 }
