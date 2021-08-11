@@ -20,129 +20,96 @@ set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
 
 find_package (Eigen3 3.3 REQUIRED)
 
-#============================================================================
-# Build
-
 # Build protobuf messages
 add_subdirectory(proto)
 
-add_library(BuoyancyEnginePlugin SHARED src/BuoyancyEnginePlugin.cc)
-set_property(TARGET BuoyancyEnginePlugin PROPERTY CXX_STANDARD 17)
-target_link_libraries(BuoyancyEnginePlugin
-  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-  Eigen3::Eigen)
+#============================================================================
+# Plugins
 
-add_library(HydrodynamicsPlugin SHARED src/HydrodynamicsPlugin.cc)
-set_property(TARGET HydrodynamicsPlugin PROPERTY CXX_STANDARD 17)
-target_link_libraries(HydrodynamicsPlugin
-  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-  Eigen3::Eigen)
+# add_lrauv_plugin (<plugin_name>
+#              [PROTO])
+#
+# Configure and install plugins.
+#
+# <plugin_name> Required. Name of the plugin library, which matches source file.
+#
+# [PROTO]: Optional. If included, plugin will be linked against custom protobuf messages.
+function(add_lrauv_plugin PLUGIN)
+  set(options PROTO)
+  set(oneValueArgs)
+  set(multiValueArgs)
 
-add_library(JointPositionPlugin SHARED src/JointPositionPlugin.cc)
-set_property(TARGET JointPositionPlugin PROPERTY CXX_STANDARD 17)
-target_link_libraries(JointPositionPlugin
-  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-  Eigen3::Eigen)
+  cmake_parse_arguments(add_lrauv_plugin "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-add_library(TethysCommPlugin SHARED src/TethysCommPlugin.cc)
-set_property(TARGET TethysCommPlugin PROPERTY CXX_STANDARD 17)
-target_include_directories(TethysCommPlugin
-  PUBLIC ${CMAKE_BINARY_DIR}/proto)
-target_link_libraries(TethysCommPlugin
-  PUBLIC ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-  PUBLIC ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-  # Protobuf generated libraries
-  PUBLIC lrauv_command
-  PUBLIC lrauv_state)
+  add_library(${PLUGIN} SHARED src/${PLUGIN}.cc)
+  set_property(TARGET ${PLUGIN} PROPERTY CXX_STANDARD 17)
+  target_link_libraries(${PLUGIN}
+    PUBLIC ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
+    PUBLIC ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER})
 
-add_library(ThrusterPlugin SHARED src/ThrusterPlugin.cc)
-set_property(TARGET ThrusterPlugin PROPERTY CXX_STANDARD 17)
-target_link_libraries(ThrusterPlugin
-  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER})
+  # Link against proto libraries
+  if (add_lrauv_plugin_PROTO)
 
-add_library(TimeAnalysisPlugin SHARED src/TimeAnalysisPlugin.cc)
-set_property(TARGET TimeAnalysisPlugin PROPERTY CXX_STANDARD 17)
-target_link_libraries(TimeAnalysisPlugin
-  PUBLIC ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-  PUBLIC ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER})
+    target_include_directories(${PLUGIN}
+      PUBLIC ${CMAKE_BINARY_DIR}/proto)
+    target_link_libraries(${PLUGIN}
+      PUBLIC lrauv_command
+      PUBLIC lrauv_state)
+
+  endif()
+
+  install(
+    TARGETS ${PLUGIN}
+    DESTINATION lib)
+
+endfunction()
+
+add_lrauv_plugin(BuoyancyEnginePlugin)
+add_lrauv_plugin(HydrodynamicsPlugin)
+add_lrauv_plugin(JointPositionPlugin)
+add_lrauv_plugin(TethysCommPlugin PROTO)
+add_lrauv_plugin(ThrusterPlugin)
+add_lrauv_plugin(TimeAnalysisPlugin)
 
 #============================================================================
-# Test controller
-add_executable(TestController test/test_controller.cc)
-set_property(TARGET TestController PROPERTY CXX_STANDARD 17)
-target_include_directories(TestController
-  PUBLIC ${CMAKE_BINARY_DIR}/proto)
-target_link_libraries(TestController
-  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-  PUBLIC lrauv_command)
+# Examples
+foreach(EXAMPLE
+  keyboard_teleop
+  multi_lrauv_race
+  example_controller
+  example_mass_shifter
+  example_buoyancy)
 
-# Test mass shifter
-add_executable(TestMassShifter test/test_mass_shifter.cc)
-set_property(TARGET TestMassShifter PROPERTY CXX_STANDARD 17)
-target_include_directories(TestMassShifter
-  PUBLIC ${CMAKE_BINARY_DIR}/proto)
-target_link_libraries(TestMassShifter
-  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-  PUBLIC lrauv_command)
+  set(EXAMPLE_EXEC LRAUV_${EXAMPLE})
 
-#============================================================================
-# Test Buoyancy
-add_executable(TestBuoyancy test/test_buoyancy.cc)
-set_property(TARGET TestBuoyancy PROPERTY CXX_STANDARD 17)
-target_include_directories(TestBuoyancy
-  PUBLIC ${CMAKE_BINARY_DIR}/proto)
-target_link_libraries(TestBuoyancy
-  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-  PUBLIC lrauv_command)
+  add_executable(${EXAMPLE_EXEC} example/${EXAMPLE}.cc)
+  set_property(TARGET ${EXAMPLE_EXEC} PROPERTY CXX_STANDARD 17)
+  target_include_directories(${EXAMPLE_EXEC}
+    PUBLIC ${CMAKE_BINARY_DIR}/proto)
+  target_link_libraries(${EXAMPLE_EXEC}
+    PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+    PUBLIC lrauv_command)
+
+  install(
+    TARGETS ${EXAMPLE_EXEC}
+    DESTINATION bin)
+
+endforeach()
 
 #============================================================================
-# Teleop
-add_executable(KeyboardTeleop test/keyboard_teleop.cc)
-set_property(TARGET KeyboardTeleop PROPERTY CXX_STANDARD 17)
-target_include_directories(KeyboardTeleop
-  PUBLIC ${CMAKE_BINARY_DIR}/proto)
-target_link_libraries(KeyboardTeleop
-  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-  PUBLIC lrauv_command)
+# Hooks
+configure_file(
+  "hooks/hook.dsv.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/hooks/hook.dsv" @ONLY
+)
 
 #============================================================================
-# Multi-LRAUV race
-add_executable(MultiLRAUVRace test/multi_lrauv_race.cc)
-set_property(TARGET MultiLRAUVRace PROPERTY CXX_STANDARD 17)
-target_include_directories(MultiLRAUVRace
-  PUBLIC ${CMAKE_BINARY_DIR}/proto)
-target_link_libraries(MultiLRAUVRace
-  PRIVATE ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-  PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-  PUBLIC lrauv_command)
-
-#============================================================================
-# Install
-
-install(
-  TARGETS
-    BuoyancyEnginePlugin
-    HydrodynamicsPlugin
-    JointPositionPlugin
-    TethysCommPlugin
-    ThrusterPlugin
-    TimeAnalysisPlugin
-    lrauv_command
-    lrauv_state
-  DESTINATION share/lib)
+# Resources
 
 install(
   DIRECTORY
-    hooks
     launch
     models
     worlds
-  DESTINATION share)
+    ${CMAKE_CURRENT_BINARY_DIR}/hooks
+  DESTINATION share/${PROJECT_NAME})

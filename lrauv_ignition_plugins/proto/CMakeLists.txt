@@ -21,3 +21,15 @@ protobuf_generate(
   IMPORT_DIRS ${ignition-msgs${IGN_MSGS_VER}_INCLUDE_DIRS}
   PROTOC_OUT_DIR ${CMAKE_BINARY_DIR}/proto
 )
+
+install(
+  TARGETS
+    lrauv_command
+    lrauv_state
+  DESTINATION lib)
+
+install(
+  DIRECTORY ${CMAKE_BINARY_DIR}
+  DESTINATION include
+  FILES_MATCHING
+    PATTERN "*.h")

@@ -21,15 +21,17 @@ source the colcon workspace and run:
 ign launch lrauv_world.ign
 ```
 
-Send test commands to move some joints:
+Send example commands to move some joints:
 ```
-./build/lrauv_ignition_plugins/TestController
+LRAUV_example_controller
 ```
 
 Keyboard teleop:
 ```
-./build/lrauv_ignition_plugins/TeleopController
+LRAUV_keyboard_teleop
 ```
+
+> Tip: Type `LRAUV_` and press tab for autocomplete to show more example examples.
 
 ## Using Docker
 

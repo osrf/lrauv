@@ -1,3 +1,3 @@
 {
-    "hooks": ["share/hooks/hook.sh"]
+    "hooks": ["share/lrauv_ignition_plugins/hooks/hook.dsv"]
 }
