@@ -47,7 +47,7 @@
     <!-- Uncomment for time analysis -->
     <!--plugin
       filename="TimeAnalysisPlugin"
-      name="time_analysis_plugin::TimeAnalysisPlugin">
+      name="tethys::TimeAnalysisPlugin">
     </plugin-->
 
     <gui fullscreen="0">
@@ -250,7 +250,7 @@
 
       <plugin
         filename="HydrodynamicsPlugin"
-        name="tethys_hydro::HydrodynamicsPlugin">
+        name="tethys::HydrodynamicsPlugin">
         <link_name>base_link</link_name>
         <enable_coriolis>false</enable_coriolis>
         <xDotU>-4.876161</xDotU>

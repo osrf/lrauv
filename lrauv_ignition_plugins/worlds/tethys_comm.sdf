@@ -113,7 +113,7 @@
 
     <plugin
       filename="TethysCommPlugin"
-      name="tethys_comm_plugin::TethysCommPlugin">
+      name="tethys::TethysCommPlugin">
       <command_topic>command_topic</command_topic>
       <state_topic>state_topic</state_topic>
     </plugin>

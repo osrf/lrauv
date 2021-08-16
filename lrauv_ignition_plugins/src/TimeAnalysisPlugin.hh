@@ -23,7 +23,7 @@
 #include <ignition/msgs/world_stats.pb.h>
 #include <ignition/transport/Node.hh>
 
-namespace time_analysis_plugin
+namespace tethys
 {
   class TimeAnalysisPlugin:
     public ignition::gazebo::System,

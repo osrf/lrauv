@@ -26,7 +26,7 @@
 #include <mutex>
 #include <string>
 
-namespace tethys_hydro 
+namespace tethys
 {
   class HydrodynamicsPrivateData;
 

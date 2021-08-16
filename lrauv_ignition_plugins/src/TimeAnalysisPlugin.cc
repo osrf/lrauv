@@ -28,7 +28,7 @@
 
 #include "TimeAnalysisPlugin.hh"
 
-using namespace time_analysis_plugin;
+using namespace tethys;
 
 void TimeAnalysisPlugin::Configure(
   const ignition::gazebo::Entity &_entity,
@@ -139,7 +139,7 @@ void TimeAnalysisPlugin::PostUpdate(
 }
 
 IGNITION_ADD_PLUGIN(
-  time_analysis_plugin::TimeAnalysisPlugin,
+  tethys::TimeAnalysisPlugin,
   ignition::gazebo::System,
-  time_analysis_plugin::TimeAnalysisPlugin::ISystemConfigure,
-  time_analysis_plugin::TimeAnalysisPlugin::ISystemPostUpdate)
+  tethys::TimeAnalysisPlugin::ISystemConfigure,
+  tethys::TimeAnalysisPlugin::ISystemPostUpdate)

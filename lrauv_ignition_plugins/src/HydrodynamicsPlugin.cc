@@ -19,7 +19,7 @@
 
 #include <Eigen/Eigen>
 
-namespace tethys_hydro
+namespace tethys
 {
 
 class HydrodynamicsPrivateData
@@ -312,7 +312,7 @@ void HydrodynamicsPlugin::PreUpdate(
 };
 
 IGNITION_ADD_PLUGIN(
-  tethys_hydro::HydrodynamicsPlugin,
+  tethys::HydrodynamicsPlugin,
   ignition::gazebo::System,
-  tethys_hydro::HydrodynamicsPlugin::ISystemConfigure,
-  tethys_hydro::HydrodynamicsPlugin::ISystemPreUpdate)
+  tethys::HydrodynamicsPlugin::ISystemConfigure,
+  tethys::HydrodynamicsPlugin::ISystemPreUpdate)

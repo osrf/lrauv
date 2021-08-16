@@ -47,7 +47,7 @@
     <!-- Uncomment for time analysis -->
     <!--plugin
       filename="TimeAnalysisPlugin"
-      name="time_analysis_plugin::TimeAnalysisPlugin">
+      name="tethys::TimeAnalysisPlugin">
     </plugin-->
 
     <light type="directional" name="sun">
@@ -170,7 +170,7 @@
       <!-- Interfacing plugin with MBARI Main Vehicle Application -->
       <plugin
         filename="TethysCommPlugin"
-        name="tethys_comm_plugin::TethysCommPlugin">
+        name="tethys::TethysCommPlugin">
         <namespace>tethys</namespace>
         <command_topic>tethys/command_topic</command_topic>
         <state_topic>tethys/state_topic</state_topic>
@@ -178,7 +178,7 @@
 
       <plugin
         filename="HydrodynamicsPlugin"
-        name="tethys_hydro::HydrodynamicsPlugin">
+        name="tethys::HydrodynamicsPlugin">
         <link_name>base_link</link_name>
         <xDotU>-4.876161</xDotU>
         <yDotV>-126.324739</yDotV>
@@ -273,7 +273,7 @@
       <!-- Interfacing plugin with MBARI Main Vehicle Application -->
       <plugin
         filename="TethysCommPlugin"
-        name="tethys_comm_plugin::TethysCommPlugin">
+        name="tethys::TethysCommPlugin">
         <namespace>triton</namespace>
         <command_topic>triton/command_topic</command_topic>
         <state_topic>triton/state_topic</state_topic>
@@ -281,7 +281,7 @@
 
       <plugin
         filename="HydrodynamicsPlugin"
-        name="tethys_hydro::HydrodynamicsPlugin">
+        name="tethys::HydrodynamicsPlugin">
         <link_name>base_link</link_name>
         <xDotU>-4.876161</xDotU>
         <yDotV>-126.324739</yDotV>
@@ -376,7 +376,7 @@
       <!-- Interfacing plugin with MBARI Main Vehicle Application -->
       <plugin
         filename="TethysCommPlugin"
-        name="tethys_comm_plugin::TethysCommPlugin">
+        name="tethys::TethysCommPlugin">
         <namespace>daphne</namespace>
         <command_topic>daphne/command_topic</command_topic>
         <state_topic>daphne/state_topic</state_topic>
@@ -384,7 +384,7 @@
 
       <plugin
         filename="HydrodynamicsPlugin"
-        name="tethys_hydro::HydrodynamicsPlugin">
+        name="tethys::HydrodynamicsPlugin">
         <link_name>base_link</link_name>
         <xDotU>-4.876161</xDotU>
         <yDotV>-126.324739</yDotV>
