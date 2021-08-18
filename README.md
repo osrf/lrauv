@@ -52,7 +52,13 @@ docker/join.sh mbari_lrauv
 
 ## To test integration with MBARI LRAUV code base
 
-Pull the Docker image on the [MBARI DockerHub](https://hub.docker.com/repository/docker/mbari/lrauv-ignition-sim) containing Ignition, MBARI LRAUV code base, and this repository.
+Pull the Docker image on the
+[MBARI DockerHub](https://hub.docker.com/r/mbari/lrauv-ignition-sim)
+containing Ignition, MBARI LRAUV code base, and this repository.
+
+```
+docker pull mbari/lrauv-ignition-sim
+```
 
 Once inside a container, source the colcon workspaces:
 ```
