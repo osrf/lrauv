@@ -22,6 +22,7 @@
 #include <ignition/gazebo/Link.hh>
 #include <ignition/gazebo/System.hh>
 #include <ignition/math/SphericalCoordinates.hh>
+#include <ignition/math/Temperature.hh>
 #include <ignition/transport/Node.hh>
 
 #include "lrauv_command.pb.h"
@@ -54,6 +55,26 @@ namespace tethys
     /// \param[in] _msg Bladder volume
     public: void BuoyancyStateCallback(
                 const ignition::msgs::Double &_msg);
+
+    /// Callback function for salinity sensor data.
+    /// \param[in] _msg Sensor data
+    public: void SalinityCallback(
+                const ignition::msgs::Float &_msg);
+
+    /// Callback function for temperature sensor data.
+    /// \param[in] _msg Sensor data
+    public: void TemperatureCallback(
+                const ignition::msgs::Double &_msg);
+
+    /// Callback function for chlorophyll sensor data.
+    /// \param[in] _msg Sensor data
+    public: void ChlorophyllCallback(
+                const ignition::msgs::Float &_msg);
+
+    /// Callback function for current sensor data.
+    /// \param[in] _msg Sensor data
+    public: void CurrentCallback(
+                const ignition::msgs::Vector3d &_msg);
 
     /// Parse SDF parameters and create components
     private: void SetupEntities(
@@ -104,6 +125,22 @@ namespace tethys
     private: std::string dropWeightTopic
       {"drop_weight"};
 
+    /// Topic to subscribe to salinity data
+    private: std::string salinityTopic
+      {"salinity"};
+
+    /// Topic to subscribe to temperature data
+    private: std::string temperatureTopic
+      {"temperature"};
+
+    /// Topic to subscribe to chlorophyll data
+    private: std::string chlorophyllTopic
+      {"chlorophyll"};
+
+    /// Topic to subscribe to current data
+    private: std::string currentTopic
+      {"current"};
+
     /// Model name
     private: std::string baseLinkName{"base_link"};
 
@@ -128,6 +165,19 @@ namespace tethys
 
     /// Buoyancy bladder size in cc
     private: double buoyancyBladderVolume = 300;
+
+    /// Latest salinity data received from sensor. NaN if not received.
+    private: float latestSalinity{std::nanf("")};
+
+    /// Latest temperature data received from sensor. NaN if not received.
+    private: ignition::math::Temperature latestTemperature{std::nanf("")};
+
+    /// Latest chlorophyll data received from sensor. NaN if not received.
+    private: float latestChlorophyll{std::nanf("")};
+
+    /// Latest current data received from sensor. NaN if not received.
+    private: ignition::math::Vector3d latestCurrent
+        {std::nan(""), std::nan(""), std::nan("")};
 
     /// TODO(mabelzhang) Remove when stable. Temporary timers for state message
     /// sanity check

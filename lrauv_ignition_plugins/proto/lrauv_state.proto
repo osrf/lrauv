@@ -64,13 +64,13 @@ message LRAUVState
   ignition.msgs.Vector3d ratePQR_ = 23;  // rateP_, rateQ_, rateR_ in SimResultStruct
                                          // for roll, pitch, yaw rates, respectively
 
-  float northCurrent_             = 24;
-  float eastCurrent_              = 25;
-  float vertCurrent_              = 26;
+  float northCurrent_             = 24; // +Y velocity in m / s
+  float eastCurrent_              = 25; // +X velocity in m / s
+  float vertCurrent_              = 26; // +Z velocity in m / s
   float magneticVariation_        = 27;
   float soundSpeed_               = 28;
-  float temperature_              = 29;
-  float salinity_                 = 30;
+  float temperature_              = 29; // Celsius
+  float salinity_                 = 30; // PSU
   float density_                  = 31;
-  repeated float values_          = 32;  // Size 4
+  repeated float values_          = 32;  // Size 4 (0: chlorophyll in ug / L)
 }

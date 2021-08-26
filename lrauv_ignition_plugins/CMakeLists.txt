@@ -10,6 +10,9 @@ find_package(ignition-cmake2 REQUIRED)
 find_package(ignition-gazebo6 REQUIRED)
 set(IGN_GAZEBO_VER ${ignition-gazebo6_VERSION_MAJOR})
 
+find_package(ignition-sensors6 REQUIRED)
+set(IGN_SENSORS_VER ${ignition-sensors6_VERSION_MAJOR})
+
 find_package(ignition-launch5 REQUIRED)
 
 find_package(ignition-msgs8 REQUIRED)
@@ -17,6 +20,9 @@ set(IGN_MSGS_VER ${ignition-msgs8_VERSION_MAJOR})
 
 find_package(ignition-plugin1 REQUIRED COMPONENTS register)
 set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
+
+find_package(ignition-utils1 REQUIRED)
+set(IGN_UTILS_VER ${ignition-utils1_VERSION_MAJOR})
 
 find_package (Eigen3 3.3 REQUIRED)
 
@@ -34,18 +40,24 @@ add_subdirectory(proto)
 # <plugin_name> Required. Name of the plugin library, which matches source file.
 #
 # [PROTO]: Optional. If included, plugin will be linked against custom protobuf messages.
+#
+# [PRIVATE_LINK_LIBS]: Specify a list of libraries to be privately linked.
 function(add_lrauv_plugin PLUGIN)
   set(options PROTO)
   set(oneValueArgs)
-  set(multiValueArgs)
+  set(multiValueArgs PRIVATE_LINK_LIBS)
 
   cmake_parse_arguments(add_lrauv_plugin "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   add_library(${PLUGIN} SHARED src/${PLUGIN}.cc)
   set_property(TARGET ${PLUGIN} PROPERTY CXX_STANDARD 17)
   target_link_libraries(${PLUGIN}
-    PUBLIC ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-    PUBLIC ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER})
+    PUBLIC
+      ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
+      ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+    PRIVATE
+      ${add_lrauv_plugin_PRIVATE_LINK_LIBS}
+  )
 
   # Link against proto libraries
   if (add_lrauv_plugin_PROTO)
@@ -67,6 +79,9 @@ endfunction()
 add_lrauv_plugin(BuoyancyEnginePlugin)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(JointPositionPlugin)
+add_lrauv_plugin(ScienceSensorsSystem
+  PRIVATE_LINK_LIBS
+    ignition-sensors${IGN_SENSORS_VER}::ignition-sensors${IGN_SENSORS_VER})
 add_lrauv_plugin(TethysCommPlugin PROTO)
 add_lrauv_plugin(ThrusterPlugin)
 add_lrauv_plugin(TimeAnalysisPlugin)

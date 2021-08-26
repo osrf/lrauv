@@ -227,7 +227,6 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   {
     ignerr << "Error subscribing to topic " << "["
       << this->buoyancyEngineStateTopic << "]. " << std::endl;
-    return;
   }
 
   this->dropWeightTopic = ignition::transport::TopicUtils::AsValidTopic("/model/" +
@@ -248,6 +247,43 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   {
     ignerr << "Error advertising topic [" << this->dropWeightTopic << "]"
       << std::endl;
+  }
+
+  // Subscribe to sensor data
+  this->salinityTopic = ignition::transport::TopicUtils::AsValidTopic(
+    "/model/" + _ns + "/" + this->salinityTopic);
+  if (!this->node.Subscribe(this->salinityTopic,
+      &TethysCommPlugin::SalinityCallback, this))
+  {
+    ignerr << "Error subscribing to topic " << "["
+      << this->salinityTopic << "]. " << std::endl;
+  }
+
+  this->temperatureTopic = ignition::transport::TopicUtils::AsValidTopic(
+    "/model/" + _ns + "/" + this->temperatureTopic);
+  if (!this->node.Subscribe(this->temperatureTopic,
+      &TethysCommPlugin::TemperatureCallback, this))
+  {
+    ignerr << "Error subscribing to topic " << "["
+      << this->temperatureTopic << "]. " << std::endl;
+  }
+
+  this->chlorophyllTopic = ignition::transport::TopicUtils::AsValidTopic(
+    "/model/" + _ns + "/" + this->chlorophyllTopic);
+  if (!this->node.Subscribe(this->chlorophyllTopic,
+      &TethysCommPlugin::ChlorophyllCallback, this))
+  {
+    ignerr << "Error subscribing to topic " << "["
+      << this->chlorophyllTopic << "]. " << std::endl;
+  }
+
+  this->currentTopic = ignition::transport::TopicUtils::AsValidTopic(
+    "/model/" + _ns + "/" + this->currentTopic);
+  if (!this->node.Subscribe(this->currentTopic,
+      &TethysCommPlugin::CurrentCallback, this))
+  {
+    ignerr << "Error subscribing to topic " << "["
+      << this->currentTopic << "]. " << std::endl;
   }
 }
 
@@ -373,6 +409,30 @@ void TethysCommPlugin::BuoyancyStateCallback(
   this->buoyancyBladderVolume = _msg.data();
 }
 
+void TethysCommPlugin::SalinityCallback(
+  const ignition::msgs::Float &_msg)
+{
+  this->latestSalinity = _msg.data();
+}
+
+void TethysCommPlugin::TemperatureCallback(
+  const ignition::msgs::Double &_msg)
+{
+  this->latestTemperature.SetCelsius(_msg.data());
+}
+
+void TethysCommPlugin::ChlorophyllCallback(
+  const ignition::msgs::Float &_msg)
+{
+  this->latestChlorophyll = _msg.data();
+}
+
+void TethysCommPlugin::CurrentCallback(
+  const ignition::msgs::Vector3d &_msg)
+{
+  this->latestCurrent = ignition::msgs::Convert(_msg);
+}
+
 void TethysCommPlugin::PostUpdate(
   const ignition::gazebo::UpdateInfo &_info,
   const ignition::gazebo::EntityComponentManager &_ecm)
@@ -457,8 +517,9 @@ void TethysCommPlugin::PostUpdate(
 
   // Lat long
   // TODO(anyone)
-  // Follow up https://github.com/ignitionrobotics/ign-gazebo/pull/519
-  auto latlon = sphericalCoords.SphericalFromLocalPosition(modelPose.Pos());
+  // Follow up https://github.com/ignitionrobotics/ign-gazebo/issues/981
+  auto latlon = this->sphericalCoords.SphericalFromLocalPosition(
+      modelPose.Pos());
   stateMsg.set_latitudedeg_(latlon.X());
   stateMsg.set_longitudedeg_(latlon.Y());
 
@@ -480,6 +541,23 @@ void TethysCommPlugin::PostUpdate(
   // ratePQR
   // TODO(anyone)
 
+
+  // Sensor data
+  stateMsg.set_salinity_(this->latestSalinity);
+  this->latestSalinity = std::nanf("");
+
+  stateMsg.set_temperature_(this->latestTemperature.Celsius());
+  this->latestTemperature = std::nanf("");
+
+  stateMsg.add_values_(this->latestChlorophyll);
+  this->latestChlorophyll = std::nanf("");
+
+  stateMsg.set_eastcurrent_(this->latestCurrent.X());
+  stateMsg.set_northcurrent_(this->latestCurrent.Y());
+  stateMsg.set_vertcurrent_(this->latestCurrent.Z());
+  this->latestCurrent = ignition::math::Vector3d(
+      std::nan(""), std::nan(""), std::nan(""));
+
   this->statePub.Publish(stateMsg);
 
   if (_info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
@@ -493,7 +571,15 @@ void TethysCommPlugin::PostUpdate(
       << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl
       << "\tMass shifter (m): " << stateMsg.massposition_() << std::endl
       << "\tPitch angle (displayed in deg): "
-        << stateMsg.rph_().y() * 180 / M_PI << std::endl;
+        << stateMsg.rph_().y() * 180 / M_PI << std::endl
+      << "\tCurrent (ENU): "
+        << stateMsg.eastcurrent_() << ", "
+        << stateMsg.northcurrent_() << ", "
+        << stateMsg.vertcurrent_() << std::endl
+      << "\tTemperature: " << stateMsg.temperature_() << std::endl
+      << "\tSalinity: " << stateMsg.salinity_() << std::endl
+      << "\tChlorophyll: " << stateMsg.values_(0) << std::endl;
+
     this->prevPubPrintTime = _info.simTime;
   }
 }

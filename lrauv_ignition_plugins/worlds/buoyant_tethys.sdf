@@ -50,6 +50,11 @@
       name="tethys::TimeAnalysisPlugin">
     </plugin-->
 
+    <plugin
+      filename="ScienceSensorsSystem"
+      name="tethys::ScienceSensorsSystem">
+    </plugin>
+
     <gui fullscreen="0">
       <plugin filename="GzScene3D" name="3D View">
         <ignition-gui>
@@ -168,6 +173,74 @@
     <include>
       <pose>0 0 0 0 0 0</pose>
       <uri>tethys</uri>
+
+      <!-- Sensors -->
+      <experimental:params>
+        <sensor
+          element_id="base_link"
+          action="add"
+          name="salinity_sensor"
+          type="custom"
+          ignition:type="salinity">
+          <always_on>1</always_on>
+          <update_rate>2</update_rate>
+          <topic>/model/tethys/salinity</topic>
+          <ignition:salinity>
+            <noise type="gaussian">
+              <mean>0.00001</mean>
+              <stddev>0.00001</stddev>
+            </noise>
+          </ignition:salinity>
+        </sensor>
+        <sensor
+          element_id="base_link"
+          action="add"
+          name="temperature_sensor"
+          type="custom"
+          ignition:type="temperature">
+          <always_on>1</always_on>
+          <update_rate>2</update_rate>
+          <topic>/model/tethys/temperature</topic>
+          <ignition:temperature>
+            <noise type="gaussian">
+              <mean>0.00001</mean>
+              <stddev>0.00001</stddev>
+            </noise>
+          </ignition:temperature>
+        </sensor>
+        <sensor
+          element_id="base_link"
+          action="add"
+          name="chlorophyll_sensor"
+          type="custom"
+          ignition:type="chlorophyll">
+          <always_on>1</always_on>
+          <update_rate>2</update_rate>
+          <topic>/model/tethys/chlorophyll</topic>
+          <ignition:chlorophyll>
+            <noise type="gaussian">
+              <mean>0.00001</mean>
+              <stddev>0.00001</stddev>
+            </noise>
+          </ignition:chlorophyll>
+        </sensor>
+        <sensor
+          element_id="base_link"
+          action="add"
+          name="current_sensor"
+          type="custom"
+          ignition:type="current">
+          <always_on>1</always_on>
+          <update_rate>2</update_rate>
+          <topic>/model/tethys/current</topic>
+          <ignition:current>
+            <noise type="gaussian">
+              <mean>0.00001</mean>
+              <stddev>0.00001</stddev>
+            </noise>
+          </ignition:current>
+        </sensor>
+      </experimental:params>
 
       <!-- Joint controllers -->
       <plugin
