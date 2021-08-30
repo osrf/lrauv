@@ -99,6 +99,8 @@ RUN [ "/bin/bash" , "-c" , \
   && colcon build \
   && apt-get -qq clean" ]
 
+SHELL ["/bin/bash", "-c"]
+
 # start ignition
 ENTRYPOINT [ "/bin/bash" , "-c" , \
   "source /home/colcon_ws/install/setup.bash \

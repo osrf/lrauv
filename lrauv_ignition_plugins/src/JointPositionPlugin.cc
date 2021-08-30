@@ -99,7 +99,7 @@ void TethysJointPlugin::Configure(
     this->dataPtr->jointIndex = _sdf->Get<unsigned int>("joint_index");
   }
 
-  std::string topic = 
+  std::string topic =
     ignition::transport::TopicUtils::AsValidTopic("/model/" +
     this->dataPtr->model.Name(_ecm) + "/joint/" + this->dataPtr->jointName +
     "/" + std::to_string(this->dataPtr->jointIndex) + "/cmd_pos");
@@ -176,7 +176,7 @@ void TethysJointPlugin::PreUpdate(
 
   std::chrono::duration<double, std::ratio<1,1>> deltaT = _info.dt;
   auto maxPositionChange = deltaT.count() * this->dataPtr->maxVelocity;
-  
+
   double desiredVelocity = 0;
   if (cmdPos < currentPos[this->dataPtr->jointIndex])
   {

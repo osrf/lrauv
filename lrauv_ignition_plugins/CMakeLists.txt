@@ -4,7 +4,6 @@ project(lrauv_ignition_plugins)
 
 #============================================================================
 # Find dependencies
-
 find_package(ignition-cmake2 REQUIRED)
 
 find_package(ignition-gazebo6 REQUIRED)
@@ -117,6 +116,51 @@ configure_file(
   "hooks/hook.dsv.in"
   "${CMAKE_CURRENT_BINARY_DIR}/hooks/hook.dsv" @ONLY
 )
+
+#============================================================================
+# Tests
+if(BUILD_TESTING)
+
+  # Fetch and configure GTest
+  include(FetchContent)
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+  )
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+
+  enable_testing()
+  include(Dart)
+
+  # Build-time constants
+  set("PROJECT_BINARY_PATH" ${CMAKE_CURRENT_BINARY_DIR})
+  set("PROJECT_SOURCE_PATH" ${CMAKE_CURRENT_SOURCE_DIR})
+  configure_file(test/helper/TestConstants.hh.in TestConstants.hh @ONLY)
+
+  # Tests
+  foreach(TEST_TARGET
+    test_controller
+    test_drop_weight
+    test_mass_shifter)
+
+    add_executable(
+      ${TEST_TARGET}
+      test/${TEST_TARGET}.cc
+    )
+    target_include_directories(${TEST_TARGET}
+      PUBLIC ${CMAKE_BINARY_DIR}/proto)
+    target_link_libraries(${TEST_TARGET}
+      PUBLIC gtest_main
+      PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+      lrauv_command
+    )
+    include_directories(${CMAKE_CURRENT_BINARY_DIR})
+    include(GoogleTest)
+    gtest_discover_tests(${TEST_TARGET})
+  endforeach()
+
+endif()
 
 #============================================================================
 # Resources

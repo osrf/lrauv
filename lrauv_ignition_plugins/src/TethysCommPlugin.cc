@@ -346,14 +346,7 @@ void TethysCommPlugin::CommandCallback(
   //    > std::chrono::milliseconds(1000))
   {
     igndbg << "Received command: " << std::endl
-      << "  propOmegaAction_: " << _msg.propomegaaction_() << std::endl
-      << "  rudderAngleAction_: " << _msg.rudderangleaction_() << std::endl
-      << "  elevatorAngleAction_: " << _msg.elevatorangleaction_() << std::endl
-      << "  massPositionAction_: " << _msg.masspositionaction_() << std::endl
-      << "  buoyancyAction_: " << _msg.buoyancyaction_() << std::endl
-      << "  density_: " << _msg.density_() << std::endl
-      << "  dt_: " << _msg.dt_() << std::endl
-      << "  time_: " << _msg.time_() << std::endl;
+      << _msg.DebugString() << std::endl;
 
     this->prevSubPrintTime = std::chrono::seconds(int(floor(_msg.time_())));
   }
