@@ -73,13 +73,19 @@ Launch the Ignition simulation:
 ```
 ign launch lrauv_world.ign
 ```
+Keep it paused.
 For verbose debug output, add `--verbose 4`.
 
-Launch the MBARI command prompt:
+Run the LRAUV Main Vehicle Application (MVA), which will bring you to a command prompt:
 ```
 cd ~/lrauv_ws/src/lrauv-application
 bin/LRAUV
 ```
+
+Unpause Ignition by clicking on the triangle play button in the lower-left
+corner of the GUI.
+Note that Ignition should not be unpaused too far in advance of starting the
+MVA. That would produce a large gap in timestamp, which the MVA does not expect.
 
 At the LRAUV command prompt:
 ```
@@ -159,7 +165,9 @@ SpeedControl-->SpeedControl.propOmegaAction=0.000000 rad/s
 
 ### Run missions designed for Ignition integration tests
 
-The following missions are available. Run one at a time:
+The following are "unit test" missions that test one or two actuators at a time.
+Run one at a time, in separate runs of Ignition and the Main Vehicle Application
+(`bin/LRAUV`):
 ```
 run RegressionTests/IgnitionTests/testDepthVBS.xml
 run RegressionTests/IgnitionTests/testPitchMass.xml
@@ -180,9 +188,28 @@ To stop a mission, run
 stop
 ```
 
-### Run the circle mission
+You can automate typing into the command prompt by issuing `-x`.
+For example, this will run the yoyo mission and terminate after the mission ends:
+```
+bin/LRAUV -x "run RegressionTests/IgnitionTests/testYoYoCircle.xml quitAtEnd"
+```
 
-This has not been tested thoroughly.
+### To run the original LRAUV simulation
+
+The original simulation is the baseline comparison for the Ignition simulation.
+
+In the MBARI code base, open `Config/sim/Simulator.cfg`, change these lines to
+look like this:
+```
+   ExternalSim.loadAtStartup = 1 bool;
+   ExternalSimIgnition.loadAtStartup = 0 bool;
+```
+This enables the original ExternalSim and disables the interface with Ignition.
+
+Try it out:
+```
+bin/LRAUV
+```
 
 Load the circle mission, which will perform two circles:
 ```
