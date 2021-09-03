@@ -89,6 +89,7 @@ function(add_lrauv_plugin PLUGIN)
 
 endfunction()
 
+add_lrauv_plugin(AcousticCommsPlugin)
 add_lrauv_plugin(BuoyancyEnginePlugin)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(JointPositionPlugin)
