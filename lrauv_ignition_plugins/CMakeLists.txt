@@ -47,9 +47,9 @@ add_subdirectory(proto)
 #
 # [PRIVATE_LINK_LIBS]: Specify a list of libraries to be privately linked.
 function(add_lrauv_plugin PLUGIN)
-  set(options PROTO PCL)
+  set(options PCL)
   set(oneValueArgs)
-  set(multiValueArgs PRIVATE_LINK_LIBS)
+  set(multiValueArgs PROTO PRIVATE_LINK_LIBS)
 
   cmake_parse_arguments(add_lrauv_plugin
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -66,13 +66,10 @@ function(add_lrauv_plugin PLUGIN)
 
   # Link against proto libraries
   if (add_lrauv_plugin_PROTO)
-
     target_include_directories(${PLUGIN}
       PUBLIC ${CMAKE_BINARY_DIR}/proto)
     target_link_libraries(${PLUGIN}
-      PUBLIC lrauv_command
-      PUBLIC lrauv_state)
-
+      PUBLIC ${add_lrauv_plugin_PROTO})
   endif()
 
   # Include PCL
@@ -89,7 +86,10 @@ function(add_lrauv_plugin PLUGIN)
 
 endfunction()
 
-add_lrauv_plugin(AcousticCommsPlugin)
+add_lrauv_plugin(AcousticCommsPlugin
+  PROTO 
+    lrauv_acoustic_message
+    lrauv_internal_comms)
 add_lrauv_plugin(BuoyancyEnginePlugin)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(JointPositionPlugin)
@@ -98,7 +98,10 @@ add_lrauv_plugin(ScienceSensorsSystem
   PRIVATE_LINK_LIBS
     ignition-sensors${IGN_SENSORS_VER}::ignition-sensors${IGN_SENSORS_VER}
     ${PCL_LIBRARIES})
-add_lrauv_plugin(TethysCommPlugin PROTO)
+add_lrauv_plugin(TethysCommPlugin
+  PROTO
+    lrauv_state
+    lrauv_command)
 add_lrauv_plugin(ThrusterPlugin)
 add_lrauv_plugin(TimeAnalysisPlugin)
 
