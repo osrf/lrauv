@@ -21,27 +21,24 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 syntax = "proto3";
 package lrauv_ignition_plugins.msgs;
 option java_package = "lrauv_ignition_plugins.msgs";
-option java_outer_classname = "LRAUVInternalCommsProtos";
+option java_outer_classname = "LRAUVAcousticMsg.Protos";
 
-/// \ingroup lrauv_internal_comms.msgs
-/// \interface LRAUVInternalComms
+/// \ingroup lrauv_acoustic_message.msgs
+/// \interface LRAUVAcousticsMessage
 /// \brief A protobuf message used internally for simulating point to
 /// point acoustic communication.
 
-import "ignition/msgs/header.proto";
-import "ignition/msgs/vector3d.proto";
-
 // Mirrors SimRunStruct
-message LRAUVInternalComms
+message LRAUVAcousticMessage
 {
   /// \brief Optional header data
-  ignition.msgs.Header header  = 1;
-  ignition.msgs.Vector3d position  = 2;
+  int32 to = 1;
+  int32 from = 2;
   enum MessageType {
     RangeRequest = 0;
     RangeResponse = 1;
     Other = 2;
   }
   MessageType type = 3;
-  bytes data = 5;
+  bytes data = 4;
 }

@@ -17,6 +17,7 @@ function(add_lrauv_message MESSAGE)
     DESTINATION lib)
 endfunction()
 
+add_lrauv_message(lrauv_acoustic_message)
 add_lrauv_message(lrauv_command)
 add_lrauv_message(lrauv_state)
 add_lrauv_message(lrauv_internal_comms)
