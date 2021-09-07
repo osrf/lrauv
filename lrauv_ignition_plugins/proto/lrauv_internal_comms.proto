@@ -37,11 +37,13 @@ message LRAUVInternalComms
   /// \brief Optional header data
   ignition.msgs.Header header  = 1;
   ignition.msgs.Vector3d position  = 2;
+  int32 to = 3;
+  int32 from = 4;
   enum MessageType {
     RangeRequest = 0;
     RangeResponse = 1;
     Other = 2;
   }
-  MessageType type = 3;
-  bytes data = 5;
+  MessageType type = 5;
+  bytes data = 6;
 }
