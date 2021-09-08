@@ -41,20 +41,24 @@ add_subdirectory(proto)
 # <plugin_name> Required. Name of the plugin library, which matches source file.
 #
 # [PROTO]: Optional. If included, plugin will be linked against custom protobuf
-# messages.
+# messages that are listed.
 #
 # [PCL]: Optional. If included, plugin will be linked against PCL.
+#
+# [ADDITIONAL_SOURCES]: Optional. Specify a list of files to be added to this
+# plugin. 
 #
 # [PRIVATE_LINK_LIBS]: Specify a list of libraries to be privately linked.
 function(add_lrauv_plugin PLUGIN)
   set(options PCL INCLUDE_COMMS)
   set(oneValueArgs)
-  set(multiValueArgs PROTO PRIVATE_LINK_LIBS EXPORTS_HEADERS)
+  set(multiValueArgs PROTO PRIVATE_LINK_LIBS ADDITIONAL_SOURCES)
 
   cmake_parse_arguments(add_lrauv_plugin
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  add_library(${PLUGIN} SHARED src/${PLUGIN}.cc)
+  add_library(${PLUGIN} 
+    SHARED src/${PLUGIN}.cc ${add_lrauv_plugin_ADDITIONAL_SOURCES})
   set_property(TARGET ${PLUGIN} PROPERTY CXX_STANDARD 17)
   target_link_libraries(${PLUGIN}
     PUBLIC
@@ -102,7 +106,9 @@ add_lrauv_plugin(AcousticCommsPlugin
   INCLUDE_COMMS
   PROTO 
     lrauv_acoustic_message
-    lrauv_internal_comms)
+    lrauv_internal_comms
+  ADDITIONAL_SOURCES
+    src/comms/CommsPacket.cc)
 add_lrauv_plugin(BuoyancyEnginePlugin)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(JointPositionPlugin)
@@ -117,6 +123,14 @@ add_lrauv_plugin(TethysCommPlugin
     lrauv_command)
 add_lrauv_plugin(ThrusterPlugin)
 add_lrauv_plugin(TimeAnalysisPlugin)
+
+#============================================================================
+# Install public headers
+install(
+  DIRECTORY include/
+    DESTINATION include
+    FILES_MATCHING
+    PATTERN "*.hh")
 
 #============================================================================
 # Examples

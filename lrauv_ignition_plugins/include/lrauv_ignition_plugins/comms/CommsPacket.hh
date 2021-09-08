@@ -22,6 +22,7 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 
 #include <ignition/math/Vector3.hh>
 
+#include <memory>
 #include <chrono>
 
 #include "lrauv_acoustic_message.pb.h"
@@ -55,7 +56,7 @@ class CommsPacket
 
   class CommsPacketPrivateData;
   /// \brief pimpl
-  private: std::unique_ptr<CommsPacketPrivateData> dataPtr;
+  private: std::shared_ptr<CommsPacketPrivateData> dataPtr;
 
   /// \brief Factory method
   /// \param[in] _datapayload - incoming message to be sent without position and
@@ -72,9 +73,11 @@ class CommsPacket
   public: static CommsPacket make(
     const lrauv_ignition_plugins::msgs::LRAUVInternalComms &_datapayload);
 
+  /// \brief Default destructor
+  public: ~CommsPacket();
+
   /// \brief Constructor. Private: use the factory methods.
-  private: CommsPacket() : dataPtr(std::make_unique<CommsPacketPrivateData>())
-  {};
+  private: CommsPacket();
 };
 }
 #endif
