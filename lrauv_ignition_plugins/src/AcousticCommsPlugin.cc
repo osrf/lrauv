@@ -24,6 +24,10 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 #include <ignition/transport/Node.hh>
 #include <ignition/gazebo/Model.hh>
 
+#include <lrauv_ignition_plugins/comms/CommsModel.hh>
+#include <lrauv_ignition_plugins/comms/CommsPacket.hh>
+#include <lrauv_ignition_plugins/comms/MessageManager.hh>
+
 #include <unordered_map>
 
 #include "lrauv_acoustic_message.pb.h"
@@ -32,7 +36,7 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 namespace tethys
 {
 //////////////////////////////////////////////////
-class CommsPacket
+/*class CommsPacket
 {
   /// \brief The position from which the transmission is made
   public: ignition::math::Vector3d Position() const;
@@ -81,8 +85,18 @@ class CommsPacket
 
   private: CommsPacket() : dataPtr(std::make_unique<CommsPacketPrivateData>())
   {};
-};
+};*/
 
+class CommsPacket::CommsPacketPrivateData
+{
+public:
+  ignition::math::Vector3d position;
+  uint32_t to;
+  uint32_t from;
+  uint32_t type;
+  std::chrono::steady_clock::time_point timeOfTx;
+  std::string data;
+};
 //////////////////////////////////////////////////
 ignition::math::Vector3d CommsPacket::Position() const
 {
@@ -196,7 +210,7 @@ CommsPacket CommsPacket::make(
 }
 
 //////////////////////////////////////////////////
-class MessageManager
+/*class MessageManager
 {
   ////////////////////////////////////////////////
   public: void MessageReachedDestination(const CommsPacket& packet)
@@ -215,13 +229,13 @@ class MessageManager
 //////////////////////////////////////////////////
 class ICommsModel
 {
-  public: virtual void enqueue_msg(CommsPacket packet);
+  public: virtual void enqueue_msg(const CommsPacket &_packet);
 
   public: virtual void step(
     const ignition::gazebo::UpdateInfo &_info,
     ignition::gazebo::EntityComponentManager &_ecm,
     MessageManager &_messageMgr);
-};
+};*/
 
 
 //////////////////////////////////////////////////
@@ -276,6 +290,9 @@ class AcousticCommsPrivateData
 void AcousticCommsPrivateData::OnMessageSendReq(
   const lrauv_ignition_plugins::msgs::LRAUVAcousticMessage &_msg)
 {
+  auto packet = 
+      CommsPacket::make(_msg, this->currentPosition, this->currentTime);
+
   std::lock_guard<std::mutex>(this->mtx);
   if (this->broadcast)
   {
@@ -286,8 +303,6 @@ void AcousticCommsPrivateData::OnMessageSendReq(
           this->internalCommsTopic);
     }
     
-    auto packet = 
-      CommsPacket::make(_msg, this->currentPosition, this->currentTime);
     publishers[0].Publish(packet.ToInternalMsg());
   }
   else
@@ -298,6 +313,8 @@ void AcousticCommsPrivateData::OnMessageSendReq(
         this->node.Advertise<lrauv_ignition_plugins::msgs::LRAUVInternalComms>(
           this->internalCommsTopic + "/" + std::to_string(_msg.to()));
     }
+
+    publishers[_msg.to()].Publish(packet.ToInternalMsg());
   }
 }
 
@@ -305,7 +322,9 @@ void AcousticCommsPrivateData::OnMessageSendReq(
 void AcousticCommsPrivateData::OnRecieveMessage(
   const lrauv_ignition_plugins::msgs::LRAUVInternalComms &_msg)
 {
-
+  auto packet = CommsPacket::make(_msg);
+  std::lock_guard<std::mutex> lock(this->mtx);
+  this->commsModel->enqueue_msg(packet);
 }
 
 //////////////////////////////////////////////////

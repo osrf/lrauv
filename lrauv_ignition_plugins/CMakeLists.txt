@@ -47,9 +47,9 @@ add_subdirectory(proto)
 #
 # [PRIVATE_LINK_LIBS]: Specify a list of libraries to be privately linked.
 function(add_lrauv_plugin PLUGIN)
-  set(options PCL)
+  set(options PCL INCLUDE_COMMS)
   set(oneValueArgs)
-  set(multiValueArgs PROTO PRIVATE_LINK_LIBS)
+  set(multiValueArgs PROTO PRIVATE_LINK_LIBS EXPORTS_HEADERS)
 
   cmake_parse_arguments(add_lrauv_plugin
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -72,6 +72,10 @@ function(add_lrauv_plugin PLUGIN)
       PUBLIC ${add_lrauv_plugin_PROTO})
   endif()
 
+  if (add_lrauv_plugin_INCLUDE_COMMS)
+    target_include_directories(${PLUGIN} PUBLIC include/)
+  endif()
+
   # Include PCL
   if (add_lrauv_plugin_PCL)
 
@@ -80,13 +84,22 @@ function(add_lrauv_plugin PLUGIN)
 
   endif()
 
-  install(
-    TARGETS ${PLUGIN}
-    DESTINATION lib)
-
+  if (add_lrauv_plugin_EXPORT_HEADERS)
+    set_target_properties(
+      ${PLUGIN} PROPERTIES PUBLIC_HEADER ${add_lrauv_plugin_EXPORT_HEADERS})
+    install(
+      TARGETS ${PLUGIN}
+      DESTINATION lib
+      PUBLIC_HEADER include)
+  else ()
+    install(
+      TARGETS ${PLUGIN}
+      DESTINATION lib)
+  endif()
 endfunction()
 
 add_lrauv_plugin(AcousticCommsPlugin
+  INCLUDE_COMMS
   PROTO 
     lrauv_acoustic_message
     lrauv_internal_comms)
