@@ -20,9 +20,10 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 
 #include "AcousticCommsPlugin.hh"
 
-#include <ignition/math/Vector3.hh>
-#include <ignition/transport/Node.hh>
 #include <ignition/gazebo/Model.hh>
+#include <ignition/math/Vector3.hh>
+#include <ignition/plugin/Loader.hh>
+#include <ignition/transport/Node.hh>
 
 #include <lrauv_ignition_plugins/comms/CommsModel.hh>
 #include <lrauv_ignition_plugins/comms/CommsPacket.hh>
@@ -69,7 +70,7 @@ class AcousticCommsPrivateData
     publishers;
 
   /// \brief Shared pointer to communications type
-  public: std::shared_ptr<ICommsModel> commsModel;
+  public: ICommsModel* commsModel = nullptr;
 
   /// \brief Publisher for external comms
   public: MessageManager externalCommsPublisher;
@@ -141,34 +142,44 @@ void AcousticCommsPlugin::Configure(
 {
   auto model = ignition::gazebo::Model(_entity);
 
-  if(!_sdf->HasElement("address"))
+  if (!_sdf->HasElement("address"))
   {
     ignerr << "No address was defined for the element " << 
       model.Name(_ecm) << " \n";
   }
   this->dataPtr->address = _sdf->Get<uint32_t>("address");
 
-  if(_sdf->HasElement("internal_comms_prefix"))
+  if (_sdf->HasElement("internal_comms_prefix"))
   {
     this->dataPtr->internalCommsTopic =
       _sdf->Get<std::string>("internal_comms_prefix");
   }
 
-  if(_sdf->HasElement("external_comms_prefix"))
+  if (_sdf->HasElement("external_comms_prefix"))
   {
     this->dataPtr->externalCommsTopic =
       _sdf->Get<std::string>("external_comms_prefix");
   }
 
-  if(_sdf->HasElement("broadcast"))
+  if (_sdf->HasElement("broadcast"))
   {
-    if(_sdf->Get<bool>("broadcast") == false)
+    if (_sdf->Get<bool>("broadcast") == false)
     {
       this->dataPtr->internalCommsTopic = this->dataPtr->internalCommsTopic +
         "/" + std::to_string(this->dataPtr->address);
-      this->dataPtr->broadcast == false;
+      this->dataPtr->broadcast = false;
     }
   }
+  
+  // Create an object that can search the system paths for the plugin libraries.
+  ignition::common::SystemPaths paths;
+
+  // Create a plugin loader
+  ignition::plugin::Loader loader;
+
+  // Add the build directory path for the plugin libraries so the SystemPaths
+  // object will know to search through it.
+  // paths.AddPluginPaths(PluginLibDir);
 
   this->dataPtr->externalCommsTopic = this->dataPtr->externalCommsTopic +
     "/" + std::to_string(this->dataPtr->address);
@@ -194,6 +205,11 @@ void AcousticCommsPlugin::PreUpdate(
   const ignition::gazebo::UpdateInfo &_info,
   ignition::gazebo::EntityComponentManager &_ecm)
 {
+  if(this->dataPtr->commsModel != nullptr)
+    this->dataPtr->commsModel->step(_info, _ecm, 
+      this->dataPtr->externalCommsPublisher);
+  else
+    ignerr << "Comms model has not loaded properly" << std::endl;
 }
 
 }

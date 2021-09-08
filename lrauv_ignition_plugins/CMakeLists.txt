@@ -124,6 +124,8 @@ add_lrauv_plugin(TethysCommPlugin
 add_lrauv_plugin(ThrusterPlugin)
 add_lrauv_plugin(TimeAnalysisPlugin)
 
+add_subdirectory(src/comms/models)
+
 #============================================================================
 # Install public headers
 install(
