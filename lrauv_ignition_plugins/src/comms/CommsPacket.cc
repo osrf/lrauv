@@ -138,3 +138,12 @@ CommsPacket CommsPacket::make(
   packet.dataPtr->timeOfTx = timeOfTx;
   return packet;
 }
+
+//////////////////////////////////////////////////
+bool CommsPacket::operator==(const CommsPacket &other) const
+{
+  return this->To() == other.To()
+    && this->From() == other.From()
+    && this->Data() == other.Data()
+    && this->Position().Distance(other.Position()) < 1e-6;
+}

@@ -42,6 +42,8 @@
         <model_plugin_file>simpleacousticmodel</model_plugin_file>
         <model_name>tethys::SimpleAcousticModel</model_name>
         <link_name>body</link_name>
+        <max_range>2500</max_range>
+        <speed_of_sound>1500</speed_of_sound>
       </plugin>
 
     </include>
@@ -57,6 +59,8 @@
         <model_plugin_file>simpleacousticmodel</model_plugin_file>
         <model_name>tethys::SimpleAcousticModel</model_name>
         <link_name>body</link_name>
+        <max_range>2500</max_range>
+        <speed_of_sound>1500</speed_of_sound>
       </plugin>
     </include>
 

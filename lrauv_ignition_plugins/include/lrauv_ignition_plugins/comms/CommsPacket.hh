@@ -78,6 +78,9 @@ class CommsPacket
 
   /// \brief Constructor. Private: use the factory methods.
   private: CommsPacket();
+
+  /// \brief Comparator for simplicity.
+  public: bool operator==(const CommsPacket& other) const;
 };
 }
 #endif

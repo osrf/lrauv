@@ -240,6 +240,7 @@ void AcousticCommsPlugin::Configure(
   }
   igndbg << "Loaded comms model" << modelName << " from " 
     << pluginPath << std::endl;
+  this->dataPtr->commsModel->Configure(_entity, _sdf, _ecm);
 
   if (!_sdf->HasElement("link_name"))
   {
@@ -283,6 +284,9 @@ void AcousticCommsPlugin::PreUpdate(
 
   ignition::gazebo::Link baseLink(this->dataPtr->linkEntity);
   auto pose = baseLink.WorldPose(_ecm);
+  
+  if (!pose.has_value())
+    return;
 
   std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
   this->dataPtr->currentPosition = pose->Pos();
@@ -291,7 +295,7 @@ void AcousticCommsPlugin::PreUpdate(
 
   if (this->dataPtr->commsModel != nullptr)
     this->dataPtr->commsModel->step(_info, _ecm, 
-      this->dataPtr->externalCommsPublisher);
+      this->dataPtr->externalCommsPublisher, pose.value());
 }
 
 }

@@ -21,6 +21,7 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 #ifndef __LRAUV_IGNITION_PLUGINS_COMMS_COMMSMODEL_HH__
 #define __LRAUV_IGNITION_PLUGINS_COMMS_COMMSMODEL_HH__
 
+#include <ignition/gazebo/System.hh>
 #include <ignition/gazebo/EntityComponentManager.hh>
 
 #include "CommsPacket.hh"
@@ -30,9 +31,16 @@ namespace tethys
 {
 /////////////////////////////////////
 /// \brief Abstract interface to define how the environment should handle
-/// communication dropouts
+/// wireless communication simulation. This class should be responsible for
+/// handling dropouts, decay and packet collisions.
 class ICommsModel
 {
+  /// \brief This method is called during setup.
+  public: virtual void Configure(
+    const ignition::gazebo::Entity &_entity,
+    const std::shared_ptr<const sdf::Element> &_sdf,
+    ignition::gazebo::EntityComponentManager &_ecm) = 0;
+
   /// \brief This method is called when the message bus delivers a message.
   /// You should override this method to determine when a message is coming in.
   /// \param[in] _packet - Incoming coMessageManagermms packet.
@@ -42,7 +50,8 @@ class ICommsModel
   public: virtual void step(
     const ignition::gazebo::UpdateInfo &_info,
     ignition::gazebo::EntityComponentManager &_ecm,
-    MessageManager &_messageMgr) = 0;
+    MessageManager &_messageMgr,
+    const ignition::math::Pose3d &_pose) = 0;
   
   /// \brief
   public: virtual ~ICommsModel() = default;
