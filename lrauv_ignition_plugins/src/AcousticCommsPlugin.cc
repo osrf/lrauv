@@ -20,7 +20,10 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 
 #include "AcousticCommsPlugin.hh"
 
+#include <ignition/gazebo/components.hh>
+#include <ignition/gazebo/Link.hh>
 #include <ignition/gazebo/Model.hh>
+#include <ignition/gazebo/Util.hh>
 #include <ignition/math/Vector3.hh>
 #include <ignition/plugin/Loader.hh>
 #include <ignition/plugin/Register.hh>
@@ -82,6 +85,9 @@ class AcousticCommsPrivateData
 
   /// \brief Current time
   public: std::chrono::steady_clock::time_point currentTime;
+
+  /// \brief Entity to which the transponder is bound to.
+  public: ignition::gazebo::Entity linkEntity;
 
   /// \brief mutex
   public: std::mutex mtx;
@@ -213,7 +219,7 @@ void AcousticCommsPlugin::Configure(
     return;
   }
   
-  auto commsModels= loader.PluginsImplementing("tethys::ICommsModel");
+  auto commsModels = loader.PluginsImplementing("tethys::ICommsModel");
   auto modelName = _sdf->Get<std::string>("model_name");
 
   if (commsModels.count(modelName) == 0)
@@ -242,6 +248,12 @@ void AcousticCommsPlugin::Configure(
     return;
   }
 
+  auto vehicleModel = ignition::gazebo::Model(_entity);
+  auto linkName = _sdf->Get<std::string>("link_name");
+  this->dataPtr->linkEntity = vehicleModel.LinkByName(_ecm, linkName);
+  ignition::gazebo::enableComponent<ignition::gazebo::components::WorldPose>(
+    _ecm, this->dataPtr->linkEntity);
+
   this->dataPtr->externalCommsTopic = this->dataPtr->externalCommsTopic +
     "/" + std::to_string(this->dataPtr->address);
 
@@ -269,7 +281,13 @@ void AcousticCommsPlugin::PreUpdate(
   if (_info.paused)
     return;
 
+  ignition::gazebo::Link baseLink(this->dataPtr->linkEntity);
+  auto pose = baseLink.WorldPose(_ecm);
+
   std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
+  this->dataPtr->currentPosition = pose->Pos();
+  this->dataPtr->currentTime = 
+    std::chrono::steady_clock::time_point(_info.simTime);
 
   if (this->dataPtr->commsModel != nullptr)
     this->dataPtr->commsModel->step(_info, _ecm, 
