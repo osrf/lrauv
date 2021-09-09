@@ -23,6 +23,8 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 #include <ignition/gazebo/Model.hh>
 #include <ignition/math/Vector3.hh>
 #include <ignition/plugin/Loader.hh>
+#include <ignition/plugin/Register.hh>
+#include <ignition/plugin/SpecializedPluginPtr.hh>
 #include <ignition/transport/Node.hh>
 
 #include <lrauv_ignition_plugins/comms/CommsModel.hh>
@@ -179,7 +181,66 @@ void AcousticCommsPlugin::Configure(
 
   // Add the build directory path for the plugin libraries so the SystemPaths
   // object will know to search through it.
-  // paths.AddPluginPaths(PluginLibDir);
+  paths.AddPluginPaths(std::getenv("TETHYS_COMMS_MODEL"));
+
+  if (!_sdf->HasElement("model_plugin_file"))
+  {
+    ignerr << "No <model_plugin_file> found." 
+      << "Please specify library to load pluginfrom." 
+      << std::endl;
+    return;
+  }
+
+  auto pluginFileName = _sdf->Get<std::string>("model_plugin_file");
+  auto pluginPath = paths.FindSharedLibrary(pluginFileName);
+  if (pluginPath.empty())
+  {
+    ignerr << "Unable to load model " << pluginFileName 
+      << "file not found" << std::endl;
+    return;
+  }
+  igndbg << "was here" <<std::endl;
+  if(loader.LoadLib(pluginPath).empty())
+  {
+    std::cout << "Failed to load " << pluginPath 
+      << "as a plugin library" << std::endl;
+  }
+
+  if (!_sdf->HasElement("model_name"))
+  {
+    ignerr << "No <model_name> found. Which model do you want to use?"
+      << std::endl;
+    return;
+  }
+  
+  auto commsModels= loader.PluginsImplementing("tethys::ICommsModel");
+  auto modelName = _sdf->Get<std::string>("model_name");
+
+  if (commsModels.count(modelName) == 0)
+  {
+    ignerr << modelName 
+      << " does not implement tethys::ICommsModel" << std::endl;
+  }
+
+  ignition::plugin::SpecializedPluginPtr<ICommsModel> ModelPluginPtr 
+    = loader.Instantiate(modelName);
+  this->dataPtr->commsModel = ModelPluginPtr->QueryInterface<ICommsModel>();
+
+  if (this->dataPtr->commsModel == nullptr)
+  {
+    ignerr << "Failed to load comms model plugin " << modelName 
+      <<  " from " << pluginPath;
+    return;
+  }
+  igndbg << "Loaded comms model" << modelName << " from " 
+    << pluginPath << std::endl;
+
+  if (!_sdf->HasElement("link_name"))
+  {
+    ignerr << "No <link_name> was found. Please specify a link to use as "
+     << "a reciever" << std::endl;
+    return;
+  }
 
   this->dataPtr->externalCommsTopic = this->dataPtr->externalCommsTopic +
     "/" + std::to_string(this->dataPtr->address);
@@ -205,11 +266,20 @@ void AcousticCommsPlugin::PreUpdate(
   const ignition::gazebo::UpdateInfo &_info,
   ignition::gazebo::EntityComponentManager &_ecm)
 {
-  if(this->dataPtr->commsModel != nullptr)
+  if (_info.paused)
+    return;
+
+  std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
+
+  if (this->dataPtr->commsModel != nullptr)
     this->dataPtr->commsModel->step(_info, _ecm, 
       this->dataPtr->externalCommsPublisher);
-  else
-    ignerr << "Comms model has not loaded properly" << std::endl;
 }
 
 }
+
+IGNITION_ADD_PLUGIN(
+  tethys::AcousticCommsPlugin,
+  ignition::gazebo::System,
+  tethys::AcousticCommsPlugin::ISystemConfigure,
+  tethys::AcousticCommsPlugin::ISystemPreUpdate)

@@ -1,0 +1,55 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="buoyant_tethys">
+    <scene>
+      <!-- For turquoise ambient to match particle effect -->
+      <ambient>0.0 1.0 1.0</ambient>
+      <!-- For default gray ambient -->
+      <!--background>0.8 0.8 0.8</background-->
+      <background>0.0 0.7 0.8</background>
+    </scene>
+
+    <physics name="1ms" type="dart">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+    </physics>
+
+    <plugin
+      filename="ignition-gazebo-physics-system"
+      name="ignition::gazebo::systems::Physics">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-user-commands-system"
+      name="ignition::gazebo::systems::UserCommands">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-scene-broadcaster-system"
+      name="ignition::gazebo::systems::SceneBroadcaster">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-contact-system"
+      name="ignition::gazebo::systems::Contact">
+    </plugin>
+
+    <include>
+      <pose>0 0 0 0 0 0</pose>
+      <uri>tethys</uri>
+      <name>Tethys1</name>
+    </include>
+
+    <include>
+      <pose>0 300 0 0 0 0</pose>
+      <uri>tethys</uri>
+      <name>Tethys2</name>
+      <plugin
+        filename="AcousticCommsPlugin"
+        name="tethys::AcousticCommsPlugin">
+        <address>1</address>
+        <model_plugin_file>simpleacousticmodel</model_plugin_file>
+        <model_name>tethys::SimpleAcousticModel</model_name>
+        <link_name>body</link_name>
+      </plugin>
+    </include>
+
+  </world>
+</sdf>
