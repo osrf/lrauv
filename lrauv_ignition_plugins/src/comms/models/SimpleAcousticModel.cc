@@ -76,10 +76,10 @@ class SimpleAcousticModel : public ICommsModel
     if (distance > this->maxRange) return true;
 
     // Linear dropoff rate for now
-    auto cutoff = distance/this->maxRange; 
-    auto val = this->uniformDistribution(gen);
+    // auto cutoff = distance/this->maxRange; 
+    // auto val = this->uniformDistribution(gen);
 
-    return val > cutoff;
+    return false;
   }
 
   public: void step(
