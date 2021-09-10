@@ -33,6 +33,7 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 #include <lrauv_ignition_plugins/comms/CommsModel.hh>
 #include <lrauv_ignition_plugins/comms/CommsPacket.hh>
 #include <lrauv_ignition_plugins/comms/MessageManager.hh>
+#include <lrauv_ignition_plugins/comms/TopicDefinitions.hh>
 
 #include <unordered_map>
 
@@ -56,10 +57,10 @@ class AcousticCommsPrivateData
   );
 
   /// \brief Internal comms topic
-  public: std::string internalCommsTopic {"comms/internal"};
+  public: std::string internalCommsTopic {INTERNAL_COMMS_BUS};
 
   /// \brief Internal comms topic
-  public: std::string externalCommsTopic {"comms/external"};
+  public: std::string externalCommsTopic {EXTERNAL_COMMS_BUS};
 
   /// \brief Address of myself
   public: uint32_t address;

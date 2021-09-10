@@ -187,6 +187,8 @@ if(BUILD_TESTING)
   set("PROJECT_SOURCE_PATH" ${CMAKE_CURRENT_SOURCE_DIR})
   configure_file(test/helper/TestConstants.hh.in TestConstants.hh @ONLY)
 
+  include(GoogleTest)
+
   # Tests
   foreach(TEST_TARGET
     test_controller
@@ -205,9 +207,20 @@ if(BUILD_TESTING)
       lrauv_command
     )
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
-    include(GoogleTest)
     gtest_discover_tests(${TEST_TARGET})
   endforeach()
+
+  add_executable(test_comms test/test_comms.cc)
+  target_include_directories(test_comms
+    PUBLIC
+    ${CMAKE_BINARY_DIR}/proto
+    include/)
+  target_link_libraries(test_comms
+    PUBLIC gtest_main
+    PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+    lrauv_acoustic_message
+    lrauv_internal_comms)
+  gtest_discover_tests(test_comms)
 
 endif()
 
