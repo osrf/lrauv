@@ -27,15 +27,6 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 
 namespace tethys
 {
-/// \brief Used internally to store the 
-struct PacketHash
-{
-  std::size_t operator()(const CommsPacket& _packet) const
-  {
-    return std::hash<std::string>()(_packet.Data() 
-      + std::to_string(_packet.From()));
-  }
-};
 /// \brief A simple acoustic model that handles incoming packets and their
 /// delays. Doesn't use any fancy datastructure (it probably should). Basically
 /// applies a delay and a drop-out rate to incoming messages. The dropout rate
@@ -44,7 +35,7 @@ class SimpleAcousticModel : public ICommsModel
 {
   /// \brief The set of messages queued. A smarter way to solve this would be to
   /// use a priority queue ordered by distance from arriving packet.
-  private: std::unordered_set<CommsPacket, PacketHash> packets;
+  private: std::vector<CommsPacket> packets;
 
   private: uint32_t address;
 
@@ -77,7 +68,7 @@ class SimpleAcousticModel : public ICommsModel
   {
     // For now don't care about packet collision
     if (_packet.To() == this->address)
-      packets.insert(_packet);
+      packets.push_back(_packet);
   }
 
   public: bool dropPacket(double distance)
@@ -97,14 +88,16 @@ class SimpleAcousticModel : public ICommsModel
     MessageManager &_messageMgr,
     const ignition::math::Pose3d &_pose) override
   {
-    /*std::erase_if(
+    this->packets.erase(std::remove_if(
       this->packets.begin(), this->packets.end(), 
-      [] (const auto packet) -> bool const
+      [_info, _pose, &_messageMgr, self = this]
+      (const auto packet) -> bool const
       {
         auto distToTransmitter = packet.Position().Distance(_pose.Pos());
         std::chrono::steady_clock::time_point currTime(_info.simTime);
+        
         auto duration = 
-          std::chrono::duration_cast<std::chrono::seconds, double>(
+          std::chrono::duration_cast<std::chrono::duration<double>>(
             currTime - packet.TimeOfTransmission());
         auto distanceCoveredByMessage = duration.count() * self->speedOfSound; 
         
@@ -117,7 +110,7 @@ class SimpleAcousticModel : public ICommsModel
           return true;
         }
         return false;
-    });*/
+    }), this->packets.end());
   }
 };
 
