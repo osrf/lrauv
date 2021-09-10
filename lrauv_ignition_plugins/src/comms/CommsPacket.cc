@@ -9,7 +9,7 @@ public:
   ignition::math::Vector3d position;
   uint32_t to;
   uint32_t from;
-  uint32_t type;
+  CommsPacket::MsgType type;
   std::chrono::steady_clock::time_point timeOfTx;
   std::string data;
 };
@@ -24,6 +24,12 @@ CommsPacket::CommsPacket() : dataPtr(std::make_shared<CommsPacketPrivateData>())
 CommsPacket::~CommsPacket()
 {
   // do nothing
+}
+
+//////////////////////////////////////////////////
+CommsPacket::MsgType CommsPacket::Type() const
+{
+  return this->dataPtr->type;
 }
 
 //////////////////////////////////////////////////
@@ -64,7 +70,23 @@ lrauv_ignition_plugins::msgs::LRAUVAcousticMessage
   msg.set_data(this->dataPtr->data);
   msg.set_from(this->dataPtr->from);
   msg.set_to(this->dataPtr->to);
-  //msg.set_type();
+
+  using MsgType 
+    = lrauv_ignition_plugins::msgs::LRAUVAcousticMessage::MessageType;
+
+  if (this->Type() == CommsPacket::MsgType::RANGE_REQUEST)
+  {
+    msg.set_type(MsgType::LRAUVAcousticMessage_MessageType_RangeRequest);
+  }
+  else if (this->Type() == CommsPacket::MsgType::RANGE_RESPONSE)
+  {
+    msg.set_type(MsgType::LRAUVAcousticMessage_MessageType_RangeResponse);
+  }
+  else
+  {
+    msg.set_type(MsgType::LRAUVAcousticMessage_MessageType_Other);
+  }
+
   return msg;
 }
 
@@ -97,7 +119,23 @@ lrauv_ignition_plugins::msgs::LRAUVInternalComms
   header.set_allocated_stamp(&time);
 
   msg.set_allocated_header(&header);
-  //msg.set_type();
+
+  using MsgType 
+    = lrauv_ignition_plugins::msgs::LRAUVInternalComms::MessageType;
+
+  if (this->Type() == CommsPacket::MsgType::RANGE_REQUEST)
+  {
+    msg.set_type(MsgType::LRAUVInternalComms_MessageType_RangeRequest);
+  }
+  else if (this->Type() == CommsPacket::MsgType::RANGE_RESPONSE)
+  {
+    msg.set_type(MsgType::LRAUVInternalComms_MessageType_RangeResponse);
+  }
+  else
+  {
+    msg.set_type(MsgType::LRAUVInternalComms_MessageType_Other);
+  }
+
   return msg;
 }
 
@@ -114,6 +152,28 @@ CommsPacket CommsPacket::make(
   packet.dataPtr->data = datapayload.data();
   packet.dataPtr->position = position;
   packet.dataPtr->timeOfTx = timeOfTx;
+
+  using MsgType 
+    = lrauv_ignition_plugins::msgs::LRAUVAcousticMessage::MessageType;
+
+  if (datapayload.type() 
+    == MsgType::LRAUVAcousticMessage_MessageType_RangeRequest)
+  {
+    packet.dataPtr->type = CommsPacket::MsgType::RANGE_REQUEST;
+  }
+
+  if (datapayload.type() 
+    == MsgType::LRAUVAcousticMessage_MessageType_RangeResponse)
+  {
+    packet.dataPtr->type = CommsPacket::MsgType::RANGE_RESPONSE;
+  }
+
+  if (datapayload.type() 
+    == MsgType::LRAUVAcousticMessage_MessageType_Other)
+  {
+    packet.dataPtr->type = CommsPacket::MsgType::DATA;
+  }
+
   return packet;
 }
 
@@ -136,6 +196,27 @@ CommsPacket CommsPacket::make(
   std::chrono::nanoseconds dur((long)(timeMsg.sec() * 1e9) + timeMsg.nsec());
   std::chrono::steady_clock::time_point timeOfTx(dur);
   packet.dataPtr->timeOfTx = timeOfTx;
+
+  using MsgType 
+    = lrauv_ignition_plugins::msgs::LRAUVInternalComms::MessageType;
+
+  if (datapayload.type() 
+    == MsgType::LRAUVInternalComms_MessageType_RangeRequest)
+  {
+    packet.dataPtr->type = CommsPacket::MsgType::RANGE_REQUEST;
+  }
+
+  if (datapayload.type() 
+    == MsgType::LRAUVInternalComms_MessageType_RangeResponse)
+  {
+    packet.dataPtr->type = CommsPacket::MsgType::RANGE_RESPONSE;
+  }
+
+  if (datapayload.type() 
+    == MsgType::LRAUVInternalComms_MessageType_Other)
+  {
+    packet.dataPtr->type = CommsPacket::MsgType::DATA;
+  }
   return packet;
 }
 
@@ -145,5 +226,6 @@ bool CommsPacket::operator==(const CommsPacket &other) const
   return this->To() == other.To()
     && this->From() == other.From()
     && this->Data() == other.Data()
+    && this->Type() == other.Type()
     && this->Position().Distance(other.Position()) < 1e-6;
 }

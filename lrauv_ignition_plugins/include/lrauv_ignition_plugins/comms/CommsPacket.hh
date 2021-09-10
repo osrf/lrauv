@@ -30,9 +30,23 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 
 namespace tethys
 {
+
 //////////////////////////////////////////////////
 class CommsPacket
 {
+  /// \brief Enum for the message type
+  public: enum class MsgType {
+    /// \brief Range requests
+    RANGE_REQUEST,
+    /// \brief Response to range request
+    RANGE_RESPONSE,
+    /// \brief Data
+    DATA
+  };
+  
+  /// \brief Returns the packet type.
+  public: MsgType Type() const;
+
   /// \brief The position from which the transmission is made
   public: ignition::math::Vector3d Position() const;
 
