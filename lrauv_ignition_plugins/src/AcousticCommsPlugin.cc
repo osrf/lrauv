@@ -179,6 +179,18 @@ void AcousticCommsPlugin::Configure(
       this->dataPtr->broadcast = false;
     }
   }
+
+  auto vehicleModel = ignition::gazebo::Model(_entity);
+  auto linkName = _sdf->Get<std::string>("link_name");
+  this->dataPtr->linkEntity = vehicleModel.LinkByName(_ecm, linkName);
+  if(this->dataPtr->linkEntity == ignition::gazebo::kNullEntity)
+  {
+    ignerr << "Link " << linkName << " was not found in "
+      << vehicleModel.Name(_ecm) << std::endl;
+    return;
+  }
+  ignition::gazebo::enableComponent<ignition::gazebo::components::WorldPose>(
+    _ecm, this->dataPtr->linkEntity);
   
   // Create an object that can search the system paths for the plugin libraries.
   ignition::common::SystemPaths paths;
@@ -250,11 +262,7 @@ void AcousticCommsPlugin::Configure(
     return;
   }
 
-  auto vehicleModel = ignition::gazebo::Model(_entity);
-  auto linkName = _sdf->Get<std::string>("link_name");
-  this->dataPtr->linkEntity = vehicleModel.LinkByName(_ecm, linkName);
-  ignition::gazebo::enableComponent<ignition::gazebo::components::WorldPose>(
-    _ecm, this->dataPtr->linkEntity);
+  
 
   this->dataPtr->externalCommsTopic = this->dataPtr->externalCommsTopic +
     "/" + std::to_string(this->dataPtr->address);
