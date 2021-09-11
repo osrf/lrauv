@@ -102,13 +102,15 @@ function(add_lrauv_plugin PLUGIN)
   endif()
 endfunction()
 
+add_subdirectory(src/comms/)
+
 add_lrauv_plugin(AcousticCommsPlugin
   INCLUDE_COMMS
   PROTO 
     lrauv_acoustic_message
     lrauv_internal_comms
-  ADDITIONAL_SOURCES
-    src/comms/CommsPacket.cc)
+  PRIVATE_LINK_LIBS
+    CommsSupport)
 add_lrauv_plugin(BuoyancyEnginePlugin)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(JointPositionPlugin)
@@ -124,7 +126,6 @@ add_lrauv_plugin(TethysCommPlugin
 add_lrauv_plugin(ThrusterPlugin)
 add_lrauv_plugin(TimeAnalysisPlugin)
 
-add_subdirectory(src/comms/models)
 
 #============================================================================
 # Install public headers
@@ -219,7 +220,8 @@ if(BUILD_TESTING)
     PUBLIC gtest_main
     PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
     lrauv_acoustic_message
-    lrauv_internal_comms)
+    lrauv_internal_comms
+    CommsSupport)
   gtest_discover_tests(test_comms)
 
 endif()
