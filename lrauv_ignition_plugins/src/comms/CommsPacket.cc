@@ -99,26 +99,26 @@ lrauv_ignition_plugins::msgs::LRAUVInternalComms
   msg.set_from(this->dataPtr->from);
   msg.set_to(this->dataPtr->to);
 
-  ignition::msgs::Vector3d vector;
-  vector.set_x(this->dataPtr->position.X());
-  vector.set_y(this->dataPtr->position.Y());
-  vector.set_z(this->dataPtr->position.Z());
-  msg.set_allocated_position(&vector);
+  ignition::msgs::Vector3d* vector = new ignition::msgs::Vector3d;
+  vector->set_x(this->dataPtr->position.X());
+  vector->set_y(this->dataPtr->position.Y());
+  vector->set_z(this->dataPtr->position.Z());
+  msg.set_allocated_position(vector);
 
-  ignition::msgs::Time time;
+  ignition::msgs::Time* time = new ignition::msgs::Time;
   auto sec = 
     std::chrono::duration_cast<std::chrono::seconds>(
       this->dataPtr->timeOfTx.time_since_epoch()
     );
-  time.set_sec(sec.count());
-  time.set_nsec(
+  time->set_sec(sec.count());
+  time->set_nsec(
     this->dataPtr->timeOfTx.time_since_epoch().count()
     - (long)(sec.count() * 1e9));
 
-  ignition::msgs::Header header;
-  header.set_allocated_stamp(&time);
+  ignition::msgs::Header* header = new ignition::msgs::Header;
+  header->set_allocated_stamp(time);
 
-  msg.set_allocated_header(&header);
+  msg.set_allocated_header(header);
 
   using MsgType 
     = lrauv_ignition_plugins::msgs::LRAUVInternalComms::MessageType;
