@@ -36,7 +36,8 @@ class AcousticCommsPrivateData;
 /// received messages and `/comms/external/<address>/tx` which this plugin 
 /// subscribes to and publishes data.
 /// * `<model_plugin_file>` : This is the name of library containing the 
-/// environmental comms Plugin. [Required]
+/// environmental comms Plugin. The file should be in your `$TETHYS_COMMS_MODEL`
+/// directory [Required].
 /// * `<model_name>` : This is the name of the environmental communications 
 /// model. [Required]
 /// * `<link_name>` : The link to which the wireless transponder is attached
