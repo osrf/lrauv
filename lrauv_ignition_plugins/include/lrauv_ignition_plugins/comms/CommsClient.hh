@@ -37,6 +37,12 @@ class CommsClient
 using CommsMsg = lrauv_ignition_plugins::msgs::LRAUVAcousticMessage;
 using Callback = std::function<void(const CommsMsg&)>;
 
+//////////////////////////////////////////////////
+/// \brief Constructor
+/// \param[in] _address - The address.
+/// \param[in] _callback - The callback to call when a message is recieved
+/// \param[in] _commsPrefix - Optional. Use if your public interface to acoustic
+/// comms is different. 
 public: CommsClient(uint32_t _address,
   Callback _callback,
   std::string _commsPrefix=EXTERNAL_COMMS_BUS) :
@@ -53,21 +59,32 @@ public: CommsClient(uint32_t _address,
   );
 }
 
-public: void SendPacket(const CommsMsg& msg)
+//////////////////////////////////////////////////
+/// \brief Send a message
+/// \param[in] _msg - Comms message to be sent
+public: void SendPacket(const CommsMsg& _msg)
 {
-  this->transmitter.Publish(msg);
+  this->transmitter.Publish(_msg);
 }
 
-private: void RecievedPacket(const CommsMsg& msg)
+//////////////////////////////////////////////////
+/// \brief Callback handler
+/// \param[in] _msg - message recieved
+private: void RecievedPacket(const CommsMsg& _msg)
 {
-  this->callback(msg);
+  this->callback(_msg);
 }
+
+/// \brief Address which the client binds to
 private: uint32_t address;
 
+/// \brief Ignition Node
 private: ignition::transport::Node node;
 
+/// \brief Publisher for interfacing with AcousticCommsPlugin
 private: ignition::transport::Node::Publisher transmitter;
 
+/// \brief Callback
 private: Callback callback;
 };
 }

@@ -28,6 +28,39 @@ namespace tethys
 
 class AcousticCommsPrivateData;
 
+///////////////////////////////////
+/// \brief 
+/// * `<address>` : The address parameter. This is a 32 bit unsigned int which
+/// reflects the address which belongs to this vehicle. This will also create 
+/// the topics  `/comms/external/<address>/rx` on which this plugin will publish
+/// received messages and `/comms/external/<address>/tx` which this plugin 
+/// subscribes to and publishes data.
+/// * `<model_plugin_file>` : This is the name of library containing the 
+/// environmental comms Plugin. [Required]
+/// * `<model_name>` : This is the name of the environmental communications 
+/// model. [Required]
+/// * `<link_name>` : The link to which the wireless transponder is attached
+/// to. [Required]
+/// * `<external_comms_prefix>` : Prefix on which to handle interaction between
+/// the application . [Optional, Defaults to `/comms/external`]
+/// * `<internal_comms_prefix>` : Prefix on which to send and listen for
+/// internal packets.  [Optional, Defaults to `/comms/internal`]
+/// * `<broadcast>` : This defaults to true. When enabled all receivers will
+/// receive all packets. If false, then packets will be directed only to 
+/// specified receivers.  [Optional, Defaults to `/comms/internal`]
+/// 
+/// ```
+///  <plugin
+///         filename="AcousticCommsPlugin"
+///         name="tethys::AcousticCommsPlugin">
+///         <address>2</address>
+///         <model_plugin_file>simpleacousticmodel</model_plugin_file>
+///         <model_name>tethys::SimpleAcousticModel</model_name>
+///         <link_name>base_link</link_name>
+///        ...
+///  </plugin>
+/// ```
+/// All other parameters are forwarded to the specific communication model.
 class AcousticCommsPlugin:
   public ignition::gazebo::System,
   public ignition::gazebo::ISystemConfigure,

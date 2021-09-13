@@ -36,6 +36,9 @@ namespace tethys
 class ICommsModel
 {
   /// \brief This method is called during setup.
+  /// \param[in] _entity - The model you are bound to.
+  /// \param[in] _sdf - The SDF description of the plugin.
+  /// \param[in] _ecm - Ignition's Entity Component Manager.
   public: virtual void Configure(
     const ignition::gazebo::Entity &_entity,
     const std::shared_ptr<const sdf::Element> &_sdf,
@@ -46,14 +49,19 @@ class ICommsModel
   /// \param[in] _packet - Incoming coMessageManagermms packet.
   public: virtual void EnqueueMsg(const CommsPacket &_packet) = 0;
 
-  /// \brief This method is called when the message bus 
+  /// \brief This method is called when there is a timestep in the simulator
+  /// override this to update your datastructures as needed.
+  /// \param[in] _info - Simulator information about the current timestep.
+  /// \param[in] _ecm - Ignition's ECM.
+  /// \param[in] _messageMgr - Use this to mark the message as arrived.
+  /// \param[in] _pose - The current pose of the recieving model.
   public: virtual void Step(
     const ignition::gazebo::UpdateInfo &_info,
     ignition::gazebo::EntityComponentManager &_ecm,
     MessageManager &_messageMgr,
     const ignition::math::Pose3d &_pose) = 0;
   
-  /// \brief
+  /// \brief Destructor
   public: virtual ~ICommsModel() = default;
 };
 }

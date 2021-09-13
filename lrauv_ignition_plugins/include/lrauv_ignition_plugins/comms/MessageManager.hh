@@ -30,11 +30,12 @@ namespace tethys
 class MessageManager
 {
   ////////////////////////////////////////////////
+  /// \brief Call this method when you want to declare that the message
+  /// has reached its destination.
   public: void MessageReachedDestination(const CommsPacket& packet)
   {
     this->externalPublisher.Publish(packet.ToExternalMsg());
   }
-
   ////////////////////////////////////////////////
   public: ignition::transport::Node::Publisher externalPublisher;
 };

@@ -37,23 +37,24 @@ class SimpleAcousticModel : public ICommsModel
   /// use a priority queue ordered by distance from arriving packet.
   private: std::vector<CommsPacket> packets;
 
+  /// \brief Address
   private: uint32_t address;
 
+  /// \brief Maximum range in metres before you drop all packets.
   private: double maxRange;
 
+  /// \brief Speed of sound in m/s.
   private: double speedOfSound;
 
-  private: std::random_device rd;  // Will be used to obtain a seed for the random number engine
-    
-  private: std::mt19937 gen;
-
-  private: std::uniform_real_distribution<> uniformDistribution;
-
-  public: SimpleAcousticModel() : gen(rd()), uniformDistribution(0,1)
+  ///////////////////////////////////////////
+  /// \brief Constructor
+  public: SimpleAcousticModel()
   {
-
+    // Do nothing.
   }
 
+  ///////////////////////////////////////////
+  /// \brief Documentation inherited from tethys::ICommsModel
   public: void Configure(
     const ignition::gazebo::Entity &_entity,
     const std::shared_ptr<const sdf::Element> &_sdf,
@@ -64,6 +65,8 @@ class SimpleAcousticModel : public ICommsModel
     this->speedOfSound = _sdf->Get<uint32_t>("speed_of_sound");
   }
 
+  ///////////////////////////////////////////
+  /// \brief Documentation inherited from tethys::ICommsModel
   public: void EnqueueMsg(const CommsPacket &_packet) override
   {
     // For now don't care about packet collision
@@ -71,17 +74,18 @@ class SimpleAcousticModel : public ICommsModel
       packets.push_back(_packet);
   }
 
+  ///////////////////////////////////////////
+  /// \brief Returns if the packet should be dropped.
+  /// \param[in] distance - Distance in metres.
   public: bool DropPacket(double distance)
   {
     if (distance > this->maxRange) return true;
 
-    // Linear dropoff rate for now
-    // auto cutoff = distance/this->maxRange; 
-    // auto val = this->uniformDistribution(gen);
-
     return false;
   }
 
+  ///////////////////////////////////////////
+  /// \brief Documentation inherited from tethys::ICommsModel
   public: void Step(
     const ignition::gazebo::UpdateInfo &_info,
     ignition::gazebo::EntityComponentManager &_ecm,
