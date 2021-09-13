@@ -46,7 +46,6 @@ public: CommsClient(uint32_t _address,
     this->node.Advertise<CommsMsg>(
       _commsPrefix + "/" + std::to_string(address) + "/tx");
 
-
   this->node.Subscribe(
     _commsPrefix + "/" + std::to_string(address) + "/rx",
     &CommsClient::RecievedPacket,

@@ -51,7 +51,33 @@ TEST(CommsBasicUnitTest, CommsPacketConversions)
   ASSERT_TRUE(MessageDifferencer::Equals(decoded, msg));
 }
 
-TEST_F(LrauvCommsFixture, testBasicSendRecieve)
+TEST_F(LrauvCommsFixture, TestBasicSendRecieve)
 {
+  using AcousticMsg = lrauv_ignition_plugins::msgs::LRAUVAcousticMessage;
+
+  CommsClient client1(1, [](const auto message){});
+
+  bool recieved_message = false;
+
+  CommsClient client2(2, [this, &recieved_message](const auto message)
+  {
+    ASSERT_EQ(message.data(), "test_message");
+    std::lock_guard<std::mutex> lock(this->mtx);
+    recieved_message = true;
+  });
   
+  AcousticMsg msg;
+  msg.set_to(2);
+  msg.set_from(1);
+  msg.set_type(
+    AcousticMsg::MessageType::LRAUVAcousticMessage_MessageType_Other);
+  msg.set_data("test_message");
+  this->fixture->Server()->Run(false, 1000, false);
+  client1.SendPacket(msg);
+
+  while(!recieved_message)
+  {
+    sleep(1);
+  }
+
 }

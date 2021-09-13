@@ -43,7 +43,7 @@ class LrauvCommsFixture : public ::testing::Test
     // Setup fixture
     this->fixture = std::make_unique<ignition::gazebo::TestFixture>(
         ignition::common::joinPaths(
-        std::string(PROJECT_SOURCE_PATH), "worlds", "acoustic_comm_test.sdf"));
+        std::string(PROJECT_SOURCE_PATH), "worlds", "acoustic_comms_test.sdf"));
 
     fixture->OnPostUpdate(
       [&](const ignition::gazebo::UpdateInfo &_info,
@@ -62,8 +62,10 @@ class LrauvCommsFixture : public ::testing::Test
   /// \brief How many times has OnPostUpdate been run
   public: unsigned int iterations{0u};
 
+  /// \brief Mutex variable
   public: std::mutex mtx;
 
+  /// \brief Current time
   public: std::chrono::steady_clock::time_point now;
 };
 #endif
