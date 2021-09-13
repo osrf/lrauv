@@ -135,7 +135,7 @@ void AcousticCommsPrivateData::OnRecieveMessage(
 {
   auto packet = CommsPacket::make(_msg);
   std::lock_guard<std::mutex> lock(this->mtx);
-  this->commsModel->enqueue_msg(packet);
+  this->commsModel->EnqueueMsg(packet);
 }
 
 //////////////////////////////////////////////////
@@ -304,7 +304,7 @@ void AcousticCommsPlugin::PreUpdate(
     std::chrono::steady_clock::time_point(_info.simTime);
 
   if (this->dataPtr->commsModel != nullptr)
-    this->dataPtr->commsModel->step(_info, _ecm, 
+    this->dataPtr->commsModel->Step(_info, _ecm, 
       this->dataPtr->externalCommsPublisher, pose.value());
 }
 

@@ -64,14 +64,14 @@ class SimpleAcousticModel : public ICommsModel
     this->speedOfSound = _sdf->Get<uint32_t>("speed_of_sound");
   }
 
-  public: void enqueue_msg(const CommsPacket &_packet) override
+  public: void EnqueueMsg(const CommsPacket &_packet) override
   {
     // For now don't care about packet collision
     if (_packet.To() == this->address)
       packets.push_back(_packet);
   }
 
-  public: bool dropPacket(double distance)
+  public: bool DropPacket(double distance)
   {
     if (distance > this->maxRange) return true;
 
@@ -82,7 +82,7 @@ class SimpleAcousticModel : public ICommsModel
     return false;
   }
 
-  public: void step(
+  public: void Step(
     const ignition::gazebo::UpdateInfo &_info,
     ignition::gazebo::EntityComponentManager &_ecm,
     MessageManager &_messageMgr,
@@ -103,7 +103,7 @@ class SimpleAcousticModel : public ICommsModel
         
         if (distToTransmitter <= distanceCoveredByMessage)
         {
-          if (!self->dropPacket(distToTransmitter))
+          if (!self->DropPacket(distToTransmitter))
           {
             _messageMgr.MessageReachedDestination(packet);
           }

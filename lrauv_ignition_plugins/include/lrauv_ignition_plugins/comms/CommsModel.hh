@@ -44,10 +44,10 @@ class ICommsModel
   /// \brief This method is called when the message bus delivers a message.
   /// You should override this method to determine when a message is coming in.
   /// \param[in] _packet - Incoming coMessageManagermms packet.
-  public: virtual void enqueue_msg(const CommsPacket &_packet) = 0;
+  public: virtual void EnqueueMsg(const CommsPacket &_packet) = 0;
 
   /// \brief This method is called when the message bus 
-  public: virtual void step(
+  public: virtual void Step(
     const ignition::gazebo::UpdateInfo &_info,
     ignition::gazebo::EntityComponentManager &_ecm,
     MessageManager &_messageMgr,
