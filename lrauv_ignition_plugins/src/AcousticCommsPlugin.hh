@@ -18,8 +18,8 @@
 /* Development of this module has been funded by the Monterey Bay Aquarium
 Research Institute (MBARI) and the David and Lucile Packard Foundation */
 
-#ifndef TETHYS_BUOYANCY_ENGINE_
-#define TETHYS_BUOYANCY_ENGINE_
+#ifndef TETHYS_ACOUSTICCOMMS_ENGINE_
+#define TETHYS_ACOUSTICCOMMS_ENGINE_
 
 #include <ignition/gazebo/System.hh>
 

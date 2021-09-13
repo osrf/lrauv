@@ -21,6 +21,8 @@ add_lrauv_message(lrauv_acoustic_message)
 add_lrauv_message(lrauv_command)
 add_lrauv_message(lrauv_state)
 add_lrauv_message(lrauv_internal_comms)
+add_lrauv_message(lrauv_range_bearing_request)
+add_lrauv_message(lrauv_range_bearing_response)
 
 install(
   DIRECTORY ${CMAKE_BINARY_DIR}
