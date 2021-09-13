@@ -221,7 +221,7 @@ void AcousticCommsPlugin::Configure(
       << "file not found" << std::endl;
     return;
   }
-  igndbg << "was here" <<std::endl;
+
   if(loader.LoadLib(pluginPath).empty())
   {
     std::cout << "Failed to load " << pluginPath 
