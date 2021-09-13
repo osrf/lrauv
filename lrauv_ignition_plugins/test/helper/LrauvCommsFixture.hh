@@ -49,7 +49,9 @@ class LrauvCommsFixture : public ::testing::Test
       [&](const ignition::gazebo::UpdateInfo &_info,
       const ignition::gazebo::EntityComponentManager &_ecm)
       {
+        std::lock_guard<std::mutex> lock(this->mtx);
         this->iterations++;
+        this->now = std::chrono::steady_clock::time_point(_info.simTime);
       });
     fixture->Finalize();
   }
@@ -59,5 +61,9 @@ class LrauvCommsFixture : public ::testing::Test
 
   /// \brief How many times has OnPostUpdate been run
   public: unsigned int iterations{0u};
+
+  public: std::mutex mtx;
+
+  public: std::chrono::steady_clock::time_point now;
 };
 #endif

@@ -15,6 +15,13 @@
     </physics>
 
     <plugin
+      filename="ignition-gazebo-buoyancy-system"
+      name="ignition::gazebo::systems::Buoyancy">
+      <uniform_fluid_density>1000</uniform_fluid_density>
+    </plugin>
+
+
+    <plugin
       filename="ignition-gazebo-physics-system"
       name="ignition::gazebo::systems::Physics">
     </plugin>
@@ -31,10 +38,32 @@
       name="ignition::gazebo::systems::Contact">
     </plugin>
 
-    <include>
+    <model name="commsLink1">
       <pose>0 0 0 0 0 0</pose>
-      <uri>tethys</uri>
-      <name>Tethys1</name>
+      <link name="base_link">
+        <inertial>
+          <mass>1000</mass>
+          <inertia>
+            <ixx>86.289</ixx>
+            <iyy>86.289</iyy>
+            <izz>86.289</izz>
+          </inertia>
+        </inertial>
+        <visual name="base_link_vis">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </visual>
+        <collision name="base_link_coll">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
       <plugin
         filename="AcousticCommsPlugin"
         name="tethys::AcousticCommsPlugin">
@@ -45,24 +74,9 @@
         <max_range>2500</max_range>
         <speed_of_sound>1500</speed_of_sound>
       </plugin>
+    </model>
 
-    </include>
-
-    <include>
-      <pose>0 300 0 0 0 0</pose>
-      <uri>tethys</uri>
-      <name>Tethys2</name>
-      <plugin
-        filename="AcousticCommsPlugin"
-        name="tethys::AcousticCommsPlugin">
-        <address>2</address>
-        <model_plugin_file>simpleacousticmodel</model_plugin_file>
-        <model_name>tethys::SimpleAcousticModel</model_name>
-        <link_name>base_link</link_name>
-        <max_range>2500</max_range>
-        <speed_of_sound>1500</speed_of_sound>
-      </plugin>
-    </include>
+   
 
   </world>
 </sdf>

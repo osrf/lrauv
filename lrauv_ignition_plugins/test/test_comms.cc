@@ -50,3 +50,8 @@ TEST(CommsBasicUnitTest, CommsPacketConversions)
 
   ASSERT_TRUE(MessageDifferencer::Equals(decoded, msg));
 }
+
+TEST_F(LrauvCommsFixture, testBasicSendRecieve)
+{
+  
+}

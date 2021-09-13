@@ -113,7 +113,7 @@ lrauv_ignition_plugins::msgs::LRAUVInternalComms
   time->set_sec(sec.count());
   time->set_nsec(
     this->dataPtr->timeOfTx.time_since_epoch().count()
-    - (long)(sec.count() * 1e9));
+    - (sec.count() * 1000000000L));
 
   ignition::msgs::Header* header = new ignition::msgs::Header;
   header->set_allocated_stamp(time);

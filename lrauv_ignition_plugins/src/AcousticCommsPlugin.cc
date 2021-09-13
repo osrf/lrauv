@@ -90,6 +90,9 @@ class AcousticCommsPrivateData
   /// \brief Entity to which the transponder is bound to.
   public: ignition::gazebo::Entity linkEntity;
 
+  /// \brief Plugin pointer
+  public: ignition::plugin::SpecializedPluginPtr<ICommsModel> ModelPluginPtr;
+
   /// \brief mutex
   public: std::mutex mtx;
 };
@@ -241,9 +244,9 @@ void AcousticCommsPlugin::Configure(
       << " does not implement tethys::ICommsModel" << std::endl;
   }
 
-  ignition::plugin::SpecializedPluginPtr<ICommsModel> ModelPluginPtr 
-    = loader.Instantiate(modelName);
-  this->dataPtr->commsModel = ModelPluginPtr->QueryInterface<ICommsModel>();
+  this->dataPtr->ModelPluginPtr = loader.Instantiate(modelName);
+  this->dataPtr->commsModel =
+    this->dataPtr->ModelPluginPtr->QueryInterface<ICommsModel>();
 
   if (this->dataPtr->commsModel == nullptr)
   {
@@ -261,8 +264,6 @@ void AcousticCommsPlugin::Configure(
      << "a reciever" << std::endl;
     return;
   }
-
-  
 
   this->dataPtr->externalCommsTopic = this->dataPtr->externalCommsTopic +
     "/" + std::to_string(this->dataPtr->address);
