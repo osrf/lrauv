@@ -58,12 +58,22 @@ TEST_F(LrauvCommsFixture, TestBasicSendRecieve)
   CommsClient client1(1, [](const auto message){});
 
   bool recieved_message = false;
-
-  CommsClient client2(2, [this, &recieved_message](const auto message)
+  
+  std::mutex recieve_message_mtx;
+  std::condition_variable cv;
+  CommsClient client2(2, [
+    this, 
+    &recieved_message,
+    &recieve_message_mtx,
+    &cv](const auto message)
   {
     ASSERT_EQ(message.data(), "test_message");
     std::lock_guard<std::mutex> lock(this->mtx);
-    recieved_message = true;
+    {
+      std::lock_guard<std::mutex> lk(recieve_message_mtx);
+      recieved_message = true;
+    }
+    cv.notify_all();
   });
   
   AcousticMsg msg;
@@ -75,9 +85,6 @@ TEST_F(LrauvCommsFixture, TestBasicSendRecieve)
   this->fixture->Server()->Run(false, 1000, false);
   client1.SendPacket(msg);
 
-  while(!recieved_message)
-  {
-    sleep(1);
-  }
-
+  std::unique_lock<std::mutex> lock(recieve_message_mtx);
+  cv.wait(lock, [&recieved_message]{return recieved_message;});
 }
