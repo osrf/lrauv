@@ -15,11 +15,114 @@
  *
  */
 #include <ignition/plugin/Register.hh>
+#include <ignition/common/SystemPaths.hh>
+
+#include <pcl/point_cloud.h>
+#include <pcl/octree/octree_search.h>
 
 #include "ScienceSensorsSystem.hh"
 
 using namespace tethys;
 
+class tethys::ScienceSensorsSystemPrivate
+{
+  /// \brief Reads csv file and populate various data fields
+  public: void ReadData();
+
+  /// \brief Generate octree from spatial data, for searching
+  public: void GenerateOctrees();
+
+  /// \brief Interpolate floating point data based on distance
+  /// \param[in] _arr Array of data from which to find elements to interpolate
+  /// \param[in] _spatialIdx Indices in _arr
+  /// \param[in] _spatialSqrDist Distances of elements in _arr
+  /// \return Interpolated value, or quiet NaN if inputs invalid.
+  public: float InterpolateData(
+    std::vector<float> _arr,
+    std::vector<int> &_inds,
+    std::vector<float> &_dists);
+
+  /// \brief csv field name for timestamp of data
+  public: const std::string TIME {"elapsed_time_second"};
+
+  /// \brief csv field name for northward coordinates
+  public: const std::string NORTHINGS {"northings_meter"};
+
+  /// \brief csv field name for eastward coordinates
+  public: const std::string EASTINGS {"eastings_meter"};
+
+  /// \brief csv field name for depth
+  public: const std::string DEPTH {"depth_meter"};
+
+  /// \brief csv field name for temperature
+  public: const std::string TEMPERATURE {"sea_water_temperature_degC"};
+
+  /// \brief csv field name for salinity
+  public: const std::string SALINITY {"sea_water_salinity_psu"};
+
+  /// \brief csv field name for chlorophyll
+  public: const std::string CHLOROPHYLL {
+    "mass_concentration_of_chlorophyll_in_sea_water_ugram_per_liter"};
+
+  /// \brief csv field name for ocean current velocity eastward
+  public: const std::string EAST_CURRENT {
+    "eastward_sea_water_velocity_meter_per_sec"};
+
+  /// \brief csv field name for ocean current velocity northward
+  public: const std::string NORTH_CURRENT {
+    "northward_sea_water_velocity_meter_per_sec"};
+
+  /// \brief Input data file name, relative to a path Ignition can find in its
+  /// environment variables.
+  public: std::string dataPath {"2003080103_mb_l3_las.csv"};
+
+  /// \brief Indicates whether data has been loaded
+  public: bool initialized = false;
+
+  /// \brief Whether using more than one time slices of data
+  public: bool multipleTimeSlices = false;
+
+  /// \brief Index of the latest time slice
+  public: int timeIdx = 0;
+
+  /// \brief Timestamps to index slices of data
+  public: std::vector<float> timestamps;
+
+  /// \brief Spatial coordinates of data
+  /// Vector size: number of time slices. Indices correspond to those of
+  /// this->timestamps.
+  /// Point cloud: spatial coordinates to index science data by location
+  public: std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> timeSpaceCoords;
+
+  /// \brief Science data.
+  /// Outer vector size: number of time slices. Indices correspond to those of
+  /// this->timestamps.
+  /// Inner vector: indices correspond to those of timeSpaceCoords.
+  public: std::vector<std::vector<float>> temperatureArr;
+
+  /// \brief Science data. Same size as temperatureArr.
+  public: std::vector<std::vector<float>> salinityArr;
+
+  /// \brief Science data. Same size as temperatureArr.
+  public: std::vector<std::vector<float>> chlorophyllArr;
+
+  /// \brief Science data. Same size as temperatureArr.
+  public: std::vector<std::vector<float>> eastCurrentArr;
+
+  /// \brief Science data. Same size as temperatureArr.
+  public: std::vector<std::vector<float>> northCurrentArr;
+
+  /// \brief Resolution of spatial coordinates in meters in octree, for data
+  /// search.
+  public: float spatialRes = 0.1f;
+
+  /// \brief Octree for data search based on spatial location of sensor. One
+  /// octree per point cloud in timeSpaceCoords.
+  public: std::vector<pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>>
+            spatialOctrees;
+};
+
+/////////////////////////////////////////////////
 /// \brief Helper function to create a sensor according to its type
 /// \tparam SensorType A sensor type
 /// \param[in] _system Pointer to the science sensors system
@@ -79,6 +182,296 @@ void createSensor(ScienceSensorsSystem *_system,
 }
 
 /////////////////////////////////////////////////
+ScienceSensorsSystem::ScienceSensorsSystem()
+  : dataPtr(std::make_unique<ScienceSensorsSystemPrivate>())
+{
+}
+
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::ReadData()
+{
+  std::fstream fs;
+  fs.open(this->dataPath, std::ios::in);
+
+  std::vector<std::string> fieldnames;
+  std::string line, word, temp;
+
+  // Read field names in first line
+  std::getline(fs, line);
+
+  std::stringstream ss(line);
+
+  // Tokenize header line into columns
+  while (std::getline(ss, word, ','))
+  {
+    fieldnames.push_back(word);
+  }
+
+  // Read file line by line
+  while (std::getline(fs, line))
+  {
+    std::stringstream ss(line);
+
+    int i = 0;
+
+    // Index of the timestamp in this line of data. Init to invalid index
+    int lineTimeIdx = -1;
+
+    // Spatial coordinates of this line of data. Init to NaN before populating
+    float northing = std::numeric_limits<float>::quiet_NaN();
+    float easting = std::numeric_limits<float>::quiet_NaN();
+    float depth = std::numeric_limits<float>::quiet_NaN();
+
+    // Science data. Init to NaN before knowing whether timestamp is valid, so
+    // that we do not assume timestamp column precedes data columns in each line
+    // in the file.
+    float temp = std::numeric_limits<float>::quiet_NaN();
+    float sal = std::numeric_limits<float>::quiet_NaN();
+    float chlor = std::numeric_limits<float>::quiet_NaN();
+    float nCurr = std::numeric_limits<float>::quiet_NaN();
+    float eCurr = std::numeric_limits<float>::quiet_NaN();
+
+    // Tokenize the line into columns
+    while (std::getline(ss, word, ','))
+    {
+      float val = 0.0f;
+      try
+      {
+        // stof handles NaNs and Infs
+        val = stof(word);
+      }
+      catch (const std::invalid_argument &ia)
+      {
+        ignerr << "Line [" << line << "] contains invalid word. Skipping. "
+               << ia.what() << std::endl;
+        continue;
+      }
+      catch (const std::out_of_range &oor)
+      {
+        ignerr << "Line [" << line << "] contains invalid word. Skipping. "
+               << oor.what() << std::endl;
+        continue;
+      }
+
+      // Time index
+      if (fieldnames[i] == TIME)
+      {
+        // Does not account for floating point error. Assumes time specified in
+        // csv file is same accuracy for each line.
+        std::vector<float>::iterator it =
+          std::find(this->timestamps.begin(), this->timestamps.end(), val);
+        // If the timestamp is new
+        if (it == this->timestamps.end())
+        {
+          // Insert new timestamp into 1D array
+          this->timestamps.push_back(val);
+
+          // Create a new time slice of data
+          auto newCloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(
+              new pcl::PointCloud<pcl::PointXYZ>);
+          this->timeSpaceCoords.push_back(newCloud->makeShared());
+          // Is this valid memory management?
+          this->temperatureArr.push_back(std::vector<float>());
+          this->salinityArr.push_back(std::vector<float>());
+          this->chlorophyllArr.push_back(std::vector<float>());
+          this->eastCurrentArr.push_back(std::vector<float>());
+          this->northCurrentArr.push_back(std::vector<float>());
+
+          lineTimeIdx = this->timestamps.size() - 1;
+        }
+        // If the timestamp exists, find the index of its corresponding time
+        // slice
+        else
+        {
+          lineTimeIdx = it - this->timestamps.begin();
+        }
+      }
+      // Spatial index: northings
+      else if (fieldnames[i] == NORTHINGS)
+      {
+        northing = val;
+      }
+      // Spatial index: eastings
+      else if (fieldnames[i] == EASTINGS)
+      {
+        easting = val;
+      }
+      // Spatial index: depth
+      else if (fieldnames[i] == DEPTH)
+      {
+        depth = val;
+      }
+      // Science data
+      else if (fieldnames[i] == TEMPERATURE)
+      {
+        temp = val;
+      }
+      else if (fieldnames[i] == SALINITY)
+      {
+        sal = val;
+      }
+      else if (fieldnames[i] == CHLOROPHYLL)
+      {
+        chlor = val;
+      }
+      else if (fieldnames[i] == EAST_CURRENT)
+      {
+        eCurr = val;
+      }
+      else if (fieldnames[i] == NORTH_CURRENT)
+      {
+        nCurr = val;
+      }
+      else
+      {
+        ignerr << "Unrecognized science data field name [" << fieldnames[i]
+               << "]. Skipping column." << std::endl;
+      }
+
+      i += 1;
+    }
+
+    // Check validity of timestamp
+    // If no timestamp was provided for this line, cannot index the datum.
+    if (lineTimeIdx == -1)
+    {
+      ignerr << "Line [" << line << "] timestamp invalid. Skipping."
+             << std::endl;
+      continue;
+    }
+    else
+    {
+      // Check validity of spatial coordinates
+      if (!std::isnan(northing) && !std::isnan(easting) && !std::isnan(depth))
+      {
+        // Gather spatial coordinates, 3 fields in the line, into point cloud
+        // for indexing this time slice of data.
+        this->timeSpaceCoords[lineTimeIdx]->push_back(
+          pcl::PointXYZ(easting, northing, depth));
+
+        // Populate science data
+        this->temperatureArr[lineTimeIdx].push_back(temp);
+        this->salinityArr[lineTimeIdx].push_back(sal);
+        this->chlorophyllArr[lineTimeIdx].push_back(chlor);
+        this->eastCurrentArr[lineTimeIdx].push_back(eCurr);
+        this->northCurrentArr[lineTimeIdx].push_back(nCurr);
+      }
+      // If spatial coordinates invalid, cannot use to index this datum
+      else
+      {
+        ignerr << "Line [" << line << "] has invalid spatial coordinates "
+               << "(northings, eastings, and/or depth). Skipping." << std::endl;
+        continue;
+      }
+    }
+  }
+
+  // Make sure the number of timestamps in the 1D indexing array, and the
+  // number of time slices of data, are the same.
+  assert(this->timestamps.size() == this->timeSpaceCoords.size());
+
+  for (int i = 0; i < this->timeSpaceCoords.size(); i++)
+  {
+    igndbg << "At time slice " << this->timestamps[i] << ", populated "
+           << this->timeSpaceCoords[i]->size()
+           << " spatial coordinates." << std::endl;
+  }
+
+  this->initialized = true;
+}
+
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::GenerateOctrees()
+{
+  // For each time slice, create an octree for the spatial coordinates
+  for (int i = 0; i < this->timeSpaceCoords.size(); ++i)
+  {
+    this->spatialOctrees.push_back(
+      pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>(this->spatialRes));
+
+    // Populate octree with spatial coordinates
+    this->spatialOctrees[i].setInputCloud(this->timeSpaceCoords[i]);
+    this->spatialOctrees[i].addPointsFromInputCloud();
+  }
+}
+
+/////////////////////////////////////////////////
+float ScienceSensorsSystemPrivate::InterpolateData(
+  std::vector<float> _arr,
+  std::vector<int> &_inds,
+  std::vector<float> &_dists)
+{
+  // Sanity checks
+  if (_inds.size() == 0 || _dists.size() == 0)
+  {
+    ignwarn << "InterpolateData(): Invalid neighbors aray size ("
+            << _inds.size() << " and " << _dists.size()
+            << "). No neighbors to use for interpolation. Returning NaN."
+            << std::endl;
+    return std::numeric_limits<float>::quiet_NaN();
+  }
+  if (_inds.size() != _dists.size())
+  {
+    ignwarn << "InterpolateData(): Number of neighbors != number of distances."
+            << "Invalid input. Returning NaN." << std::endl;
+    return std::numeric_limits<float>::quiet_NaN();
+  }
+
+  int nnIdx = _inds[0];
+  float minDist = _dists[nnIdx];
+
+  // Dummy: Just return the closest element
+  for (int i = 0; i < _inds.size(); i++)
+  {
+    if (_dists[_inds[i]] < minDist)
+    {
+      nnIdx = _inds[i];
+      minDist = _dists[nnIdx];
+    }
+  }
+  return _arr[nnIdx];
+
+  // TODO Return a weighted sum, based on distance, of the elements to
+  // interpolate among
+  // TODO: Look at x and y only? Depth resolution much finer and tips kNN
+  // search. Or use radiusSearch().
+
+
+
+}
+
+/////////////////////////////////////////////////
+void ScienceSensorsSystem::Configure(
+  const ignition::gazebo::Entity &_entity,
+  const std::shared_ptr<const sdf::Element> &_sdf,
+  ignition::gazebo::EntityComponentManager &_ecm,
+  ignition::gazebo::EventManager &_eventMgr)
+{
+  if (_sdf->HasElement("data_path"))
+  {
+    this->dataPtr->dataPath = _sdf->Get<std::string>("data_path");
+  }
+
+  ignition::common::SystemPaths sysPaths;
+  std::string fullPath = sysPaths.FindFile(this->dataPtr->dataPath);
+  if (fullPath.empty())
+  {
+     ignerr << "Data file [" << this->dataPtr->dataPath << "] not found."
+            << std::endl;
+     return;
+  }
+  else
+  {
+    this->dataPtr->dataPath = fullPath;
+    ignmsg << "Loading science data from [" << this->dataPtr->dataPath << "]"
+           << std::endl;
+  }
+
+  this->dataPtr->ReadData();
+  this->dataPtr->GenerateOctrees();
+}
+
+/////////////////////////////////////////////////
 void ScienceSensorsSystem::PreUpdate(
   const ignition::gazebo::UpdateInfo &,
   ignition::gazebo::EntityComponentManager &_ecm)
@@ -101,39 +494,109 @@ void ScienceSensorsSystem::PreUpdate(
 void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   const ignition::gazebo::EntityComponentManager &_ecm)
 {
-  // Only update and publish if not paused.
-  if (!_info.paused)
+  // Only update and publish if data has been loaded and simulation is not
+  // paused.
+  if (this->dataPtr->initialized && !_info.paused)
   {
-    // TODO: Decide how the table data will be stored
-    // auto table = _ecm.Component<components::Lookup>();
+    double simTimeSeconds = std::chrono::duration_cast<std::chrono::seconds>(
+      _info.simTime).count();
 
+    // Update time index
+    if (this->dataPtr->multipleTimeSlices)
+    {
+      // Only update if sim time exceeds the elapsed timestamp in data
+      if (!this->dataPtr->timestamps.empty() &&
+        simTimeSeconds >= this->dataPtr->timestamps[this->dataPtr->timeIdx])
+      {
+        // Increment for next point in time
+        this->dataPtr->timeIdx++;
+      }
+    }
+
+    // For each sensor, get its pose, search in the octree for the closest
+    // neighbors, and interpolate to get approximate data at this sensor pose.
     for (auto &[entity, sensor] : this->entitySensorMap)
     {
-      auto worldPose = ignition::gazebo::worldPose(entity, _ecm);
+      // Sensor pose, used to search for data by spatial coordinates
+      auto sensorPose = ignition::gazebo::worldPose(entity, _ecm);
+      pcl::PointXYZ searchPoint(sensorPose.X(), sensorPose.Y(), sensorPose.Z());
 
-      // TODO: populate sensor data from lookup table
-      // auto data = table.Lookup<SensorType>(worldPose);
+      // kNN search (alternatives are voxel search and radius search. kNN
+      // search is good for variable resolution when the distance to the next
+      // neighbor is unknown).
+      int k = 8;
 
+      // Indices and distances of neighboring points in the search results
+      std::vector<int> spatialIdx;
+      std::vector<float> spatialSqrDist;
+
+      // Search in octree to find spatial index of science data
+      if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].nearestKSearch(
+        searchPoint, k, spatialIdx, spatialSqrDist) <= 0)
+      {
+        ignwarn << "No data found near sensor location " << sensorPose
+                << std::endl;
+        continue;
+      }
+      // Debug output
+      /*
+      else
+      {
+        igndbg << "kNN search for sensor pose (" << sensorPose.X() << ", "
+               << sensorPose.Y() << ", " << sensorPose.Z() << "):"
+               << std::endl;
+
+        for (std::size_t i = 0; i < spatialIdx.size(); i++)
+        {
+          // Index the point cloud at the current time slice
+          pcl::PointXYZ nbrPt = (*(this->dataPtr->timeSpaceCoords[
+            this->dataPtr->timeIdx]))[spatialIdx[i]];
+
+          igndbg << "Neighbor at (" << nbrPt.x << ", " << nbrPt.y << ", "
+                 << nbrPt.z << "), squared distance " << spatialSqrDist[i]
+                 << " m" << std::endl;
+        }
+      }
+      */
+
+      // For the correct sensor, grab closest neighbors and interpolate
       if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
       {
-        float data{0.0f};
-        casted->SetData(data);
+        float sal = this->dataPtr->InterpolateData(
+          this->dataPtr->salinityArr[this->dataPtr->timeIdx], spatialIdx,
+          spatialSqrDist);
+        casted->SetData(sal);
       }
-      else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(sensor))
+      else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
+        sensor))
       {
-        ignition::math::Temperature data;
-        data.SetCelsius(0.0);
-        casted->SetData(data);
+        float temp = this->dataPtr->InterpolateData(
+          this->dataPtr->temperatureArr[this->dataPtr->timeIdx], spatialIdx,
+          spatialSqrDist);
+
+        ignition::math::Temperature tempC;
+        tempC.SetCelsius(temp);
+        casted->SetData(tempC);
       }
-      else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(sensor))
+      else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
+        sensor))
       {
-        float data{0.0f};
-        casted->SetData(data);
+        float chlor = this->dataPtr->InterpolateData(
+          this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx], spatialIdx,
+          spatialSqrDist);
+        casted->SetData(chlor);
       }
       else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(sensor))
       {
-        auto data = ignition::math::Vector3d::Zero;
-        casted->SetData(data);
+        float eCurr = this->dataPtr->InterpolateData(
+          this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx], spatialIdx,
+          spatialSqrDist);
+        float nCurr = this->dataPtr->InterpolateData(
+          this->dataPtr->northCurrentArr[this->dataPtr->timeIdx], spatialIdx,
+          spatialSqrDist);
+
+        auto curr = ignition::math::Vector3d(eCurr, nCurr, 0.0);
+        casted->SetData(curr);
       }
       else
       {
@@ -173,6 +636,7 @@ void ScienceSensorsSystem::RemoveSensorEntities(
 IGNITION_ADD_PLUGIN(
   tethys::ScienceSensorsSystem,
   ignition::gazebo::System,
+  tethys::ScienceSensorsSystem::ISystemConfigure,
   tethys::ScienceSensorsSystem::ISystemPreUpdate,
   tethys::ScienceSensorsSystem::ISystemPostUpdate)
 

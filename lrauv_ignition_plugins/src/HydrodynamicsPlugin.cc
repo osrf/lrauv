@@ -152,8 +152,8 @@ double SdfParamDouble(
 
 
 HydrodynamicsPlugin::HydrodynamicsPlugin()
+  : dataPtr(std::make_unique<HydrodynamicsPrivateData>())
 {
-  this->dataPtr = std::make_unique<HydrodynamicsPrivateData>();
 }
 
 void HydrodynamicsPlugin::Configure(

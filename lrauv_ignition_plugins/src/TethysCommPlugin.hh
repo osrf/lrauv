@@ -160,7 +160,7 @@ namespace tethys
     private: std::string massShifterJointName{"battery_joint"};
 
     /// TODO(mabelzhang) Remove when stable. Temporary counter for state
-    ///  message sanity check
+    /// message sanity check
     private: int counter = 0;
 
     /// Buoyancy bladder size in cc

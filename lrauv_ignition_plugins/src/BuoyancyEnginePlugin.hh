@@ -71,7 +71,7 @@ namespace tethys
         const ignition::gazebo::UpdateInfo &_info,
         ignition::gazebo::EntityComponentManager &_ecm);
 
-    /// Inherits documentation from parent class
+    /// \brief Private data pointer
     private: std::unique_ptr<BuoyancyEnginePrivateData> dataPtr;
   };
 }

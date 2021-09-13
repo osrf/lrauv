@@ -53,6 +53,7 @@
     <plugin
       filename="ScienceSensorsSystem"
       name="tethys::ScienceSensorsSystem">
+      <data_path>2003080103_mb_l3_las.csv</data_path>
     </plugin>
 
     <gui fullscreen="0">

@@ -46,6 +46,11 @@ RUN apt-get -qq update && apt-get -q -y install \
   python3-colcon-common-extensions \
   ignition-fortress
 
+# Install PCL
+RUN apt-get update \
+ && apt-get install -y \
+        libpcl-dev
+
 # Clean up apt
 RUN rm -rf /var/lib/apt/lists/* \
   && apt-get -qq clean

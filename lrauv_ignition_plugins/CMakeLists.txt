@@ -25,6 +25,8 @@ set(IGN_UTILS_VER ${ignition-utils1_VERSION_MAJOR})
 
 find_package (Eigen3 3.3 REQUIRED)
 
+find_package(PCL 1.2 REQUIRED)
+
 # Build protobuf messages
 add_subdirectory(proto)
 
@@ -32,21 +34,25 @@ add_subdirectory(proto)
 # Plugins
 
 # add_lrauv_plugin (<plugin_name>
-#              [PROTO])
+#              [PROTO] [PCL] [PRIVATE_LINK_LIBS])
 #
 # Configure and install plugins.
 #
 # <plugin_name> Required. Name of the plugin library, which matches source file.
 #
-# [PROTO]: Optional. If included, plugin will be linked against custom protobuf messages.
+# [PROTO]: Optional. If included, plugin will be linked against custom protobuf
+# messages.
+#
+# [PCL]: Optional. If included, plugin will be linked against PCL.
 #
 # [PRIVATE_LINK_LIBS]: Specify a list of libraries to be privately linked.
 function(add_lrauv_plugin PLUGIN)
-  set(options PROTO)
+  set(options PROTO PCL)
   set(oneValueArgs)
   set(multiValueArgs PRIVATE_LINK_LIBS)
 
-  cmake_parse_arguments(add_lrauv_plugin "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  cmake_parse_arguments(add_lrauv_plugin
+    "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   add_library(${PLUGIN} SHARED src/${PLUGIN}.cc)
   set_property(TARGET ${PLUGIN} PROPERTY CXX_STANDARD 17)
@@ -69,6 +75,14 @@ function(add_lrauv_plugin PLUGIN)
 
   endif()
 
+  # Include PCL
+  if (add_lrauv_plugin_PCL)
+
+    target_include_directories(${PLUGIN}
+      PUBLIC ${PCL_INCLUDE_DIRS})
+
+  endif()
+
   install(
     TARGETS ${PLUGIN}
     DESTINATION lib)
@@ -79,8 +93,10 @@ add_lrauv_plugin(BuoyancyEnginePlugin)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(JointPositionPlugin)
 add_lrauv_plugin(ScienceSensorsSystem
+  PCL
   PRIVATE_LINK_LIBS
-    ignition-sensors${IGN_SENSORS_VER}::ignition-sensors${IGN_SENSORS_VER})
+    ignition-sensors${IGN_SENSORS_VER}::ignition-sensors${IGN_SENSORS_VER}
+    ${PCL_LIBRARIES})
 add_lrauv_plugin(TethysCommPlugin PROTO)
 add_lrauv_plugin(ThrusterPlugin)
 add_lrauv_plugin(TimeAnalysisPlugin)
@@ -167,6 +183,7 @@ endif()
 
 install(
   DIRECTORY
+    data
     launch
     models
     worlds

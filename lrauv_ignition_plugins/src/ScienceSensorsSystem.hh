@@ -50,18 +50,30 @@ LOOKUP_SENSOR(ChlorophyllSensor, float, chlorophyll);
 /// Z: Up
 LOOKUP_SENSOR(CurrentSensor, ignition::math::Vector3d, current);
 
+class ScienceSensorsSystemPrivate;
+
 /// \brief System that creates and updates the science sensors defined above.
 class ScienceSensorsSystem:
   public ignition::gazebo::System,
+  public ignition::gazebo::ISystemConfigure,
   public ignition::gazebo::ISystemPreUpdate,
   public ignition::gazebo::ISystemPostUpdate
 {
+  public: ScienceSensorsSystem();
+
+  // Documentation inherited
+  public: void Configure(
+              const ignition::gazebo::Entity &_entity,
+              const std::shared_ptr<const sdf::Element> &_sdf,
+              ignition::gazebo::EntityComponentManager &_ecm,
+              ignition::gazebo::EventManager &_eventMgr) override;
+
   // Documentation inherited
   public: void PreUpdate(
       const ignition::gazebo::UpdateInfo &_info,
       ignition::gazebo::EntityComponentManager &_ecm) override;
 
-  // Documentation inherited.
+  // Documentation inherited
   public: void PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       const ignition::gazebo::EntityComponentManager &_ecm) final;
 
@@ -74,6 +86,9 @@ class ScienceSensorsSystem:
   /// \brief A map of entities to their sensors
   public: std::unordered_map<ignition::gazebo::Entity,
       std::shared_ptr<ignition::sensors::Sensor>> entitySensorMap;
+
+  /// \brief Private data pointer
+  private: std::unique_ptr<ScienceSensorsSystemPrivate> dataPtr;
 };
 }
 #endif

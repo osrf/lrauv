@@ -7,6 +7,11 @@ This repository contains packages for simulating the MBARI Tethys.
 Make sure you have [ignition-fortress](https://ignitionrobotics.org/docs/fortress) and
 [colcon](https://colcon.readthedocs.io/en/released/), on Ubuntu Focal or higher.
 
+Install dependencies
+```
+sudo apt-get install libpcl-dev
+```
+
 Clone this repository then run
 ```
 colcon build
@@ -328,3 +333,19 @@ Make sure to use
 quick on
 ```
 to let the system finish loading, before issuing control commands.
+
+# Science data
+
+Science data can be read from a csv file with the following recognized field
+names in the first line of the file:
+```
+elapsed_time_second
+northings_meter
+eastings_meter
+depth_meter
+sea_water_temperature_degC
+sea_water_salinity_psu
+mass_concentration_of_chlorophyll_in_sea_water_ugram_per_liter
+eastward_sea_water_velocity_meter_per_sec
+northward_sea_water_velocity_meter_per_sec
+```
