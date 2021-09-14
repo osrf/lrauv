@@ -211,7 +211,41 @@ void RangeBearingPlugin::PreUpdate(
   const ignition::gazebo::UpdateInfo &_info,
   ignition::gazebo::EntityComponentManager &_ecm)
 {
+  using MsgType =
+    lrauv_ignition_plugins::msgs::LRAUVAcousticMessage::MessageType;
 
+  if(_info.paused)
+    return;
+
+  ignition::gazebo::Link baseLink(this->dataPtr->linkEntity);
+  auto pose = baseLink.WorldPose(_ecm);
+  
+  if (!pose.has_value())
+    return;
+  
+  std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
+  this->dataPtr->timeNow = std::chrono::steady_clock::time_point{
+    _info.simTime};
+  
+  while(
+    !this->dataPtr->messageQueue.empty()
+    && (this->dataPtr->messageQueue.front().timeOfReception 
+      + this->dataPtr->processingDelay) <= this->dataPtr->timeNow)
+  {
+    auto ping = this->dataPtr->messageQueue.front();
+    lrauv_ignition_plugins::msgs::LRAUVAcousticMessage message;
+    lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse resp;
+    message.set_to(ping.from);
+    message.set_from(this->dataPtr->address);
+    message.set_type(MsgType::LRAUVAcousticMessage_MessageType_RangeResponse);
+
+    resp.set_req_id(ping.reqId);
+    //resp.set
+
+    //message.set_data(resp.);
+    this->dataPtr->commsClient->SendPacket(message);
+    this->dataPtr->messageQueue.pop();
+  }
 }
 
 }
