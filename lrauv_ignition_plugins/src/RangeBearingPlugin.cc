@@ -20,6 +20,7 @@ namespace tethys
 struct IncomingRangePing
 {
   uint32_t from;
+  uint32_t reqId;
   std::chrono::steady_clock::time_point timeOfReception;
 };
 ////////////////////////////////////////////////
@@ -49,6 +50,12 @@ class RangeBearingPrivateData
   /// \brief Queue which we need to respond to.
   public: std::queue<IncomingRangePing> messageQueue;
 
+  /// \brief Table to lookup outgoing requests
+  /// TODO(arjo) Add a garbage collection mechanism for packets that
+  /// are lost.
+  public: std::unordered_map<uint32_t,
+    std::chrono::steady_clock::time_point> transmissionTime;
+
   /// \brief Transport node
   public: ignition::transport::Node node;
 
@@ -66,6 +73,9 @@ class RangeBearingPrivateData
 
   /// \brief Link and entity which this is bound to
   public: ignition::gazebo::Entity linkEntity;
+
+  /// \brief mutex
+  public: std::mutex mtx;
 };
 
 ////////////////////////////////////////////////
@@ -84,7 +94,10 @@ void RangeBearingPrivateData::OnRecieveCommsMsg(
   using MsgType =
     lrauv_ignition_plugins::msgs::LRAUVAcousticMessage::MessageType;
 
-  IncomingRangePing ping{message.from(), this->timeNow};
+  lrauv_ignition_plugins::msgs::LRAUVRangeBearingRequest req;
+  std::istringstream stream{message.data()};
+  req.ParseFromIstream(&stream);
+  IncomingRangePing ping{message.from(), req.req_id(), this->timeNow};
 
   switch(message.type())
   {
@@ -112,6 +125,9 @@ void RangeBearingPrivateData::OnRangeRequest(
   std::ostringstream stream;
   req.SerializeToOstream(&stream);
   message.set_data(stream.str());
+
+  std::lock_guard<std::mutex> lock(this->mtx);
+  this->transmissionTime[req.req_id()] = this->timeNow;
   this->commsClient->SendPacket(message);
 }
 
