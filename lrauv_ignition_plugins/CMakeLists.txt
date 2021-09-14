@@ -114,7 +114,11 @@ add_lrauv_plugin(AcousticCommsPlugin
 add_lrauv_plugin(BuoyancyEnginePlugin)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(JointPositionPlugin)
-add_lrauv_plugin(RangeBearingPlugin)
+add_lrauv_plugin(RangeBearingPlugin
+  INCLUDE_COMMS
+  PROTO
+    lrauv_range_bearing_request
+    lrauv_range_bearing_response)
 add_lrauv_plugin(ScienceSensorsSystem
   PCL
   PRIVATE_LINK_LIBS

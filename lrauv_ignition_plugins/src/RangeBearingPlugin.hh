@@ -38,16 +38,16 @@ class RangeBearingPlugin:
 
   /// Inherits documentation from parent class
   public: void Configure(
-      const ignition::gazebo::Entity &_entity,
-      const std::shared_ptr<const sdf::Element> &_sdf,
-      ignition::gazebo::EntityComponentManager &_ecm,
-      ignition::gazebo::EventManager &/*_eventMgr*/
+    const ignition::gazebo::Entity &_entity,
+    const std::shared_ptr<const sdf::Element> &_sdf,
+    ignition::gazebo::EntityComponentManager &_ecm,
+    ignition::gazebo::EventManager &/*_eventMgr*/
   );
 
   /// Inherits documentation from parent class
   public: void PreUpdate(
-      const ignition::gazebo::UpdateInfo &_info,
-      ignition::gazebo::EntityComponentManager &_ecm);
+    const ignition::gazebo::UpdateInfo &_info,
+    ignition::gazebo::EntityComponentManager &_ecm);
 
   /// Inherits documentation from parent class
   private: std::unique_ptr<RangeBearingPrivateData> dataPtr;

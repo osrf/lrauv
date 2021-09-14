@@ -28,6 +28,7 @@ import "ignition/msgs/vector3d.proto";
 message LRAUVRangeBearingResponse
 {
   /// \brief Optional header data
-  ignition.msgs.Vector3d bearing = 1;
-  double range = 2;
+  uint32 req_id = 1;
+  ignition.msgs.Vector3d bearing = 2;
+  double range = 3;
 }

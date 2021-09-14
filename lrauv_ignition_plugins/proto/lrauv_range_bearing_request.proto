@@ -20,9 +20,9 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 syntax = "proto3";
 package lrauv_ignition_plugins.msgs;
 option java_package = "lrauv_ignition_plugins.msgs";
-option java_outer_classname = "LRAUVRangeRequest";
+option java_outer_classname = "LRAUVRangeBearingRequest";
 
-message LRAUVRangeRequest
+message LRAUVRangeBearingRequest
 {
   uint32 to = 1;
   uint32 req_id = 2;
