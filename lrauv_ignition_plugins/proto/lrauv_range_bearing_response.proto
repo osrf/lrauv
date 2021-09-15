@@ -27,8 +27,14 @@ import "ignition/msgs/vector3d.proto";
 
 message LRAUVRangeBearingResponse
 {
-  /// \brief Optional header data
+  /// \brief Request ID. Each request ID must be unique.
   uint32 req_id = 1;
+
+  /// \brief Bearing in terms of (r, theta, phi). This is based on ground truth
+  /// and not calculated using time-of-flight
   ignition.msgs.Vector3d bearing = 2;
+
+  /// \brief Time-Of-Flight reading. This is good for studying errors arising
+  /// due to movement. But at high dt this may be prone to error.
   double range = 3;
 }

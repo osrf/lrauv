@@ -74,6 +74,12 @@ class RangeBearingPrivateData
   /// \brief Link and entity which this is bound to
   public: ignition::gazebo::Entity linkEntity;
 
+  /// \brief The current pose
+  public: ignition::math::Pose3d currentPose;
+
+  /// \brief Speed of sound. Units: m/s
+  public: double speedOfSound {15000};
+
   /// \brief mutex
   public: std::mutex mtx;
 };
@@ -108,7 +114,7 @@ void RangeBearingPrivateData::OnRecieveCommsMsg(
     this->PublishResponse(message);
     break;
   default:
-    ignwarn << "Unable to process message type";
+    ignwarn << "Unable to process message type\n";
   }
 }
 
@@ -138,7 +144,31 @@ void RangeBearingPrivateData::PublishResponse(
   lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse resp;
   std::istringstream stream{msg.data()};
   resp.ParseFromIstream(&stream);
-  this->pub.Publish(resp);
+  
+  auto timeOfTx = transmissionTime[resp.req_id()];
+  transmissionTime.erase(resp.req_id());
+  auto duration = std::chrono::duration<double>(
+    this->timeNow - timeOfTx - this->processingDelay);
+  auto range = (this->speedOfSound * duration.count()) / 2;
+
+  auto poseOffset = ignition::math::Matrix4d(this->currentPose);
+  auto otherVehiclesPos =
+    ignition::math::Vector3d(
+      resp.bearing().x(), resp.bearing().y(), resp.bearing().z());
+  auto groundTruthPose = poseOffset.Inverse() * otherVehiclesPos;
+
+  auto theta = acos(groundTruthPose.Z() / groundTruthPose.Length());
+  auto phi = atan2(groundTruthPose.Y(), groundTruthPose.X());
+
+  lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse finalAnswer;
+  finalAnswer.set_range(range);
+  finalAnswer.set_req_id(resp.req_id());
+  
+  ignition::msgs::Vector3d* vec = new ignition::msgs::Vector3d;
+  vec->set_x(groundTruthPose.Length()); vec->set_y(theta); vec->set_z(phi);
+  finalAnswer.set_allocated_bearing(vec); 
+
+  this->pub.Publish(finalAnswer);
 }
 
 ////////////////////////////////////////////////
@@ -222,8 +252,9 @@ void RangeBearingPlugin::PreUpdate(
   
   if (!pose.has_value())
     return;
-  
+
   std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
+  this->dataPtr->currentPose = pose.value();
   this->dataPtr->timeNow = std::chrono::steady_clock::time_point{
     _info.simTime};
   
@@ -240,9 +271,16 @@ void RangeBearingPlugin::PreUpdate(
     message.set_type(MsgType::LRAUVAcousticMessage_MessageType_RangeResponse);
 
     resp.set_req_id(ping.reqId);
-    //resp.set
+    ignition::msgs::Vector3d* vec = new ignition::msgs::Vector3d;
+    vec->set_x(pose->Pos().X());
+    vec->set_y(pose->Pos().Y());
+    vec->set_z(pose->Pos().Z());
+    resp.set_allocated_bearing(vec);
 
-    //message.set_data(resp.);
+    std::ostringstream stream;
+    resp.SerializeToOstream(&stream);
+    message.set_data(stream.str());
+
     this->dataPtr->commsClient->SendPacket(message);
     this->dataPtr->messageQueue.pop();
   }
