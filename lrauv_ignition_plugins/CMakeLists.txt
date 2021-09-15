@@ -118,7 +118,8 @@ add_lrauv_plugin(RangeBearingPlugin
   INCLUDE_COMMS
   PROTO
     lrauv_range_bearing_request
-    lrauv_range_bearing_response)
+    lrauv_range_bearing_response
+    lrauv_acoustic_message)
 add_lrauv_plugin(ScienceSensorsSystem
   PCL
   PRIVATE_LINK_LIBS

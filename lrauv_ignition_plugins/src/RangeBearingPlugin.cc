@@ -201,6 +201,13 @@ void RangeBearingPlugin::Configure(
     std::chrono::steady_clock::duration{
       (long)(_sdf->Get<double>("processing_delay") * 1e9)};
 
+  if (!_sdf->HasElement("speed_of_sound"))
+  {
+    ignerr << "<speed_of_sound> not specified\n";
+    return;
+  }
+  this->dataPtr->speedOfSound = _sdf->Get<double>("speed_of_sound");
+
   if (!_sdf->HasElement("link_name"))
   {
     ignerr << 
