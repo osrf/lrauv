@@ -230,6 +230,17 @@ if(BUILD_TESTING)
     CommsSupport)
   gtest_discover_tests(test_comms)
 
+  add_executable(test_range_bearing test/test_range_bearing.cc)
+  target_include_directories(test_range_bearing
+    PUBLIC
+    ${CMAKE_BINARY_DIR}/proto
+    include/)
+  target_link_libraries(test_range_bearing
+    PUBLIC gtest_main
+    PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+    lrauv_range_bearing_request
+    lrauv_range_bearing_response)
+  gtest_discover_tests(test_range_bearing)
 endif()
 
 #============================================================================
