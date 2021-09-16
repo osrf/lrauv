@@ -71,8 +71,12 @@ class SimpleAcousticModel : public ICommsModel
   public: void EnqueueMsg(const CommsPacket &_packet) override
   {
     // For now don't care about packet collision
+    igndbg << "Message recieved" <<std::endl;
     if (_packet.To() == this->address)
+    {
+      igndbg << "Message forwarded" <<std::endl;
       packets.push_back(_packet);
+    }
   }
 
   ///////////////////////////////////////////
@@ -110,6 +114,7 @@ class SimpleAcousticModel : public ICommsModel
         {
           if (!self->DropPacket(distToTransmitter))
           {
+            igndbg << "Message delivered" <<std::endl;
             _messageMgr.MessageReachedDestination(packet);
           }
           return true;

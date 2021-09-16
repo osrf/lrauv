@@ -5,6 +5,8 @@ PUBLIC
   ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
   ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
   CommsSupport
+  lrauv_acoustic_message
+  lrauv_internal_comms
 )
 target_include_directories(simpleacousticmodel 
   PUBLIC ../../../include/

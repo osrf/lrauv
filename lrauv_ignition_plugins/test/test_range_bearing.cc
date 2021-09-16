@@ -48,9 +48,11 @@ public: msgs::LRAUVRangeBearingResponse RequestRange(uint32_t address)
 
   this->pub.Publish(req);
 
+  igndbg << "Published request" << "\n";
+
   std::unique_lock<std::mutex> lk(this->mtx);
   cv.wait(lk, [this]{return this->recieved;});
-
+  //sleep(2.0);
   this->request_counter++;
 
   return this->lastResponse;
@@ -58,6 +60,7 @@ public: msgs::LRAUVRangeBearingResponse RequestRange(uint32_t address)
 
 public: void onCallback(const msgs::LRAUVRangeBearingResponse& resp)
 {
+  igndbg << "Recieved message\n";
   if(resp.req_id() == this->request_counter)
   {
     {
@@ -86,11 +89,12 @@ private: bool recieved;
 
 TEST_F(LrauvCommsFixture, TestRangingAccuracy)
 {
+  this->fixture->Server()->Run(false, 1000, false);
   RangeBearingClient client("box1");
   auto result = client.RequestRange(2);
 
   igndbg << "Request id: "<< result.req_id() << "\n";
   igndbg << "TOF Range: "<< result.range() << "\n";
   igndbg << "Bearing: " << result.bearing().x() << ", "
-        << result.bearing().y() << ", " << result.bearing().z() << "\n";
+      << result.bearing().y() << ", " << result.bearing().z() << "\n";
 }
