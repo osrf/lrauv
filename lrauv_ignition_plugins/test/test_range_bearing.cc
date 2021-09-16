@@ -28,7 +28,7 @@ class RangeBearingClient
 {
 
 public: RangeBearingClient(std::string address) :
-  request_counter(0)
+  request_counter(2)
 {
   this->pub = this->node.Advertise<msgs::LRAUVRangeBearingRequest>(
     "/"+address+"/range_bearing/requests");
@@ -89,12 +89,16 @@ private: bool recieved;
 
 TEST_F(LrauvCommsFixture, TestRangingAccuracy)
 {
-  this->fixture->Server()->Run(false, 1000, false);
+  /// Needs to have the server call configure on the plugin before requesting.
+  this->fixture->Server()->Run(true, 100, false);
+  this->fixture->Server()->Run(false, 2000, false);
+  
   RangeBearingClient client("box1");
   auto result = client.RequestRange(2);
 
-  igndbg << "Request id: "<< result.req_id() << "\n";
-  igndbg << "TOF Range: "<< result.range() << "\n";
-  igndbg << "Bearing: " << result.bearing().x() << ", "
-      << result.bearing().y() << ", " << result.bearing().z() << "\n";
+  EXPECT_EQ(result.req_id(), 2);
+  EXPECT_NEAR(result.range(), 20, 5);
+  EXPECT_NEAR(result.bearing().x(), 20, 1e-3);
+  EXPECT_NEAR(result.bearing().y(), 1.57, 1e-2);
+  EXPECT_NEAR(result.bearing().z(), 1.57, 1e-2);
 }

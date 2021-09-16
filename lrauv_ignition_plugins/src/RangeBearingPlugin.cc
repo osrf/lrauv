@@ -106,15 +106,12 @@ void RangeBearingPrivateData::OnRecieveCommsMsg(
   req.ParseFromIstream(&stream);
   IncomingRangePing ping{message.from(), req.req_id(), this->timeNow};
 
-  igndbg << "Recieved request from "<< ping.from <<"\n";
   switch(message.type())
   {
   case MsgType::LRAUVAcousticMessage_MessageType_RangeRequest:  
-    igndbg << "Adding request to queue" <<"\n";
     this->messageQueue.push(ping);
     break;
   case MsgType::LRAUVAcousticMessage_MessageType_RangeResponse:
-    igndbg << "Recieved resoponse" <<"\n";
     this->PublishResponse(message);
     break;
   default:
@@ -171,11 +168,6 @@ void RangeBearingPrivateData::PublishResponse(
   ignition::msgs::Vector3d* vec = new ignition::msgs::Vector3d;
   vec->set_x(groundTruthPose.Length()); vec->set_y(theta); vec->set_z(phi);
   finalAnswer.set_allocated_bearing(vec); 
-
-  igndbg << "Publishing bearing: " << groundTruthPose.Length() << ", "
-    << theta << ", " << phi << "\n";
-  igndbg << "Range: " << range << "\n";
-
   this->pub.Publish(finalAnswer);
 }
 
@@ -278,12 +270,10 @@ void RangeBearingPlugin::PreUpdate(
     && (this->dataPtr->messageQueue.front().timeOfReception 
       + this->dataPtr->processingDelay) <= this->dataPtr->timeNow)
   {
-    igndbg << "Publishing response\n";
     auto ping = this->dataPtr->messageQueue.front();
     lrauv_ignition_plugins::msgs::LRAUVAcousticMessage message;
     lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse resp;
     message.set_to(ping.from);
-    igndbg << "Returning packet to: " << message.to() <<std::endl;
     message.set_from(this->dataPtr->address);
     message.set_type(MsgType::LRAUVAcousticMessage_MessageType_RangeResponse);
 
