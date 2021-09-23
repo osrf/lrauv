@@ -417,18 +417,18 @@ float ScienceSensorsSystemPrivate::InterpolateData(
     return std::numeric_limits<float>::quiet_NaN();
   }
 
+  // Find closest neighbor
   int nnIdx = _inds[0];
-  float minDist = _dists[nnIdx];
-
-  // Dummy: Just return the closest element
-  for (int i = 0; i < _inds.size(); i++)
+  float minDist = _dists[0];
+  for (int i = 0; i < _inds.size(); ++i)
   {
-    if (_dists[_inds[i]] < minDist)
+    if (_dists[i] < minDist)
     {
       nnIdx = _inds[i];
-      minDist = _dists[nnIdx];
+      minDist = _dists[i];
     }
   }
+
   return _arr[nnIdx];
 
   // TODO Return a weighted sum, based on distance, of the elements to
