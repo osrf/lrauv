@@ -585,16 +585,10 @@ void TethysCommPlugin::PostUpdate(
   // ratePQR
   // TODO(anyone)
 
-
   // Sensor data
   stateMsg.set_salinity_(this->latestSalinity);
-  this->latestSalinity = std::nanf("");
-
   stateMsg.set_temperature_(this->latestTemperature.Celsius());
-  this->latestTemperature = std::nanf("");
-
   stateMsg.add_values_(this->latestChlorophyll);
-  this->latestChlorophyll = std::nanf("");
 
   stateMsg.add_values_(pressureFromDepthLatitude(-modelPose.Pos().Z(),
       latlon.X()));
@@ -602,8 +596,6 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.set_eastcurrent_(this->latestCurrent.X());
   stateMsg.set_northcurrent_(this->latestCurrent.Y());
   stateMsg.set_vertcurrent_(this->latestCurrent.Z());
-  this->latestCurrent = ignition::math::Vector3d(
-      std::nan(""), std::nan(""), std::nan(""));
 
   this->statePub.Publish(stateMsg);
 
