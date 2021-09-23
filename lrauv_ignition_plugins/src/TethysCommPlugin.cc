@@ -38,6 +38,57 @@
 
 using namespace tethys;
 
+/// \brief Calculates water pressure based on depth and latitude.
+/// Borrowed from MBARI's codebase: AuvMath::OceanPressure, which implements
+/// Peter M. Saunders, Practical Conversion of Pressure to Depth, Journal of
+/// Physical Oceanography, 11(4), 573--574, 1981. DOI
+/// https://doi.org/10.1175/1520-0485(1981)011%3C0573:PCOPTD%3E2.0.CO;2
+/// \param[in] _depth Depth in meters, larger values are deeper.
+/// \param[in] _lat Latitude in degrees.
+/// \return Pressure in Pa, or -1 in case of error.
+double pressureFromDepthLatitude(double _depth, double _lat)
+{
+  // Negative check with tolerance
+  if (_depth < -1E-5)
+  {
+    ignerr << "Depth must be positive. Received [" << _depth << "]"
+           << std::endl;
+    return -1.0;
+  }
+  if (_lat < -90 || _lat > 90)
+  {
+    ignerr << "Latitude range is [-90, 90]. Received [" << _lat << "]"
+           << std::endl;
+    return -1.0;
+  }
+
+  const double G0 = 9.780318;
+  const double G1 = 5.2788E-3;
+
+  double x = sin(_lat);
+  x *= x;
+
+  double gLatitude =  G0 * (1 + G1 * x);
+
+  double kDepthLatitude = (gLatitude - 2E-5 * _depth)
+                        / (9.80612 - 2E-5 * _depth);
+
+  double depth2 = _depth * _depth;
+
+  double hDepth45 = 1.00818E-2 * _depth
+                    + 2.465E-8 * depth2
+                    - 1.25E-13 * depth2 * _depth
+                    + 2.8E-19 * depth2 * depth2;
+
+  double hDepthLatitude = hDepth45 * kDepthLatitude;
+
+  double thyh0Depth = _depth / (_depth + 100) / 100 + 6.2E-6 * _depth;
+
+  double pDepthLatitude = hDepthLatitude - thyh0Depth;
+
+  return pDepthLatitude * 1E6;
+}
+
 void AddAngularVelocityComponent(
   const ignition::gazebo::Entity &_entity,
   ignition::gazebo::EntityComponentManager &_ecm)
@@ -545,6 +596,9 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.add_values_(this->latestChlorophyll);
   this->latestChlorophyll = std::nanf("");
 
+  stateMsg.add_values_(pressureFromDepthLatitude(-modelPose.Pos().Z(),
+      latlon.X()));
+
   stateMsg.set_eastcurrent_(this->latestCurrent.X());
   stateMsg.set_northcurrent_(this->latestCurrent.Y());
   stateMsg.set_vertcurrent_(this->latestCurrent.Z());
@@ -563,15 +617,16 @@ void TethysCommPlugin::PostUpdate(
       << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl
       << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl
       << "\tMass shifter (m): " << stateMsg.massposition_() << std::endl
-      << "\tPitch angle (displayed in deg): "
+      << "\tPitch angle (deg): "
         << stateMsg.rph_().y() * 180 / M_PI << std::endl
-      << "\tCurrent (ENU): "
+      << "\tCurrent (ENU, m/s): "
         << stateMsg.eastcurrent_() << ", "
         << stateMsg.northcurrent_() << ", "
         << stateMsg.vertcurrent_() << std::endl
-      << "\tTemperature: " << stateMsg.temperature_() << std::endl
-      << "\tSalinity: " << stateMsg.salinity_() << std::endl
-      << "\tChlorophyll: " << stateMsg.values_(0) << std::endl;
+      << "\tTemperature (C): " << stateMsg.temperature_() << std::endl
+      << "\tSalinity (PSU): " << stateMsg.salinity_() << std::endl
+      << "\tChlorophyll (ug/L): " << stateMsg.values_(0) << std::endl
+      << "\tPressure (Pa): " << stateMsg.values_(1) << std::endl;
 
     this->prevPubPrintTime = _info.simTime;
   }
