@@ -14,7 +14,9 @@
 # limitations under the License.
 #
 
-FROM ubuntu:20.04
+FROM mbari/lrauv-ignition-sim
+
+USER root
 
 # This avoids keyboard interaction when asked for geographic area
 ARG DEBIAN_FRONTEND=noninteractive
@@ -32,18 +34,13 @@ RUN apt-get update \
         tzdata \
         wget
 
-# Add ROS packages for colcon
-RUN /bin/sh -c 'echo "deb [arch=amd64,arm64] http://repo.ros2.org/ubuntu/main `lsb_release -cs` main" > /etc/apt/sources.list.d/ros2-latest.list' \
- && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
-
-# Add Ignition nightly packages
+# Add Ignition's latest packages, which may be more up-to-date than the ones from the MBARI image
 RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list' && \
-    /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-nightly.list' && \
+    /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-prerelease `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-prerelease.list' && \
     /bin/sh -c 'wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add -'
 
-# Install colcon and Ignition
+# Install the latest Ignition binaries
 RUN apt-get -qq update && apt-get -q -y install \
-  python3-colcon-common-extensions \
   ignition-fortress
 
 # Install PCL
@@ -55,12 +52,20 @@ RUN apt-get update \
 RUN rm -rf /var/lib/apt/lists/* \
   && apt-get -qq clean
 
-# Build LRAUV
-RUN mkdir -p /home/colcon_ws/src
-COPY . /home/colcon_ws/src
+USER $USERNAME
 
-WORKDIR /home/colcon_ws
+# We're in /home/developer/lrauv_ws/src/lrauv-application, go back to ~/lrauv_ws
+WORKDIR ../..
+
+# Clean up colcon workspace
+RUN rm -rf build log install src/lrauv
+
+# Use current version of the code
+COPY . src/lrauv
+
+# Build image
 RUN [ "/bin/bash" , "-c" , "colcon build --cmake-args='-DBUILD_TESTING=true'" ]
 
 # Run tests
-ENTRYPOINT [ "/bin/bash" , "-c" , "colcon test" ]
+RUN [ "/bin/bash" , "-c" , ". ~/lrauv_ws/install/setup.sh; colcon test --event-handlers console_direct+" ]
+RUN [ "/bin/bash" , "-c" , ". ~/lrauv_ws/install/setup.sh; colcon test-result" ]
