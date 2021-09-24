@@ -28,7 +28,7 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 namespace tethys
 {
 /// \brief A simple acoustic model that handles incoming packets and their
-/// delays. Doesn't use any fancy datastructure (it probably should). Basically
+/// delays. Doesn't use any fancy data structure (it probably should). Basically
 /// applies a delay and a drop-out rate to incoming messages. The dropout rate
 /// is linearly proportional to the distance.
 class SimpleAcousticModel : public ICommsModel
