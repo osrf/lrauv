@@ -40,7 +40,7 @@ using Callback = std::function<void(const CommsMsg&)>;
 //////////////////////////////////////////////////
 /// \brief Constructor
 /// \param[in] _address - The address.
-/// \param[in] _callback - The callback to call when a message is recieved
+/// \param[in] _callback - The callback to call when a message is received
 /// \param[in] _commsPrefix - Optional. Use if your public interface to acoustic
 /// comms is different. 
 public: CommsClient(uint32_t _address,
