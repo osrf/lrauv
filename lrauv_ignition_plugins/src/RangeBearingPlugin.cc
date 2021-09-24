@@ -9,8 +9,8 @@
 #include <ignition/gazebo/Link.hh>
 #include <ignition/gazebo/Model.hh>
 #include <ignition/gazebo/Util.hh>
-#include <ignition/transport/Node.hh>
 #include <ignition/plugin/Register.hh>
+#include <ignition/transport/Node.hh>
 
 #include <lrauv_ignition_plugins/comms/CommsClient.hh>
 
@@ -36,7 +36,7 @@ class RangeBearingPrivateData
   public: void BindToAddress(const uint32_t address);
 
   /// \brief Callback for CommsClient
-  public: void OnRecieveCommsMsg(
+  public: void OnReceiveCommsMsg(
     const lrauv_ignition_plugins::msgs::LRAUVAcousticMessage& message);
 
   /// \brief Callback for range requests
@@ -90,12 +90,12 @@ void RangeBearingPrivateData::BindToAddress(const uint32_t address)
   this->address = address;
   this->commsClient = std::make_shared<CommsClient>(
     address,
-    std::bind(&RangeBearingPrivateData::OnRecieveCommsMsg, this,
+    std::bind(&RangeBearingPrivateData::OnReceiveCommsMsg, this,
       std::placeholders::_1));
 }
 
 ////////////////////////////////////////////////
-void RangeBearingPrivateData::OnRecieveCommsMsg(
+void RangeBearingPrivateData::OnReceiveCommsMsg(
   const lrauv_ignition_plugins::msgs::LRAUVAcousticMessage& message)
 {
   using MsgType =

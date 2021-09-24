@@ -29,6 +29,27 @@ namespace tethys
 class RangeBearingPrivateData;
 
 ///////////////////////////////////
+/// \brief Range Bearing Plugin
+/// This plugin simulates a two way ranging protocol over an acoustic network
+/// including the delays in the system.
+///
+/// ## Parameters
+/// * `<address>` - Address of the comms node you bind to.
+/// * `<namespace>` - The namespace on which this plugin should listen to
+///   receive and respond to requests.
+/// * `<processing_delay>` - The amount of time which it will take for the
+///   transponder to respond.
+/// * `<speed_of_sound>` - Speed of sound in the underlying medium.
+/// * `<link_name>` - The name of the link which holds the receiver.
+///
+/// ## External API for invoking the range bearing plugin.
+///
+/// The RangeBearingPlugin will listen on the 
+/// `/{namespace}/range_bearing/requests` for incoming requests using the 
+/// `lrauv_ignition_plugins::msgs::LRAUVRangeBearingRequest` message and will 
+/// respond using the `lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse` 
+/// message on the `/{namespace}/range_bearing/response` topic.
+///
 class RangeBearingPlugin:
   public ignition::gazebo::System,
   public ignition::gazebo::ISystemConfigure,
