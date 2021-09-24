@@ -20,10 +20,10 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 #ifndef __LRAUV_IGNITION_PLUGINS_COMMS_COMMSPACKET_HH__
 #define __LRAUV_IGNITION_PLUGINS_COMMS_COMMSPACKET_HH__
 
-#include <ignition/math/Vector3.hh>
-
-#include <memory>
 #include <chrono>
+#include <memory>
+
+#include <ignition/math/Vector3.hh>
 
 #include "lrauv_acoustic_message.pb.h"
 #include "lrauv_internal_comms.pb.h"

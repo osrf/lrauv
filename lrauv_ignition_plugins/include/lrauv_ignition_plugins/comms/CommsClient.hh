@@ -21,12 +21,13 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 #ifndef __LRAUV_IGNITION_PLUGINS_COMMS_COMMSCLIENT_HH__
 #define __LRAUV_IGNITION_PLUGINS_COMMS_COMMSCLIENT_HH__
 
-#include <ignition/transport/Node.hh>
-
 #include <functional>
+
+#include <ignition/transport/Node.hh>
 
 #include "CommsPacket.hh"
 #include "TopicDefinitions.hh"
+
 #include "lrauv_acoustic_message.pb.h"
 
 namespace tethys

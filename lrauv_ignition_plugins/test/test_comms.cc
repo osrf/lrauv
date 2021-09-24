@@ -51,27 +51,26 @@ TEST(CommsBasicUnitTest, CommsPacketConversions)
   ASSERT_TRUE(MessageDifferencer::Equals(decoded, msg));
 }
 
-TEST_F(LrauvCommsFixture, TestBasicSendRecieve)
+TEST_F(LrauvCommsFixture, TestBasicSendReceive)
 {
   using AcousticMsg = lrauv_ignition_plugins::msgs::LRAUVAcousticMessage;
 
   CommsClient client1(1, [](const auto message){});
 
-  bool recieved_message = false;
+  bool received_message = false;
   
-  std::mutex recieve_message_mtx;
+  std::mutex receive_message_mtx;
   std::condition_variable cv;
   CommsClient client2(2, [
     this, 
-    &recieved_message,
-    &recieve_message_mtx,
+    &received_message,
+    &receive_message_mtx,
     &cv](const auto message)
   {
     ASSERT_EQ(message.data(), "test_message");
-    std::lock_guard<std::mutex> lock(this->mtx);
     {
-      std::lock_guard<std::mutex> lk(recieve_message_mtx);
-      recieved_message = true;
+      std::lock_guard<std::mutex> lk(receive_message_mtx);
+      received_message = true;
     }
     cv.notify_all();
   });
@@ -85,6 +84,6 @@ TEST_F(LrauvCommsFixture, TestBasicSendRecieve)
   this->fixture->Server()->Run(false, 1000, false);
   client1.SendPacket(msg);
 
-  std::unique_lock<std::mutex> lock(recieve_message_mtx);
-  cv.wait(lock, [&recieved_message]{return recieved_message;});
+  std::unique_lock<std::mutex> lock(receive_message_mtx);
+  cv.wait(lock, [&received_message]{return received_message;});
 }

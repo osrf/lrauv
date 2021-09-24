@@ -21,8 +21,8 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 #ifndef __LRAUV_IGNITION_PLUGINS_COMMS_COMMSMODEL_HH__
 #define __LRAUV_IGNITION_PLUGINS_COMMS_COMMSMODEL_HH__
 
-#include <ignition/gazebo/System.hh>
 #include <ignition/gazebo/EntityComponentManager.hh>
+#include <ignition/gazebo/System.hh>
 
 #include "CommsPacket.hh"
 #include "MessageManager.hh"
@@ -46,15 +46,15 @@ class ICommsModel
 
   /// \brief This method is called when the message bus delivers a message.
   /// You should override this method to determine when a message is coming in.
-  /// \param[in] _packet - Incoming coMessageManagermms packet.
+  /// \param[in] _packet - Incoming comms packet.
   public: virtual void EnqueueMsg(const CommsPacket &_packet) = 0;
 
   /// \brief This method is called when there is a timestep in the simulator
-  /// override this to update your datastructures as needed.
+  /// override this to update your data structures as needed.
   /// \param[in] _info - Simulator information about the current timestep.
   /// \param[in] _ecm - Ignition's ECM.
   /// \param[in] _messageMgr - Use this to mark the message as arrived.
-  /// \param[in] _pose - The current pose of the recieving model.
+  /// \param[in] _pose - The current pose of the receiving model.
   public: virtual void Step(
     const ignition::gazebo::UpdateInfo &_info,
     ignition::gazebo::EntityComponentManager &_ecm,

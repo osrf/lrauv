@@ -20,6 +20,8 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 
 #include "AcousticCommsPlugin.hh"
 
+#include <unordered_map>
+
 #include <ignition/gazebo/components.hh>
 #include <ignition/gazebo/Link.hh>
 #include <ignition/gazebo/Model.hh>
@@ -34,8 +36,6 @@ Research Institute (MBARI) and the David and Lucile Packard Foundation */
 #include <lrauv_ignition_plugins/comms/CommsPacket.hh>
 #include <lrauv_ignition_plugins/comms/MessageManager.hh>
 #include <lrauv_ignition_plugins/comms/TopicDefinitions.hh>
-
-#include <unordered_map>
 
 #include "lrauv_acoustic_message.pb.h"
 #include "lrauv_internal_comms.pb.h"
