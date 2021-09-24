@@ -54,7 +54,7 @@ public: CommsClient(uint32_t _address,
 
   this->node.Subscribe(
     _commsPrefix + "/" + std::to_string(address) + "/rx",
-    &CommsClient::RecievedPacket,
+    &CommsClient::ReceivedPacket,
     this
   );
 }
@@ -69,8 +69,8 @@ public: void SendPacket(const CommsMsg& _msg)
 
 //////////////////////////////////////////////////
 /// \brief Callback handler
-/// \param[in] _msg - message recieved
-private: void RecievedPacket(const CommsMsg& _msg)
+/// \param[in] _msg - message received
+private: void ReceivedPacket(const CommsMsg& _msg)
 {
   this->callback(_msg);
 }

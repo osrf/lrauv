@@ -51,8 +51,8 @@ class AcousticCommsPrivateData
     const lrauv_ignition_plugins::msgs::LRAUVAcousticMessage &_msg
   );
 
-  /// \brief handles when a message is to be recieved from another robot
-  public: void OnRecieveMessage(
+  /// \brief handles when a message is to be received from another robot
+  public: void OnReceiveMessage(
     const lrauv_ignition_plugins::msgs::LRAUVInternalComms &_msg
   );
 
@@ -130,7 +130,7 @@ void AcousticCommsPrivateData::OnMessageSendReq(
 }
 
 //////////////////////////////////////////////////
-void AcousticCommsPrivateData::OnRecieveMessage(
+void AcousticCommsPrivateData::OnReceiveMessage(
   const lrauv_ignition_plugins::msgs::LRAUVInternalComms &_msg)
 {
   auto packet = CommsPacket::make(_msg);
@@ -270,7 +270,7 @@ void AcousticCommsPlugin::Configure(
 
   this->dataPtr->node.Subscribe(
     this->dataPtr->internalCommsTopic,
-    &AcousticCommsPrivateData::OnRecieveMessage,
+    &AcousticCommsPrivateData::OnReceiveMessage,
     this->dataPtr.get());
 
   this->dataPtr->node.Subscribe(
