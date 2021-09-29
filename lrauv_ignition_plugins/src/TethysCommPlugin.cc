@@ -51,8 +51,8 @@ double pressureFromDepthLatitude(double _depth, double _lat)
   // Negative check with tolerance
   if (_depth < -1E-5)
   {
-    ignerr << "Depth must be positive. Received [" << _depth << "]"
-           << std::endl;
+    // This happens often when the vehicle is near the surface, so we don't
+    // spam the console with error messages.
     return -1.0;
   }
   if (_lat < -90 || _lat > 90)
@@ -590,8 +590,12 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.set_temperature_(this->latestTemperature.Celsius());
   stateMsg.add_values_(this->latestChlorophyll);
 
-  stateMsg.add_values_(pressureFromDepthLatitude(-modelPose.Pos().Z(),
-      latlon.X()));
+  double pressure = 0.0;
+  auto calcPressure = pressureFromDepthLatitude(-modelPose.Pos().Z(),
+      latlon.X());
+  if (calcPressure >= 0)
+    pressure = calcPressure;
+  stateMsg.add_values_(pressure);
 
   stateMsg.set_eastcurrent_(this->latestCurrent.X());
   stateMsg.set_northcurrent_(this->latestCurrent.Y());
