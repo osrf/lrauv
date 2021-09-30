@@ -44,15 +44,15 @@ public: msgs::LRAUVRangeBearingResponse RequestRange(uint32_t address)
   req.set_to(address);
   req.set_req_id(this->request_counter);
 
-  this->recieved = false;
+  this->received = false;
 
   this->pub.Publish(req);
 
   igndbg << "Published request" << "\n";
 
   std::unique_lock<std::mutex> lk(this->mtx);
-  cv.wait(lk, [this]{return this->recieved;});
-  //sleep(2.0);
+  cv.wait(lk, [this]{return this->received;});
+
   this->request_counter++;
 
   return this->lastResponse;
@@ -60,13 +60,13 @@ public: msgs::LRAUVRangeBearingResponse RequestRange(uint32_t address)
 
 public: void onCallback(const msgs::LRAUVRangeBearingResponse& resp)
 {
-  igndbg << "Recieved message\n";
+  igndbg << "Received message\n";
   if(resp.req_id() == this->request_counter)
   {
     {
       std::lock_guard<std::mutex> lk(this->mtx);
       this->lastResponse = resp;
-      this->recieved = true;
+      this->received = true;
     }
     cv.notify_all();
   }
@@ -84,7 +84,7 @@ private: std::condition_variable cv;
 
 private: msgs::LRAUVRangeBearingResponse lastResponse;
 
-private: bool recieved;
+private: bool received;
 };
 
 TEST_F(LrauvCommsFixture, TestRangingAccuracy)
