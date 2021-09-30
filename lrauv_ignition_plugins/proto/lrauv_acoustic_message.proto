@@ -32,8 +32,8 @@ option java_outer_classname = "LRAUVAcousticMsg.Protos";
 message LRAUVAcousticMessage
 {
   /// \brief Optional header data
-  int32 to = 1;
-  int32 from = 2;
+  uint32 to = 1;
+  uint32 from = 2;
   enum MessageType {
     RangeRequest = 0;
     RangeResponse = 1;
