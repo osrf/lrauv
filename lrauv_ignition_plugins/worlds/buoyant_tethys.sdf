@@ -10,7 +10,7 @@
     </scene>
 
     <physics name="1ms" type="dart">
-      <max_step_size>0.001</max_step_size>
+      <max_step_size>0.02</max_step_size>
       <real_time_factor>0</real_time_factor>
     </physics>
     <plugin

@@ -30,7 +30,7 @@ TEST_F(LrauvTestFixture, DropWeightRelease)
   this->fixture->Server()->Run(true, 100, false);
   EXPECT_EQ(100, this->iterations);
   EXPECT_EQ(100, this->tethysPoses.size());
-  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Z(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Z(), 0.05);
 
   // Tell the vehicle to release the weight
   lrauv_ignition_plugins::msgs::LRAUVCommand cmdMsg;

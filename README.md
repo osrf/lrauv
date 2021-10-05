@@ -57,9 +57,24 @@ docker/join.sh mbari_lrauv
 
 ## To test integration with MBARI LRAUV code base
 
-Pull the Docker image on the
-[MBARI DockerHub](https://hub.docker.com/r/mbari/lrauv-ignition-sim)
-containing Ignition, MBARI LRAUV code base, and this repository.
+MBARI's code base lives in a private repository. For people with access,
+[here](https://bitbucket.org/mbari/lrauv-application/src/7b3b5fce1b0ad1af1734952adaf94f2a69193aec/docker_ignition/?at=feature%2F2021-02-12-ignition-sim)
+are instructions on setting it up from source.
+
+The integration assumes that this repository is cloned as a sibling of
+the `lrauv-application` repository, i.e.:
+
+```
+<workspace>
+|-- lrauv
+`-- lrauv-application
+```
+
+### Docker image
+
+A Docker image is available for people without access to the MBARI codebase.
+[MBARI's image on DockerHub](https://hub.docker.com/r/mbari/lrauv-ignition-sim)
+contains Ignition, MBARI's LRAUV code base, and this repository.
 
 ```
 docker pull mbari/lrauv-ignition-sim
@@ -74,11 +89,26 @@ This needs to be done for each terminal.
 
 ### Setting up for a run
 
+For ease of development, the following world is set up to run at a real time
+factor (RTF) of 0 (as fast as possible) and a step size of 0.02 seconds.
+
+That is significantly faster than the default Ignition setting of RTF 1 and
+step size 0.001 seconds, which will give real time performance and roughly the
+nominal vehicle speed of 1 m/s.
+
+The RTF and step size can be changed at run time via the GUI by going to the
+Inspector panel and then Physics Group.
+
+Alternatively, they can be changed prior to compilation in the world SDF under
+`<physics><max_step_size>` and `<physics><real_time_factor>`.
+
 Launch the Ignition simulation:
 ```
 ign launch lrauv_world.ign
 ```
+
 Keep it paused.
+
 For verbose debug output, add `--verbose 4`.
 
 Run the LRAUV Main Vehicle Application (MVA), which will bring you to a command prompt:

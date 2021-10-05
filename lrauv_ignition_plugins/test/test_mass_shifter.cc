@@ -30,7 +30,7 @@ TEST_F(LrauvTestFixture, MassShifterTilt)
   this->fixture->Server()->Run(true, 100, false);
   EXPECT_EQ(100, this->iterations);
   EXPECT_EQ(100, this->tethysPoses.size());
-  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 0.01);
 
   // Tell the vehicle to tilt forward
   lrauv_ignition_plugins::msgs::LRAUVCommand cmdMsg;

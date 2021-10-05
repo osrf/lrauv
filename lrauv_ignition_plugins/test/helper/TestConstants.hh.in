@@ -2,4 +2,7 @@
 #define __TEST_CONSTANTS_HH__
 #cmakedefine PROJECT_BINARY_PATH "@PROJECT_BINARY_PATH@"
 #cmakedefine PROJECT_SOURCE_PATH "@PROJECT_SOURCE_PATH@"
+
+// Hardcode path, assume lrauv-application is a sibling of lrauv
+#define LRAUV_APP_PATH "@PROJECT_SOURCE_PATH@/../../lrauv-application"
 #endif

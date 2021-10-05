@@ -200,7 +200,10 @@ if(BUILD_TESTING)
   foreach(TEST_TARGET
     test_controller
     test_drop_weight
-    test_mass_shifter)
+    test_mass_shifter
+    test_mission_depth_vbs
+    test_mission_pitch_mass
+    test_mission_yoyo_circle)
 
     add_executable(
       ${TEST_TARGET}
