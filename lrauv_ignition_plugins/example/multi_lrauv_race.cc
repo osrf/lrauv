@@ -20,9 +20,8 @@
  * within reasonable limits, and send the command to the vehicle.
  *
  * Usage:
- *   $ MultiLRAUVRace
+ *   $ LRAUV_multi_lrauv_race
  */
-
 #include <chrono>
 #include <thread>
 

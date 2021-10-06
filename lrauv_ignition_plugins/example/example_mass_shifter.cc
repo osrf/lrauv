@@ -20,7 +20,7 @@
  * forward and backward.
  *
  * Usage:
- *   $ TestMassShifter
+ *   $ LRAUV_example_mass_shifter <vehicle_name>
  */
 
 #include <chrono>
@@ -30,10 +30,16 @@
 #include <ignition/transport.hh>
 #include "lrauv_command.pb.h"
 
-int main(int argc, char** argv)
+int main(int _argc, char **_argv)
 {
+  std::string vehicleName("tethys");
+  if (_argc > 1)
+  {
+    vehicleName = _argv[1];
+  }
+
   ignition::transport::Node node;
-  auto commandTopic = "/tethys/command_topic";
+  auto commandTopic = "/" + vehicleName + "/command_topic";
   auto commandPub =
     node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(commandTopic);
 

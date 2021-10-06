@@ -1,5 +1,25 @@
+/*
+ * Copyright (C) 2021 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 /**
  * Keyboard teleop controller
+ *
+ * Usage:
+ *   $ LRAUV_keyboard_teleop <vehicle_name>
  */
 #include <unistd.h>
 #include <termios.h>
@@ -32,17 +52,15 @@ char getch()
   return (buf);
 }
 
-int main(int argc, char** argv)
+int main(int _argc, char **_argv)
 {
-  // Robot namespace, to allow multiple vehicles
-  std::string ns = "tethys";
-  for (int i = 1; i < argc; i++)
+  std::string vehicleName("tethys");
+  if (_argc > 1)
   {
-    ns = argv[i];
+    vehicleName = _argv[1];
   }
-
   ignition::transport::Node node;
-  std::string commandTopic = ns + "/command_topic";
+  auto commandTopic = "/" + vehicleName + "/command_topic";
   auto commandPub =
     node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(commandTopic);
 
@@ -53,14 +71,14 @@ int main(int argc, char** argv)
   {
     std::cout << "\033[2J";
     std::cout << "Keyboard teleop for lrauv" << std::endl;
-    std::cout << "Robot namespace set to [" << ns << "]" << std::endl;
+    std::cout << "Robot namespace set to [" << vehicleName << "]" << std::endl;
     std::cout << "  w  <-- Control elevator to point up (pitch down)" <<std::endl;
-    std::cout << "a   d  <-- Control Rudder left/right" <<std::endl;
-    std::cout << "  s  <-- Point Elevator down (pitch up)" <<std::endl;
+    std::cout << "a   d  <-- Control Rudder left/right" << std::endl;
+    std::cout << "  s  <-- Point Elevator down (pitch up)" << std::endl;
 
-    std::cout << "Throttle control:" <<std::endl;
-    std::cout << "\tk - increase thrust "<< std::endl;
-    std::cout << "\tj - decrease thrust "<< std::endl;
+    std::cout << "Throttle control:" << std::endl;
+    std::cout << "\tk - increase thrust " << std::endl;
+    std::cout << "\tj - decrease thrust " << std::endl;
 
     std::cout << "Current state:" << std::endl;
     std::cout << "\tThrust (radians per second): " << thrust << std::endl;
