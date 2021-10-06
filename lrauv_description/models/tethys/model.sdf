@@ -89,7 +89,7 @@
             <size>0.1 0.1 0.02</size>
           </box>
         </geometry>
-      </collision> 
+      </collision>
 
       <visual name= "visual">
         <pose>-1.05 0 0 0 0 0</pose>

@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<sdf version="1.6">
+<sdf version="1.9">
   <world name="multi_lrauv">
     <scene>
       <!-- For turquoise ambient to match particle effect -->
@@ -102,309 +102,78 @@
 
     <include>
       <pose>0 0 1 0 0 1.57</pose>
-      <uri>tethys</uri>
-
-      <!-- Joint controllers -->
-      <plugin
-        filename="ignition-gazebo-joint-position-controller-system"
-        name="ignition::gazebo::systems::JointPositionController">
-        <joint_name>horizontal_fins_joint</joint_name>
-        <p_gain>0.1</p_gain>
-      </plugin>
-
-      <plugin
-        filename="ignition-gazebo-joint-position-controller-system"
-        name="ignition::gazebo::systems::JointPositionController">
-        <joint_name>vertical_fins_joint</joint_name>
-        <p_gain>0.1</p_gain>
-      </plugin>
-
-      <plugin
-        filename="ignition-gazebo-thruster-system"
-        name="ignition::gazebo::systems::Thruster">
-        <namespace>tethys</namespace>
-        <joint_name>propeller_joint</joint_name>
-        <thrust_coefficient>0.004422</thrust_coefficient>
-        <fluid_density>1000</fluid_density>
-        <propeller_diameter>0.2</propeller_diameter>
-      </plugin>
-
-      <!-- Lift and drag -->
-
-      <!-- Vertical fin -->
-      <plugin
-        filename="ignition-gazebo-lift-drag-system"
-        name="ignition::gazebo::systems::LiftDrag">
-        <air_density>1000</air_density>
-        <cla>4.13</cla>
-        <cla_stall>-1.1</cla_stall>
-        <cda>0.2</cda>
-        <cda_stall>0.03</cda_stall>
-        <alpha_stall>0.17</alpha_stall>
-        <a0>0</a0>
-        <area>0.0244</area>
-        <upward>0 1 0</upward>
-        <forward>1 0 0</forward>
-        <link_name>vertical_fins</link_name>
-        <cp>0 0 0</cp>
-      </plugin>
-
-      <!-- Horizontal fin -->
-      <plugin
-        filename="ignition-gazebo-lift-drag-system"
-        name="ignition::gazebo::systems::LiftDrag">
-        <air_density>1000</air_density>
-        <cla>4.13</cla>
-        <cla_stall>-1.1</cla_stall>
-        <cda>0.2</cda>
-        <cda_stall>0.03</cda_stall>
-        <alpha_stall>0.17</alpha_stall>
-        <a0>0</a0>
-        <area>0.0244</area>
-        <upward>0 0 1</upward>
-        <forward>1 0 0</forward>
-        <link_name>horizontal_fins</link_name>
-        <cp>0 0 0</cp>
-      </plugin>
-
-      <!-- Interfacing plugin with MBARI Main Vehicle Application -->
-      <plugin
-        filename="TethysCommPlugin"
-        name="tethys::TethysCommPlugin">
-        <namespace>tethys</namespace>
-        <command_topic>tethys/command_topic</command_topic>
-        <state_topic>tethys/state_topic</state_topic>
-      </plugin>
-
-      <plugin
-        filename="HydrodynamicsPlugin"
-        name="tethys::HydrodynamicsPlugin">
-        <link_name>base_link</link_name>
-        <xDotU>-4.876161</xDotU>
-        <yDotV>-126.324739</yDotV>
-        <zDotW>-126.324739</zDotW>
-        <kDotP>0</kDotP>
-        <mDotQ>-33.46</mDotQ>
-        <nDotR>-33.46</nDotR>
-        <xUU>-6.2282</xUU>
-        <xU>0</xU>
-        <yVV>-601.27</yVV>
-        <yV>0</yV>
-        <zWW>-601.27</zWW>
-        <zW>0</zW>
-        <kPP>-0.1916</kPP>
-        <kP>0</kP>
-        <mQQ>-632.698957</mQQ>
-        <mQ>0</mQ>
-        <nRR>-632.698957</nRR>
-        <nR>0</nR>
-      </plugin>
-
+      <uri>tethys_equiped</uri>
     </include>
 
     <include>
       <pose>5 0 1 0 0 1.57</pose>
-      <uri>tethys</uri>
+      <uri>tethys_equiped</uri>
       <name>triton</name>
 
-      <!-- Joint controllers -->
-      <plugin
-        filename="ignition-gazebo-joint-position-controller-system"
-        name="ignition::gazebo::systems::JointPositionController">
-        <joint_name>horizontal_fins_joint</joint_name>
-        <p_gain>0.1</p_gain>
-      </plugin>
-
-      <plugin
-        filename="ignition-gazebo-joint-position-controller-system"
-        name="ignition::gazebo::systems::JointPositionController">
-        <joint_name>vertical_fins_joint</joint_name>
-        <p_gain>0.1</p_gain>
-      </plugin>
-
-      <plugin
-        filename="ignition-gazebo-thruster-system"
-        name="ignition::gazebo::systems::Thruster">
-        <namespace>triton</namespace>
-        <joint_name>propeller_joint</joint_name>
-        <thrust_coefficient>0.004422</thrust_coefficient>
-        <fluid_density>1000</fluid_density>
-        <propeller_diameter>0.2</propeller_diameter>
-      </plugin>
-
-      <!-- Lift and drag -->
-
-      <!-- Vertical fin -->
-      <plugin
-        filename="ignition-gazebo-lift-drag-system"
-        name="ignition::gazebo::systems::LiftDrag">
-        <air_density>1000</air_density>
-        <cla>4.13</cla>
-        <cla_stall>-1.1</cla_stall>
-        <cda>0.2</cda>
-        <cda_stall>0.03</cda_stall>
-        <alpha_stall>0.17</alpha_stall>
-        <a0>0</a0>
-        <area>0.0244</area>
-        <upward>0 1 0</upward>
-        <forward>1 0 0</forward>
-        <link_name>vertical_fins</link_name>
-        <cp>0 0 0</cp>
-      </plugin>
-
-      <!-- Horizontal fin -->
-      <plugin
-        filename="ignition-gazebo-lift-drag-system"
-        name="ignition::gazebo::systems::LiftDrag">
-        <air_density>1000</air_density>
-        <cla>4.13</cla>
-        <cla_stall>-1.1</cla_stall>
-        <cda>0.2</cda>
-        <cda_stall>0.03</cda_stall>
-        <alpha_stall>0.17</alpha_stall>
-        <a0>0</a0>
-        <area>0.0244</area>
-        <upward>0 0 1</upward>
-        <forward>1 0 0</forward>
-        <link_name>horizontal_fins</link_name>
-        <cp>0 0 0</cp>
-      </plugin>
-
-      <!-- Interfacing plugin with MBARI Main Vehicle Application -->
-      <plugin
-        filename="TethysCommPlugin"
-        name="tethys::TethysCommPlugin">
-        <namespace>triton</namespace>
-        <command_topic>triton/command_topic</command_topic>
-        <state_topic>triton/state_topic</state_topic>
-      </plugin>
-
-      <plugin
-        filename="HydrodynamicsPlugin"
-        name="tethys::HydrodynamicsPlugin">
-        <link_name>base_link</link_name>
-        <xDotU>-4.876161</xDotU>
-        <yDotV>-126.324739</yDotV>
-        <zDotW>-126.324739</zDotW>
-        <kDotP>0</kDotP>
-        <mDotQ>-33.46</mDotQ>
-        <nDotR>-33.46</nDotR>
-        <xUU>-6.2282</xUU>
-        <xU>0</xU>
-        <yVV>-601.27</yVV>
-        <yV>0</yV>
-        <zWW>-601.27</zWW>
-        <zW>0</zW>
-        <kPP>-0.1916</kPP>
-        <kP>0</kP>
-        <mQQ>-632.698957</mQQ>
-        <mQ>0</mQ>
-        <nRR>-632.698957</nRR>
-        <nR>0</nR>
-      </plugin>
+      <experimental:params>
+        <sensor element_id="base_link::salinity_sensor" action="modify">
+          <topic>/model/triton/salinity</topic>
+        </sensor>
+        <sensor element_id="base_link::temperature_sensor" action="modify">
+          <topic>/model/triton/temperature</topic>
+        </sensor>
+        <sensor element_id="base_link::chlorophyll_sensor" action="modify">
+          <topic>/model/triton/chlorophyll</topic>
+        </sensor>
+        <sensor element_id="base_link::current_sensor" action="modify">
+          <topic>/model/triton/current</topic>
+        </sensor>
+        <plugin element_id="tethys::Thruster" action="modify">
+          <namespace>triton</namespace>
+        </plugin>
+        <plugin element_id="tethys::TethysCommPlugin" action="modify">
+          <namespace>triton</namespace>
+          <command_topic>triton/command_topic</command_topic>
+          <state_topic>triton/state_topic</state_topic>
+        </plugin>
+        <plugin element_id="tethys::BuoyancyEnginePlugin" action="modify">
+          <namespace>triton</namespace>
+        </plugin>
+        <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
+          <topic>/model/triton/drop_weight</topic>
+        </plugin>
+      </experimental:params>
 
     </include>
 
     <include>
       <pose>-5 0 1 0 0 1.57</pose>
-      <uri>tethys</uri>
+      <uri>tethys_equiped</uri>
       <name>daphne</name>
 
-      <!-- Joint controllers -->
-      <plugin
-        filename="ignition-gazebo-joint-position-controller-system"
-        name="ignition::gazebo::systems::JointPositionController">
-        <joint_name>horizontal_fins_joint</joint_name>
-        <p_gain>0.1</p_gain>
-      </plugin>
-
-      <plugin
-        filename="ignition-gazebo-joint-position-controller-system"
-        name="ignition::gazebo::systems::JointPositionController">
-        <joint_name>vertical_fins_joint</joint_name>
-        <p_gain>0.1</p_gain>
-      </plugin>
-
-      <plugin
-        filename="ignition-gazebo-thruster-system"
-        name="ignition::gazebo::systems::Thruster">
-        <namespace>daphne</namespace>
-        <joint_name>propeller_joint</joint_name>
-        <thrust_coefficient>0.004422</thrust_coefficient>
-        <fluid_density>1000</fluid_density>
-        <propeller_diameter>0.2</propeller_diameter>
-      </plugin>
-
-      <!-- Lift and drag -->
-
-      <!-- Vertical fin -->
-      <plugin
-        filename="ignition-gazebo-lift-drag-system"
-        name="ignition::gazebo::systems::LiftDrag">
-        <air_density>1000</air_density>
-        <cla>4.13</cla>
-        <cla_stall>-1.1</cla_stall>
-        <cda>0.2</cda>
-        <cda_stall>0.03</cda_stall>
-        <alpha_stall>0.17</alpha_stall>
-        <a0>0</a0>
-        <area>0.0244</area>
-        <upward>0 1 0</upward>
-        <forward>1 0 0</forward>
-        <link_name>vertical_fins</link_name>
-        <cp>0 0 0</cp>
-      </plugin>
-
-      <!-- Horizontal fin -->
-      <plugin
-        filename="ignition-gazebo-lift-drag-system"
-        name="ignition::gazebo::systems::LiftDrag">
-        <air_density>1000</air_density>
-        <cla>4.13</cla>
-        <cla_stall>-1.1</cla_stall>
-        <cda>0.2</cda>
-        <cda_stall>0.03</cda_stall>
-        <alpha_stall>0.17</alpha_stall>
-        <a0>0</a0>
-        <area>0.0244</area>
-        <upward>0 0 1</upward>
-        <forward>1 0 0</forward>
-        <link_name>horizontal_fins</link_name>
-        <cp>0 0 0</cp>
-      </plugin>
-
-      <!-- Interfacing plugin with MBARI Main Vehicle Application -->
-      <plugin
-        filename="TethysCommPlugin"
-        name="tethys::TethysCommPlugin">
-        <namespace>daphne</namespace>
-        <command_topic>daphne/command_topic</command_topic>
-        <state_topic>daphne/state_topic</state_topic>
-      </plugin>
-
-      <plugin
-        filename="HydrodynamicsPlugin"
-        name="tethys::HydrodynamicsPlugin">
-        <link_name>base_link</link_name>
-        <xDotU>-4.876161</xDotU>
-        <yDotV>-126.324739</yDotV>
-        <zDotW>-126.324739</zDotW>
-        <kDotP>0</kDotP>
-        <mDotQ>-33.46</mDotQ>
-        <nDotR>-33.46</nDotR>
-        <xUU>-6.2282</xUU>
-        <xU>0</xU>
-        <yVV>-601.27</yVV>
-        <yV>0</yV>
-        <zWW>-601.27</zWW>
-        <zW>0</zW>
-        <kPP>-0.1916</kPP>
-        <kP>0</kP>
-        <mQQ>-632.698957</mQQ>
-        <mQ>0</mQ>
-        <nRR>-632.698957</nRR>
-        <nR>0</nR>
-      </plugin>
+      <experimental:params>
+        <sensor element_id="base_link::salinity_sensor" action="modify">
+          <topic>/model/daphne/salinity</topic>
+        </sensor>
+        <sensor element_id="base_link::temperature_sensor" action="modify">
+          <topic>/model/daphne/temperature</topic>
+        </sensor>
+        <sensor element_id="base_link::chlorophyll_sensor" action="modify">
+          <topic>/model/daphne/chlorophyll</topic>
+        </sensor>
+        <sensor element_id="base_link::current_sensor" action="modify">
+          <topic>/model/daphne/current</topic>
+        </sensor>
+        <plugin element_id="tethys::Thruster" action="modify">
+          <namespace>daphne</namespace>
+        </plugin>
+        <plugin element_id="tethys::TethysCommPlugin" action="modify">
+          <namespace>daphne</namespace>
+          <command_topic>daphne/command_topic</command_topic>
+          <state_topic>daphne/state_topic</state_topic>
+        </plugin>
+        <plugin element_id="tethys::BuoyancyEnginePlugin" action="modify">
+          <namespace>daphne</namespace>
+        </plugin>
+        <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
+          <topic>/model/daphne/drop_weight</topic>
+        </plugin>
+      </experimental:params>
 
     </include>
 
