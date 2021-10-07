@@ -26,6 +26,7 @@ int main(int argc, char** argv)
     lrauv_ignition_plugins::msgs::LRAUVCommand rudderMsg;
     angle *= -1;
     rudderMsg.set_buoyancyaction_(0.0005); // Keep it stable
+    rudderMsg.set_dropweightstate_(1);
     rudderMsg.set_rudderangleaction_(angle);
     commandPub.Publish(rudderMsg);
     std::cout << "moving rudder to " << angle << "\n";
@@ -35,6 +36,7 @@ int main(int argc, char** argv)
   lrauv_ignition_plugins::msgs::LRAUVCommand rudderStopMsg;
   rudderStopMsg.set_buoyancyaction_(0.0005);
   rudderStopMsg.set_rudderangleaction_(0);
+  rudderStopMsg.set_dropweightstate_(1);
   commandPub.Publish(rudderStopMsg);
   std::cout << "moving rudder to " << angle << "\n";
 
@@ -46,6 +48,7 @@ int main(int argc, char** argv)
     angle *= -1;
     elevatorMsg.set_buoyancyaction_(0.0005);
     elevatorMsg.set_elevatorangleaction_(angle);
+    elevatorMsg.set_dropweightstate_(1);
     commandPub.Publish(elevatorMsg);
     std::cout << "moving elevator to " << angle << "\n";
   }
@@ -54,6 +57,7 @@ int main(int argc, char** argv)
   lrauv_ignition_plugins::msgs::LRAUVCommand elevatorStopMsg;
   elevatorStopMsg.set_buoyancyaction_(0.0005);
   elevatorStopMsg.set_elevatorangleaction_(0);
+  elevatorStopMsg.set_dropweightstate_(1);
   commandPub.Publish(elevatorStopMsg);
   std::cout << "moving elevator to " << angle << "\n";
 
@@ -61,6 +65,7 @@ int main(int argc, char** argv)
   lrauv_ignition_plugins::msgs::LRAUVCommand thrustMsg;
   thrustMsg.set_buoyancyaction_(0.0005);
   thrustMsg.set_propomegaaction_(30);
+  thrustMsg.set_dropweightstate_(1);
   commandPub.Publish(thrustMsg);
   std::cout << "charging forward!\n";
 
@@ -68,6 +73,7 @@ int main(int argc, char** argv)
   lrauv_ignition_plugins::msgs::LRAUVCommand stopMsg;
   stopMsg.set_buoyancyaction_(0.0005);
   stopMsg.set_propomegaaction_(0);
+  stopMsg.set_dropweightstate_(1);
   commandPub.Publish(stopMsg);
   std::cout << "stop\n";
 }
