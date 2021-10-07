@@ -19,10 +19,11 @@ endfunction()
 
 add_lrauv_message(lrauv_acoustic_message)
 add_lrauv_message(lrauv_command)
-add_lrauv_message(lrauv_state)
+add_lrauv_message(lrauv_init)
 add_lrauv_message(lrauv_internal_comms)
 add_lrauv_message(lrauv_range_bearing_request)
 add_lrauv_message(lrauv_range_bearing_response)
+add_lrauv_message(lrauv_state)
 
 install(
   DIRECTORY ${CMAKE_BINARY_DIR}
