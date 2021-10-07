@@ -27,55 +27,55 @@ class HydrodynamicsPrivateData
   /// \brief Values to set via Plugin Parameters.
   /// Plugin Parameter: Added mass in surge, X_\dot{u}.
   public: double paramXdotU;
-  
+
   /// \brief Plugin Parameter: Added mass in sway, Y_\dot{v}.
   public: double paramYdotV;
-  
+
   /// \brief Plugin Parameter: Added mass in heave, Z_\dot{w}.
   public: double paramZdotW;
-  
+
   /// \brief Plugin Parameter: Added mass in roll, K_\dot{p}.
   public: double paramKdotP;
-  
+
   /// \brief Plugin Parameter: Added mass in pitch, M_\dot{q}.
   public: double paramMdotQ;
-  
+
   /// \brief Plugin Parameter: Added mass in yaw, N_\dot{r}.
   public: double paramNdotR;
-  
+
   /// \brief Plugin Parameter: Linear drag in surge.
   public: double paramXu;
-  
+
   /// \brief Plugin Parameter: Quadratic drag in surge.
   public: double paramXuu;
-  
+
   /// \brief Plugin Parameter: Linear drag in sway.
   public: double paramYv;
-  
+
   /// \brief Plugin Parameter: Quadratic drag in sway.
   public: double paramYvv;
-  
+
   /// \brief Plugin Parameter: Linear drag in heave.
   public: double paramZw;
-  
+
   /// \brief Plugin Parameter: Quadratic drag in heave.
   public: double paramZww;
-  
+
   /// \brief Plugin Parameter: Linear drag in roll.
   public: double paramKp;
-  
+
   /// \brief Plugin Parameter: Quadratic drag in roll.
   public: double paramKpp;
-  
+
   /// \brief Plugin Parameter: Linear drag in pitch.
   public: double paramMq;
-  
+
   /// \brief Plugin Parameter: Quadratic drag in pitch.
   public: double paramMqq;
-  
+
   /// \brief Plugin Parameter: Linear drag in yaw.
   public: double paramNr;
-  
+
   /// \brief Plugin Parameter: Quadratic drag in yaw.
   public: double paramNrr;
 
@@ -190,6 +190,13 @@ void HydrodynamicsPlugin::Configure(
   auto link_name = _sdf->Get<std::string>("link_name");
   this->dataPtr->linkEntity = model.LinkByName(_ecm, link_name);
 
+  if (ignition::gazebo::kNullEntity == this->dataPtr->linkEntity)
+  {
+    ignerr << "Failed to find link named [" << link_name << "] in model ["
+           << model.Name(_ecm) << "]. Plugin failed to initialize." << std::endl;
+    return;
+  }
+
   this->dataPtr->prevState = Eigen::VectorXd::Zero(6);
   this->dataPtr->prevStateDot = Eigen::VectorXd::Zero(6);
 
@@ -205,13 +212,13 @@ void HydrodynamicsPlugin::PreUpdate(
   if(_info.paused)
     return;
 
-  // These variables are named following Fossen's scheme in "Guidance and Control 
+  // These variables are named following Fossen's scheme in "Guidance and Control
   // of Ocean Vehicles." The `state` vector contains the ship's current velocity
   // in the formate [x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel].
   // `stateDot` consists of the first derivative in time of the state vector.
   // `Cmat` corresponds to the Centripetal matrix
   // `Dmat` is the drag matrix
-  // `Ma` is the added mass. 
+  // `Ma` is the added mass.
   Eigen::VectorXd stateDot = Eigen::VectorXd(6);
   Eigen::VectorXd state    = Eigen::VectorXd(6);
   Eigen::MatrixXd Cmat     = Eigen::MatrixXd::Zero(6, 6);
@@ -304,7 +311,7 @@ void HydrodynamicsPlugin::PreUpdate(
     kTotalWrench += kCmatVec;
 
   ignition::math::Vector3d totalForce(-kTotalWrench(0),  -kTotalWrench(1), -kTotalWrench(2));
-  ignition::math::Vector3d totalTorque(-kTotalWrench(3),  -kTotalWrench(4), -kTotalWrench(5)); 
+  ignition::math::Vector3d totalTorque(-kTotalWrench(3),  -kTotalWrench(4), -kTotalWrench(5));
 
   baseLink.AddWorldWrench(_ecm, pose->Rot()*(totalForce), pose->Rot()*totalTorque);
 }

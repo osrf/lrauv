@@ -35,6 +35,9 @@ class BuoyancyEnginePrivateData
   public: void OnCmdBuoyancyEngine(
     const ignition::msgs::Double& volumeSetPoint);
 
+  /// \brief Namespace for topics
+  public: std::string ns{""};
+
   /// \brief current volume of bladder in m^3
   public: double bladderVolume = 3e-5;
 
@@ -81,7 +84,8 @@ void BuoyancyEnginePrivateData::OnCmdBuoyancyEngine(
 
   std::lock_guard lock(this->mtx);
   this->volumeSetPoint = volume;
-  igndbg << "Updating volume " << volume <<"\n";
+  igndbg << "[" << this->ns << "] Updating volume " << volume
+         << "\n";
 }
 
 //////////////////////////////////////////////////
@@ -133,31 +137,30 @@ void BuoyancyEnginePlugin::Configure(
     this->dataPtr->neutralVolume = _sdf->Get<double>("neutral_volume");
   }
 
-  std::string cmdTopic = "/buoyancy_engine/";
-  std::string statusTopic = "/buoyancy_engine/current_volume";
   if (_sdf->HasElement("namespace"))
   {
-    cmdTopic = ignition::transport::TopicUtils::AsValidTopic(
-      "/model/" + _sdf->Get<std::string>("namespace") + "/buoyancy_engine/");
-    statusTopic = ignition::transport::TopicUtils::AsValidTopic(
-      "/model/" + _sdf->Get<std::string>("namespace")
-      + "/buoyancy_engine/current_volume");
+    this->dataPtr->ns = _sdf->Get<std::string>("namespace");
   }
-  igndbg << "listening on topic: " << cmdTopic <<std::endl;
+  auto cmdTopic = ignition::transport::TopicUtils::AsValidTopic(
+    "/model/" + this->dataPtr->ns + "/buoyancy_engine/");
+  auto statusTopic = ignition::transport::TopicUtils::AsValidTopic(
+    "/model/" + this->dataPtr->ns + "/buoyancy_engine/current_volume");
 
-  if(_sdf->HasElement("max_inflation_rate"))
+  if (_sdf->HasElement("max_inflation_rate"))
   {
     this->dataPtr->maxInflationRate = _sdf->Get<double>("max_inflation_rate");
   }
 
-  if(!this->dataPtr->node.Subscribe(cmdTopic,
+  if (!this->dataPtr->node.Subscribe(cmdTopic,
     &BuoyancyEnginePrivateData::OnCmdBuoyancyEngine, this->dataPtr.get()))
   {
     ignerr << "Failed to subscribe to [" << cmdTopic << "]" << std::endl;
   }
+  igndbg << "Listening on topic: " << cmdTopic <<std::endl;
 
   this->dataPtr->statusPub =
     this->dataPtr->node.Advertise<ignition::msgs::Double>(statusTopic);
+  igndbg << "Publishing on topic: " << statusTopic <<std::endl;
 }
 
 //////////////////////////////////////////////////

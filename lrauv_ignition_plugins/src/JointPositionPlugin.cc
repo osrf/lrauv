@@ -119,6 +119,7 @@ void TethysJointPlugin::Configure(
   }
   this->dataPtr->node.Subscribe(
       topic, &TethysJointPrivateData::OnCmdPos, this->dataPtr.get());
+  ignmsg << "Listening to commands on [" << topic << "]" << std::endl;
 }
 
 //////////////////////////////////////////////////
@@ -131,6 +132,18 @@ void TethysJointPlugin::PreUpdate(
   {
     this->dataPtr->jointEntity =
         this->dataPtr->model.JointByName(_ecm, this->dataPtr->jointName);
+
+    if (this->dataPtr->jointEntity == ignition::gazebo::kNullEntity)
+    {
+      static bool informed{false};
+      if (!informed)
+      {
+        ignerr << "Failed to find joint [" << this->dataPtr->jointName
+               << "] in model [" << this->dataPtr->model.Name(_ecm) << "]"
+               << std::endl;
+        informed = true;
+      }
+    }
 
     // Get joint velocity limit specified in SDF
     auto jointAxisComp =
