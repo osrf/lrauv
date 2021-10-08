@@ -288,7 +288,7 @@
 
     <include>
       <pose>0 0 0 0 0 0</pose>
-      <uri>tethys_equiped</uri>
+      <uri>tethys_equipped</uri>
     </include>
 
   </world>

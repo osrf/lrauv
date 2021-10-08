@@ -102,12 +102,12 @@
 
     <include>
       <pose>0 0 1 0 0 1.57</pose>
-      <uri>tethys_equiped</uri>
+      <uri>tethys_equipped</uri>
     </include>
 
     <include>
       <pose>5 0 1 0 0 1.57</pose>
-      <uri>tethys_equiped</uri>
+      <uri>tethys_equipped</uri>
       <name>triton</name>
 
       <experimental:params>
@@ -143,7 +143,7 @@
 
     <include>
       <pose>-5 0 1 0 0 1.57</pose>
-      <uri>tethys_equiped</uri>
+      <uri>tethys_equipped</uri>
       <name>daphne</name>
 
       <experimental:params>
