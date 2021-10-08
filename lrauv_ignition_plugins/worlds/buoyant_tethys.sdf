@@ -385,9 +385,11 @@
       </plugin>
 
       <plugin
-        filename="JointPositionPlugin"
-        name="tethys::TethysJointPlugin">
+        filename="ignition-gazebo-joint-position-controller-system"
+        name="ignition::gazebo::systems::JointPositionController">
         <joint_name>battery_joint</joint_name>
+        <use_velocity_commands>true</use_velocity_commands>
+        <cmd_max>0.0007</cmd_max>
       </plugin>
 
       <!-- Lift and drag -->

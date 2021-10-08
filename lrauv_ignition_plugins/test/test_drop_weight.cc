@@ -34,10 +34,10 @@ TEST_F(LrauvTestFixture, DropWeightRelease)
 
   // Tell the vehicle to release the weight
   lrauv_ignition_plugins::msgs::LRAUVCommand cmdMsg;
-  cmdMsg.set_dropweightstate_(true);
+  cmdMsg.set_dropweightstate_(false);
 
   // Neutral buoyancy
-  cmdMsg.set_buoyancyaction_(500);
+  cmdMsg.set_buoyancyaction_(0.0005);
 
   // Run server until the command is processed and the model floats to a
   // certain height

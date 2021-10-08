@@ -37,7 +37,7 @@ TEST_F(LrauvTestFixture, Command)
   cmdMsg.set_propomegaaction_(30);
 
   // Neutral buoyancy
-  cmdMsg.set_buoyancyaction_(500);
+  cmdMsg.set_buoyancyaction_(0.0005);
 
   // Run server until the command is processed and the model reaches a certain
   // point ahead (the robot moves towards -X)

@@ -35,6 +35,7 @@ TEST_F(LrauvTestFixture, MassShifterTilt)
   // Tell the vehicle to tilt forward
   lrauv_ignition_plugins::msgs::LRAUVCommand cmdMsg;
   cmdMsg.set_masspositionaction_(-0.01);
+  cmdMsg.set_buoyancyaction_(0.0005);
 
   // Run server until the command is processed and the model tilts to a
   // certain pitch
