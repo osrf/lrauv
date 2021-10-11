@@ -63,7 +63,6 @@ are instructions on setting it up from source.
 
 The integration assumes that this repository is cloned as a sibling of
 the `lrauv-application` repository, i.e.:
-
 ```
 <workspace>
 |-- lrauv
@@ -72,13 +71,16 @@ the `lrauv-application` repository, i.e.:
 
 ### Docker image
 
-A Docker image is available for people without access to the MBARI codebase.
+A public Docker image is available for people without access to the MBARI
+codebase.
 [MBARI's image on DockerHub](https://hub.docker.com/r/mbari/lrauv-ignition-sim)
 contains Ignition, MBARI's LRAUV code base, and this repository.
-
 ```
 docker pull mbari/lrauv-ignition-sim
 ```
+Note: To update that image, see
+[instructions](https://bitbucket.org/mbari/lrauv-application/src/f89b2bf16e3e5e72cafe6b21252a1a6b3314fbaa/docker_ignition/README.md?at=feature%2F2021-02-12-ignition-sim)
+in MBARI's private `lrauv-application` repository.
 
 Once inside a container, source the colcon workspaces:
 ```
@@ -364,7 +366,7 @@ quick on
 ```
 to let the system finish loading, before issuing control commands.
 
-# Science data
+## Science data
 
 Science data can be read from a csv file with the following recognized field
 names in the first line of the file:
