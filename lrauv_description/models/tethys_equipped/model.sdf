@@ -167,8 +167,8 @@
         <nR>0</nR>
       </plugin>
       <plugin
-        filename="BuoyancyEnginePlugin"
-        name="tethys::BuoyancyEnginePlugin">
+        filename="ignition-gazebo-buoyancy-engine-system"
+        name="ignition::gazebo::v6::systems::BuoyancyEnginePlugin">
         <link_name>buoyancy_engine</link_name>
         <namespace>tethys</namespace>
         <min_volume>0.000080</min_volume>

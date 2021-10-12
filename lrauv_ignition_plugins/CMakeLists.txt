@@ -57,7 +57,7 @@ function(add_lrauv_plugin PLUGIN)
   cmake_parse_arguments(add_lrauv_plugin
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  add_library(${PLUGIN} 
+  add_library(${PLUGIN}
     SHARED src/${PLUGIN}.cc ${add_lrauv_plugin_ADDITIONAL_SOURCES})
   set_property(TARGET ${PLUGIN} PROPERTY CXX_STANDARD 17)
   target_link_libraries(${PLUGIN}
@@ -106,12 +106,11 @@ add_subdirectory(src/comms/)
 
 add_lrauv_plugin(AcousticCommsPlugin
   INCLUDE_COMMS
-  PROTO 
+  PROTO
     lrauv_acoustic_message
     lrauv_internal_comms
   PRIVATE_LINK_LIBS
     CommsSupport)
-add_lrauv_plugin(BuoyancyEnginePlugin)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(RangeBearingPlugin
   INCLUDE_COMMS
