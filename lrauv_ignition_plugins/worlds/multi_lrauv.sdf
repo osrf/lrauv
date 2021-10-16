@@ -137,6 +137,13 @@
         <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
           <topic>/model/triton/drop_weight</topic>
         </plugin>
+        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
+          <address>2</address>
+        </plugin>
+        <plugin element_id="tethys::RangeBearingPlugin" action="modify">
+          <address>2</address>
+          <namespace>triton</namespace>
+        </plugin>
       </experimental:params>
 
     </include>
@@ -172,6 +179,13 @@
         </plugin>
         <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
           <topic>/model/daphne/drop_weight</topic>
+        </plugin>
+        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
+          <address>3</address>
+        </plugin>
+        <plugin element_id="tethys::RangeBearingPlugin" action="modify">
+          <address>3</address>
+          <namespace>daphne</namespace>
         </plugin>
       </experimental:params>
 
