@@ -277,6 +277,17 @@ stop
 quit
 ```
 
+## Using Debug Container to debug the simulator
+
+A simple dockerfile and tmux config exists that makes launching and debugging the different components of the project a lot easier. To use it simply run
+
+$ docker/debug_integration.sh
+
+This will build a new container with the source code and launch a tmux session. The tmux session has 2 windows: 0:simulation and 1:logging. In the simulation window you will see the top pane runs the ignition simulation while the bottom pane runs the actual `bin/LRAUV` controller. The logging pane on the other hand will automatically convert the sim slate and write it to the results directory on your computer one layer above the directory to where you checked out.
+
+![tmux_debug](https://user-images.githubusercontent.com/542272/137456870-a0eed740-7206-43c1-8ccf-215148ad4675.gif)
+
+
 ### LRAUV cheat sheet
 
 This contains some most-often used commands for quick reference:
