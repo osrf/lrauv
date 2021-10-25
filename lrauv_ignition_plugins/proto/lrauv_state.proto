@@ -41,7 +41,11 @@ message LRAUVState
   float propOmega_                = 5;
   float propThrust_               = 6;
   float propTorque_               = 7;
-  float rudderAngle_              = 8;
+  float rudderAngle_              = 8;  // Angle that the rudder joint is
+                                        // currently at. Unit: radians.
+                                        // Higher values have the vertical fins
+                                        // rotated more clockwise when looking
+                                        // from the top (i.e. to starboard)
   float elevatorAngle_            = 9;
   float massPosition_             = 10;
   float buoyancyPosition_         = 11;  // Volume in cubic meters

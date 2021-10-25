@@ -142,11 +142,13 @@ install(
 #============================================================================
 # Examples
 foreach(EXAMPLE
-  keyboard_teleop
-  multi_lrauv_race
+  example_buoyancy
   example_controller
   example_mass_shifter
-  example_buoyancy)
+  example_rudder
+  example_thruster
+  keyboard_teleop
+  multi_lrauv_race)
 
   set(EXAMPLE_EXEC LRAUV_${EXAMPLE})
 
@@ -202,7 +204,8 @@ if(BUILD_TESTING)
     test_mass_shifter
     test_mission_depth_vbs
     test_mission_pitch_mass
-    test_mission_yoyo_circle)
+    test_mission_yoyo_circle
+    test_rudder)
 
     add_executable(
       ${TEST_TARGET}
