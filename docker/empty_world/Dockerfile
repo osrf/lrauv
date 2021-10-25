@@ -30,6 +30,7 @@ RUN apt-get update \
         libbluetooth-dev \
         libcwiid-dev \
         libgoogle-glog-dev \
+        libpcl-dev \
         libspnav-dev \
         libusb-dev \
         lsb-release \
