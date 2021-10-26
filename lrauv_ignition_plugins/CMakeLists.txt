@@ -74,6 +74,7 @@ function(add_lrauv_plugin PLUGIN)
       PUBLIC ${CMAKE_BINARY_DIR}/proto)
     target_link_libraries(${PLUGIN}
       PUBLIC ${add_lrauv_plugin_PROTO})
+    add_dependencies(${PLUGIN} ${add_lrauv_plugin_PROTO})
   endif()
 
   if (add_lrauv_plugin_INCLUDE_COMMS)
@@ -111,6 +112,7 @@ add_lrauv_plugin(AcousticCommsPlugin
     lrauv_internal_comms
   PRIVATE_LINK_LIBS
     CommsSupport)
+
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(RangeBearingPlugin
   INCLUDE_COMMS

@@ -10,6 +10,9 @@ PUBLIC
 target_include_directories(CommsSupport 
   PUBLIC ../../include/
   PUBLIC ${CMAKE_BINARY_DIR}/proto)
+add_dependencies(CommsSupport
+  lrauv_acoustic_message
+  lrauv_internal_comms)
 
 install(
   TARGETS CommsSupport
