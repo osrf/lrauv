@@ -2,7 +2,14 @@
 
 # Plot data from missions
 # Usage:
-#   $ python3 plot_missions.py
+#   $ python3 plot_missions.py <mission_name> <tmp>
+#
+# Arguments:
+#
+# * <mission_name>: Optional. Defaults to `testYoYoCircle`
+# * <tmp>: Optional. If the string `tmp` is added, `mission/tmp/tmp.csv` is
+#          used. If not present, defaults to the timestamp in
+#          `missions/<mission_name>/plot_input_ref.txt`
 
 import os
 import csv
@@ -62,106 +69,107 @@ def read_and_plot_one_variable(infile, xvals, yvarname, ax, lbl, color=None):
 
 def main():
 
+  args = sys.argv[1:]
+
+  missionName = 'testYoYoCircle'
+  usingTmp = False
+
+  if len(args) >= 1:
+    missionName = args[0]
+
+  if len(args) >= 2 and args[1] == 'tmp':
+    usingTmp = True
+
   this_path = os.path.dirname(os.path.realpath(__file__))
   missions_path = os.path.join(this_path, 'missions')
 
   blue = '#4682B4'
   orange = '#FF8C00'
 
-  missionName = None
-
   # Uncomment the mission you want to plot. Plot configurations like axes,
   # labels, and legends are different for each mission.
 
-  '''
   # VBS
-  missionName = 'testDepthVBS'
-  var = [
-    'depth',
-    'VerticalControl.depthCmd',
-    'platform_buoyancy_position',
-    'VerticalControl.buoyancyAction',
-  ]
-  varaxs = [0, 0, 1, 1]
-  # Input data
-  timestamps = read_input_list(os.path.join(missions_path, missionName,
-    'plot_input_ref.txt'))
-  lbls = [
-    'state', 'cmd', 
-    'state', 'cmd', 
-  ]
-  colors = [orange, blue, orange, blue]
-  nPlots = max(varaxs) + 1
-  '''
+  if missionName == 'testDepthVBS':
+    var = [
+      'depth',
+      'VerticalControl.depthCmd',
+      'platform_buoyancy_position',
+      'VerticalControl.buoyancyAction',
+    ]
+    varaxs = [0, 0, 1, 1]
+    # Input data
+    timestamps = read_input_list(os.path.join(missions_path, missionName,
+      'plot_input_ref.txt'))
+    lbls = [
+      'state', 'cmd',
+      'state', 'cmd',
+    ]
+    colors = [orange, blue, orange, blue]
+    nPlots = max(varaxs) + 1
 
-  '''
   # Mass shifter
-  missionName = 'testPitchMass'
-  var = [
-    'platform_mass_position',
-    'VerticalControl.massPositionAction',
-    'platform_pitch_angle',
-  ]
-  # Subplot to put each variable
-  varaxs = [0, 0, 1]
-  # Input data
-  timestamps = read_input_list(os.path.join(missions_path, missionName,
-    'plot_input_ref.txt'))
-  # Legend label for axis [0]
-  lbls = ['state', 'cmd', 'state']
-  # Color for each variable
-  colors = [orange, blue, orange]
-  nPlots = max(varaxs) + 1
-  '''
+  elif missionName == 'testPitchMass':
+    var = [
+      'platform_mass_position',
+      'VerticalControl.massPositionAction',
+      'platform_pitch_angle',
+    ]
+    # Subplot to put each variable
+    varaxs = [0, 0, 1]
+    # Input data
+    timestamps = read_input_list(os.path.join(missions_path, missionName,
+      'plot_input_ref.txt'))
+    # Legend label for axis [0]
+    lbls = ['state', 'cmd', 'state']
+    # Color for each variable
+    colors = [orange, blue, orange]
+    nPlots = max(varaxs) + 1
 
-  '''
   # Mass shifter + VBS
-  missionName = 'testPitchAndDepthMassVBS'
-  var = [
-    'depth',
-    'VerticalControl.depthCmd',
-    'platform_buoyancy_position',
-    'VerticalControl.buoyancyAction',
-    'platform_mass_position',
-    'VerticalControl.massPositionAction',
-    'platform_pitch_angle',
-  ]
-  varaxs = [0, 0, 1, 1, 2, 2, 3]
-  # Input data
-  timestamps = read_input_list(os.path.join(missions_path, missionName,
-    'plot_input_ref.txt'))
-  lbls = [
-    'state', 'cmd',
-    'state', 'cmd',
-    'state', 'cmd',
-    'state',
-  ]
-  colors = [orange, blue, orange, blue, orange, blue, orange]
-  nPlots = max(varaxs) + 1
-  '''
+  elif missionName == 'testPitchAndDepthMassVBS':
+    var = [
+      'depth',
+      'VerticalControl.depthCmd',
+      'platform_buoyancy_position',
+      'VerticalControl.buoyancyAction',
+      'platform_mass_position',
+      'VerticalControl.massPositionAction',
+      'platform_pitch_angle',
+    ]
+    varaxs = [0, 0, 1, 1, 2, 2, 3]
+    # Input data
+    timestamps = read_input_list(os.path.join(missions_path, missionName,
+      'plot_input_ref.txt'))
+    lbls = [
+      'state', 'cmd',
+      'state', 'cmd',
+      'state', 'cmd',
+      'state',
+    ]
+    colors = [orange, blue, orange, blue, orange, blue, orange]
+    nPlots = max(varaxs) + 1
 
-  #'''
   # Yoyo
-  missionName = 'testYoYoCircle'
-  var = [
-    'depth',
-    'VerticalControl.elevatorAngleAction',
-    'platform_pitch_angle',
-  ]
-  # Subplot to put each variable
-  varaxs = [0, 1, 2]
-  colors = None
-  nPlots = max(varaxs) + 1
-  # Input data
-  timestamps = read_input_list(os.path.join(missions_path, missionName,
-    'plot_input_ref.txt'))
-  # Legend label for axis [0]
-  lbls = ['Run ' + str(i) for i in range(len(timestamps))]
-  #'''
+  elif missionName == 'testYoYoCircle':
+    var = [
+      'depth',
+      'VerticalControl.elevatorAngleAction',
+      'platform_pitch_angle',
+    ]
+    # Subplot to put each variable
+    varaxs = [0, 1, 2]
+    colors = None
+    nPlots = max(varaxs) + 1
+    # Input data
+    timestamps = read_input_list(os.path.join(missions_path, missionName,
+      'plot_input_ref.txt'))
+    # Legend label for axis [0]
+    lbls = ['Run ' + str(i) for i in range(len(timestamps))]
 
   # Sanity check for user error
-  if missionName is None:
-    print('ERROR: missionName is None. Did you forget to uncomment a mission?')
+  if var is None:
+    print('ERROR: unsupported mission [%s]' % (missionName))
     return
 
   title_suffix = ''
@@ -169,7 +177,6 @@ def main():
     title_suffix = timestamps[0]
   else:
     title_suffix = timestamps[0][:8] + 'multiRuns'
-
 
   # Output directory for plot image
   out_path = missionName
@@ -189,6 +196,9 @@ def main():
   for t_i in range(len(timestamps)):
 
     infile = os.path.join(missions_path, missionName, timestamps[t_i] + '.csv')
+
+    if usingTmp:
+      infile = os.path.join(missions_path, 'tmp', 'tmp.csv')
 
     # x-axis is time
     secs = read_csv(infile, 'EpochSeconds')

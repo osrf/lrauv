@@ -42,6 +42,7 @@ latest_base=${latest##*/}
 # Output path: output directory. Make sure this doesn't have files you want to
 # keep, or they will get overwritten!
 out_path=$SCRIPT_DIR/missions
+using_tmp=false
 
 if [[ "$#" -ge 2 ]]; then
   out_path="$out_path/$2"
@@ -49,6 +50,7 @@ else
   echo "Using tmp output directory"
 
   out_path="$out_path/tmp"
+  using_tmp=true
 fi
 
 if [[ ! -d "$out_path" ]]; then
@@ -110,7 +112,11 @@ echo ""
 # Assumes there is only one file matching the wildcard
 # File name is unserialized timestamp
 # Example: $latest/202107210753_202107210759.csv
-cmd="cp $latest/$unserialized_wildcard $out_path"
+if [ "$using_tmp" = false ]; then
+  cmd="cp $latest/$unserialized_wildcard $out_path"
+else
+  cmd="cp $latest/$unserialized_wildcard $out_path/tmp.csv"
+fi
 echo "Executing command:"
 echo $cmd
 exec $cmd

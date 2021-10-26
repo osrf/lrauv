@@ -6,44 +6,60 @@ Plot variables from missions for validation
 $ pip3 install matplotlib numpy
 ```
 
-### Batch unserialize variables to inspect
+### Pre-requisites
 
-This assumes you have run a mission in the LRAUV application, which would
-generate some log files in `lrauv-application/Logs/`:
-```
-$ bin/LRAUV
-> run RegressionTests/IgnitionTests/testYoYoCircle.xml
-```
-
-Compile the unserialized target if you haven't done so:
+Compile the `unserialized` target if you haven't done so:
 ```
 cd ~/lrauv_ws/src/lrauv-application
 make unserialize
 ```
 
-This unserializes the relevant variables, and outputs the csv file to the
-output directory specified in the script:
-```
-./unserialize_for_plotting.sh
-```
+### Usage
 
-By default, it unserializes `latest` directory, which is a symbolic link to the
-log directory from the last run. The output goes to `./missions/tmp` directory.
+1. Run a mission
 
-To specify a different input log directory and a different output directory,
-you can pass in the specific log directory under `Logs/` and the mission name,
-like so:
-```
-./unserialize_for_plotting.sh 20210811T002224 testYoYoCircle
-```
-The unserialized output will go to `./missions/<missionName>`.
+    Every time you run a mission in the LRAUV application, it generates
+    some log files in `lrauv-application/Logs/`. For example, run a mission:
 
-### Batch plot
+    ```
+    $ bin/LRAUV
+    > run RegressionTests/IgnitionTests/testYoYoCircle.xml
+    ```
 
-In `plot_missions.py`, uncomment the block for the mission you want to plot.
-Each mission has different plot configurations.
+1. Generate CSV
 
-Then, run the script to plot the relevant variables in appropriate subplots:
-```
-python3 plot_missions.py
-```
+
+    Use a script to unserialize the relevant variables and output a csv file:
+
+    ```
+    ./unserialize_for_plotting.sh
+    ```
+
+    By default, it unserializes `lrauv-application/Logs/latest` directory, which
+    is a symbolic link to the log directory from the last run. The output goes
+    to `./missions/tmp/tmp.csv`.
+
+    To specify a different input log directory and a different output directory,
+    you can pass in the specific log directory under `lrauv-application/Logs/`
+    and the mission name, like so:
+
+    ```
+    ./unserialize_for_plotting.sh 20210811T002224 testYoYoCircle
+    ```
+
+    The unserialized output will go to `./missions/<missionName>`.
+
+    See more information on the top of `unserialize_for_plotting.sh`.
+
+1. Generate plots
+
+    Run a script to plot the relevant variables in appropriate subplots:
+
+    ```
+    python3 plot_missions.py <mission_name> <tmp>
+    ```
+
+    Where `<mission_name>` is the name of the mission, and `<tmp>` is the `tmp`
+    string, which if present, will plot values from `missions/tmp/tmp.csv`.
+
+    See more information on the top of `unserialize_for_plotting.sh`.
