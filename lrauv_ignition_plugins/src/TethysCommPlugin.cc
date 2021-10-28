@@ -175,14 +175,13 @@ void TethysCommPlugin::Configure(
   ignition::gazebo::EventManager &_eventMgr)
 {
   // Get namespace
-  std::string ns {""};
   if (_sdf->HasElement("namespace"))
   {
-    ns = _sdf->Get<std::string>("namespace");
+    this->ns = _sdf->Get<std::string>("namespace");
   }
   else
   {
-    ns = "tethys";
+    this->ns = "tethys";
   }
 
   // Parse SDF parameters
@@ -199,7 +198,7 @@ void TethysCommPlugin::Configure(
   if (!this->node.Subscribe(this->commandTopic,
       &TethysCommPlugin::CommandCallback, this))
   {
-    ignerr << "Error subscribing to topic " << "[" << commandTopic << "]. "
+    ignerr << "Error subscribing to topic " << "[" << this->commandTopic << "]. "
       << std::endl;
     return;
   }
@@ -209,7 +208,7 @@ void TethysCommPlugin::Configure(
     this->stateTopic);
   if (!this->statePub)
   {
-    ignerr << "Error advertising topic [" << stateTopic << "]"
+    ignerr << "Error advertising topic [" << this->stateTopic << "]"
       << std::endl;
   }
 
@@ -396,7 +395,7 @@ void TethysCommPlugin::CommandCallback(
   //if (std::chrono::seconds(int(floor(_msg.time_()))) - this->prevSubPrintTime
   //    > std::chrono::milliseconds(1000))
   {
-    igndbg << "Received command: " << std::endl
+    igndbg << "[" << this->ns << "] Received command: " << std::endl
       << _msg.DebugString() << std::endl;
 
     this->prevSubPrintTime = std::chrono::seconds(int(floor(_msg.time_())));
@@ -560,12 +559,12 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.set_speed_(linearVelocity->Data().Length());
 
   // Lat long
-  // TODO(anyone)
-  // Follow up https://github.com/ignitionrobotics/ign-gazebo/issues/981
-  auto latlon = this->sphericalCoords.SphericalFromLocalPosition(
-      modelPose.Pos());
-  stateMsg.set_latitudedeg_(latlon.X());
-  stateMsg.set_longitudedeg_(latlon.Y());
+  auto latlon = ignition::gazebo::sphericalCoordinates(this->modelLink, _ecm);
+  if (latlon)
+  {
+    stateMsg.set_latitudedeg_(latlon.value().X());
+    stateMsg.set_longitudedeg_(latlon.value().Y());
+  }
 
   // Robot position
   ignition::math::Vector3d pos = modelPose.Pos();
@@ -591,10 +590,14 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.add_values_(this->latestChlorophyll);
 
   double pressure = 0.0;
-  auto calcPressure = pressureFromDepthLatitude(-modelPose.Pos().Z(),
-      latlon.X());
-  if (calcPressure >= 0)
-    pressure = calcPressure;
+  if (latlon)
+  {
+    auto calcPressure = pressureFromDepthLatitude(-modelPose.Pos().Z(),
+      latlon.value().X());
+    if (calcPressure >= 0)
+      pressure = calcPressure;
+  }
+
   stateMsg.add_values_(pressure);
 
   stateMsg.set_eastcurrent_(this->latestCurrent.X());
@@ -605,9 +608,11 @@ void TethysCommPlugin::PostUpdate(
 
   if (_info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
   {
-    igndbg << "Published state to " << this->stateTopic
+    igndbg << "[" << this->ns << "] Published state to " << this->stateTopic
       << " at time: " << stateMsg.header().stamp().sec()
       << "." << stateMsg.header().stamp().nsec() << std::endl
+      << "\tLat / lon (deg): " << stateMsg.latitudedeg_() << " / "
+                               << stateMsg.longitudedeg_() << std::endl
       << "\tpropOmega: " << stateMsg.propomega_() << std::endl
       << "\tSpeed: " << stateMsg.speed_() << std::endl
       << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl

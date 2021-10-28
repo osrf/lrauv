@@ -365,6 +365,66 @@ To terminate:
 >quit
 ```
 
+### Multiple vehicles
+
+Each instance of `bin/LRAUV` is tied to a single vehicle. In order to work
+with multiple vehicles, multiple instances of `bin/LRAUV` must be spun up.
+
+The first vehicle spun up will be placed at the origin of the world, and
+the latitude / longitude of the world's origin will be set to coincide with it.
+Subsequent vehicles will be spawned at positions relative to the initial one,
+according to their latitude / longitude.
+
+Information about the vehicle is hardcoded on the `lrauv-application` code,
+within the `Config` folder. Here's a recommended setup assuming that you have
+`lrauv-application` cloned under `~/lrauv_ws/src`:
+
+1. Copy the `lrauv-application` folder for each robot to be spawned:
+
+    ```
+    cp -r ~/lrauv_ws/src/lrauv-application ~/lrauv_ws/src/lrauv-application-2
+    cp -r ~/lrauv_ws/src/lrauv-application ~/lrauv_ws/src/lrauv-application-3
+    ...
+    ```
+
+1. Edit the vehicle name (in `Config/vehicle.cfg`) and initial location (in
+   `Config/workSite.cfg`) for each instance. For example:
+
+    ```diff
+    --- lrauv-application/Config/vehicle.cfg        2021-09-27 16:17:09.816305451 -0700
+    +++ lrauv-application-2/Config/vehicle.cfg      2021-09-29 14:53:57.480185748 -0700
+    @@ -10,7 +10,7 @@
+     ////////////////////////////////////////////////////////////////////
+
+     //   Vehicle.name            = "Tethys";
+    -   Vehicle.name            = "tethys";  // Use name to match Ignition default SDF
+    +   Vehicle.name            = "daphne";  // Use name to match Ignition default SDF
+        Vehicle.id              = 0 enum;
+        Vehicle.kmlColor        = "ff0055ff"; // 4 hex bytes indicating alpha, blue, green, and red
+                                            // In this case, orange.
+    --- lrauv-application/Config/workSite.cfg       2021-09-27 14:16:43.622409403 -0700
+    +++ lrauv-application-2/Config/workSite.cfg     2021-09-29 14:53:06.887476472 -0700
+    @@ -14,8 +14,8 @@
+     //  initLat        =   36.806966 arcdeg; // Initial latitude
+     //  initLon        = -121.824326 arcdeg; // Initial longitude
+     // initial position same as for regression tests
+    -  initLat       =   36.8034 arcdeg; // Initial latitude
+    -  initLon       = -121.8222 arcdeg; // Initial longitude
+    +  initLat       =   36.8033 arcdeg; // Initial latitude
+    +  initLon       = -121.8223 arcdeg; // Initial longitude
+
+       startupScript = "Missions/Startup.xml";  // Mission to run on power-up
+       defaultScript = "Missions/Default.xml";  // Mission to run when no other mission is running.
+    ```
+
+To run simulation, use the empty environment, and start vehicles in order,
+for example:
+
+1. `ign gazebo empty_environment.sdf -v 4`
+1. `~/lrauv_ws/src/lrauv-application/bin/LRAUV`
+1. `~/lrauv_ws/src/lrauv-application-2/bin/LRAUV`
+1. Start more `bin/LRAUV` as needed
+
 ### Troubleshoot
 
 After issuing control commands, for example, rudder and thrust, if you then
@@ -383,8 +443,8 @@ Science data can be read from a csv file with the following recognized field
 names in the first line of the file:
 ```
 elapsed_time_second
-northings_meter
-eastings_meter
+latitude_degree
+longitude_degree
 depth_meter
 sea_water_temperature_degC
 sea_water_salinity_psu

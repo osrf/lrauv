@@ -21,7 +21,6 @@
 
 #include <ignition/gazebo/Link.hh>
 #include <ignition/gazebo/System.hh>
-#include <ignition/math/SphericalCoordinates.hh>
 #include <ignition/math/Temperature.hh>
 #include <ignition/transport/Node.hh>
 
@@ -86,6 +85,9 @@ namespace tethys
     /// Set up control message topics
     /// \param[in] _ns Namespace to prepend to topic names
     private: void SetupControlTopics(const std::string &_ns);
+
+    /// Namespace for topics.
+    private: std::string ns{""};
 
     /// Topic on which robot commands will be received
     private: std::string commandTopic{"command_topic"};
@@ -189,10 +191,7 @@ namespace tethys
     /// Transport node for message passing
     private: ignition::transport::Node node;
 
-    /// Spherical coordinate handler
-    private: ignition::math::SphericalCoordinates sphericalCoords;
-
-    /// The model in question
+    /// The model's base link
     private: ignition::gazebo::Entity modelLink;
 
     /// The thruster link

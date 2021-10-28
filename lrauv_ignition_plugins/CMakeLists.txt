@@ -127,10 +127,13 @@ add_lrauv_plugin(ScienceSensorsSystem
     ${PCL_LIBRARIES})
 add_lrauv_plugin(TethysCommPlugin
   PROTO
-    lrauv_state
-    lrauv_command)
+    lrauv_command
+    lrauv_state)
 add_lrauv_plugin(ThrusterPlugin)
 add_lrauv_plugin(TimeAnalysisPlugin)
+add_lrauv_plugin(WorldCommPlugin
+  PROTO
+    lrauv_init)
 
 
 #============================================================================
@@ -148,6 +151,7 @@ foreach(EXAMPLE
   example_controller
   example_mass_shifter
   example_rudder
+  example_spawn
   example_thruster
   keyboard_teleop
   multi_lrauv_race)
@@ -160,7 +164,8 @@ foreach(EXAMPLE
     PUBLIC ${CMAKE_BINARY_DIR}/proto)
   target_link_libraries(${EXAMPLE_EXEC}
     PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-    PUBLIC lrauv_command)
+    PUBLIC lrauv_command
+           lrauv_init)
 
   install(
     TARGETS ${EXAMPLE_EXEC}
@@ -207,7 +212,8 @@ if(BUILD_TESTING)
     test_mission_depth_vbs
     test_mission_pitch_mass
     test_mission_yoyo_circle
-    test_rudder)
+    test_rudder
+    test_spawn)
 
     add_executable(
       ${TEST_TARGET}
@@ -219,6 +225,7 @@ if(BUILD_TESTING)
       PUBLIC gtest_main
       PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
       lrauv_command
+      lrauv_init
     )
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
     gtest_discover_tests(${TEST_TARGET})

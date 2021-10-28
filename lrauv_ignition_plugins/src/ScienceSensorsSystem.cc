@@ -45,11 +45,11 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief csv field name for timestamp of data
   public: const std::string TIME {"elapsed_time_second"};
 
-  /// \brief csv field name for northward coordinates
-  public: const std::string NORTHINGS {"northings_meter"};
+  /// \brief csv field name for latitude
+  public: const std::string LATITUDE {"latitude_degree"};
 
-  /// \brief csv field name for eastward coordinates
-  public: const std::string EASTINGS {"eastings_meter"};
+  /// \brief csv field name for longitude
+  public: const std::string LONGITUDE {"longitude_degree"};
 
   /// \brief csv field name for depth
   public: const std::string DEPTH {"depth_meter"};
@@ -218,8 +218,8 @@ void ScienceSensorsSystemPrivate::ReadData()
     int lineTimeIdx = -1;
 
     // Spatial coordinates of this line of data. Init to NaN before populating
-    float northing = std::numeric_limits<float>::quiet_NaN();
-    float easting = std::numeric_limits<float>::quiet_NaN();
+    float latitude = std::numeric_limits<float>::quiet_NaN();
+    float longitude = std::numeric_limits<float>::quiet_NaN();
     float depth = std::numeric_limits<float>::quiet_NaN();
 
     // Science data. Init to NaN before knowing whether timestamp is valid, so
@@ -286,15 +286,15 @@ void ScienceSensorsSystemPrivate::ReadData()
           lineTimeIdx = it - this->timestamps.begin();
         }
       }
-      // Spatial index: northings
-      else if (fieldnames[i] == NORTHINGS)
+      // Spatial index: latitude
+      else if (fieldnames[i] == LATITUDE)
       {
-        northing = val;
+        latitude = val;
       }
-      // Spatial index: eastings
-      else if (fieldnames[i] == EASTINGS)
+      // Spatial index: longitude
+      else if (fieldnames[i] == LONGITUDE)
       {
-        easting = val;
+        longitude = val;
       }
       // Spatial index: depth
       else if (fieldnames[i] == DEPTH)
@@ -342,12 +342,12 @@ void ScienceSensorsSystemPrivate::ReadData()
     else
     {
       // Check validity of spatial coordinates
-      if (!std::isnan(northing) && !std::isnan(easting) && !std::isnan(depth))
+      if (!std::isnan(latitude) && !std::isnan(longitude) && !std::isnan(depth))
       {
         // Gather spatial coordinates, 3 fields in the line, into point cloud
         // for indexing this time slice of data.
         this->timeSpaceCoords[lineTimeIdx]->push_back(
-          pcl::PointXYZ(easting, northing, depth));
+          pcl::PointXYZ(latitude, longitude, depth));
 
         // Populate science data
         this->temperatureArr[lineTimeIdx].push_back(temp);
@@ -360,7 +360,7 @@ void ScienceSensorsSystemPrivate::ReadData()
       else
       {
         ignerr << "Line [" << line << "] has invalid spatial coordinates "
-               << "(northings, eastings, and/or depth). Skipping." << std::endl;
+               << "(latitude, longitude, and/or depth). Skipping." << std::endl;
         continue;
       }
     }
@@ -517,9 +517,23 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     // neighbors, and interpolate to get approximate data at this sensor pose.
     for (auto &[entity, sensor] : this->entitySensorMap)
     {
-      // Sensor pose, used to search for data by spatial coordinates
-      auto sensorPose = ignition::gazebo::worldPose(entity, _ecm);
-      pcl::PointXYZ searchPoint(sensorPose.X(), sensorPose.Y(), sensorPose.Z());
+      // Sensor pose in lat/lon, used to search for data by spatial coordinates
+      auto sensorLatLon = ignition::gazebo::sphericalCoordinates(entity, _ecm);
+      if (!sensorLatLon)
+      {
+        static std::unordered_set<ignition::gazebo::Entity> warnedEntities;
+        if (warnedEntities.find(entity) != warnedEntities.end())
+        {
+          ignwarn << "Failed to get spherical coordinates for sensor entity ["
+                  << entity << "]" << std::endl;
+          warnedEntities.insert(entity);
+        }
+        continue;
+      }
+      pcl::PointXYZ searchPoint(
+          sensorLatLon.value().X(),
+          sensorLatLon.value().Y(),
+          sensorLatLon.value().Z());
 
       // kNN search (alternatives are voxel search and radius search. kNN
       // search is good for variable resolution when the distance to the next
@@ -534,7 +548,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].nearestKSearch(
         searchPoint, k, spatialIdx, spatialSqrDist) <= 0)
       {
-        ignwarn << "No data found near sensor location " << sensorPose
+        ignwarn << "No data found near sensor location " << sensorLatLon.value()
                 << std::endl;
         continue;
       }
