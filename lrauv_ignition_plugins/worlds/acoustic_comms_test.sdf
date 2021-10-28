@@ -32,10 +32,6 @@
       filename="ignition-gazebo-scene-broadcaster-system"
       name="ignition::gazebo::systems::SceneBroadcaster">
     </plugin>
-    <plugin
-      filename="ignition-gazebo-contact-system"
-      name="ignition::gazebo::systems::Contact">
-    </plugin>
 
     <model name="commsLink1">
       <pose>0 0 0 0 0 0</pose>

@@ -25,10 +25,6 @@
       filename="ignition-gazebo-scene-broadcaster-system"
       name="ignition::gazebo::systems::SceneBroadcaster">
     </plugin>
-    <plugin
-      filename="ignition-gazebo-contact-system"
-      name="ignition::gazebo::systems::Contact">
-    </plugin>
 
     <plugin
       filename="ignition-gazebo-buoyancy-system"
