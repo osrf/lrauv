@@ -1,10 +1,26 @@
 # LRAUV Simulation
 
-This repository contains packages for simulating the MBARI Tethys.
+This repository contains packages for simulating the Tethys-class Long-Range
+AUV (LRAUV) from the Monterey Bay Aquarium Research Institute (MBARI).
+
+Disclaimer: This repository is in active development.
+Stability is not guaranteed.
+
+Source files, models, and plugins relevant to a general audience are upstreamed
+on an irregular basis to Ignition libraries, the top-level library being
+[ign-gazebo](https://github.com/ignitionrobotics/ign-gazebo/).
+Upstreamed files may eventually be removed from this repository.
+
+Standalone, this repository contains the environment and plugins necessary to
+simulate an underwater vehicle in Ignition Gazebo.
+Integrated with the real-world LRAUV controller code, the binaries of which are
+provided to the public on MBARI's DockerHub (see below), the simulated robot
+can be controlled using the same code executed on the real robot.
+This enables the validation of scientific missions for oceanography research.
 
 ## To build
 
-Make sure you have [ignition-fortress](https://ignitionrobotics.org/docs/fortress) and
+Make sure you have [Ignition Fortress](https://ignitionrobotics.org/docs/fortress) and
 [colcon](https://colcon.readthedocs.io/en/released/), on Ubuntu Focal or higher.
 
 Install dependencies
