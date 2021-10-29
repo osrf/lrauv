@@ -14,10 +14,17 @@
  * limitations under the License.
  *
  */
+
+#include <ignition/msgs/pointcloud_packed.pb.h>
+
 #include <ignition/plugin/Register.hh>
 #include <ignition/common/SystemPaths.hh>
+#include <ignition/msgs/Utility.hh>
+#include <ignition/transport/Node.hh>
 
+#include <pcl/conversions.h>
 #include <pcl/point_cloud.h>
+#include <pcl/PCLPointCloud2.h>
 #include <pcl/octree/octree_search.h>
 
 #include "ScienceSensorsSystem.hh"
@@ -31,6 +38,15 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Generate octree from spatial data, for searching
   public: void GenerateOctrees();
+
+  /// \brief Publish the latest point cloud
+  public: void PublishData();
+
+  /// \brief Service that provides the latest science data
+  public: bool ScienceDataService(ignition::msgs::PointCloudPacked &_res);
+
+  /// \brief Returns a point cloud message populated with the latest sensor data
+  public: ignition::msgs::PointCloudPacked PointCloudMsg();
 
   /// \brief Interpolate floating point data based on distance
   /// \param[in] _arr Array of data from which to find elements to interpolate
@@ -120,6 +136,12 @@ class tethys::ScienceSensorsSystemPrivate
   /// octree per point cloud in timeSpaceCoords.
   public: std::vector<pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>>
             spatialOctrees;
+
+  /// \brief Node for communication
+  public: ignition::transport::Node node;
+
+  /// \brief Publisher for point cloud data
+  public: ignition::transport::Node::Publisher cloudPub;
 };
 
 /////////////////////////////////////////////////
@@ -396,6 +418,12 @@ void ScienceSensorsSystemPrivate::GenerateOctrees()
 }
 
 /////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::PublishData()
+{
+  this->cloudPub.Publish(this->PointCloudMsg());
+}
+
+/////////////////////////////////////////////////
 float ScienceSensorsSystemPrivate::InterpolateData(
   std::vector<float> _arr,
   std::vector<int> &_inds,
@@ -467,8 +495,15 @@ void ScienceSensorsSystem::Configure(
            << std::endl;
   }
 
+  this->dataPtr->cloudPub = this->dataPtr->node.Advertise<
+      ignition::msgs::PointCloudPacked>("/science_data");
+
+  this->dataPtr->node.Advertise("/science_data",
+      &ScienceSensorsSystemPrivate::ScienceDataService, this->dataPtr.get());
+
   this->dataPtr->ReadData();
   this->dataPtr->GenerateOctrees();
+  this->dataPtr->PublishData();
 }
 
 /////////////////////////////////////////////////
@@ -510,6 +545,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       {
         // Increment for next point in time
         this->dataPtr->timeIdx++;
+        this->dataPtr->PublishData();
       }
     }
 
@@ -645,6 +681,53 @@ void ScienceSensorsSystem::RemoveSensorEntities(
 
         return true;
       });
+}
+
+//////////////////////////////////////////////////
+bool ScienceSensorsSystemPrivate::ScienceDataService(
+    ignition::msgs::PointCloudPacked &_res)
+{
+  _res = this->PointCloudMsg();
+  return true;
+}
+
+//////////////////////////////////////////////////
+ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
+{
+  ignition::msgs::PointCloudPacked msg;
+
+  if (this->timeIdx < 0 || this->timeIdx >= this->timestamps.size())
+  {
+    ignerr << "Invalid time index [" << this->timeIdx << "]."
+           << std::endl;
+    return msg;
+  }
+
+  ignition::msgs::InitPointCloudPacked(msg, "world", true,
+    {
+      {"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32}
+      // {"salinity", ignition::msgs::PointCloudPacked::Field::FLOAT32}
+      // TODO(louise) Add more fields
+      // https://github.com/osrf/lrauv/issues/85
+    });
+
+  msg.mutable_header()->mutable_stamp()->set_sec(this->timestamps[this->timeIdx]);
+
+  pcl::PCLPointCloud2 pclPC2;
+  pcl::toPCLPointCloud2(*this->timeSpaceCoords[this->timeIdx].get(), pclPC2);
+
+  msg.set_height(pclPC2.height);
+  msg.set_width(pclPC2.width);
+  msg.set_is_bigendian(pclPC2.is_bigendian);
+  msg.set_point_step(pclPC2.point_step);
+  msg.set_row_step(pclPC2.row_step);
+  msg.set_is_dense(pclPC2.is_dense);
+
+  // FIXME: Include more than position data
+  msg.mutable_data()->resize(pclPC2.data.size());
+  memcpy(msg.mutable_data()->data(), pclPC2.data.data(), pclPC2.data.size());
+
+  return msg;
 }
 
 IGNITION_ADD_PLUGIN(

@@ -6,5 +6,8 @@ prepend-non-duplicate;IGN_GAZEBO_RESOURCE_PATH;@CMAKE_INSTALL_PREFIX@/share/@PRO
 prepend-non-duplicate;IGN_GAZEBO_RESOURCE_PATH;@CMAKE_INSTALL_PREFIX@/share/@PROJECT_NAME@/data
 prepend-non-duplicate;IGN_GAZEBO_SYSTEM_PLUGIN_PATH;@CMAKE_INSTALL_PREFIX@/lib
 
+prepend-non-duplicate;IGN_GUI_PLUGIN_PATH;@CMAKE_INSTALL_PREFIX@/lib/gui
+
 prepend-non-duplicate;TETHYS_COMMS_MODEL;@CMAKE_INSTALL_PREFIX@/lib
+
 prepend-non-duplicate;LD_LIBRARY_PATH;@CMAKE_INSTALL_PREFIX@/lib

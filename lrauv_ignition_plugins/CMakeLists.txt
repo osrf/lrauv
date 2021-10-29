@@ -1,3 +1,8 @@
+#
+# Development of this module has been funded by the Monterey Bay Aquarium
+# Research Institute (MBARI) and the David and Lucile Packard Foundation
+#
+
 cmake_minimum_required(VERSION 3.10.2 FATAL_ERROR)
 
 project(lrauv_ignition_plugins)
@@ -6,8 +11,11 @@ project(lrauv_ignition_plugins)
 # Find dependencies
 find_package(ignition-cmake2 REQUIRED)
 
-find_package(ignition-gazebo6 REQUIRED)
+find_package(ignition-gazebo6 REQUIRED COMPONENTS gui)
 set(IGN_GAZEBO_VER ${ignition-gazebo6_VERSION_MAJOR})
+
+find_package(ignition-gui6 REQUIRED)
+set(IGN_GUI_VER ${ignition-gui6_VERSION_MAJOR})
 
 find_package(ignition-sensors6 REQUIRED)
 set(IGN_SENSORS_VER ${ignition-sensors6_VERSION_MAJOR})
@@ -34,7 +42,7 @@ add_subdirectory(proto)
 # Plugins
 
 # add_lrauv_plugin (<plugin_name>
-#              [PROTO] [PCL] [PRIVATE_LINK_LIBS])
+#              [PROTO] msg1 msg2 ... [PCL] [GUI] [PRIVATE_LINK_LIBS] [INCLUDE_COMMS])
 #
 # Configure and install plugins.
 #
@@ -45,20 +53,37 @@ add_subdirectory(proto)
 #
 # [PCL]: Optional. If included, plugin will be linked against PCL.
 #
-# [ADDITIONAL_SOURCES]: Optional. Specify a list of files to be added to this
-# plugin. 
+# [GUI]: Optional. Include for GUI plugins.
 #
 # [PRIVATE_LINK_LIBS]: Specify a list of libraries to be privately linked.
+#
+# [INCLUDE_COMMS]: Optional. Include comms header files.
 function(add_lrauv_plugin PLUGIN)
-  set(options PCL INCLUDE_COMMS)
+  set(options PCL GUI INCLUDE_COMMS)
   set(oneValueArgs)
-  set(multiValueArgs PROTO PRIVATE_LINK_LIBS ADDITIONAL_SOURCES)
+  set(multiValueArgs PROTO PRIVATE_LINK_LIBS)
 
   cmake_parse_arguments(add_lrauv_plugin
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+  set(PLUGIN_SOURCES src/${PLUGIN}.cc)
+  set(INSTALL_LIB lib)
+
+  # GUI plugin
+  if (add_lrauv_plugin_GUI)
+    QT5_WRAP_CPP(${PLUGIN}_headers_MOC src/${PLUGIN}.hh)
+    QT5_ADD_RESOURCES(${PLUGIN}_RCC src/${PLUGIN}.qrc)
+
+    set(PLUGIN_SOURCES ${PLUGIN_SOURCES}
+      ${${PLUGIN}_headers_MOC}
+      ${${PLUGIN}_RCC}
+    )
+    set(INSTALL_LIB lib/gui)
+  endif()
+
+  # All plugins
   add_library(${PLUGIN}
-    SHARED src/${PLUGIN}.cc ${add_lrauv_plugin_ADDITIONAL_SOURCES})
+    SHARED ${PLUGIN_SOURCES})
   set_property(TARGET ${PLUGIN} PROPERTY CXX_STANDARD 17)
   target_link_libraries(${PLUGIN}
     PUBLIC
@@ -77,30 +102,34 @@ function(add_lrauv_plugin PLUGIN)
     add_dependencies(${PLUGIN} ${add_lrauv_plugin_PROTO})
   endif()
 
+  # Include comms
   if (add_lrauv_plugin_INCLUDE_COMMS)
-    target_include_directories(${PLUGIN} PUBLIC include/)
+    target_include_directories(${PLUGIN}
+      PUBLIC include)
   endif()
 
   # Include PCL
   if (add_lrauv_plugin_PCL)
+    target_include_directories(${PLUGIN}
+      PUBLIC ${PCL_INCLUDE_DIRS})
+  endif()
+
+  # GUI
+  if (add_lrauv_plugin_GUI)
+    target_link_libraries(${PLUGIN}
+      PUBLIC
+        TINYXML2::TINYXML2
+      PRIVATE
+        ignition-gui${IGN_GUI_VER}::ignition-gui${IGN_GUI_VER}
+    )
 
     target_include_directories(${PLUGIN}
       PUBLIC ${PCL_INCLUDE_DIRS})
-
   endif()
 
-  if (add_lrauv_plugin_EXPORT_HEADERS)
-    set_target_properties(
-      ${PLUGIN} PROPERTIES PUBLIC_HEADER ${add_lrauv_plugin_EXPORT_HEADERS})
-    install(
-      TARGETS ${PLUGIN}
-      DESTINATION lib
-      PUBLIC_HEADER include)
-  else ()
-    install(
-      TARGETS ${PLUGIN}
-      DESTINATION lib)
-  endif()
+  install(
+    TARGETS ${PLUGIN}
+    DESTINATION ${INSTALL_LIB})
 endfunction()
 
 add_subdirectory(src/comms/)
@@ -131,10 +160,10 @@ add_lrauv_plugin(TethysCommPlugin
     lrauv_state)
 add_lrauv_plugin(ThrusterPlugin)
 add_lrauv_plugin(TimeAnalysisPlugin)
+add_lrauv_plugin(VisualizePointCloud GUI)
 add_lrauv_plugin(WorldCommPlugin
   PROTO
     lrauv_init)
-
 
 #============================================================================
 # Install public headers
