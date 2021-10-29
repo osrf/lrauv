@@ -109,8 +109,6 @@ Launch the Ignition simulation:
 ign launch lrauv_world.ign
 ```
 
-Keep it paused.
-
 For verbose debug output, add `--verbose 4`.
 
 Run the LRAUV Main Vehicle Application (MVA), which will bring you to a command prompt:
@@ -121,8 +119,6 @@ bin/LRAUV
 
 Unpause Ignition by clicking on the triangle play button in the lower-left
 corner of the GUI.
-Note that Ignition should not be unpaused too far in advance of starting the
-MVA. That would produce a large gap in timestamp, which the MVA does not expect.
 
 At the LRAUV command prompt:
 ```

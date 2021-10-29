@@ -79,7 +79,7 @@ unserialized_prefix=${tokens[0]}${tokens[1]}
 # Truncate last two digits. They won't be in unserialized file name.
 unserialized_prefix=${unserialized_prefix::-2}
 
-unserialized_wildcard=${unserialized_prefix}_*.csv
+unserialized_wildcard=*.csv
 
 echo "Unserialized prefix (T removed): $unserialized_wildcard"
 echo ""
