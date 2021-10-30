@@ -1,3 +1,8 @@
+#
+# Development of this module has been funded by the Monterey Bay Aquarium
+# Research Institute (MBARI) and the David and Lucile Packard Foundation
+#
+
 add_library(simpleacousticmodel SHARED SimpleAcousticModel.cc)
 
 target_link_libraries(simpleacousticmodel

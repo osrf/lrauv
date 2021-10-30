@@ -15,8 +15,11 @@
  *
  */
 
-/* Development of this module has been funded by the Monterey Bay Aquarium
-Research Institute (MBARI) and the David and Lucile Packard Foundation */
+/*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
+
 #ifndef __LRAUV_IGNITION_PLUGINS_COMMS_COMMSPACKET_HH__
 #define __LRAUV_IGNITION_PLUGINS_COMMS_COMMSPACKET_HH__
 

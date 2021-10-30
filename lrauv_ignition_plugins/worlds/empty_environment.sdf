@@ -1,5 +1,10 @@
 <?xml version="1.0" ?>
 <!--
+  Development of this module has been funded by the Monterey Bay Aquarium
+  Research Institute (MBARI) and the David and Lucile Packard Foundation
+-->
+
+<!--
 
   This world doesn't contain any vehicles. They're spawned at runtime by
   WorldCommPlugin as it receives LRAUVInit messages.

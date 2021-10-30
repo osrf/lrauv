@@ -16,6 +16,11 @@
  */
 
 /*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
+
+/*
  * Tests the mass shifter actuator by sending commands to shift the battery
  * forward and backward.
  *

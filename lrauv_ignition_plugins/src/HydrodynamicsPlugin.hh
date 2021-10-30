@@ -15,6 +15,11 @@
  *
  */
 
+/*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
+
 #include <ignition/gazebo/Model.hh>
 #include <ignition/gazebo/Util.hh>
 #include <ignition/gazebo/System.hh>

@@ -13,7 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
-*/
+ */
+
+/*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
 
 #ifndef TETHYS_VISUALIZEPOINTCLOUD_HH_
 #define TETHYS_VISUALIZEPOINTCLOUD_HH_

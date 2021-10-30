@@ -15,8 +15,10 @@
  *
  */
 
-/* Development of this module has been funded by the Monterey Bay Aquarium
-Research Institute (MBARI) and the David and Lucile Packard Foundation */
+/*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
 
 #ifndef TETHYS_ACOUSTICCOMMS_ENGINE_
 #define TETHYS_ACOUSTICCOMMS_ENGINE_

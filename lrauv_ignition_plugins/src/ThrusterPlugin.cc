@@ -14,6 +14,12 @@
  * limitations under the License.
  *
  */
+
+/*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
+
 #include <memory>
 #include <mutex>
 #include <string>

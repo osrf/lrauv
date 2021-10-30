@@ -16,6 +16,11 @@
 # limitations under the License.
 #
 
+#
+# Development of this module has been funded by the Monterey Bay Aquarium
+# Research Institute (MBARI) and the David and Lucile Packard Foundation
+#
+
 # Make sure processes in the container can connect to the x server
 # Necessary so gazebo can create a context for OpenGL rendering (even headless)
 XAUTH=/tmp/.docker.xauth

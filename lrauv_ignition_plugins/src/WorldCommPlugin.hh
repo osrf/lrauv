@@ -14,6 +14,12 @@
  * limitations under the License.
  *
  */
+
+/*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
+
 #ifndef WORLD_COMM_PLUGIN_H_
 #define WORLD_COMM_PLUGIN_H_
 

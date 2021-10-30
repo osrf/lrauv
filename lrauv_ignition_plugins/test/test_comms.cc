@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
-*/
+ */
 
-/* Development of this module has been funded by the Monterey Bay Aquarium
-Research Institute (MBARI) and the David and Lucile Packard Foundation */
+/*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
 
 #include <lrauv_ignition_plugins/comms/CommsClient.hh>
 #include <lrauv_ignition_plugins/comms/CommsPacket.hh>

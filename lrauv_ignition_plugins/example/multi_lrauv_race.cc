@@ -16,12 +16,18 @@
  */
 
 /*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
+
+/*
  * In each iteration, for each vehicle, generate a random fin angle and thrust
  * within reasonable limits, and send the command to the vehicle.
  *
  * Usage:
  *   $ LRAUV_multi_lrauv_race
  */
+
 #include <chrono>
 #include <thread>
 

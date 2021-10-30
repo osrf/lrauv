@@ -15,12 +15,18 @@
  *
  */
 
+/*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
+
 /**
  * Send velocity commands to the thruster.
  *
  * Usage:
  *   $ LRAUV_example_thruster <vehicle_name> <rad_per_sec>
  */
+
 #include <chrono>
 #include <thread>
 

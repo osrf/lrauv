@@ -15,6 +15,11 @@
  *
  */
 
+/*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
+
 /**
  * This is a stupidly simple test controller
  * that wiggles the fins a bit and then commands the robot
@@ -23,6 +28,7 @@
  * Usage:
  *   $ LRAUV_example_controller <vehicle_name>
  */
+
 #include <chrono>
 #include <thread>
 

@@ -1,3 +1,8 @@
+#
+# Development of this module has been funded by the Monterey Bay Aquarium
+# Research Institute (MBARI) and the David and Lucile Packard Foundation
+#
+
 find_package(Protobuf REQUIRED)
 
 function(add_lrauv_message MESSAGE)

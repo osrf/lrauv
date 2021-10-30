@@ -15,6 +15,11 @@
  *
  */
 
+/*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
+
 /**
  * Control the rudder joint position.
  *
@@ -25,6 +30,7 @@
  * Usage:
  *   $ LRAUV_example_rudder <vehicle_name> <angle_radians>
  */
+
 #include <chrono>
 #include <thread>
 

@@ -15,12 +15,18 @@
  *
  */
 
+/*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
+
 /**
  * Keyboard teleop controller
  *
  * Usage:
  *   $ LRAUV_keyboard_teleop <vehicle_name>
  */
+
 #include <unistd.h>
 #include <termios.h>
 
