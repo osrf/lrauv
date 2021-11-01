@@ -52,11 +52,14 @@ message LRAUVState
                                         // rotated more clockwise when looking
                                         // from the top (i.e. to starboard)
   float elevatorAngle_            = 9;
-  float massPosition_             = 10;
+  float massPosition_             = 10;  // Position of the battery's joint.
+                                         // Unit: meters. Positive values have
+                                         // the battery forward, tilting the
+                                         // nose downward.
   float buoyancyPosition_         = 11;  // Volume in cubic meters
   float depth_                    = 12;
 
-  ignition.msgs.Vector3d rph_     = 13;  // roll_, pitch_, heading_ in SimResultStruct
+  ignition.msgs.Vector3d rph_     = 13;  // roll_, pitch_, heading_ in SimResultStruct (rad)
 
   float speed_                    = 14;
   double latitudeDeg_             = 15;

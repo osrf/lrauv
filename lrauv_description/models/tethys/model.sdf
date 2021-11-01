@@ -348,8 +348,9 @@
       </axis>
     </joint>
 
+    <!-- positive joint values move mass forward -->
     <joint name="battery_joint" type="prismatic">
-      <pose>0 0 0 0 0 0</pose>
+      <pose degrees="true">0 0 0   0 0 180</pose>
       <parent>base_link</parent>
       <child>battery</child>
       <axis>

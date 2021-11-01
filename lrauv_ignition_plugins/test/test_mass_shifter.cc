@@ -31,19 +31,19 @@
 //////////////////////////////////////////////////
 TEST_F(LrauvTestFixture, MassShifterTilt)
 {
-  // Get initial X
+  // Check initial pitch
   this->fixture->Server()->Run(true, 100, false);
   EXPECT_EQ(100, this->iterations);
   EXPECT_EQ(100, this->tethysPoses.size());
   EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 0.01);
 
-  // Tell the vehicle to tilt forward
+  // Tell the vehicle to tilt downward by moving the mass forward (positive command)
   lrauv_ignition_plugins::msgs::LRAUVCommand cmdMsg;
-  cmdMsg.set_masspositionaction_(-0.01);
+  cmdMsg.set_masspositionaction_(0.01);
   cmdMsg.set_buoyancyaction_(0.0005);
 
   // Run server until the command is processed and the model tilts to a
-  // certain pitch
+  // certain pitch. Negative pitch means vehicle's nose is pointing down.
   double targetPitch{-0.15};
   this->PublishCommandWhile(cmdMsg, [&]()
   {

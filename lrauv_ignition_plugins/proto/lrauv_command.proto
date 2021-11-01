@@ -44,7 +44,10 @@ message LRAUVCommand
                                      // rotated more clockwise when looking
                                      // from the top (i.e. to starboard)
   float elevatorAngle_         = 4;
-  float massPosition_          = 5;
+  float massPosition_          = 5;  // Position where the controller believes
+                                     // the mass shifter's joint is in. Unit:
+                                     // meters. Positive values have the battery
+                                     // forward, tilting the nose downward.
   float buoyancyPosition_      = 6;
   bool dropWeightState_        = 7;  // Indicator "dropweight OK"
                                      // 1 = in place, 0 = dropped
@@ -55,7 +58,10 @@ message LRAUVCommand
                                      // vertical fins clockwise when looking
                                      // from the top (i.e. to starboard)
   float elevatorAngleAction_   = 10;
-  float massPositionAction_    = 11;
+  float massPositionAction_    = 11;  // Target position for the battery's joint.
+                                      // Unit: meters. Positive values move the
+                                      // battery forward, tilting the nose
+                                      // downward.
   float buoyancyAction_        = 12;  // Volume in cubic meters
 
   float density_               = 13;

@@ -45,6 +45,11 @@ TEST_F(LrauvTestFixture, PitchMass)
   this->fixture->Server()->Run(false, 0, false);
 
   // Launch mission
+  // SetSpeed.speed = 0 m/s^2
+  // Point.rudderAngle = 0 deg
+  // Buoyancy.position = neutral
+  // Pitch.pitch = 20 deg
+  // Pitch.elevatorAngle = 0
   std::atomic<bool> lrauvRunning{true};
   std::thread lrauvThread([&]()
   {
@@ -70,34 +75,38 @@ TEST_F(LrauvTestFixture, PitchMass)
   int maxIterations{28000};
   ASSERT_LT(maxIterations, this->tethysPoses.size());
 
-  // Uncomment to get new expectations
-  // for (int i = 2000; i <= maxIterations; i += 2000)
-  // {
-  //   auto pose = this->tethysPoses[i];
-  //   std::cout << "this->CheckRange(" << i << ", {"
-  //       << std::setprecision(2) << std::fixed
-  //       << pose.Pos().X() << ", "
-  //       << pose.Pos().Y() << ", "
-  //       << pose.Pos().Z() << ", "
-  //       << pose.Rot().Roll() << ", "
-  //       << pose.Rot().Pitch() << ", "
-  //       << pose.Rot().Yaw() << "}, {0.5, 0.5});"
-  //       << std::endl;
-  // }
-
-  this->CheckRange(2000, {0.00, 0.00, -0.01, -0.00, -0.59, -0.00}, {0.5, 0.5});
-  this->CheckRange(4000, {-0.01, -0.00, -0.01, -0.00, -0.68, -0.00}, {0.5, 0.5});
-  this->CheckRange(6000, {-0.02, -0.00, -0.01, 0.00, -0.69, -0.00}, {0.5, 0.5});
-  this->CheckRange(8000, {-0.02, -0.00, -0.01, 0.00, -0.71, -0.00}, {0.5, 0.5});
-  this->CheckRange(10000, {-0.03, -0.00, -0.01, 0.00, -0.72, -0.00}, {0.5, 0.5});
-  this->CheckRange(12000, {-0.03, -0.00, -0.02, -0.00, -0.69, -0.00}, {0.5, 0.5});
-  this->CheckRange(14000, {-0.04, -0.00, -0.02, -0.00, -0.69, -0.00}, {0.5, 0.5});
-  this->CheckRange(16000, {-0.04, -0.00, -0.02, 0.00, -0.70, -0.00}, {0.5, 0.5});
-  this->CheckRange(18000, {-0.04, -0.00, -0.02, 0.00, -0.71, -0.00}, {0.5, 0.5});
-  this->CheckRange(20000, {-0.04, -0.00, -0.02, -0.00, -0.70, -0.00}, {0.5, 0.5});
-  this->CheckRange(22000, {-0.04, -0.00, -0.02, -0.00, -0.69, -0.00}, {0.5, 0.5});
-  this->CheckRange(24000, {-0.05, -0.00, -0.02, 0.00, -0.70, -0.00}, {0.5, 0.5});
-  this->CheckRange(26000, {-0.05, -0.00, -0.02, -0.00, -0.71, -0.00}, {0.5, 0.5});
-  this->CheckRange(28000, {-0.05, -0.00, -0.02, -0.00, -0.71, -0.00}, {0.5, 0.5});
+  // * Y, roll and yaw are kept pretty stable close to zero with low tolerances
+  // * The pitch target is 20 deg, but there's a lot of oscillation, so we need
+  //   the high tolerance
+  // * X and Y are meant to stay close to zero, but the vehicle goes forward
+  //   (-X, +Z) slowly. That could be caused by the pitch oscillation?
+  this->CheckRange(2000,  {-0.01, 0.00, -0.06, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  this->CheckRange(4000,  {-0.17, 0.00, -0.01, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  this->CheckRange(6000,  {-0.51, 0.00,  0.12, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  this->CheckRange(8000,  {-0.87, 0.00,  0.22, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  this->CheckRange(10000, {-1.21, 0.00,  0.34, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  this->CheckRange(12000, {-1.55, 0.00,  0.50, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  this->CheckRange(14000, {-1.90, 0.00,  0.63, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  this->CheckRange(16000, {-2.25, 0.00,  0.73, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  this->CheckRange(18000, {-2.60, 0.00,  0.86, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  this->CheckRange(20000, {-2.93, 0.00,  1.02, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  this->CheckRange(22000, {-3.29, 0.00,  1.13, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  this->CheckRange(24000, {-3.64, 0.00,  1.24, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  this->CheckRange(26000, {-3.97, 0.00,  1.39, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  this->CheckRange(28000, {-4.32, 0.00,  1.53, 0.00, IGN_DTOR(20), 0.00},
+      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
 }
 

@@ -24,8 +24,11 @@
  * Tests the mass shifter actuator by sending commands to shift the battery
  * forward and backward.
  *
+ * Positive mass shifter commands move the battery towards the front, causing the vehicle
+ * to pitch downwards (more negative pitch). Negative commands do the opposite.
+ *
  * Usage:
- *   $ LRAUV_example_mass_shifter <vehicle_name>
+ *   $ LRAUV_example_mass_shifter <vehicle_name> <mass_pos_meters>
  */
 
 #include <chrono>
@@ -43,27 +46,30 @@ int main(int _argc, char **_argv)
     vehicleName = _argv[1];
   }
 
+  double pos{0.001};
+  if (_argc > 2)
+  {
+    pos = atof(_argv[2]);
+  }
+
   ignition::transport::Node node;
   auto commandTopic = "/" + vehicleName + "/command_topic";
   auto commandPub =
     node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(commandTopic);
 
-  // Negative moves toward nose of vehicle; positive moves toward tail
-  double dist = -0.001;
+  while (!commandPub.HasConnections())
+  {
+    std::cout << "Command publisher waiting for connections..." << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  }
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   lrauv_ignition_plugins::msgs::LRAUVCommand batteryMsg;
-  batteryMsg.set_masspositionaction_(dist);
+  batteryMsg.set_masspositionaction_(pos);
+
+  // Keep it stable
   batteryMsg.set_buoyancyaction_(0.0005);
   batteryMsg.set_dropweightstate_(1);
-  commandPub.Publish(batteryMsg);
-  std::cout << "Commanding mass shifter to " << dist << std::endl;
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-  lrauv_ignition_plugins::msgs::LRAUVCommand batteryReverseMsg;
-  batteryReverseMsg.set_masspositionaction_(-dist);
-  batteryReverseMsg.set_dropweightstate_(1);
-  batteryReverseMsg.set_buoyancyaction_(0.0005);
-  commandPub.Publish(batteryReverseMsg);
-  std::cout << "Commanding mass shifter to " << -dist << std::endl;
+  commandPub.Publish(batteryMsg);
+  std::cout << "Commanding mass shifter to [" << pos << "] m" << std::endl;
 }
