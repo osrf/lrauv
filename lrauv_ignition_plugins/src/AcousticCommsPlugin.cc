@@ -89,6 +89,10 @@ class AcousticCommsPrivateData
   /// \brief Current time
   public: std::chrono::steady_clock::time_point currentTime;
 
+  /// \brief Timestep
+  public: std::optional<std::chrono::steady_clock::duration> 
+    timestep = std::nullopt;
+
   /// \brief Entity to which the transponder is bound to.
   public: ignition::gazebo::Entity linkEntity;
 
@@ -183,6 +187,14 @@ void AcousticCommsPlugin::Configure(
         "/" + std::to_string(this->dataPtr->address);
       this->dataPtr->broadcast = false;
     }
+  }
+
+  if (_sdf->HasElement("timestep"))
+  {
+    auto timestep = _sdf->Get<double>("timestep");
+    this->dataPtr->timestep = 
+      std::chrono::duration<long, std::nano>(
+        static_cast<long>(timestep * 1e9));
   }
 
   auto vehicleModel = ignition::gazebo::Model(_entity);
@@ -305,9 +317,40 @@ void AcousticCommsPlugin::PreUpdate(
   this->dataPtr->currentTime = 
     std::chrono::steady_clock::time_point(_info.simTime);
 
-  if (this->dataPtr->commsModel != nullptr)
+  if (this->dataPtr->commsModel == nullptr)
+  {
+    static bool warn = false;
+    if(!warn)
+    {
+      ignerr << "Failed to load Comms model.\n"; 
+      warn = true;
+    }
+    return;
+  }
+
+  if (!this->dataPtr->timestep.has_value())
+  {
+    // If no timestep is defined simply load the comms model and execute the
+    // environmental model.
     this->dataPtr->commsModel->Step(_info, _ecm, 
       this->dataPtr->externalCommsPublisher, pose.value());
+  }
+  else
+  {
+    // Otherwise step at the specified time step till we converge on the final
+    // timestep. If the time step is larger than the dt then dt will be used.
+    auto endTime = this->dataPtr->currentTime + _info.dt;
+    
+    while (this->dataPtr->currentTime < endTime)
+    {
+      ignition::gazebo::UpdateInfo info(_info);
+      info.dt = std::min(this->dataPtr->timestep.value(), _info.dt);
+      info.simTime = this->dataPtr->currentTime.time_since_epoch();
+      this->dataPtr->commsModel->Step(info, _ecm, 
+        this->dataPtr->externalCommsPublisher, pose.value());
+      this->dataPtr->currentTime += info.dt;
+    }
+  }
 }
 
 }

@@ -99,7 +99,7 @@ TEST_F(LrauvCommsFixture, TestRangingAccuracy)
   auto result = client.RequestRange(2);
 
   EXPECT_EQ(result.req_id(), 2);
-  EXPECT_NEAR(result.range(), 20, 5);
+  EXPECT_NEAR(result.range(), 20, 0.5);
   EXPECT_NEAR(result.bearing().x(), 20, 1e-3);
   EXPECT_NEAR(result.bearing().y(), 1.57, 1e-2);
   EXPECT_NEAR(result.bearing().z(), 1.57, 1e-2);

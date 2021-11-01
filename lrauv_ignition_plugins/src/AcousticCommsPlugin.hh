@@ -51,6 +51,11 @@ class AcousticCommsPrivateData;
 /// * `<broadcast>` : This defaults to true. When enabled all receivers will
 /// receive all packets. If false, then packets will be directed only to 
 /// specified receivers.  [Optional, Defaults to `/comms/internal`]
+/// * `<timestep>` : If defined this will allow the comms client to run at a
+/// higher clock resolution than the physics engine. This is useful when dealing
+/// with ranging. If the timestep is set larger than the physics engine dt then
+/// the engine will default to dt. Note: for consistency it is adviced that the
+/// dt is a multiple of timestep. [Optional. Seconds]
 /// 
 /// ```
 ///  <plugin
@@ -60,6 +65,7 @@ class AcousticCommsPrivateData;
 ///         <model_plugin_file>simpleacousticmodel</model_plugin_file>
 ///         <model_name>tethys::SimpleAcousticModel</model_name>
 ///         <link_name>base_link</link_name>
+///         <timestep>0.00001</timestep>
 ///        ...
 ///  </plugin>
 /// ```
