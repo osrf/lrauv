@@ -69,10 +69,26 @@
       name="tethys::TimeAnalysisPlugin">
     </plugin-->
 
+    <!-- Spawn at default in a location with science data in csv -->
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+
+      <!-- For 2003080103_mb_l3_las.csv -->
+      <latitude_deg>35.5999984741211</latitude_deg>
+      <longitude_deg>-121.779998779297</longitude_deg>
+
+      <!-- For 2003080103_mb_l3_las_1x1km.csv -->
+      <!--latitude_deg>36.8024781413352</latitude_deg>
+      <longitude_deg>-121.829647676843</longitude_deg-->
+
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
     <plugin
       filename="ScienceSensorsSystem"
       name="tethys::ScienceSensorsSystem">
       <data_path>2003080103_mb_l3_las.csv</data_path>
+      <!--data_path>2003080103_mb_l3_las_1x1km.csv</data_path-->
       <!--data_path>simple_test.csv</data_path-->
     </plugin>
 
@@ -248,7 +264,7 @@
       <plugin filename="VisualizePointCloud" name="Visualize science data">
         <ignition-gui>
           <title>Visualize science data</title>
-          <property type="string" key="state">floating_collapsed</property>
+          <property type="string" key="state">floating</property>
           <property key="x" type="double">800</property>
         </ignition-gui>
       </plugin>
@@ -267,6 +283,20 @@
       </attenuation>
       <direction>-0.5 0.1 -0.9</direction>
     </light>
+
+    <model name="debug science data -200k -150k">
+      <pose>-200900 -159654 0 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
 
     <!-- Uncomment if you need a ground plane -->
     <!-- <model name="ground_plane">

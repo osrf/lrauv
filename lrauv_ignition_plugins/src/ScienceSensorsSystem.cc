@@ -24,6 +24,7 @@
 
 #include <ignition/plugin/Register.hh>
 #include <ignition/common/SystemPaths.hh>
+#include <ignition/math/SphericalCoordinates.hh>
 #include <ignition/msgs/Utility.hh>
 #include <ignition/transport/Node.hh>
 
@@ -38,6 +39,10 @@ using namespace tethys;
 
 class tethys::ScienceSensorsSystemPrivate
 {
+  /// \brief Shift point cloud with respect to the world origin in spherical
+  /// coordinates, if available.
+  public: void GetWorldOriginSphericalCoords();
+
   /// \brief Reads csv file and populate various data fields
   public: void ReadData();
 
@@ -47,7 +52,9 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Publish the latest point cloud
   public: void PublishData();
 
-  /// \brief Service that provides the latest science data
+  /// \brief Service callback for a point cloud with the latest science data.
+  /// \param[in] _res Point cloud to return
+  /// \return True
   public: bool ScienceDataService(ignition::msgs::PointCloudPacked &_res);
 
   /// \brief Returns a point cloud message populated with the latest sensor data
@@ -93,12 +100,23 @@ class tethys::ScienceSensorsSystemPrivate
   public: const std::string NORTH_CURRENT {
     "northward_sea_water_velocity_meter_per_sec"};
 
+  /// \brief Service name for getting the spherical coordinates associated with
+  /// the world origin
+  public: std::string getWorldOriginSphericalService
+    {"/world_origin_spherical"};
+
   /// \brief Input data file name, relative to a path Ignition can find in its
   /// environment variables.
   public: std::string dataPath {"2003080103_mb_l3_las.csv"};
 
   /// \brief Indicates whether data has been loaded
   public: bool initialized = false;
+
+  /// World origin in spherical coordinates (latitude, longitude, elevation)
+  public: ignition::math::Vector3d worldOriginSphericalCoords = {0, 0, 0};
+
+  /// World origin in Cartesian coordinates converted from spherical coordinates
+  public: ignition::math::Vector3d worldOriginEarthCartesianCoords = {0, 0, 0};
 
   /// \brief Whether using more than one time slices of data
   public: bool multipleTimeSlices = false;
@@ -108,6 +126,10 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Timestamps to index slices of data
   public: std::vector<float> timestamps;
+
+  /// \brief Surface type, for converting spherical coordinates to Cartesian
+  public: ignition::math::SphericalCoordinates::SurfaceType surfaceType =
+    ignition::math::SphericalCoordinates::EARTH_WGS84;
 
   /// \brief Spatial coordinates of data
   /// Vector size: number of time slices. Indices correspond to those of
@@ -140,13 +162,38 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Octree for data search based on spatial location of sensor. One
   /// octree per point cloud in timeSpaceCoords.
   public: std::vector<pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>>
-            spatialOctrees;
+    spatialOctrees;
 
-  /// \brief Node for communication
+  /// \brief Transport node
   public: ignition::transport::Node node;
 
-  /// \brief Publisher for point cloud data
+  /// \brief Publisher for point clouds representing positions for science data
   public: ignition::transport::Node::Publisher cloudPub;
+
+  // TODO TEMPORARY HACK publish float arrays instead of point cloud fields
+  public: ignition::transport::Node::Publisher tempPub;
+  public: ignition::transport::Node::Publisher chlorPub;
+  public: ignition::transport::Node::Publisher salPub;
+  public: ignition::msgs::Float_V tempMsg;
+  public: ignition::msgs::Float_V chlorMsg;
+  public: ignition::msgs::Float_V salMsg;
+
+  // TODO TEMPORARY HACK
+  /// \brief Publish a few more times for visualization plugin to get them
+  public: int repeatPubTimes = 1;
+
+  // TODO TEMPORARY HACK scale down to see in view to skip orbit tool limits
+  // For 2003080103_mb_l3_las_1x1km.csv
+  //public: const float MINIATURE_SCALE = 0.01;
+  // For 2003080103_mb_l3_las.csv
+  public: const float MINIATURE_SCALE = 0.0001;
+
+  // TODO TEMPORARY HACK Skip depths below this z, so have memory to
+  // visualize higher layers at higher resolution.
+  // This is only for visualization, so that MAX_PTS_VIS can calculate close
+  // to the actual number of points visualized.
+  // Sensors shouldn't use this.
+  public: const float SKIP_Z_BELOW = -20;
 };
 
 /////////////////////////////////////////////////
@@ -227,6 +274,9 @@ void ScienceSensorsSystemPrivate::ReadData()
   std::getline(fs, line);
 
   std::stringstream ss(line);
+
+  // Spherical coordinates object for Cartesian conversions
+  ignition::math::SphericalCoordinates sc(this->surfaceType);
 
   // Tokenize header line into columns
   while (std::getline(ss, word, ','))
@@ -371,10 +421,33 @@ void ScienceSensorsSystemPrivate::ReadData()
       // Check validity of spatial coordinates
       if (!std::isnan(latitude) && !std::isnan(longitude) && !std::isnan(depth))
       {
+        // TODO TEMPORARY HACK skip points below a certain depth
+        if (-depth < this->SKIP_Z_BELOW)
+        {
+          continue;
+        }
+
+        // Convert spherical coordinates to Cartesian
+        ignition::math::Vector3d cart = sc.LocalFromSphericalPosition(
+          {latitude, longitude, 0});
+
+        // Shift to be relative to world origin spherical coordinates
+        cart -= this->worldOriginEarthCartesianCoords;
+
+        // TODO TEMPORARY HACK scale down to see in view
+        cart *= this->MINIATURE_SCALE;
+
+        // TODO TEMPORARY HACK skip points beyond some distance from origin
+        if (abs(cart.X()) > 1000 || abs(cart.Y()) > 1000)
+        {
+          continue;
+        }
+
         // Gather spatial coordinates, 3 fields in the line, into point cloud
         // for indexing this time slice of data.
+        // Flip sign of z, because positive depth is negative z.
         this->timeSpaceCoords[lineTimeIdx]->push_back(
-          pcl::PointXYZ(latitude, longitude, depth));
+          pcl::PointXYZ(cart.X(), cart.Y(), -depth));
 
         // Populate science data
         this->temperatureArr[lineTimeIdx].push_back(temp);
@@ -408,6 +481,81 @@ void ScienceSensorsSystemPrivate::ReadData()
 }
 
 /////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::GetWorldOriginSphericalCoords()
+{
+  // TODO TEMPORARY HACK hard code lat long.
+  // When have time, init default value from SDF <spherical_coordinates> tag
+  this->worldOriginSphericalCoords = ignition::math::Vector3d(
+    36.8024781413352, -121.829647676843, 0);
+  // Convert spherical coordinates to Cartesian
+  ignition::math::SphericalCoordinates sc(this->surfaceType);
+  this->worldOriginEarthCartesianCoords = sc.LocalFromSphericalPosition(
+    this->worldOriginSphericalCoords);
+
+  /*
+  ignition::msgs::Vector3d res;
+  bool success;
+
+  ignmsg << "Waiting for " << this->getWorldOriginSphericalService << "..."
+    << std::endl;
+
+  // Get world origin in spherical coordinates, if available.
+  if (!this->node.Request(this->getWorldOriginSphericalService, 5000, res,
+    success))
+  {
+    ignerr << "Failed to request service ["
+      << this->getWorldOriginSphericalService << "]" << std::endl;
+  }
+
+  // If unsuccessful, a first vehicle hasn't been spawned, no long/lat info
+  if (!success)
+  {
+    ignwarn << "No long/lat information. "
+      << "Has a vehicle been spawned using the WorldCommPlugin service? "
+      << "Science data will be loaded without correcting for long/lat at world "
+      << "origin."
+      << std::endl;
+  }
+  else
+  {
+    this->worldOriginSphericalCoords = ignition::math::Vector3d(
+      res.x(), res.y(), res.z());
+
+    // Convert spherical coordinates to Cartesian
+    ignition::math::SphericalCoordinates sc(this->surfaceType);
+    this->worldOriginEarthCartesianCoords = sc.LocalFromSphericalPosition(
+      this->worldOriginSphericalCoords);
+  }
+  */
+}
+
+
+/*
+  if (!this->node.Request(this->getWorldOriginSphericalService, 5000,
+      &ScienceSensorsSystemPrivate::WorldOriginSphericalCoordsCb(), this))
+  {
+    ignerr << "Failed to request service ["
+      << this->getWorldOriginSphericalService << "]" << std::endl;
+  }
+}
+
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::WorldOriginSphericalCoordsCb(
+  const ignition::msgs::Vector3d &_res,
+  const bool _success)
+{
+  if (_success)
+  {
+    this->worldOriginSphericalCoords = _res;
+
+    // Convert spherical coordinates to Cartesian
+    this->worldOriginEarthCartesianCoords = this->sc.LocalFromSphericalPosition(
+      this->worldOriginSphericalCoords);
+  }
+}
+*/
+
+/////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::GenerateOctrees()
 {
   // For each time slice, create an octree for the spatial coordinates
@@ -426,6 +574,9 @@ void ScienceSensorsSystemPrivate::GenerateOctrees()
 void ScienceSensorsSystemPrivate::PublishData()
 {
   this->cloudPub.Publish(this->PointCloudMsg());
+  this->tempPub.Publish(this->tempMsg);
+  this->chlorPub.Publish(this->chlorMsg);
+  this->salPub.Publish(this->salMsg);
 }
 
 /////////////////////////////////////////////////
@@ -503,11 +654,25 @@ void ScienceSensorsSystem::Configure(
   this->dataPtr->cloudPub = this->dataPtr->node.Advertise<
       ignition::msgs::PointCloudPacked>("/science_data");
 
-  this->dataPtr->node.Advertise("/science_data",
+  this->dataPtr->node.Advertise("/science_data_srv",
       &ScienceSensorsSystemPrivate::ScienceDataService, this->dataPtr.get());
+
+  // TODO TEMPORARY HACK publish float array instead of point cloud fields
+  this->dataPtr->tempPub = this->dataPtr->node.Advertise<
+      ignition::msgs::Float_V>("/temperature");
+  this->dataPtr->chlorPub = this->dataPtr->node.Advertise<
+      ignition::msgs::Float_V>("/chlorophyll");
+  this->dataPtr->salPub = this->dataPtr->node.Advertise<
+      ignition::msgs::Float_V>("/salinity");
+
+  // TODO: Offer a way to shift after ReadData(), in case the first vehicle is
+  // spawned much later than when ScienceSensorsSystem plugin is loaded.
+  this->dataPtr->GetWorldOriginSphericalCoords();
 
   this->dataPtr->ReadData();
   this->dataPtr->GenerateOctrees();
+
+  // Publish science data at the initial timestamp
   this->dataPtr->PublishData();
 }
 
@@ -550,8 +715,23 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       {
         // Increment for next point in time
         this->dataPtr->timeIdx++;
+
+        // Publish science data at the next timestamp
         this->dataPtr->PublishData();
       }
+    }
+
+    // TODO TEMPORARY DEBUG publishing more frequently to help debugging.
+    // Publish every n iters so that VisualizePointCloud plugin gets it.
+    if (this->dataPtr->repeatPubTimes % 10000 == 0)
+    {
+      this->dataPtr->PublishData();
+      // Reset
+      this->dataPtr->repeatPubTimes = 1;
+    }
+    else
+    {
+      this->dataPtr->repeatPubTimes++;
     }
 
     // For each sensor, get its pose, search in the octree for the closest
@@ -559,7 +739,14 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     for (auto &[entity, sensor] : this->entitySensorMap)
     {
       // Sensor pose in lat/lon, used to search for data by spatial coordinates
+      // TODO convert to Cartesian
       auto sensorLatLon = ignition::gazebo::sphericalCoordinates(entity, _ecm);
+      /*
+      // TODO TEMP DEBUG what is the sensor attached to?? World? Not robot?
+      ignerr << "sensor lat long: "
+             << sensorLatLon.value().X() << ", " << sensorLatLon.value().Y()
+             << std::endl;
+      */
       if (!sensorLatLon)
       {
         static std::unordered_set<ignition::gazebo::Entity> warnedEntities;
@@ -586,76 +773,80 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       std::vector<float> spatialSqrDist;
 
       // Search in octree to find spatial index of science data
-      if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].nearestKSearch(
-        searchPoint, k, spatialIdx, spatialSqrDist) <= 0)
+      if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].getLeafCount()
+        > 0)
       {
-        ignwarn << "No data found near sensor location " << sensorLatLon.value()
-                << std::endl;
-        continue;
-      }
-      // Debug output
-      /*
-      else
-      {
-        igndbg << "kNN search for sensor pose (" << sensorPose.X() << ", "
-               << sensorPose.Y() << ", " << sensorPose.Z() << "):"
-               << std::endl;
-
-        for (std::size_t i = 0; i < spatialIdx.size(); i++)
+        if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].nearestKSearch(
+          searchPoint, k, spatialIdx, spatialSqrDist) <= 0)
         {
-          // Index the point cloud at the current time slice
-          pcl::PointXYZ nbrPt = (*(this->dataPtr->timeSpaceCoords[
-            this->dataPtr->timeIdx]))[spatialIdx[i]];
-
-          igndbg << "Neighbor at (" << nbrPt.x << ", " << nbrPt.y << ", "
-                 << nbrPt.z << "), squared distance " << spatialSqrDist[i]
-                 << " m" << std::endl;
+          ignwarn << "No data found near sensor location " << sensorLatLon.value()
+                  << std::endl;
+          continue;
         }
-      }
-      */
+        // Debug output
+        /*
+        else
+        {
+          igndbg << "kNN search for sensor pose (" << sensorPose.X() << ", "
+                 << sensorPose.Y() << ", " << sensorPose.Z() << "):"
+                 << std::endl;
 
-      // For the correct sensor, grab closest neighbors and interpolate
-      if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
-      {
-        float sal = this->dataPtr->InterpolateData(
-          this->dataPtr->salinityArr[this->dataPtr->timeIdx], spatialIdx,
-          spatialSqrDist);
-        casted->SetData(sal);
-      }
-      else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
-        sensor))
-      {
-        float temp = this->dataPtr->InterpolateData(
-          this->dataPtr->temperatureArr[this->dataPtr->timeIdx], spatialIdx,
-          spatialSqrDist);
+          for (std::size_t i = 0; i < spatialIdx.size(); i++)
+          {
+            // Index the point cloud at the current time slice
+            pcl::PointXYZ nbrPt = (*(this->dataPtr->timeSpaceCoords[
+              this->dataPtr->timeIdx]))[spatialIdx[i]];
 
-        ignition::math::Temperature tempC;
-        tempC.SetCelsius(temp);
-        casted->SetData(tempC);
-      }
-      else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
-        sensor))
-      {
-        float chlor = this->dataPtr->InterpolateData(
-          this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx], spatialIdx,
-          spatialSqrDist);
-        casted->SetData(chlor);
-      }
-      else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(sensor))
-      {
-        float eCurr = this->dataPtr->InterpolateData(
-          this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx], spatialIdx,
-          spatialSqrDist);
-        float nCurr = this->dataPtr->InterpolateData(
-          this->dataPtr->northCurrentArr[this->dataPtr->timeIdx], spatialIdx,
-          spatialSqrDist);
+            igndbg << "Neighbor at (" << nbrPt.x << ", " << nbrPt.y << ", "
+                   << nbrPt.z << "), squared distance " << spatialSqrDist[i]
+                   << " m" << std::endl;
+          }
+        }
+        */
 
-        auto curr = ignition::math::Vector3d(eCurr, nCurr, 0.0);
-        casted->SetData(curr);
-      }
-      else
-      {
-        ignerr << "Unsupported sensor type, failed to set data" << std::endl;
+        // For the correct sensor, grab closest neighbors and interpolate
+        if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
+        {
+          float sal = this->dataPtr->InterpolateData(
+            this->dataPtr->salinityArr[this->dataPtr->timeIdx], spatialIdx,
+            spatialSqrDist);
+          casted->SetData(sal);
+        }
+        else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
+          sensor))
+        {
+          float temp = this->dataPtr->InterpolateData(
+            this->dataPtr->temperatureArr[this->dataPtr->timeIdx], spatialIdx,
+            spatialSqrDist);
+
+          ignition::math::Temperature tempC;
+          tempC.SetCelsius(temp);
+          casted->SetData(tempC);
+        }
+        else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
+          sensor))
+        {
+          float chlor = this->dataPtr->InterpolateData(
+            this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx], spatialIdx,
+            spatialSqrDist);
+          casted->SetData(chlor);
+        }
+        else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(sensor))
+        {
+          float eCurr = this->dataPtr->InterpolateData(
+            this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx], spatialIdx,
+            spatialSqrDist);
+          float nCurr = this->dataPtr->InterpolateData(
+            this->dataPtr->northCurrentArr[this->dataPtr->timeIdx], spatialIdx,
+            spatialSqrDist);
+
+          auto curr = ignition::math::Vector3d(eCurr, nCurr, 0.0);
+          casted->SetData(curr);
+        }
+        else
+        {
+          ignerr << "Unsupported sensor type, failed to set data" << std::endl;
+        }
       }
       sensor->Update(_info.simTime, false);
     }
@@ -710,11 +901,13 @@ ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
 
   ignition::msgs::InitPointCloudPacked(msg, "world", true,
     {
-      {"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32}
-      // {"salinity", ignition::msgs::PointCloudPacked::Field::FLOAT32}
-      // TODO(louise) Add more fields
-      // https://github.com/osrf/lrauv/issues/85
+      {"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32},
     });
+
+  // TODO optimization for visualization:
+  // Use PCL methods to chop off points beyond some distance from sensor
+  // pose. Don't need to visualize beyond that. Might want to put that on a
+  // different topic specifically for visualization.
 
   msg.mutable_header()->mutable_stamp()->set_sec(this->timestamps[this->timeIdx]);
 
@@ -730,7 +923,40 @@ ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
 
   // FIXME: Include more than position data
   msg.mutable_data()->resize(pclPC2.data.size());
+  //  + temperatureArr[this->timeIdx].size());
   memcpy(msg.mutable_data()->data(), pclPC2.data.data(), pclPC2.data.size());
+
+  /*
+  // Interleaf fields to each point
+  for (int c = 0; c < pclPC2.width; ++c)
+  {
+    for (int r = 0; r < pclPC2.height; ++r)
+    {
+      memcpy(msg.mutable_data()->data() + ,
+        pclPC2.data.data() + ,
+        pclPC2.data.size());
+
+
+    }
+  }
+  */
+
+  // Wrong layout
+  // Temperature field, offset from beginning by previous data's size
+  //memcpy(msg.mutable_data()->data() + pclPC2.data.size(),
+  //  temperatureArr[this->timeIdx].data(), temperatureArr[this->timeIdx].size());
+
+  // TODO TEMPORARY HACK publish float arrays instead of point cloud fields
+  //this->tempMsg.mutable_data()->Resize(temperatureArr[this->timeIdx].size(), 0.0f);
+  //memcpy(this->tempMsg.mutable_data(),
+  //  temperatureArr[this->timeIdx].data(), temperatureArr[this->timeIdx].size());
+  // TODO did memory leak start after I started publishing float array?
+  *this->tempMsg.mutable_data() = {temperatureArr[this->timeIdx].begin(),
+    temperatureArr[this->timeIdx].end()};
+  *this->chlorMsg.mutable_data() = {chlorophyllArr[this->timeIdx].begin(),
+    chlorophyllArr[this->timeIdx].end()};
+  *this->salMsg.mutable_data() = {salinityArr[this->timeIdx].begin(),
+    salinityArr[this->timeIdx].end()};
 
   return msg;
 }

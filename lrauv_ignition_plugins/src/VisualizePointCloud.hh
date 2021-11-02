@@ -25,6 +25,7 @@
 
 #include <memory>
 
+#include "ignition/msgs/float_v.pb.h"
 #include "ignition/msgs/pointcloud_packed.pb.h"
 
 #include <ignition/gui/Plugin.hh>
@@ -57,10 +58,16 @@ namespace tethys
 
     /// \brief Callback function to get data from the message
     /// \param[in]_msg Point cloud message
-    public: void OnMessage(const ignition::msgs::PointCloudPacked &_msg);
+    public: void OnCloud(const ignition::msgs::PointCloudPacked &_msg);
+
+    // TODO TEMPORARY HACK float arrays instead of point cloud fields
+    public: void OnTemperature(const ignition::msgs::Float_V &_msg);
+    public: void OnChlorophyll(const ignition::msgs::Float_V &_msg);
+    public: void OnSalinity(const ignition::msgs::Float_V &_msg);
+    public: void OnFloatData(const ignition::msgs::Float_V &_msg);
 
     /// \brief Callback function to get data from the message
-    /// \param[in]_res Point cloud message
+    /// \param[in]_msg Point cloud message
     /// \param[out]_result True on success.
     public: void OnService(const ignition::msgs::PointCloudPacked &_res,
         bool _result);

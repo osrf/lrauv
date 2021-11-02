@@ -51,17 +51,59 @@ namespace tethys
     /// \brief Transport node
     public: ignition::transport::Node node;
 
-    /// \brief Topic name to subscribe
+    /// \brief Science data type-specific topic name to subscribe
     public: std::string topicName{""};
 
-    /// \brief List of topics publishing LaserScan messages.
+    /// \brief List of science data topics
     public: QStringList topicList;
 
     /// \brief Protect variables changed from transport and the user
     public: std::recursive_mutex mutex;
 
-    /// \brief Latest point cloud message
+    /// \brief Generic point cloud topic name
+    public: std::string pcTopic = {"/science_data"};
+
+    /// \brief Generic point cloud service name
+    public: std::string pcSrv = {"/science_data_srv"};
+
+    /// \brief Point cloud message containing location of data
     public: ignition::msgs::PointCloudPacked pcMsg;
+
+    /// \brief Temperature mssage to visualize
+    // TODO TEMPORARY HACK 1D array instead of point cloud fields
+    public: ignition::msgs::Float_V tempMsg;
+    public: ignition::msgs::Float_V chlorMsg;
+    public: ignition::msgs::Float_V salMsg;
+    //public: ignition::msgs::Float_V valMsg;
+
+    // Cap of how many points to visualize, to save memory
+    public: const int MAX_PTS_VIS = 1000;
+
+    // TODO TEMPORARY HACK
+    // Render only every other n, to save performance. Increase to render fewer
+    // markers (faster performance).
+    public: int renderEvery = 20;
+
+    // TODO TEMPORARY HACK Skip depths below this z, so have memory to
+    // visualize higher layers at higher resolution.
+    public: const float SKIP_Z_BELOW = -40;
+
+    // TODO TEMPORARY HACK scale down to see in view to skip orbit tool limits
+    // For 2003080103_mb_l3_las_1x1km.csv
+    //public: const float MINIATURE_SCALE = 0.01;
+    // For 2003080103_mb_l3_las.csv
+    public: const float MINIATURE_SCALE = 0.0001;
+    public: float dimFactor = 0.03;
+
+    // TODO TEMPORARY HACK hardcode resolution to make markers resemble voxels
+    // For 2003080103_mb_l3_las_1x1km.csv
+    //public: const float RES_X = 15 * MINIATURE_SCALE;
+    //public: const float RES_Y = 22 * MINIATURE_SCALE;
+    //public: const float RES_Z = 5 * MINIATURE_SCALE;
+    // For 2003080103_mb_l3_las.csv
+    public: const float RES_X = 15;
+    public: const float RES_Y = 22;
+    public: const float RES_Z = 10;
   };
 }
 
@@ -86,6 +128,28 @@ void VisualizePointCloud::LoadConfig(const tinyxml2::XMLElement *)
   if (this->title.empty())
     this->title = "Visualize point cloud";
 
+  if (!this->dataPtr->node.Subscribe("/temperature",
+                            &VisualizePointCloud::OnTemperature, this))
+  {
+    ignerr << "Unable to subscribe to topic ["
+           << "/temperature" << "]\n";
+    return;
+  }
+  if (!this->dataPtr->node.Subscribe("/chlorophyll",
+                            &VisualizePointCloud::OnChlorophyll, this))
+  {
+    ignerr << "Unable to subscribe to topic ["
+           << "/chlorophyll" << "]\n";
+    return;
+  }
+  if (!this->dataPtr->node.Subscribe("/salinity",
+                            &VisualizePointCloud::OnSalinity, this))
+  {
+    ignerr << "Unable to subscribe to topic ["
+           << "/salinity" << "]\n";
+    return;
+  }
+
   ignition::gui::App()->findChild<
     ignition::gui::MainWindow *>()->installEventFilter(this);
 }
@@ -94,31 +158,47 @@ void VisualizePointCloud::LoadConfig(const tinyxml2::XMLElement *)
 void VisualizePointCloud::OnTopic(const QString &_topicName)
 {
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
+  // Unsubscribe from previous choice
+  /*
   if (!this->dataPtr->topicName.empty() &&
       !this->dataPtr->node.Unsubscribe(this->dataPtr->topicName))
   {
     ignerr << "Unable to unsubscribe from topic ["
            << this->dataPtr->topicName <<"]" <<std::endl;
   }
-
-  // Clear visualization
-  this->ClearMarkers();
-
+  */
   this->dataPtr->topicName = _topicName.toStdString();
 
   // Request service
-  this->dataPtr->node.Request(this->dataPtr->topicName,
+  this->dataPtr->node.Request(this->dataPtr->pcSrv,
       &VisualizePointCloud::OnService, this);
 
   // Create new subscription
+  if (!this->dataPtr->node.Subscribe(this->dataPtr->pcTopic,
+                            &VisualizePointCloud::OnCloud, this))
+  {
+    ignerr << "Unable to subscribe to topic ["
+           << this->dataPtr->pcTopic << "]\n";
+    return;
+  }
+  ignmsg << "Subscribed to " << this->dataPtr->pcTopic << std::endl;
+
+  // This doesn't work correctly. Values do not correspond to the right type
+  // of data. Maybe doesn't have time to subscribe befores markers go out.
+  // Better to subscribe individually - worked more reliably.
+  /*
   if (!this->dataPtr->node.Subscribe(this->dataPtr->topicName,
-                            &VisualizePointCloud::OnMessage, this))
+                            &VisualizePointCloud::OnFloatData, this))
   {
     ignerr << "Unable to subscribe to topic ["
            << this->dataPtr->topicName << "]\n";
     return;
   }
   ignmsg << "Subscribed to " << this->dataPtr->topicName << std::endl;
+  */
+
+  // Clear visualization
+  this->ClearMarkers();
 }
 
 //////////////////////////////////////////////////
@@ -143,6 +223,8 @@ void VisualizePointCloud::OnRefresh()
   // Clear
   this->dataPtr->topicList.clear();
 
+  bool gotCloud = false;
+
   // Get updated list
   std::vector<std::string> allTopics;
   this->dataPtr->node.TopicList(allTopics);
@@ -152,14 +234,21 @@ void VisualizePointCloud::OnRefresh()
     this->dataPtr->node.TopicInfo(topic, publishers);
     for (auto pub : publishers)
     {
+      // Have a fixed topic for point cloud locations. Let user choose
+      // which science data type to visualize
       if (pub.MsgTypeName() == "ignition.msgs.PointCloudPacked")
       {
+        //this->dataPtr->topicList.push_back(QString::fromStdString(topic));
+        //break;
+        gotCloud = true;
+      }
+      else if (pub.MsgTypeName() == "ignition.msgs.Float_V")
+      {
         this->dataPtr->topicList.push_back(QString::fromStdString(topic));
-        break;
       }
     }
   }
-  if (this->dataPtr->topicList.size() > 0)
+  if (gotCloud && this->dataPtr->topicList.size() > 0)
   {
     this->OnTopic(this->dataPtr->topicList.at(0));
   }
@@ -181,11 +270,41 @@ void VisualizePointCloud::SetTopicList(const QStringList &_topicList)
 }
 
 //////////////////////////////////////////////////
-void VisualizePointCloud::OnMessage(const ignition::msgs::PointCloudPacked &_msg)
+void VisualizePointCloud::OnCloud(const ignition::msgs::PointCloudPacked &_msg)
 {
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
   this->dataPtr->pcMsg = _msg;
   this->PublishMarkers();
+}
+
+/*
+//////////////////////////////////////////////////
+void VisualizePointCloud::OnFloatData(const ignition::msgs::Float_V &_msg)
+{
+  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
+  this->dataPtr->valMsg = _msg;
+}
+*/
+
+//////////////////////////////////////////////////
+void VisualizePointCloud::OnTemperature(const ignition::msgs::Float_V &_msg)
+{
+  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
+  this->dataPtr->tempMsg = _msg;
+}
+
+//////////////////////////////////////////////////
+void VisualizePointCloud::OnChlorophyll(const ignition::msgs::Float_V &_msg)
+{
+  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
+  this->dataPtr->chlorMsg = _msg;
+}
+
+//////////////////////////////////////////////////
+void VisualizePointCloud::OnSalinity(const ignition::msgs::Float_V &_msg)
+{
+  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
+  this->dataPtr->salMsg = _msg;
 }
 
 //////////////////////////////////////////////////
@@ -213,47 +332,180 @@ void VisualizePointCloud::PublishMarkers()
     return;
   }
 
+  // Used to calculate cap of number of points to visualize, to save memory
+  int nPts = this->dataPtr->pcMsg.height() * this->dataPtr->pcMsg.width();
+  this->dataPtr->renderEvery = (int) round(
+    nPts / (double) this->dataPtr->MAX_PTS_VIS);
+
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
   ignition::msgs::Marker_V markers;
 
-  PointCloudPackedIterator<float> iter_x(this->dataPtr->pcMsg, "x");
-  PointCloudPackedIterator<float> iter_y(this->dataPtr->pcMsg, "y");
-  PointCloudPackedIterator<float> iter_z(this->dataPtr->pcMsg, "z");
+  PointCloudPackedIterator<float> iterX(this->dataPtr->pcMsg, "x");
+  PointCloudPackedIterator<float> iterY(this->dataPtr->pcMsg, "y");
+  PointCloudPackedIterator<float> iterZ(this->dataPtr->pcMsg, "z");
+  // FIXME: publish point cloud fields instead of float arrays
+  //PointCloudPackedIterator<float> iterTemp(this->dataPtr->pcMsg, "temperature");
 
-  int count{0};
-  while (iter_x != iter_x.end() &&
-         iter_y != iter_y.end() &&
-         iter_z != iter_z.end())
+  // Type of data to visualize
+  std::string dataType = this->dataPtr->topicName;
+  // Ranges to scale marker colors
+  float minVal = 0.0f;
+  float maxVal = 10000.0f;
+  if (dataType == "/temperature")
   {
-    auto msg = markers.add_marker();
-
-    msg->set_ns(this->dataPtr->topicName);
-    msg->set_id(count++);
-    msg->mutable_material()->mutable_ambient()->set_b(1);
-    msg->mutable_material()->mutable_ambient()->set_a(0.3);
-    msg->mutable_material()->mutable_diffuse()->set_b(1);
-    msg->mutable_material()->mutable_diffuse()->set_a(0.3);
-    msg->set_action(ignition::msgs::Marker::ADD_MODIFY);
-    msg->set_type(ignition::msgs::Marker::BOX);
-    msg->set_visibility(ignition::msgs::Marker::GUI);
-    ignition::msgs::Set(msg->mutable_scale(),
-                    ignition::math::Vector3d::One);
-
-    ignition::msgs::Set(msg->mutable_pose(), ignition::math::Pose3d(
-      *iter_x,
-      *iter_y,
-      *iter_z,
-      0, 0, 0));
-
-    ++iter_x;
-    ++iter_y;
-    ++iter_z;
-
-    // FIXME: how to handle more points?
-    // https://github.com/osrf/lrauv/issues/85
-    if (count > 100)
-      break;
+    minVal = 6.0f;
+    maxVal = 20.0f;
   }
+  else if (dataType == "/chlorophyll")
+  {
+    //minVal = -6.0f;
+    minVal = 0.0f;
+    maxVal = 6.5f;
+  }
+  else if (dataType == "/salinity")
+  {
+    minVal = 32.0f;
+    maxVal = 34.5f;
+  }
+
+  // TODO TEMPORARY DEBUG
+  ignerr << "First point in cloud (size "
+         << this->dataPtr->pcMsg.height() * this->dataPtr->pcMsg.width()
+         << "): " << *iterX << ", " << *iterY << ", " << *iterZ << std::endl;
+
+  // Index of point in point cloud, visualized or not
+  int ptIdx{0};
+  // Number of points actually visualized
+  int nPtsViz{0};
+  while (iterX != iterX.end() &&
+         iterY != iterY.end() &&
+         iterZ != iterZ.end())
+  {
+    // TODO TEMPORARY Only publish every nth. Skip z below some depth
+    if (this->dataPtr->renderEvery != 0 &&
+        ptIdx % this->dataPtr->renderEvery == 0 &&
+        *iterZ > this->dataPtr->SKIP_Z_BELOW)
+    {
+      // Science data value
+      float dataVal = std::numeric_limits<float>::quiet_NaN();
+      /*
+      if (this->dataPtr->valMsg.data().size() > ptIdx)
+      {
+        dataVal = this->dataPtr->valMsg.data(ptIdx);
+      }
+      */
+      // Sanity check array size
+      if (dataType == "/temperature")
+      {
+        if (this->dataPtr->tempMsg.data().size() > ptIdx)
+        {
+          dataVal = this->dataPtr->tempMsg.data(ptIdx);
+        }
+      }
+      else if (dataType == "/chlorophyll")
+      {
+        if (this->dataPtr->chlorMsg.data().size() > ptIdx)
+        {
+          dataVal = this->dataPtr->chlorMsg.data(ptIdx);
+        }
+      }
+      else if (dataType == "/salinity")
+      {
+        if (this->dataPtr->salMsg.data().size() > ptIdx)
+        {
+          dataVal = this->dataPtr->salMsg.data(ptIdx);
+        }
+      }
+
+      // Don't visualize NaN
+      if (!std::isnan(dataVal))
+      {
+        auto msg = markers.add_marker();
+
+        msg->set_ns(this->dataPtr->pcTopic);
+        msg->set_id(nPtsViz + 1);
+
+        msg->mutable_material()->mutable_ambient()->set_r(
+          (dataVal - minVal) / (maxVal - minVal));
+        msg->mutable_material()->mutable_ambient()->set_g(
+          1 - (dataVal - minVal) / (maxVal - minVal));
+        msg->mutable_material()->mutable_ambient()->set_a(0.5);
+
+        msg->mutable_material()->mutable_diffuse()->set_r(
+          (dataVal - minVal) / (maxVal - minVal));
+        msg->mutable_material()->mutable_diffuse()->set_g(
+          1 - (dataVal - minVal) / (maxVal - minVal));
+        msg->mutable_material()->mutable_diffuse()->set_a(0.5);
+        msg->set_action(ignition::msgs::Marker::ADD_MODIFY);
+
+        // TODO: Use POINTS or LINE_LIST, but need per-vertex color
+        msg->set_type(ignition::msgs::Marker::BOX);
+        msg->set_visibility(ignition::msgs::Marker::GUI);
+        //ignition::msgs::Set(msg->mutable_scale(),
+        //                ignition::math::Vector3d::One);
+        // TODO TEMPORARY HACK make boxes exact dimension of x and y gaps to
+        // resemble "voxels". Then scale up by renderEvery to cover the space
+        // where all the points are skipped.
+        float dimX = this->dataPtr->RES_X * this->dataPtr->MINIATURE_SCALE
+          * this->dataPtr->renderEvery * this->dataPtr->renderEvery
+          * this->dataPtr->dimFactor;
+        float dimY = this->dataPtr->RES_Y * this->dataPtr->MINIATURE_SCALE
+          * this->dataPtr->renderEvery * this->dataPtr->renderEvery
+          * this->dataPtr->dimFactor;
+        float dimZ = this->dataPtr->RES_Z * this->dataPtr->MINIATURE_SCALE
+          * this->dataPtr->renderEvery * this->dataPtr->renderEvery
+          * this->dataPtr->dimFactor;
+        ignition::msgs::Set(msg->mutable_scale(),
+          ignition::math::Vector3d(dimX, dimY, dimZ));
+
+        // TODO TEMPORARY HACK Center the hack-scaled markers by shifting by
+        // half of box size
+        ignition::msgs::Set(msg->mutable_pose(), ignition::math::Pose3d(
+          *iterX,// + (0.5 * dimX),
+          *iterY,// + (0.5 * dimY),
+          *iterZ,// + (0.5 * dimZ),
+          0, 0, 0));
+
+        /*
+        // Use POINTS type and array for better performance, pending per-point
+        // color.
+        // One marker per point cloud, many points.
+        // TODO Implement in ign-gazebo per-point color like RViz point arrays, so
+        // can have just 1 marker, many points in it, each with a specified color,
+        // to improve performance. Color is the limiting factor that requires us
+        // to use many markers here, 1 point per marker.
+        ignition::msgs::Set(msg->mutable_pose(), ignition::math::Pose3d(
+          0, 0, 0, 0, 0, 0));
+        auto pt = msg->add_point();
+        pt->set_x(*iterX);
+        pt->set_y(*iterY);
+        pt->set_z(*iterZ);
+        */
+
+        // TODO TEMPORARY DEBUG
+        if (nPtsViz < 10)
+        {
+          ignerr << "Added point " << nPtsViz << " at "
+                 << msg->pose().position().x() << ", "
+                 << msg->pose().position().y() << ", "
+                 << msg->pose().position().z() << ", "
+                 << "value " << dataVal << ", "
+                 << "type " << dataType << ", "
+                 << "dimX " << dimX
+                 << std::endl;
+        }
+        ++nPtsViz;
+      }
+    }
+
+    ++iterX;
+    ++iterY;
+    ++iterZ;
+    ++ptIdx;
+  }
+
+  ignerr << "Visualizing " << markers.marker().size() << " markers"
+    << std::endl;
 
   ignition::msgs::Boolean res;
   bool result;
@@ -271,7 +523,7 @@ void VisualizePointCloud::ClearMarkers()
 {
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
   ignition::msgs::Marker msg;
-  msg.set_ns(this->dataPtr->topicName);
+  msg.set_ns(this->dataPtr->pcTopic);
   msg.set_id(0);
   msg.set_action(ignition::msgs::Marker::DELETE_ALL);
 

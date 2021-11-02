@@ -80,7 +80,6 @@ GridLayout {
     ToolTip.text: qsTr("Ignition transport topics publishing PointCloudPacked messages")
   }
 
-
   Item {
     Layout.columnSpan: 6
     width: 10
