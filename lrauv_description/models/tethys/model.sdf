@@ -296,6 +296,7 @@
         </geometry>
       </collision>
     </link>
+
     <!-- Joints -->
     <joint name="buoyancy_engine_joint" type="fixed">
       <pose>0 0 0 0 0 0</pose>

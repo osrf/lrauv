@@ -40,11 +40,11 @@ namespace tethys
         const std::shared_ptr<const sdf::Element> &_sdf,
         ignition::gazebo::EntityComponentManager &_ecm,
         ignition::gazebo::EventManager &/*_eventMgr*/
-    ) override;
+    );
 
     public: void PreUpdate(
         const ignition::gazebo::UpdateInfo &_info,
-        ignition::gazebo::EntityComponentManager &_ecm) override;
+        ignition::gazebo::EntityComponentManager &_ecm);
 
     private: std::unique_ptr<ThrusterPrivateData> dataPtr;
   };

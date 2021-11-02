@@ -129,10 +129,6 @@ namespace tethys
     private: std::string dropWeightTopic
       {"drop_weight"};
 
-    /// Topic to publish for dropweight
-    private: std::string dropWeightTopic
-      {"drop_weight"};
-
     /// Topic to subscribe to salinity data
     private: std::string salinityTopic
       {"salinity"};
