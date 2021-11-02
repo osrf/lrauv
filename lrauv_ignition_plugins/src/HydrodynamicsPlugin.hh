@@ -38,12 +38,12 @@ namespace tethys
   /// This class provides hydrodynamic behaviour for underwater vehicles
   /// It is shamelessly based off Brian Bingham's plugin for VRX
   /// which in turn is based of fossen's equations.
-  class HydrodynamicsPlugin:
+  class Hydrodynamics:
     public ignition::gazebo::System,
     public ignition::gazebo::ISystemConfigure,
     public ignition::gazebo::ISystemPreUpdate
   {
-  public: HydrodynamicsPlugin();
+  public: Hydrodynamics();
 
   public: ~HydrodynamicsPlugin() = default;
 
