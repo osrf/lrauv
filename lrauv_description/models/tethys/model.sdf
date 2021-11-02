@@ -5,30 +5,18 @@
 -->
 <sdf version="1.6">
   <model name="tethys">
-    <!-- Body -->
+    <!-- Pressure hull -->
     <link name="base_link">
+      <pose>0.457 0 0.003 0 0 0</pose>
       <inertial>
-        <!-- to offset battery CoM before getting real parameters for vehicle without battery -->
-        <!--pose>0 0.0236 0 0 0 0</pose-->
-        <!-- 146.5671 subtracted by battery mass -->
-        <mass>114.8364</mass>
-        <!-- TODO: Get inertial matrix of base link WITHOUT battery -->
+        <mass>44.6</mass>
         <inertia>
-          <!--ixx>3.000000</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>41.980233</iyy>
-          <iyz>0</iyz>
-          <izz>41.980233</izz-->
-
-          <!-- Guesstimated (decreased by 1/5) to account for battery -->
-          <ixx>2.4</ixx>
-          <ixy>0</ixy>
-          <ixz>0.0004</ixz>
-          <iyy>33.5841864</iyy>
-          <iyz>0</iyz>
-          <izz>33.5841864</izz>
-
+          <ixx>0.708</ixx>
+          <ixy>0.004</ixy>
+          <ixz>0.019</ixz>
+          <iyy>8.262</iyy>
+          <iyz>-0.001</iyz>
+          <izz>8.237</izz>
         </inertia>
       </inertial>
 
@@ -36,12 +24,14 @@
         <pose>0 0 0.007 0 0 0</pose>
         <geometry>
           <box>
-            <size>2 0.3 0.245945166667</size>
+            <!--<size>2 0.3 0.074333</size>-->
+            <size>2 0.3 0.127217833333</size>
           </box>
         </geometry>
       </collision>
 
       <visual name="visual">
+        <pose>-0.457 0 -0.003 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
@@ -71,9 +61,121 @@
       </visual>
     </link>
 
+    <!-- Tailcone -->
+    <link name="tailcone_link">
+      <pose>-0.277 0 0.004 0 0 0</pose>
+      <inertial>
+        <mass>15.35</mass>
+        <inertia>
+          <ixx>0.21</ixx>
+          <ixy>0</ixy>
+          <ixz>0.012</ixz>
+          <iyy>0.853</iyy>
+          <iyz>0.001</iyz>
+          <izz>0.767</izz>
+        </inertia>
+      </inertial>
+
+      <collision name="tail_cone_buoyancy">
+        <geometry>
+          <box>
+            <size>2 0.3 0.02725</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="visual">
+        <pose>0.277 0 -0.004 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/tethys.dae</uri>
+            <submesh>
+              <name>Tails</name>
+              <center>false</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <diffuse>1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0</specular>
+          <pbr>
+            <metal>
+              <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
+              <normal_map>materials/textures/Tethys_Normal.png</normal_map>
+              <metalness_map>materials/textures/Tethys_Metalness.png</metalness_map>
+              <roughness_map>materials/textures/Tethys_Roughness.png</roughness_map>
+            </metal>
+          </pbr>
+          <script>
+            <uri>materials/scripts/</uri>
+            <uri>materials/textures/</uri>
+            <name>tethys/Tethys_Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Nose (short version) -->
+    <link name="nose_link">
+      <pose>1.126 0.003 0.004 0 0 0</pose>
+      <inertial>
+        <mass>16.77</mass>
+        <inertia>
+          <ixx>0.239</ixx>
+          <ixy>0.003</ixy>
+          <ixz>0.002</ixz>
+          <iyy>0.537</iyy>
+          <iyz>0.002</iyz>
+          <izz>0.516</izz>
+        </inertia>
+      </inertial>
+
+      <collision name="main_body_buoyancy">
+        <geometry>
+          <box>
+            <size>2 0.3 0.02795</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="visual">
+        <pose>-1.126 -0.003 -0.004 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/tethys.dae</uri>
+            <submesh>
+              <name>Nose</name>
+              <center>false</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <diffuse>1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0</specular>
+          <pbr>
+            <metal>
+              <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
+              <normal_map>materials/textures/Tethys_Normal.png</normal_map>
+              <metalness_map>materials/textures/Tethys_Metalness.png</metalness_map>
+              <roughness_map>materials/textures/Tethys_Roughness.png</roughness_map>
+            </metal>
+          </pbr>
+          <script>
+            <uri>materials/scripts/</uri>
+            <uri>materials/textures/</uri>
+            <name>tethys/Tethys_Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
     <!-- Horizontal fins -->
     <link name="horizontal_fins">
-      <pose>1.05 0 0 0 0 0</pose>
+      <!--
+        Actually -1.05 from origin, but since this is attached to the tailcone,
+        then we need to transform it to the tailcone's origin.
+      -->
+      <pose>-0.773 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 1.57 0 0.5</pose>
         <mass>0.2</mass>
@@ -95,8 +197,8 @@
         </geometry>
       </collision>
 
-      <visual name= "visual">
-        <pose>-1.05 0 0 0 0 0</pose>
+      <visual name="visual">
+        <pose>0.773 0 0 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
@@ -128,7 +230,11 @@
 
     <!-- Vertical fins -->
     <link name="vertical_fins">
-      <pose>1.05 0 0 0 0 0</pose>
+      <!--
+        Actually -1.05 from origin, but since this is attached to the tailcone,
+        then we need to transform it to the tailcone's origin.
+      -->
+      <pose>-0.773 0 0 0 0 0</pose>
       <inertial>
         <mass>0.2</mass>
         <inertia>
@@ -149,8 +255,8 @@
         </geometry>
       </collision>
 
-      <visual name= "visual">
-        <pose>-1.05 0 0 0 0 0</pose>
+      <visual name="visual">
+        <pose>0.773 0 0 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
@@ -204,7 +310,7 @@
         </geometry>
       </collision>
 
-      <visual name= "visual">
+      <visual name="visual">
         <pose>-1.43162 0 0 0 0 0</pose>
         <geometry>
           <mesh>
@@ -239,11 +345,13 @@
     <!-- No separate collision for battery, because it is inside the vehicle.
          Additional collision requires buoyancy volume recalculation. -->
     <link name="battery">
-      <!-- TODO: On hold till mesh center adjusted to aft dome, then it will be 0.563, 0, 0.024. -->
-      <pose>0 0 0 0 0 0</pose>
+      <!-- Technicaly should be: <pose>0.563 0 0.024 0 0 0</pose> but this
+      introduces unwanted pitching. Currently we just pretend the battery is
+      at the C.o.M of the vehicle. Alternatively, we could shave of some mass
+      from the mainbody and simulate a counter weight... -->
+      <pose>0.457 0 0.003 0 0 0</pose>
       <inertial>
         <!-- Non-zero y creates roll. Not fun to tune without actual base link inertia minus battery-->
-        <!--pose>0 -0.0236 0 0 0 0</pose-->
         <mass>31.7307</mass>
         <inertia>
           <ixx>0.2327</ixx>
@@ -255,7 +363,7 @@
         </inertia>
       </inertial>
 
-      <visual name= "visual">
+      <visual name="visual">
         <geometry>
           <box>
             <!-- z is guesstimated from schematics. Visual doesn't matter. -->
@@ -270,11 +378,8 @@
     </link>
 
     <link name="buoyancy_engine">
-      <!-- TODO: Determine location of buoyancy engine -->
-      <pose>0.4 0 0 0 0 0</pose>
-
+      <pose>-0.137 0 -0.045 0 0 0</pose>
       <inertial>
-        <pose>0 0 0 0 0 0</pose>
         <!-- Ignition requires a mass assigned to the link otherwise weird
         and wonderful segfaults may happen. So we create a neutral buoyancy link
         and then use the plugin to emulate the weight-->
@@ -298,15 +403,26 @@
     </link>
 
     <!-- Joints -->
+    <joint name="base_nose_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>nose_link</child>
+    </joint>
+
+    <joint name="base_tailcone_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>tailcone_link</child>
+    </joint>
+
     <joint name="buoyancy_engine_joint" type="fixed">
       <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
       <child>buoyancy_engine</child>
       <namespace>tethys</namespace>
     </joint>
+
     <joint name="horizontal_fins_joint" type="revolute">
       <pose>0 0 0 0 0 0</pose>
-      <parent>base_link</parent>
+      <parent>tailcone_link</parent>
       <child>horizontal_fins</child>
       <axis>
         <xyz>0 1 0</xyz>
@@ -320,8 +436,8 @@
     </joint>
 
     <joint name="vertical_fins_joint" type="revolute">
-      <pose degrees="true">0 0 0   180 0 0</pose>
-      <parent>base_link</parent>
+      <pose>0 0 0 0 0 0</pose>
+      <parent>tailcone_link</parent>
       <child>vertical_fins</child>
       <axis>
         <xyz>0 0 1</xyz>
@@ -367,9 +483,9 @@
 
     <!-- Drop weight -->
     <link name="drop_weight">
-      <pose>0 0 0 0 0 0</pose>
+      <!-- Hackjob: use tail pose otherwise we get exciting dynamics -->
+      <pose>-0.277 0 0.004 0 0 0</pose>
       <inertial>
-        <pose>0 0 0 0 0 0</pose>
         <mass>1</mass>
         <inertia>
           <ixx>0.000143971303</ixx>
