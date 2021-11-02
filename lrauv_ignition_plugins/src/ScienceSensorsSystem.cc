@@ -44,6 +44,38 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Generate octree from spatial data, for searching
   public: void GenerateOctrees();
 
+  /// \brief Find XYZ locations of points in the two closest z slices to
+  /// interpolate among.
+  /// \param[in] _pt Location in space to interpolate for
+  /// \param[in] _inds Indices in _arr
+  /// \param[in] _dists Distances of elements in _arr
+  /// \param[out] _interpolatorIndsRV Result. Indices of points to interpolate
+  /// among
+  public: void FindInterpolators(
+    pcl::PointXYZ &_pt,
+    std::vector<int> &_inds,
+    std::vector<float> &_dists,
+    std::vector<int> &_interpolatorIndsRV);
+
+  /// \brief Create a slice from a point cloud, represented in a matrix of size
+  /// 3 x n, of points sharing the same given z value.
+  /// \param[in] _searchPt Location in space to interpolate for
+  /// \param[in] _depth Target z value
+  /// \param[in] _points Points in the original point cloud
+  /// \param[out] _zSlice Points in the new point cloud slice at _depth
+  /// \param[out] _zSliceInds Indices of points in _zSlices in the original
+  /// point cloud _points
+  /// \param[out] _interpolatorInds Result of octree search, indices of points.
+  /// \param[out] _interpolatorSqrDists Result of octree search, distances.
+  public: void CreateDepthSlice(
+    pcl::PointXYZ &_searchPt,
+    float _depth,
+    Eigen::MatrixXf &_points,
+    pcl::PointCloud<pcl::PointXYZ> &_zSlice,
+    std::vector<int> &_zSliceInds,
+    std::vector<int> &_interpolatorInds,
+    std::vector<float> &_interpolatorSqrDists);
+
   /// \brief Publish the latest point cloud
   public: void PublishData();
 
@@ -55,8 +87,8 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Interpolate floating point data based on distance
   /// \param[in] _arr Array of data from which to find elements to interpolate
-  /// \param[in] _spatialIdx Indices in _arr
-  /// \param[in] _spatialSqrDist Distances of elements in _arr
+  /// \param[in] _inds Indices in _arr
+  /// \param[in] _dists Distances of elements in _arr
   /// \return Interpolated value, or quiet NaN if inputs invalid.
   public: float InterpolateData(
     std::vector<float> _arr,
@@ -115,6 +147,15 @@ class tethys::ScienceSensorsSystemPrivate
   /// Point cloud: spatial coordinates to index science data by location
   public: std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> timeSpaceCoords;
 
+  /// \brief Resolution of spatial coordinates in meters in octree, for data
+  /// search.
+  public: float spatialRes = 0.1f;
+
+  /// \brief Octree for data search based on spatial location of sensor. One
+  /// octree per point cloud in timeSpaceCoords.
+  public: std::vector<pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>::Ptr>
+            spatialOctrees;
+
   /// \brief Science data.
   /// Outer vector size: number of time slices. Indices correspond to those of
   /// this->timestamps.
@@ -132,15 +173,6 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Science data. Same size as temperatureArr.
   public: std::vector<std::vector<float>> northCurrentArr;
-
-  /// \brief Resolution of spatial coordinates in meters in octree, for data
-  /// search.
-  public: float spatialRes = 0.1f;
-
-  /// \brief Octree for data search based on spatial location of sensor. One
-  /// octree per point cloud in timeSpaceCoords.
-  public: std::vector<pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>>
-            spatialOctrees;
 
   /// \brief Node for communication
   public: ignition::transport::Node node;
@@ -414,12 +446,182 @@ void ScienceSensorsSystemPrivate::GenerateOctrees()
   for (int i = 0; i < this->timeSpaceCoords.size(); ++i)
   {
     this->spatialOctrees.push_back(
-      pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>(this->spatialRes));
+      pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>::Ptr(
+        new pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>(
+          this->spatialRes)));
 
     // Populate octree with spatial coordinates
-    this->spatialOctrees[i].setInputCloud(this->timeSpaceCoords[i]);
-    this->spatialOctrees[i].addPointsFromInputCloud();
+    this->spatialOctrees[i]->setInputCloud(this->timeSpaceCoords[i]);
+    this->spatialOctrees[i]->addPointsFromInputCloud();
   }
+}
+
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::FindInterpolators(
+  pcl::PointXYZ &_pt,
+  std::vector<int> &_inds,
+  std::vector<float> &_dists,
+  std::vector<int> &_interpolatorIndsRV)
+{
+  // Sanity checks
+  // Vector not populated
+  if (this->timeSpaceCoords.size() == 0)
+  {
+    return;
+  }
+  // Point cloud not populated
+  if (this->timeSpaceCoords[this->timeIdx]->size() == 0)
+  {
+    return;
+  }
+  if (_inds.size() == 0 || _dists.size() == 0)
+  {
+    ignwarn << "FindInterpolators(): Invalid neighbors aray size ("
+            << _inds.size() << " and " << _dists.size()
+            << "). No neighbors to use for interpolation. Returning NaN."
+            << std::endl;
+    return;
+  }
+  if (_inds.size() != _dists.size())
+  {
+    ignwarn << "FindInterpolators(): Number of neighbors != number of "
+            << "distances. Invalid input. Returning NaN." << std::endl;
+    return;
+  }
+
+  // Closest neighbor
+  // The distances from kNN search are sorted, so can always just take _dists[0]
+  int nnIdx = _inds[0];
+  float minDist = _dists[0];
+  ignerr << this->timeSpaceCoords[this->timeIdx]->size() << " points. "
+         << "nnIdx " << nnIdx << " _inds[0] " << _inds[0] << std::endl;
+  // Get z of neighbor
+  float nnZ = this->timeSpaceCoords[this->timeIdx]->at(nnIdx).z;
+
+  // Second-closest neighbor
+  int nnIdx2 = _inds[1];
+  float minDist2 = _dists[1];
+  ignerr << this->timeSpaceCoords[this->timeIdx]->size() << " points. "
+         << "nnIdx2 " << nnIdx2 << std::endl;
+  // Get z of neighbor
+  float nnZ2 = this->timeSpaceCoords[this->timeIdx]->at(nnIdx2).z;
+
+  // Filter out just the slice of point cloud at the two closest z values
+
+  // Get raw Eigen matrix of all spatial locations. Take only the block of
+  // the matrix containing the z values of the points.
+  // Matrix size 3 x n
+  Eigen::MatrixXf points =
+    this->timeSpaceCoords[this->timeIdx]->getMatrixXfMap(3, 4, 0).block(
+      0, 0, 3, this->timeSpaceCoords[this->timeIdx]->size());
+
+  //Eigen::MatrixXf zSlice1, zSlice2;
+  pcl::PointCloud<pcl::PointXYZ> zSlice1, zSlice2;
+  std::vector<int> zSliceInds1, zSliceInds2;
+
+  // Indices and distances of neighboring points in the search results
+  // 4 above, 4 below
+  std::vector<int> interpolatorInds1, interpolatorInds2;
+  std::vector<float> interpolatorSqrDists1, interpolatorSqrDists2;
+
+  this->CreateDepthSlice(_pt, nnZ, points, zSlice1, zSliceInds1,
+    interpolatorInds1, interpolatorSqrDists1);
+  this->CreateDepthSlice(_pt, nnZ2, points, zSlice2, zSliceInds2,
+    interpolatorInds2, interpolatorSqrDists2);
+
+  // TODO: Return indices of 8 points in original point cloud, using zSliceInds
+  //interpolatorIndsRV
+}
+
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::CreateDepthSlice(
+  pcl::PointXYZ &_searchPt,
+  float _depth,
+  Eigen::MatrixXf &_points,
+  pcl::PointCloud<pcl::PointXYZ> &_zSlice,
+  std::vector<int> &_zSliceInds,
+  std::vector<int> &_interpolatorInds,
+  std::vector<float> &_interpolatorSqrDists)
+{
+  // Find points with z matching the closest z. These points are on
+  // the same z slice
+  Eigen::Matrix<bool, 1, Eigen::Dynamic> depthInds =
+    (_points.row(2).array() == _depth);
+
+  igndbg << "Number of points matching z == " << _depth << ": "
+         << depthInds.count() << std::endl;
+
+  // Logical indexing. Filter out just the points on the z slice
+  // Allocate only the number of points in the slice
+  //_zSlice = Eigen::MatrixXf::Zero(3, depthInds.count());
+  //_zSlice = pcl::PointCloud<pcl::PointXYZ>::Ptr(
+  //  new pcl::PointCloud<pcl::PointXYZ>());
+  _zSlice = pcl::PointCloud<pcl::PointXYZ>();
+  _zSlice.points.resize(depthInds.count());
+
+  _zSliceInds.clear();
+
+  int zSliceIdx = 0;
+  // Go through the Boolean array
+  for (int i = 0; i < depthInds.size(); ++i)
+  {
+    // Only look at points with z matching closest z
+    if (depthInds[i])
+    {
+      // Keep track of new points' indices in the original point cloud
+      _zSliceInds.push_back(i);
+
+      // Retrieve the corresponding point in the original point cloud
+      //_zSlice.block<3, 1>(0, zSliceIdx) = _points.block<3, 1>(0, i);
+
+      _zSlice.points[zSliceIdx] = pcl::PointXYZ(
+        _points(0, i),
+        _points(1, i),
+        _points(2, i));
+
+      //igndbg << "Filtered point: " << _points(0, i) << ","
+      //                             << _points(1, i) << ","
+      //                             << _points(2, i) << std::endl;
+      zSliceIdx++;
+    }
+  }
+
+  igndbg << "Number of points in this z slice: " << zSliceIdx << std::endl;
+  assert(zSliceIdx == depthInds.count());
+
+  // Create octree for this depth slice
+  auto octree = pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>(
+    this->spatialRes);
+  octree.setInputCloud(_zSlice.makeShared());
+  octree.addPointsFromInputCloud();
+
+  int k = 4;
+
+  // TODO debug seg fault
+  // Search in the depth slice to find 4 closest neighbors
+  if (octree.nearestKSearch(
+    _searchPt, k, _interpolatorInds, _interpolatorSqrDists) <= 0)
+  {
+    ignwarn << "No data found in slice near search point " << _searchPt
+            << std::endl;
+    return;
+  }
+  // Debug output
+  else
+  {
+    igndbg << "Found " << _interpolatorInds.size()
+           << " neighbors in this slice." << std::endl;
+
+    for (std::size_t i = 0; i < _interpolatorInds.size(); ++i)
+    {
+      pcl::PointXYZ nbrPt = _zSlice.at(_interpolatorInds[i]);
+
+      igndbg << "Neighbor at (" << nbrPt.x << ", " << nbrPt.y << ", "
+             << nbrPt.z << "), squared distance " << _interpolatorSqrDists[i]
+             << " m" << std::endl;
+    }
+  }
+  //
 }
 
 /////////////////////////////////////////////////
@@ -462,6 +664,25 @@ float ScienceSensorsSystemPrivate::InterpolateData(
     }
   }
 
+  // Find second-closest neighbor
+  int secondNnIdx = _inds[0];
+  float secondMinDist = _dists[secondNnIdx];
+  for (int i = 0; i < _inds.size(); ++i)
+  {
+    if (_dists[_inds[i]] < secondMinDist && i != nnIdx)
+    {
+      secondNnIdx = _inds[i];
+      secondMinDist = _dists[secondNnIdx];
+    }
+  }
+
+  // Interpolate between closest and second-closest neighbors
+
+
+
+
+
+  // Dummy: Just return the closest element
   return _arr[nnIdx];
 
   // TODO Return a weighted sum, based on distance, of the elements to
@@ -586,7 +807,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       std::vector<float> spatialSqrDist;
 
       // Search in octree to find spatial index of science data
-      if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].nearestKSearch(
+      if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]->nearestKSearch(
         searchPoint, k, spatialIdx, spatialSqrDist) <= 0)
       {
         ignwarn << "No data found near sensor location " << sensorLatLon.value()
@@ -613,6 +834,12 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         }
       }
       */
+
+      std::vector<int> interpolatorInds;
+      this->dataPtr->FindInterpolators(searchPoint, spatialIdx, spatialSqrDist,
+        interpolatorInds);
+
+      // TODO trilinear interpolation using the 8 interpolators found
 
       // For the correct sensor, grab closest neighbors and interpolate
       if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
