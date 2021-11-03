@@ -130,17 +130,19 @@ def main():
     var = [
       'platform_mass_position',
       'VerticalControl.massPositionAction',
+      'VerticalControl.massPitchErrorInternal',
+      'VerticalControl.pitchCmd',
       'platform_pitch_angle',
     ]
     # Subplot to put each variable
-    varaxs = [0, 0, 1]
+    varaxs = [0, 0, 1, 1, 2]
     # Input data
     timestamps = read_input_list(os.path.join(missions_path, missionName,
       'plot_input_ref.txt'))
     # Legend label for axis [0]
-    lbls = ['state', 'cmd', 'state']
+    lbls = ['state', 'cmd', 'error', 'pitch cmd', 'state']
     # Color for each variable
-    colors = [orange, blue, orange]
+    colors = [orange, blue, orange, blue, orange, blue]
     nPlots = max(varaxs) + 1
 
   # Mass shifter + VBS

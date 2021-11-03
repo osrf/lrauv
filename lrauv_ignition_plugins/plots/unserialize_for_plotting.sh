@@ -107,6 +107,8 @@ echo ""
 cmd="$lrauv_app_path/bin/unserialize -c ${latest}/slate \
   depth \
   VerticalControl.depthCmd \
+  VerticalControl.pitchCmd \
+  VerticalControl.massPitchErrorInternal\
   platform_propeller_rotation_rate \
   SpeedControl.propOmegaAction \
   platform_buoyancy_position \
