@@ -57,6 +57,10 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 cd $DIR
+
+# exit if build fails
+set -e
+
 # Build the docker image
 docker build -t mbari_lrauv_debug -f $DIR/debug_integration/Dockerfile ..
 
