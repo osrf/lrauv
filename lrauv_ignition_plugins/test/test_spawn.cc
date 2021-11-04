@@ -21,6 +21,7 @@
  */
 
 #include <chrono>
+#include <thread>
 #include <gtest/gtest.h>
 
 #include <ignition/gazebo/TestFixture.hh>
@@ -96,6 +97,14 @@ TEST(SpawnTest, Spawn)
   auto spawnPub = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVInit>(
     "/lrauv/init");
 
+  int sleep{0};
+  int maxSleep{30};
+  for (; !spawnPub.HasConnections() && sleep < maxSleep; ++sleep)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+  EXPECT_LT(sleep, maxSleep);
+
   {
     lrauv_ignition_plugins::msgs::LRAUVInit spawnMsg;
     spawnMsg.mutable_id_()->set_data("vehicle1");
@@ -138,20 +147,20 @@ TEST(SpawnTest, Spawn)
   // Check vehicle positions
   EXPECT_NEAR(0.0, poses1.back().Pos().X(), 1e-3);
   EXPECT_NEAR(0.0, poses1.back().Pos().Y(), 1e-3);
-  EXPECT_NEAR(0.0, poses1.back().Pos().Z(), 1e-3);
+  EXPECT_NEAR(0.0, poses1.back().Pos().Z(), 1e-2);
   EXPECT_NEAR(0.0, poses1.back().Rot().Roll(), 1e-3);
-  EXPECT_NEAR(0.0, poses1.back().Rot().Pitch(), 1e-3);
+  EXPECT_NEAR(0.0, poses1.back().Rot().Pitch(), 1e-2);
   EXPECT_NEAR(0.0, poses1.back().Rot().Yaw(), 1e-3);
 
   EXPECT_NEAR(20.0, latLon1.back().X(), 1e-3);
   EXPECT_NEAR(20.0, latLon1.back().Y(), 1e-3);
-  EXPECT_NEAR(0.0, latLon1.back().Z(), 1e-3);
+  EXPECT_NEAR(0.0, latLon1.back().Z(), 1e-2);
 
   EXPECT_LT(100.0, poses2.back().Pos().X());
   EXPECT_LT(100.0, poses2.back().Pos().Y());
   EXPECT_GT(0.0, poses2.back().Pos().Z());
   EXPECT_NEAR(0.0, poses2.back().Rot().Roll(), 1e-3);
-  EXPECT_NEAR(0.0, poses2.back().Rot().Pitch(), 1e-3);
+  EXPECT_NEAR(0.0, poses2.back().Rot().Pitch(), 1e-2);
   EXPECT_NEAR(0.0, poses2.back().Rot().Yaw(), 1e-3);
 
   EXPECT_NEAR(20.1, latLon2.back().X(), 1e-3);
