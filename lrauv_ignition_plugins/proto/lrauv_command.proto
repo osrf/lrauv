@@ -43,7 +43,12 @@ message LRAUVCommand
                                      // Higher values have the vertical fins
                                      // rotated more clockwise when looking
                                      // from the top (i.e. to starboard)
-  float elevatorAngle_         = 4;
+  float elevatorAngle_         = 4;  // Angle that the controller believes the
+                                     // elevator is currently at. Unit: radians.
+                                     // Higher values have the horizontal fins
+                                     // rotated more counter-clockwise when
+                                     // looking from starboard, which tilts the
+                                     // nose downward when moving forward.
   float massPosition_          = 5;  // Position where the controller believes
                                      // the mass shifter's joint is in. Unit:
                                      // meters. Positive values have the battery
@@ -57,7 +62,11 @@ message LRAUVCommand
                                      // radians. Higher values rotate the
                                      // vertical fins clockwise when looking
                                      // from the top (i.e. to starboard)
-  float elevatorAngleAction_   = 10;
+  float elevatorAngleAction_   = 10;  // Target angle for the elevator joint.
+                                      // Unit: radians. Higher values rotate
+                                      // vertical fins more counter-clockwise
+                                      // when looking from starboard, which tilts
+                                      // the nose downward when moving forward.
   float massPositionAction_    = 11;  // Target position for the battery's joint.
                                       // Unit: meters. Positive values move the
                                       // battery forward, tilting the nose

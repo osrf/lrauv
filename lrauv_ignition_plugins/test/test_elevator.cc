@@ -40,11 +40,12 @@ TEST_F(LrauvTestFixture, Elevator)
   cmdMsg.set_propomegaaction_(30);
 
   // Rotate elevator counter-clockwise when looking from starboard, which
-  // causes the vehicle to move down
-  cmdMsg.set_elevatorangleaction_(0.8);
+  // causes the vehicle to pitch down
+  cmdMsg.set_elevatorangleaction_(0.27);
 
   // Neutral buoyancy
   cmdMsg.set_buoyancyaction_(0.0005);
+  cmdMsg.set_dropweightstate_(true);
 
   // Run server until the command is processed and the model reaches a certain
   // point vertically
@@ -54,10 +55,21 @@ TEST_F(LrauvTestFixture, Elevator)
     return this->tethysPoses.back().Pos().Z() > targetZ;
   });
 
-  EXPECT_LT(100, this->iterations);
-  EXPECT_LT(100, this->tethysPoses.size());
+  EXPECT_LT(1000, this->iterations);
+  EXPECT_LT(1000, this->tethysPoses.size());
 
   // Vehicle goes down
   EXPECT_GT(targetZ, this->tethysPoses.back().Pos().Z());
+
+  for (int i = 0; i < this->tethysPoses.size(); ++i)
+  {
+    auto pose = this->tethysPoses[i];
+
+    // FIXME(anyone) It goes up a little bit in the beginning
+    if (i < 1000)
+      EXPECT_GT(0.2, pose.Pos().Z()) << i << " -- " << pose.Pos().Z();
+    else
+      EXPECT_GT(0.0, pose.Pos().Z()) << i << " -- " << pose.Pos().Z();
+  }
 }
 
