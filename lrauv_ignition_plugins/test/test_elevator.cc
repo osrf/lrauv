@@ -41,7 +41,8 @@ TEST_F(LrauvTestFixture, Elevator)
 
   // Rotate elevator counter-clockwise when looking from starboard, which
   // causes the vehicle to pitch down
-  cmdMsg.set_elevatorangleaction_(0.27);
+  // Using an angle lower than the stall angle 0.17
+  cmdMsg.set_elevatorangleaction_(0.15);
 
   // Neutral buoyancy
   cmdMsg.set_buoyancyaction_(0.0005);
@@ -55,8 +56,8 @@ TEST_F(LrauvTestFixture, Elevator)
     return this->tethysPoses.back().Pos().Z() > targetZ;
   });
 
-  EXPECT_LT(1000, this->iterations);
-  EXPECT_LT(1000, this->tethysPoses.size());
+  EXPECT_LT(1500, this->iterations);
+  EXPECT_LT(1500, this->tethysPoses.size());
 
   // Vehicle goes down
   EXPECT_GT(targetZ, this->tethysPoses.back().Pos().Z());
@@ -65,8 +66,9 @@ TEST_F(LrauvTestFixture, Elevator)
   {
     auto pose = this->tethysPoses[i];
 
-    // FIXME(anyone) It goes up a little bit in the beginning
-    if (i < 1000)
+    // FIXME(chapulina) It goes up a little bit in the beginning, is this
+    // expected?
+    if (i < 1500)
       EXPECT_GT(0.2, pose.Pos().Z()) << i << " -- " << pose.Pos().Z();
     else
       EXPECT_GT(0.0, pose.Pos().Z()) << i << " -- " << pose.Pos().Z();
