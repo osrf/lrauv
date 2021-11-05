@@ -144,27 +144,31 @@ TEST(SpawnTest, Spawn)
   EXPECT_LT(150, latLon1.size());
   EXPECT_LT(50, latLon2.size());
 
-  // Check vehicle positions
-  EXPECT_NEAR(0.0, poses1.back().Pos().X(), 1e-3);
-  EXPECT_NEAR(0.0, poses1.back().Pos().Y(), 1e-3);
-  EXPECT_NEAR(0.0, poses1.back().Pos().Z(), 1e-2);
-  EXPECT_NEAR(0.0, poses1.back().Rot().Roll(), 1e-3);
-  EXPECT_NEAR(0.0, poses1.back().Rot().Pitch(), 1e-2);
-  EXPECT_NEAR(0.0, poses1.back().Rot().Yaw(), 1e-3);
+  double spawn_linear_tolerance = 1e-2;
+  double spawn_angular_tolerance = 1e-2;
+  double spawn_latlon_tolerance = 1e-2;
 
-  EXPECT_NEAR(20.0, latLon1.back().X(), 1e-3);
-  EXPECT_NEAR(20.0, latLon1.back().Y(), 1e-3);
-  EXPECT_NEAR(0.0, latLon1.back().Z(), 1e-2);
+  // Check vehicle positions
+  EXPECT_NEAR(0.0, poses1.back().Pos().X(), spawn_linear_tolerance);
+  EXPECT_NEAR(0.0, poses1.back().Pos().Y(), spawn_linear_tolerance);
+  EXPECT_NEAR(0.0, poses1.back().Pos().Z(), spawn_linear_tolerance);
+  EXPECT_NEAR(0.0, poses1.back().Rot().Roll(), spawn_angular_tolerance);
+  EXPECT_NEAR(0.0, poses1.back().Rot().Pitch(), spawn_angular_tolerance);
+  EXPECT_NEAR(0.0, poses1.back().Rot().Yaw(), spawn_angular_tolerance);
+
+  EXPECT_NEAR(20.0, latLon1.back().X(), spawn_latlon_tolerance);
+  EXPECT_NEAR(20.0, latLon1.back().Y(), spawn_latlon_tolerance);
+  EXPECT_NEAR(0.0, latLon1.back().Z(), spawn_latlon_tolerance);
 
   EXPECT_LT(100.0, poses2.back().Pos().X());
   EXPECT_LT(100.0, poses2.back().Pos().Y());
   EXPECT_GT(0.0, poses2.back().Pos().Z());
-  EXPECT_NEAR(0.0, poses2.back().Rot().Roll(), 1e-3);
-  EXPECT_NEAR(0.0, poses2.back().Rot().Pitch(), 1e-2);
-  EXPECT_NEAR(0.0, poses2.back().Rot().Yaw(), 1e-3);
+  EXPECT_NEAR(0.0, poses2.back().Rot().Roll(), spawn_angular_tolerance);
+  EXPECT_NEAR(0.0, poses2.back().Rot().Pitch(), spawn_angular_tolerance);
+  EXPECT_NEAR(0.0, poses2.back().Rot().Yaw(), spawn_angular_tolerance);
 
-  EXPECT_NEAR(20.1, latLon2.back().X(), 1e-3);
-  EXPECT_NEAR(20.1, latLon2.back().Y(), 1e-3);
-  EXPECT_NEAR(0.0, latLon2.back().Z(), 1e-2);
+  EXPECT_NEAR(20.1, latLon2.back().X(), spawn_latlon_tolerance);
+  EXPECT_NEAR(20.1, latLon2.back().Y(), spawn_latlon_tolerance);
+  EXPECT_NEAR(0.0, latLon2.back().Z(), spawn_latlon_tolerance);
 }
 
