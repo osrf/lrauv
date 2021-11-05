@@ -107,9 +107,9 @@ RUN [ "/bin/bash" , "-c" , \
   && colcon build \
   && apt-get -qq clean" ]
 
-SHELL ["/bin/bash", "-c"]
+COPY docker/entrypoint.bash /
 
-# start ignition
-ENTRYPOINT [ "/bin/bash" , "-c" , \
-  "source /home/colcon_ws/install/setup.bash \
-  && ign gazebo buoyant_tethys.sdf" ]
+# setup ignition environment
+ENTRYPOINT ["/entrypoint.bash"]
+
+CMD ign gazebo buoyant_tethys.sdf
