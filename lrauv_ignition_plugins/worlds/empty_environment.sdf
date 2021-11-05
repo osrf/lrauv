@@ -18,7 +18,7 @@
     </scene>
 
     <physics name="1ms" type="dart">
-      <max_step_size>0.001</max_step_size>
+      <max_step_size>0.02</max_step_size>
       <real_time_factor>0</real_time_factor>
     </physics>
     <plugin
@@ -32,10 +32,6 @@
     <plugin
       filename="ignition-gazebo-scene-broadcaster-system"
       name="ignition::gazebo::systems::SceneBroadcaster">
-    </plugin>
-    <plugin
-      filename="ignition-gazebo-contact-system"
-      name="ignition::gazebo::systems::Contact">
     </plugin>
 
     <plugin
@@ -224,12 +220,10 @@
 
       <plugin filename="Plot3D" name="Plot 3D">
         <ignition-gui>
-          <title>3D plot</title>
+          <title>Plot Tethys 3D path</title>
           <property type="string" key="state">floating_collapsed</property>
-          <anchors target="3D View">
-            <line own="right" target="right"/>
-            <line own="bottom" target="bottom"/>
-          </anchors>
+          <property key="x" type="double">0</property>
+          <property key="y" type="double">0</property>
         </ignition-gui>
         <entity_name>tethys</entity_name>
         <color>0 0 1</color>
@@ -241,6 +235,13 @@
           <title>Inspector</title>
           <property type="string" key="state">floating_collapsed</property>
           <property type="double" key="x">400</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="VisualizePointCloud" name="Visualize science data">
+        <ignition-gui>
+          <title>Visualize science data</title>
+          <property type="string" key="state">floating_collapsed</property>
+          <property key="x" type="double">800</property>
         </ignition-gui>
       </plugin>
     </gui>
