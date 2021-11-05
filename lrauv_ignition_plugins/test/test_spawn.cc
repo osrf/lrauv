@@ -143,7 +143,7 @@ TEST(SpawnTest, Spawn)
   // FIXME(anyone): Ideally all axes would have a tight tolerance, but depth
   // and pitch are currently unstable, see
   // https://github.com/osrf/lrauv/issues/49
-  double tightTol{1e-6};
+  double tightTol{1e-5};
   double depthTol{1e-2};
   double pitchTol{1e-2};
 
