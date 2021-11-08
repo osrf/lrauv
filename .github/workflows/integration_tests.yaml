@@ -18,7 +18,7 @@ jobs:
     - name: Create results directory
       run: mkdir results
     - name: Run tests
-      run: docker run -it -v "$(pwd)/results":/results mbari_lrauv_test
+      run: docker run -v "$(pwd)/results":/results mbari_lrauv_test
     - name: Upload test results.
       uses: actions/upload-artifact@v2
       with:
