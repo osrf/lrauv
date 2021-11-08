@@ -50,6 +50,7 @@ TEST_F(LrauvTestFixture, DepthVBS)
   {
     LrauvTestFixture::ExecLRAUV(
         "/Missions/RegressionTests/IgnitionTests/testDepthVBS.xml",
+        "testDepthVBS",
         lrauvRunning);
   });
 

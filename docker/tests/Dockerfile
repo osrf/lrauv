@@ -68,9 +68,12 @@ RUN rm -rf build log install src/lrauv
 # Use current version of the code
 COPY . src/lrauv
 
+# Use G++9 instead.
+ARG CC=gcc-9 
+ARG CXX=g++-9
+
 # Build image
 RUN [ "/bin/bash" , "-c" , "colcon build --cmake-args='-DBUILD_TESTING=true'" ]
 
 # Run tests
-RUN [ "/bin/bash" , "-c" , ". ~/lrauv_ws/install/setup.sh; colcon test --event-handlers console_direct+" ]
-RUN [ "/bin/bash" , "-c" , ". ~/lrauv_ws/install/setup.sh; colcon test-result" ]
+ENTRYPOINT [ "/bin/bash" , "-c" , ". ~/lrauv_ws/install/setup.sh; colcon test --event-handlers console_direct+; colcon test-result;"]

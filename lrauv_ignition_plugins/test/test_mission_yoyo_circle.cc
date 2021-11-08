@@ -58,6 +58,7 @@ TEST_F(LrauvTestFixture, YoYoCircle)
   {
     LrauvTestFixture::ExecLRAUV(
         "/Missions/RegressionTests/IgnitionTests/testYoYoCircle.xml",
+        "testYoYoCircle",
         lrauvRunning);
   });
 

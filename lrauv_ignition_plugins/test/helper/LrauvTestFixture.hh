@@ -171,10 +171,32 @@ class LrauvTestFixture : public ::testing::Test
     return pid;
   }
 
+  public: static void ExportLogs(std::string _target)
+  {
+    int res = system("sudo /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/unserialize_for_plotting.sh");
+    
+    if (res != 0)
+    {
+      ignerr << "Failed to unserialize plots\n";
+      return;
+    }
+    ignmsg << "Finished unserialize, copying.\n";
+    
+    // WARNING: THIS CAN LEAD TO ARBITRARY CODE EXECUTION
+    auto targetfile = _target + ".csv";
+    auto cmd = std::string("cp -r /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/tmp/tmp.csv /results/") + targetfile;
+    res = system(cmd.c_str());
+    if (res != 0)
+    {
+      ignerr << "Failed to copy logs\n";
+    }
+  }
+
   /// \brief Spin up a new process and execute the LRAUV controller.
   /// \param[in] _mission Mission to run
   /// \param[out] _running Flag to indicate whether the controller is running.
   public: static void ExecLRAUV(const std::string &_mission,
+      const std::string &_shortname,
       std::atomic<bool> &_running)
   {
     std::string cmd = std::string(LRAUV_APP_PATH) + "/bin/LRAUV -x 'run " +
@@ -223,7 +245,8 @@ class LrauvTestFixture : public ::testing::Test
       kill(pid, 9);
     }
 
-    pclose(pipe);
+    pclose(pipe);   
+    ExportLogs(_shortname);
 
     ignmsg << "Completed command [" << cmd << "]" << std::endl;
 

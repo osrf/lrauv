@@ -13,5 +13,14 @@ jobs:
         sudo rm -rf /opt/ghc
     - name: Check out code
       uses: actions/checkout@v2
-    - name: Compile and run tests
-      run: docker build -t mbari_lrauv . -f docker/tests/Dockerfile
+    - name: Compile tests
+      run: docker build -t mbari_lrauv_test . -f docker/tests/Dockerfile
+    - name: Create results directory
+      run: mkdir results
+    - name: Run tests
+      run: docker run -it -v "$(pwd)/results":/results mbari_lrauv_test
+    - name: Upload test results.
+      uses: actions/upload-artifact@v2
+      with:
+        name: integration_test_results
+        path: results

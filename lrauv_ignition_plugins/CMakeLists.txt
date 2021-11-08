@@ -248,6 +248,7 @@ if(BUILD_TESTING)
       ${TEST_TARGET}
       test/${TEST_TARGET}.cc
     )
+    set_property(TARGET ${TEST_TARGET} PROPERTY CXX_STANDARD 17)
     target_include_directories(${TEST_TARGET}
       PUBLIC ${CMAKE_BINARY_DIR}/proto)
     target_link_libraries(${TEST_TARGET}

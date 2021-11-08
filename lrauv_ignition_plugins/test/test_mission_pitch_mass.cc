@@ -55,6 +55,7 @@ TEST_F(LrauvTestFixture, PitchMass)
   {
     LrauvTestFixture::ExecLRAUV(
         "/Missions/RegressionTests/IgnitionTests/testPitchMass.xml",
+        "testPitchMass",
         lrauvRunning);
   });
 
