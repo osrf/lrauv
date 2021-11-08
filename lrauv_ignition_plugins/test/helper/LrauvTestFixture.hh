@@ -184,7 +184,7 @@ class LrauvTestFixture : public ::testing::Test
     
     // WARNING: THIS CAN LEAD TO ARBITRARY CODE EXECUTION
     auto targetfile = _target + ".csv";
-    auto cmd = std::string("cp -r /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/tmp/tmp.csv /results/") + targetfile;
+    auto cmd = std::string("sudo cp -r /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/tmp/tmp.csv /results/") + targetfile;
     res = system(cmd.c_str());
     if (res != 0)
     {
