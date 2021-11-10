@@ -69,40 +69,52 @@ namespace tethys
     /// \brief Point cloud message containing location of data
     public: ignition::msgs::PointCloudPacked pcMsg;
 
-    /// \brief Temperature mssage to visualize
-    // TODO TEMPORARY HACK 1D array instead of point cloud fields
+    /// \brief Temperature data to visualize
     public: ignition::msgs::Float_V tempMsg;
-    public: ignition::msgs::Float_V chlorMsg;
-    public: ignition::msgs::Float_V salMsg;
-    //public: ignition::msgs::Float_V valMsg;
 
-    // Cap of how many points to visualize, to save memory
+    /// \brief Chlorophyll data to visualize
+    public: ignition::msgs::Float_V chlorMsg;
+
+    /// \brief Salinity data to visualize
+    public: ignition::msgs::Float_V salMsg;
+
+    /// \brief Performance trick. Cap number of points to visualize, to save
+    /// memory.
     public: const int MAX_PTS_VIS = 1000;
 
-    // TODO TEMPORARY HACK
-    // Render only every other n, to save performance. Increase to render fewer
-    // markers (faster performance).
+    /// \brief Performance trick. Render only every other n. Increase to render
+    /// fewer markers (faster performance).
     public: int renderEvery = 20;
 
-    // TODO TEMPORARY HACK Skip depths below this z, so have memory to
-    // visualize higher layers at higher resolution.
+    /// \brief Performance trick. Skip depths below this z, so have memory to
+    /// visualize higher layers at higher resolution.
+    /// For less confusion, match the parameter in ScienceSensorsSystem.cc.
     public: const float SKIP_Z_BELOW = -40;
 
-    // TODO TEMPORARY HACK scale down to see in view to skip orbit tool limits
+    /// \brief Scale down to see in view to skip orbit tool limits
+    /// For less confusion, match the parameter in ScienceSensorsSystem.cc.
+    // TODO This is a workaround pending upstream orbit tool improvements
     // For 2003080103_mb_l3_las_1x1km.csv
     //public: const float MINIATURE_SCALE = 0.01;
     // For 2003080103_mb_l3_las.csv
     public: const float MINIATURE_SCALE = 0.0001;
+
+    /// \brief Performance trick. Factor to multiply in calculating Marker sizes
     public: float dimFactor = 0.03;
 
-    // TODO TEMPORARY HACK hardcode resolution to make markers resemble voxels
+    /// \brief Parameter to calculate Marker size in x.
+    /// Performance trick. Hardcode resolution to make markers resemble voxels.
     // For 2003080103_mb_l3_las_1x1km.csv
     //public: const float RES_X = 15 * MINIATURE_SCALE;
     //public: const float RES_Y = 22 * MINIATURE_SCALE;
     //public: const float RES_Z = 5 * MINIATURE_SCALE;
     // For 2003080103_mb_l3_las.csv
     public: const float RES_X = 15;
+
+    /// \brief Parameter to calculate Marker size in y.
     public: const float RES_Y = 22;
+
+    /// \brief Parameter to calculate Marker size in z.
     public: const float RES_Z = 10;
   };
 }
@@ -368,8 +380,7 @@ void VisualizePointCloud::PublishMarkers()
     maxVal = 34.5f;
   }
 
-  // TODO TEMPORARY DEBUG
-  ignerr << "First point in cloud (size "
+  igndbg << "First point in cloud (size "
          << this->dataPtr->pcMsg.height() * this->dataPtr->pcMsg.width()
          << "): " << *iterX << ", " << *iterY << ", " << *iterZ << std::endl;
 
@@ -381,7 +392,7 @@ void VisualizePointCloud::PublishMarkers()
          iterY != iterY.end() &&
          iterZ != iterZ.end())
   {
-    // TODO TEMPORARY Only publish every nth. Skip z below some depth
+    // Performance trick. Only publish every nth. Skip z below some depth
     if (this->dataPtr->renderEvery != 0 &&
         ptIdx % this->dataPtr->renderEvery == 0 &&
         *iterZ > this->dataPtr->SKIP_Z_BELOW)
@@ -443,7 +454,7 @@ void VisualizePointCloud::PublishMarkers()
         msg->set_visibility(ignition::msgs::Marker::GUI);
         //ignition::msgs::Set(msg->mutable_scale(),
         //                ignition::math::Vector3d::One);
-        // TODO TEMPORARY HACK make boxes exact dimension of x and y gaps to
+        // Performance trick. Make boxes exact dimension of x and y gaps to
         // resemble "voxels". Then scale up by renderEvery to cover the space
         // where all the points are skipped.
         float dimX = this->dataPtr->RES_X * this->dataPtr->MINIATURE_SCALE
@@ -458,22 +469,21 @@ void VisualizePointCloud::PublishMarkers()
         ignition::msgs::Set(msg->mutable_scale(),
           ignition::math::Vector3d(dimX, dimY, dimZ));
 
-        // TODO TEMPORARY HACK Center the hack-scaled markers by shifting by
-        // half of box size
         ignition::msgs::Set(msg->mutable_pose(), ignition::math::Pose3d(
-          *iterX,// + (0.5 * dimX),
-          *iterY,// + (0.5 * dimY),
-          *iterZ,// + (0.5 * dimZ),
+          *iterX,
+          *iterY,
+          *iterZ,
           0, 0, 0));
 
         /*
         // Use POINTS type and array for better performance, pending per-point
         // color.
         // One marker per point cloud, many points.
-        // TODO Implement in ign-gazebo per-point color like RViz point arrays, so
-        // can have just 1 marker, many points in it, each with a specified color,
-        // to improve performance. Color is the limiting factor that requires us
-        // to use many markers here, 1 point per marker.
+        // TODO Implement in ign-gazebo per-point color like RViz point arrays,
+        // so can have just 1 marker, many points in it, each with a specified
+        // color, to improve performance. Color is the limiting factor that
+        // requires us to use many markers here, 1 point per marker.
+        // https://github.com/osrf/lrauv/issues/52
         ignition::msgs::Set(msg->mutable_pose(), ignition::math::Pose3d(
           0, 0, 0, 0, 0, 0));
         auto pt = msg->add_point();
@@ -482,10 +492,9 @@ void VisualizePointCloud::PublishMarkers()
         pt->set_z(*iterZ);
         */
 
-        // TODO TEMPORARY DEBUG
         if (nPtsViz < 10)
         {
-          ignerr << "Added point " << nPtsViz << " at "
+          igndbg << "Added point " << nPtsViz << " at "
                  << msg->pose().position().x() << ", "
                  << msg->pose().position().y() << ", "
                  << msg->pose().position().z() << ", "

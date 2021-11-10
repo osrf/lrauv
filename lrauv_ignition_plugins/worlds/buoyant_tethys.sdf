@@ -13,18 +13,6 @@
       <background>0.0 0.7 0.8</background>
     </scene>
 
-    <!--
-      Set the coordinates for the world origin to 0 / 0
-    -->
-    <spherical_coordinates>
-      <surface_model>EARTH_WGS84</surface_model>
-      <world_frame_orientation>ENU</world_frame_orientation>
-      <latitude_deg>0</latitude_deg>
-      <longitude_deg>0</longitude_deg>
-      <elevation>0</elevation>
-      <heading_deg>0</heading_deg>
-    </spherical_coordinates>
-
     <physics name="1ms" type="dart">
       <max_step_size>0.02</max_step_size>
       <real_time_factor>0</real_time_factor>
@@ -69,9 +57,10 @@
       name="tethys::TimeAnalysisPlugin">
     </plugin-->
 
-    <!-- Spawn at default in a location with science data in csv -->
+    <!-- Spawn by default in a location with science data in csv -->
     <spherical_coordinates>
       <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
 
       <!-- For 2003080103_mb_l3_las.csv -->
       <latitude_deg>35.5999984741211</latitude_deg>

@@ -170,25 +170,36 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Publisher for point clouds representing positions for science data
   public: ignition::transport::Node::Publisher cloudPub;
 
-  // TODO TEMPORARY HACK publish float arrays instead of point cloud fields
+  /// \brief Publisher for temperature
   public: ignition::transport::Node::Publisher tempPub;
+
+  /// \brief Publisher for chlorophyll
   public: ignition::transport::Node::Publisher chlorPub;
+
+  /// \brief Publisher for salinity
   public: ignition::transport::Node::Publisher salPub;
+
+  /// \brief Temperature message
   public: ignition::msgs::Float_V tempMsg;
+
+  /// \brief Chlorophyll message
   public: ignition::msgs::Float_V chlorMsg;
+
+  /// \brief Salinity message
   public: ignition::msgs::Float_V salMsg;
 
-  // TODO TEMPORARY HACK
   /// \brief Publish a few more times for visualization plugin to get them
   public: int repeatPubTimes = 1;
 
-  // TODO TEMPORARY HACK scale down to see in view to skip orbit tool limits
+  // TODO This is a workaround pending upstream Ignition orbit tool improvements
+  // Scale down in order to see in view
   // For 2003080103_mb_l3_las_1x1km.csv
   //public: const float MINIATURE_SCALE = 0.01;
   // For 2003080103_mb_l3_las.csv
   public: const float MINIATURE_SCALE = 0.0001;
 
-  // TODO TEMPORARY HACK Skip depths below this z, so have memory to
+  // TODO This is a workaround pending upstream Marker performance improvements.
+  // Performance trick. Skip depths below this z, so have memory to
   // visualize higher layers at higher resolution.
   // This is only for visualization, so that MAX_PTS_VIS can calculate close
   // to the actual number of points visualized.
@@ -421,7 +432,7 @@ void ScienceSensorsSystemPrivate::ReadData()
       // Check validity of spatial coordinates
       if (!std::isnan(latitude) && !std::isnan(longitude) && !std::isnan(depth))
       {
-        // TODO TEMPORARY HACK skip points below a certain depth
+        // Performance trick. Skip points below a certain depth
         if (-depth < this->SKIP_Z_BELOW)
         {
           continue;
@@ -434,10 +445,10 @@ void ScienceSensorsSystemPrivate::ReadData()
         // Shift to be relative to world origin spherical coordinates
         cart -= this->worldOriginEarthCartesianCoords;
 
-        // TODO TEMPORARY HACK scale down to see in view
+        // Performance trick. Scale down to see in view
         cart *= this->MINIATURE_SCALE;
 
-        // TODO TEMPORARY HACK skip points beyond some distance from origin
+        // Performance trick. Skip points beyond some distance from origin
         if (abs(cart.X()) > 1000 || abs(cart.Y()) > 1000)
         {
           continue;
@@ -483,8 +494,8 @@ void ScienceSensorsSystemPrivate::ReadData()
 /////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::GetWorldOriginSphericalCoords()
 {
-  // TODO TEMPORARY HACK hard code lat long.
-  // When have time, init default value from SDF <spherical_coordinates> tag
+  // TODO don't hard code lat long. Initialize default value from SDF
+  // <spherical_coordinates> tag
   this->worldOriginSphericalCoords = ignition::math::Vector3d(
     36.8024781413352, -121.829647676843, 0);
   // Convert spherical coordinates to Cartesian
@@ -657,7 +668,7 @@ void ScienceSensorsSystem::Configure(
   this->dataPtr->node.Advertise("/science_data_srv",
       &ScienceSensorsSystemPrivate::ScienceDataService, this->dataPtr.get());
 
-  // TODO TEMPORARY HACK publish float array instead of point cloud fields
+  // Advertise science data topics
   this->dataPtr->tempPub = this->dataPtr->node.Advertise<
       ignition::msgs::Float_V>("/temperature");
   this->dataPtr->chlorPub = this->dataPtr->node.Advertise<
@@ -721,8 +732,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       }
     }
 
-    // TODO TEMPORARY DEBUG publishing more frequently to help debugging.
     // Publish every n iters so that VisualizePointCloud plugin gets it.
+    // Otherwise the initial publication in Configure() is not enough.
     if (this->dataPtr->repeatPubTimes % 10000 == 0)
     {
       this->dataPtr->PublishData();
@@ -742,7 +753,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       // TODO convert to Cartesian
       auto sensorLatLon = ignition::gazebo::sphericalCoordinates(entity, _ecm);
       /*
-      // TODO TEMP DEBUG what is the sensor attached to?? World? Not robot?
+      // TODO DEBUG what is the sensor attached to?? World? Not robot?
       ignerr << "sensor lat long: "
              << sensorLatLon.value().X() << ", " << sensorLatLon.value().Y()
              << std::endl;
@@ -921,36 +932,10 @@ ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
   msg.set_row_step(pclPC2.row_step);
   msg.set_is_dense(pclPC2.is_dense);
 
-  // FIXME: Include more than position data
   msg.mutable_data()->resize(pclPC2.data.size());
-  //  + temperatureArr[this->timeIdx].size());
   memcpy(msg.mutable_data()->data(), pclPC2.data.data(), pclPC2.data.size());
 
-  /*
-  // Interleaf fields to each point
-  for (int c = 0; c < pclPC2.width; ++c)
-  {
-    for (int r = 0; r < pclPC2.height; ++r)
-    {
-      memcpy(msg.mutable_data()->data() + ,
-        pclPC2.data.data() + ,
-        pclPC2.data.size());
-
-
-    }
-  }
-  */
-
-  // Wrong layout
-  // Temperature field, offset from beginning by previous data's size
-  //memcpy(msg.mutable_data()->data() + pclPC2.data.size(),
-  //  temperatureArr[this->timeIdx].data(), temperatureArr[this->timeIdx].size());
-
-  // TODO TEMPORARY HACK publish float arrays instead of point cloud fields
-  //this->tempMsg.mutable_data()->Resize(temperatureArr[this->timeIdx].size(), 0.0f);
-  //memcpy(this->tempMsg.mutable_data(),
-  //  temperatureArr[this->timeIdx].data(), temperatureArr[this->timeIdx].size());
-  // TODO did memory leak start after I started publishing float array?
+  // Populate float arrays for actual science data
   *this->tempMsg.mutable_data() = {temperatureArr[this->timeIdx].begin(),
     temperatureArr[this->timeIdx].end()};
   *this->chlorMsg.mutable_data() = {chlorophyllArr[this->timeIdx].begin(),
