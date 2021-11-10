@@ -443,7 +443,6 @@ void TethysCommPlugin::CommandCallback(
 void TethysCommPlugin::BuoyancyStateCallback(
   const ignition::msgs::Double &_msg)
 {
-  // Units: cubic centimeters
   this->buoyancyBladderVolume = _msg.data();
 }
 
@@ -531,8 +530,7 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.set_massposition_(massShifterPosComp->Data()[0]);
 
   // Buoyancy position
-  // Convert from cubic centimeters to cubic meters
-  stateMsg.set_buoyancyposition_(buoyancyBladderVolume);
+  stateMsg.set_buoyancyposition_(this->buoyancyBladderVolume);
 
   // Depth
   stateMsg.set_depth_(-modelPose.Pos().Z());
@@ -613,6 +611,7 @@ void TethysCommPlugin::PostUpdate(
       << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl
       << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl
       << "\tMass shifter (m): " << stateMsg.massposition_() << std::endl
+      << "\tVBS volume (m^3): " << stateMsg.buoyancyposition_() << std::endl
       << "\tPitch angle (deg): "
         << stateMsg.rph_().y() * 180 / M_PI << std::endl
       << "\tCurrent (ENU, m/s): "
