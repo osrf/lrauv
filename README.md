@@ -87,7 +87,7 @@ the `lrauv-application` repository, i.e.:
 ```
 <workspace>
 |-- lrauv
-|-- lrauv-application
+└-- lrauv-application
 ```
 
 For quick reference, compilation boils down to running this on the right branch:
