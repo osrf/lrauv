@@ -173,7 +173,7 @@ class LrauvTestFixture : public ::testing::Test
 
   public: static void ExportLogs(const std::string &_target)
   {
-    if (getenv("EXPORT_LOGS") == NULL)
+    if (getenv("STORE_LOGS") == NULL)
     {
       ignmsg << "Skipping export of logs" << "\n";
       return;
