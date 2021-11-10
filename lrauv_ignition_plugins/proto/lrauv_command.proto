@@ -53,7 +53,10 @@ message LRAUVCommand
                                      // the mass shifter's joint is in. Unit:
                                      // meters. Positive values have the battery
                                      // forward, tilting the nose downward.
-  float buoyancyPosition_      = 6;
+  float buoyancyPosition_      = 6;  // Volume that the controller believes the
+                                     // VBS currently has. Unit: cubic meters.
+                                     // Volumes higher than the neutral volume
+                                     // push the vehicle upward.
   bool dropWeightState_        = 7;  // Indicator "dropweight OK"
                                      // 1 = in place, 0 = dropped
 
@@ -71,7 +74,10 @@ message LRAUVCommand
                                       // Unit: meters. Positive values move the
                                       // battery forward, tilting the nose
                                       // downward.
-  float buoyancyAction_        = 12;  // Volume in cubic meters
+  float buoyancyAction_        = 12;  // Target volume for the VBS (Variable
+                                      // Buoyancy System). Unit: cubic meters.
+                                      // Volumes higher than the neutral volume
+                                      // make the vehicle float.
 
   float density_               = 13;
   float dt_                    = 14;

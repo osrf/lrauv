@@ -181,10 +181,15 @@
         name="ignition::gazebo::v6::systems::BuoyancyEnginePlugin">
         <link_name>buoyancy_engine</link_name>
         <namespace>tethys</namespace>
+        <fluid_density>1000</fluid_density>
+        <!-- 80 cc == 0.00008 m^3 -->
         <min_volume>0.000080</min_volume>
+        <!-- 500 cc == 0.0005 m^3 -->
         <neutral_volume>0.0005</neutral_volume>
         <default_volume>0.0005</default_volume>
+        <!-- 955 cc == 0.000955 m^3 -->
         <max_volume>0.000955</max_volume>
+        <!-- m^3/s -->
         <max_inflation_rate>0.000003</max_inflation_rate>
       </plugin>
       <plugin

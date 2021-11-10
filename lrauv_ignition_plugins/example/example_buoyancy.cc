@@ -21,9 +21,15 @@
  */
 
 /**
+ * Control the VBS (Variable Buoyancy System).
+ *
+ * The neutral volume keeps the vehicle neutrally buoyant, higher volumes
+ * apply an upwards force, lower ones don't apply enough force to counter gravity.
+ *
  * Usage:
- *   $ LRAUV_example_buoyancy <vehicle_name>
+ *   $ LRAUV_example_buoyancy <vehicle_name> <volume_cubic_meter>
  */
+
 #include <chrono>
 #include <thread>
 
@@ -39,17 +45,30 @@ int main(int _argc, char **_argv)
     vehicleName = _argv[1];
   }
 
+  double volume{0.0004};
+  if (_argc > 2)
+  {
+    volume = atof(_argv[2]);
+  }
+
   ignition::transport::Node node;
   auto commandTopic = "/" + vehicleName + "/command_topic";
   auto commandPub =
     node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(commandTopic);
 
-  lrauv_ignition_plugins::msgs::LRAUVCommand buoyancyMessage;
-  std::cout << "Expect vehicle to move up \n";
-  for (int i = 0 ; i < 10; i++)
+  while (!commandPub.HasConnections())
   {
-    buoyancyMessage.set_buoyancyaction_(0.0004);
-    commandPub.Publish(buoyancyMessage);
+    std::cout << "Command publisher waiting for connections..." << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
+
+  lrauv_ignition_plugins::msgs::LRAUVCommand cmdMsg;
+  cmdMsg.set_buoyancyaction_(volume);
+
+  // Don't release drop-weight
+  cmdMsg.set_dropweightstate_(1);
+
+  commandPub.Publish(cmdMsg);
+
+  std::cout << "Changing VBS volume to [" << volume << "] rad" << std::endl;
 }
