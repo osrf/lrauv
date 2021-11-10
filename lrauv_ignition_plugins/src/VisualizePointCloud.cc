@@ -308,7 +308,7 @@ void VisualizePointCloud::OnSalinity(const ignition::msgs::Float_V &_msg)
 }
 
 //////////////////////////////////////////////////
-void VisualizePointCloud::OnService(const ignition::msgs::PointCloudPacked &_res,
+void VisualizePointCloud::OnService(const ignition::msgs::PointCloudPacked &_msg,
     bool _result)
 {
   if (!_result)
@@ -318,7 +318,7 @@ void VisualizePointCloud::OnService(const ignition::msgs::PointCloudPacked &_res
   }
 
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
-  this->dataPtr->pcMsg = _res;
+  this->dataPtr->pcMsg = _msg;
   this->PublishMarkers();
 }
 

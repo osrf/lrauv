@@ -69,7 +69,7 @@ namespace tethys
     /// \brief Callback function to get data from the message
     /// \param[in]_msg Point cloud message
     /// \param[out]_result True on success.
-    public: void OnService(const ignition::msgs::PointCloudPacked &_res,
+    public: void OnService(const ignition::msgs::PointCloudPacked &_msg,
         bool _result);
 
     /// \brief Get the topic list

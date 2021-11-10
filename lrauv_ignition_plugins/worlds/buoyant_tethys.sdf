@@ -284,20 +284,6 @@
       <direction>-0.5 0.1 -0.9</direction>
     </light>
 
-    <model name="debug science data -200k -150k">
-      <pose>-200900 -159654 0 0 0 0</pose>
-      <static>true</static>
-      <link name="link">
-        <visual name="visual">
-          <geometry>
-            <box>
-              <size>1 1 1</size>
-            </box>
-          </geometry>
-        </visual>
-      </link>
-    </model>
-
     <!-- Uncomment if you need a ground plane -->
     <!-- <model name="ground_plane">
       <static>true</static>
