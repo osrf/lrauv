@@ -21,11 +21,13 @@
  */
 
 #include <chrono>
+#include <thread>
 #include <gtest/gtest.h>
 
 #include <ignition/gazebo/TestFixture.hh>
 #include <ignition/gazebo/Util.hh>
 #include <ignition/gazebo/World.hh>
+#include <ignition/math/SphericalCoordinates.hh>
 #include <ignition/transport/Node.hh>
 
 #include "lrauv_init.pb.h"
@@ -96,11 +98,21 @@ TEST(SpawnTest, Spawn)
   auto spawnPub = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVInit>(
     "/lrauv/init");
 
+  int sleep{0};
+  int maxSleep{30};
+  for (; !spawnPub.HasConnections() && sleep < maxSleep; ++sleep)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+  ASSERT_LT(sleep, maxSleep);
+
+  ignition::math::Angle lat1 = IGN_DTOR(20.0);
+  ignition::math::Angle lon1 = IGN_DTOR(20.0);
   {
     lrauv_ignition_plugins::msgs::LRAUVInit spawnMsg;
     spawnMsg.mutable_id_()->set_data("vehicle1");
-    spawnMsg.set_initlat_(20);
-    spawnMsg.set_initlon_(20);
+    spawnMsg.set_initlat_(lat1.Degree());
+    spawnMsg.set_initlon_(lon1.Degree());
 
     spawnPub.Publish(spawnMsg);
   }
@@ -116,14 +128,24 @@ TEST(SpawnTest, Spawn)
   EXPECT_EQ(0, latLon2.size());
 
   // Spawn second vehicle
+
+  ignition::math::Angle lat2 = IGN_DTOR(20.1);
+  ignition::math::Angle lon2 = IGN_DTOR(20.1);
   {
     lrauv_ignition_plugins::msgs::LRAUVInit spawnMsg;
     spawnMsg.mutable_id_()->set_data("vehicle2");
-    spawnMsg.set_initlat_(20.1);
-    spawnMsg.set_initlon_(20.1);
+    spawnMsg.set_initlat_(lat2.Degree());
+    spawnMsg.set_initlon_(lon2.Degree());
 
     spawnPub.Publish(spawnMsg);
   }
+
+  // FIXME(anyone): Ideally all axes would have a tight tolerance, but depth
+  // and pitch are currently unstable, see
+  // https://github.com/osrf/lrauv/issues/49
+  double tightTol{1e-5};
+  double depthTol{1e-2};
+  double pitchTol{1e-2};
 
   // Check that vehicles were spawned
   fixture->Server()->Run(true, 100, false);
@@ -136,26 +158,33 @@ TEST(SpawnTest, Spawn)
   EXPECT_LT(50, latLon2.size());
 
   // Check vehicle positions
-  EXPECT_NEAR(0.0, poses1.back().Pos().X(), 1e-3);
-  EXPECT_NEAR(0.0, poses1.back().Pos().Y(), 1e-3);
-  EXPECT_NEAR(0.0, poses1.back().Pos().Z(), 1e-3);
-  EXPECT_NEAR(0.0, poses1.back().Rot().Roll(), 1e-3);
-  EXPECT_NEAR(0.0, poses1.back().Rot().Pitch(), 1e-3);
-  EXPECT_NEAR(0.0, poses1.back().Rot().Yaw(), 1e-3);
+  EXPECT_NEAR(0.0, poses1.back().Pos().X(), tightTol);
+  EXPECT_NEAR(0.0, poses1.back().Pos().Y(), tightTol);
+  EXPECT_NEAR(0.0, poses1.back().Pos().Z(), depthTol);
+  EXPECT_NEAR(0.0, poses1.back().Rot().Roll(), tightTol);
+  EXPECT_NEAR(0.0, poses1.back().Rot().Pitch(), pitchTol);
+  EXPECT_NEAR(0.0, poses1.back().Rot().Yaw(), tightTol);
 
-  EXPECT_NEAR(20.0, latLon1.back().X(), 1e-3);
-  EXPECT_NEAR(20.0, latLon1.back().Y(), 1e-3);
-  EXPECT_NEAR(0.0, latLon1.back().Z(), 1e-3);
+  EXPECT_NEAR(lat1.Degree(), latLon1.back().X(), tightTol);
+  EXPECT_NEAR(lon1.Degree(), latLon1.back().Y(), tightTol);
+  EXPECT_NEAR(0.0, latLon1.back().Z(), depthTol);
 
-  EXPECT_LT(100.0, poses2.back().Pos().X());
-  EXPECT_LT(100.0, poses2.back().Pos().Y());
-  EXPECT_GT(0.0, poses2.back().Pos().Z());
-  EXPECT_NEAR(0.0, poses2.back().Rot().Roll(), 1e-3);
-  EXPECT_NEAR(0.0, poses2.back().Rot().Pitch(), 1e-3);
-  EXPECT_NEAR(0.0, poses2.back().Rot().Yaw(), 1e-3);
+  ignition::math::SphericalCoordinates sc;
+  sc.SetLatitudeReference(lat1);
+  sc.SetLongitudeReference(lon1);
+  auto expectedPos2 = sc.PositionTransform(
+      {lat2.Radian(), lon2.Radian(), 0.0},
+      ignition::math::SphericalCoordinates::SPHERICAL,
+      ignition::math::SphericalCoordinates::LOCAL2);
+  EXPECT_NEAR(expectedPos2.X(), poses2.back().Pos().X(), tightTol);
+  EXPECT_NEAR(expectedPos2.Y(), poses2.back().Pos().Y(), tightTol);
+  EXPECT_NEAR(expectedPos2.Z(), poses2.back().Pos().Z(), depthTol);
+  EXPECT_NEAR(0.0, poses2.back().Rot().Roll(), tightTol);
+  EXPECT_NEAR(0.0, poses2.back().Rot().Pitch(), pitchTol);
+  EXPECT_NEAR(0.0, poses2.back().Rot().Yaw(), tightTol);
 
-  EXPECT_NEAR(20.1, latLon2.back().X(), 1e-3);
-  EXPECT_NEAR(20.1, latLon2.back().Y(), 1e-3);
-  EXPECT_NEAR(0.0, latLon2.back().Z(), 1e-2);
+  EXPECT_NEAR(lat2.Degree(), latLon2.back().X(), tightTol);
+  EXPECT_NEAR(lon2.Degree(), latLon2.back().Y(), tightTol);
+  EXPECT_NEAR(0.0, latLon2.back().Z(), depthTol);
 }
 
