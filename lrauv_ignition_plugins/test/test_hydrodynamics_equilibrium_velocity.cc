@@ -42,41 +42,52 @@
 //////////////////////////////////////////////////
 TEST(SpawnTest, Spawn)
 {
-  ignition::common::Console::SetVerbosity(4);
+  using namespace ignition;
+  common::Console::SetVerbosity(4);
 
   // Setup fixture
   auto fixture = std::make_unique<ignition::gazebo::TestFixture>(
       ignition::common::joinPaths(
       std::string(PROJECT_SOURCE_PATH), "worlds", "empty_environment.sdf"));
 
-  ignition::gazebo::Entity vehicle1{ignition::gazebo::kNullEntity};
-  ignition::gazebo::Entity vehicle2{ignition::gazebo::kNullEntity};
-  ignition::gazebo::Entity vehicle3{ignition::gazebo::kNullEntity};
-  ignition::gazebo::Entity vehicle4{ignition::gazebo::kNullEntity};
+  gazebo::Entity vehicle1{gazebo::kNullEntity};
+  gazebo::Entity vehicle2{gazebo::kNullEntity};
+  gazebo::Entity vehicle3{gazebo::kNullEntity};
+  gazebo::Entity vehicle4{gazebo::kNullEntity};
+
+  std::vector<math::Vector3d> velocitiesV1;
+  std::vector<math::Vector3d> velocitiesV2;
+  std::vector<math::Vector3d> velocitiesV3;
+  std::vector<math::Vector3d> velocitiesV4;
+  
+  std::vector<math::Pose3d> posesV1;
+  std::vector<math::Pose3d> posesV2;
+  std::vector<math::Pose3d> posesV3;
+  std::vector<math::Pose3d> posesV4;
 
   fixture->OnPostUpdate(
-    [&](const ignition::gazebo::UpdateInfo &_info,
-    const ignition::gazebo::EntityComponentManager &_ecm)
+    [&](const gazebo::UpdateInfo &_info,
+    const gazebo::EntityComponentManager &_ecm)
     {
-      auto worldEntity = ignition::gazebo::worldEntity(_ecm);
-      ignition::gazebo::World world(worldEntity);
+      auto worldEntity = gazebo::worldEntity(_ecm);
+      gazebo::World world(worldEntity);
 
       vehicle1 = world.ModelByName(_ecm, "tethys");
-      auto baselink1 = vehicle1.LinkByName(_ecm, "base_link");
-      if (ignition::gazebo::kNullEntity != vehicle1)
+      if (gazebo::kNullEntity != vehicle1)
       {
-        baselink1.
+        auto baselink1 = Model(vehicle1).LinkByName(_ecm, "base_link");
+        gazebo::Link link(baselink1);
+        auto velocity = link.WorldLinearVelocity(_ecm);
+        auto pose = link.WorldPose(_ecm);
       }
 
       vehicle2 = world.ModelByName(_ecm, "thetys2");
-      auto baselink2 = vehicle1.LinkByName(_ecm, "base_link");
-      if (ignition::gazebo::kNullEntity != vehicle2)
+      if (gazebo::kNullEntity != vehicle2)
       {
       }
 
       vehicle3 = world.ModelByName(_ecm, "tethys3");
-      auto baselink3 = vehicle1.LinkByName(_ecm, "base_link");
-      if (ignition::gazebo::kNullEntity != vehicle3)
+      if (gazebo::kNullEntity != vehicle3)
       {
       }
 
@@ -86,7 +97,6 @@ TEST(SpawnTest, Spawn)
       {
       }
 
-      iterations++;
     });
   fixture->Finalize();
 
