@@ -23,7 +23,7 @@ jobs:
       run: find .
     - name: Upload test results.
       uses: actions/upload-artifact@v2
-      if: always()
+      if: ${{always()}}
       with:
         name: integration_test_results
         path: results/**
