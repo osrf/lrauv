@@ -399,12 +399,6 @@ void VisualizePointCloud::PublishMarkers()
     {
       // Science data value
       float dataVal = std::numeric_limits<float>::quiet_NaN();
-      /*
-      if (this->dataPtr->valMsg.data().size() > ptIdx)
-      {
-        dataVal = this->dataPtr->valMsg.data(ptIdx);
-      }
-      */
       // Sanity check array size
       if (dataType == "/temperature")
       {
@@ -452,8 +446,6 @@ void VisualizePointCloud::PublishMarkers()
         // TODO: Use POINTS or LINE_LIST, but need per-vertex color
         msg->set_type(ignition::msgs::Marker::BOX);
         msg->set_visibility(ignition::msgs::Marker::GUI);
-        //ignition::msgs::Set(msg->mutable_scale(),
-        //                ignition::math::Vector3d::One);
         // Performance trick. Make boxes exact dimension of x and y gaps to
         // resemble "voxels". Then scale up by renderEvery to cover the space
         // where all the points are skipped.
@@ -513,7 +505,7 @@ void VisualizePointCloud::PublishMarkers()
     ++ptIdx;
   }
 
-  ignerr << "Visualizing " << markers.marker().size() << " markers"
+  igndbg << "Visualizing " << markers.marker().size() << " markers"
     << std::endl;
 
   ignition::msgs::Boolean res;

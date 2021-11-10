@@ -253,7 +253,7 @@
       <plugin filename="VisualizePointCloud" name="Visualize science data">
         <ignition-gui>
           <title>Visualize science data</title>
-          <property type="string" key="state">floating</property>
+          <property type="string" key="state">floating_collapsed</property>
           <property key="x" type="double">800</property>
         </ignition-gui>
       </plugin>

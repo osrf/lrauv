@@ -102,8 +102,8 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Service name for getting the spherical coordinates associated with
   /// the world origin
-  public: std::string getWorldOriginSphericalService
-    {"/world_origin_spherical"};
+  // public: std::string getWorldOriginSphericalService
+  //   {"/world_origin_spherical"};
 
   /// \brief Input data file name, relative to a path Ignition can find in its
   /// environment variables.
@@ -503,6 +503,10 @@ void ScienceSensorsSystemPrivate::GetWorldOriginSphericalCoords()
   this->worldOriginEarthCartesianCoords = sc.LocalFromSphericalPosition(
     this->worldOriginSphericalCoords);
 
+  // TODO: Need a good way (a service?) to get vehicle spawn lat long from
+  // WorldCommPlugin.cc. Cannot wait until vehicle is spawned, because could
+  // wait forever. After that, then must shift all the science coordinates AFTER
+  // ReadData(), to have Cartesian coordinates wrt new origin lat/long.
   /*
   ignition::msgs::Vector3d res;
   bool success;
