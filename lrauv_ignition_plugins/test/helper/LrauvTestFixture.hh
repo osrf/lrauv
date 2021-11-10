@@ -171,8 +171,14 @@ class LrauvTestFixture : public ::testing::Test
     return pid;
   }
 
-  public: static void ExportLogs(std::string _target)
+  public: static void ExportLogs(const std::string &_target)
   {
+    if (getenv("EXPORT_LOGS") == NULL)
+    {
+      ignmsg << "Skipping export of logs" << "\n";
+      return;
+    }
+
     int res = system("sudo /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/unserialize_for_plotting.sh");
     
     if (res != 0)

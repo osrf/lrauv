@@ -76,4 +76,6 @@ ARG CXX=g++-9
 RUN [ "/bin/bash" , "-c" , "colcon build --cmake-args='-DBUILD_TESTING=true'" ]
 
 # Run tests
-ENTRYPOINT [ "/bin/bash" , "-c" , ". ~/lrauv_ws/install/setup.sh; colcon test --event-handlers console_direct+; colcon test-result;"]
+ENTRYPOINT [ "/bin/bash" , "-c" ,
+  "export STORE_LOGS=true . ~/lrauv_ws/install/setup.sh;"\
+  "colcon test --event-handlers console_direct+; colcon test-result;"]
