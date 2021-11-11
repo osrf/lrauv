@@ -45,14 +45,14 @@
 #include "TestConstants.hh"
 
 //////////////////////////////////////////////////
-void commandVehicleForward(const std::string &name)
+void commandVehicleForward(const std::string &_name)
 {
   using namespace ignition;
 
   transport::Node node;
   auto pub =
       node.Advertise<msgs::Double>(
-          "/model/" + name + "/joint/propeller_joint/cmd_pos");
+          "/model/" + _name + "/joint/propeller_joint/cmd_pos");
 
   msgs::Double thrustCmd;
   thrustCmd.set_data(-6.7);
@@ -64,7 +64,44 @@ void commandVehicleForward(const std::string &name)
 }
 
 //////////////////////////////////////////////////
-TEST(SpawnTest, Spawn)
+void checkDamping(const std::vector<ignition::math::Vector3d> &_velocities)
+{
+  using namespace ignition;
+  math::Vector3d prev{0, 0, 0}, prevAcc{0,0,0};
+  bool firstTime{true}, firstAcc{true};
+
+  int idx = 0;
+  for(auto vel: _velocities)
+  {
+    if (firstTime)
+    {
+      prev = vel;
+      firstTime = false;
+      continue;
+    }
+
+    auto acc = vel - prev;
+    prev = vel;
+    if(firstAcc)
+    {
+      prevAcc = acc;
+      firstAcc = false;
+    }
+
+    idx++;
+    if(idx > 30) // Wait few iterations for message to be received :(
+    {
+      EXPECT_LE(acc.Length(), prevAcc.Length());
+    }
+    prevAcc = acc;
+  }
+
+  EXPECT_EQ(firstTime, false);
+  EXPECT_EQ(firstAcc, false);
+}
+
+//////////////////////////////////////////////////
+TEST(HydrodynamicsTest, DampForwardThrust)
 {
   using namespace ignition;
   common::Console::SetVerbosity(4);
@@ -217,10 +254,15 @@ TEST(SpawnTest, Spawn)
   EXPECT_NEAR(
     velocitiesV1.rbegin()->Z(), 0, 1e-3);
 
+  // Acceleration should always be decreasing.
+  checkDamping(velocitiesV1);
+  checkDamping(velocitiesV2);
+  checkDamping(velocitiesV3);
+  checkDamping(velocitiesV4);
+
   // Rotations should not have changed much throuh the course of the test
   EXPECT_EQ(posesV1.rbegin()->Rot(), posesV1.begin()->Rot());
   EXPECT_EQ(posesV2.rbegin()->Rot(), posesV2.begin()->Rot());
   EXPECT_EQ(posesV3.rbegin()->Rot(), posesV3.begin()->Rot());
   EXPECT_EQ(posesV4.rbegin()->Rot(), posesV4.begin()->Rot());
-  
 }
