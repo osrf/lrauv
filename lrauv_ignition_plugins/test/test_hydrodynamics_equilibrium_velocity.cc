@@ -22,7 +22,11 @@
 
 /*
 * This test evaluates whether the hydrodynamic plugin successfully performs
-* damping when a thrust is applied.
+* damping when a thrust is applied. Based on previous discussion with MBARI
+* at 300rpm, we should be moving at 1ms^-1. This test checks this behaviour.
+* Furthermore, by starting 4 vehicles out in different positions and
+* orientations, this test makes sure that the transforms of the hydrodynamics
+* plugin are correct.
 */
 
 #include <chrono>
@@ -185,9 +189,18 @@ TEST(SpawnTest, Spawn)
   // Check that vehicles don't exist
   fixture->Server()->Run(true, 50000, false);
 
+  ASSERT_EQ(velocitiesV1.size(), 50000);
+  ASSERT_EQ(velocitiesV2.size(), 50000);
+  ASSERT_EQ(velocitiesV3.size(), 50000);
+  ASSERT_EQ(velocitiesV4.size(), 50000);
+
+  ASSERT_EQ(posesV1.size(), 50000);
+  ASSERT_EQ(posesV2.size(), 50000);
+  ASSERT_EQ(posesV3.size(), 50000);
+  ASSERT_EQ(posesV4.size(), 50000);
+
   // Expect all their final velocity lengths to be similar - around 1m/s as
   // specified early on.
-
   EXPECT_NEAR(
     velocitiesV1.rbegin()->Length(), velocitiesV2.rbegin()->Length(), 1e-3);
   EXPECT_NEAR(
@@ -204,11 +217,10 @@ TEST(SpawnTest, Spawn)
   EXPECT_NEAR(
     velocitiesV1.rbegin()->Z(), 0, 1e-3);
 
-
   // Rotations should not have changed much throuh the course of the test
-
-  std::cout << "tethys 1 pose " << *posesV1.rbegin() << "\n";
-  std::cout << "tethys 2 pose " << *posesV2.rbegin() << "\n";
-  std::cout << "tethys 3 pose " << *posesV3.rbegin() << "\n";
-  std::cout << "tethys 4 pose " << *posesV4.rbegin() << "\n";
+  EXPECT_EQ(posesV1.rbegin()->Rot(), posesV1.begin()->Rot());
+  EXPECT_EQ(posesV2.rbegin()->Rot(), posesV2.begin()->Rot());
+  EXPECT_EQ(posesV3.rbegin()->Rot(), posesV3.begin()->Rot());
+  EXPECT_EQ(posesV4.rbegin()->Rot(), posesV4.begin()->Rot());
+  
 }
