@@ -89,8 +89,8 @@
         <p_gain>0.1</p_gain>
       </plugin>
       <plugin
-        filename="ThrusterPlugin"
-        name="tethys::Thruster">
+        filename="ignition-gazebo-thruster-system"
+        name="ignition::gazebo::systems::Thruster">
         <namespace>tethys</namespace>
         <joint_name>propeller_joint</joint_name>
         <thrust_coefficient>0.004422</thrust_coefficient>
