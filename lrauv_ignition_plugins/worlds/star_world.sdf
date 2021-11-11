@@ -68,10 +68,11 @@
     <include>
       <pose>-5 0 1 0 0 0</pose>
       <uri>tethys_equipped</uri>
+      <name>tethys</name>
     </include>
 
     <include>
-      <pose>-4.3301 2.5 1 0 0 0.524</pose>
+      <pose>-4.3301 -2.5 1 0 0 0.524</pose>
       <uri>tethys_equipped</uri>
       <name>tethys2</name>
       <experimental:params>
@@ -153,7 +154,7 @@
     </include>
 
     <include>
-      <pose>0 5 1 0 0 1.57</pose>
+      <pose>0 -5 1 0 0 1.57</pose>
       <uri>tethys_equipped</uri>
       <name>tethys4</name>
       <experimental:params>
