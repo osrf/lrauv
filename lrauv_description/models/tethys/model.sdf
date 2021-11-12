@@ -10,9 +10,10 @@
       
       <inertial>
         <!-- to offset battery CoM before getting real parameters for vehicle without battery -->
-        <!--pose>0 0.0236 0 0 0 0</pose-->
         <!-- 146.5671 subtracted by battery mass -->
         <mass>114.8364</mass>
+
+        <!--This is calculated by taking the center of mass and subtractin-->
         <pose>0.15556377681 0 0 0 0 0</pose>
         <!-- TODO: Get inertial matrix of base link WITHOUT battery -->
         <inertia>
@@ -24,18 +25,21 @@
           <izz>41.980233</izz-->
 
           <!-- Guesstimated (decreased by 1/5) to account for battery -->
-          <ixx>2.4</ixx>
-          <ixy>0</ixy>
-          <ixz>0.0004</ixz>
-          <iyy>33.5841864</iyy>
-          <iyz>0</iyz>
-          <izz>33.5841864</izz>
+          <ixx>1.157</ixx>
+          <ixy>0.007</ixy>
+          <ixz>0.033</ixz>
+          <iyx>0.0005</iyx>
+          <iyy>9.65</iyy>
+          <iyz>0.002</iyz>
+          <izx>0.033</izx>
+          <izy>0.002</izy>
+          <izz>9.52</izz>
 
         </inertia>
       </inertial>
 
       <collision name="main_body_buoyancy">
-        <pose>0 0 0.02 0 0 0</pose>
+        <pose>0 0 0.007 0 0 0</pose>
         <geometry>
           <box>
             <size>2 0.3 0.245945166667</size>
