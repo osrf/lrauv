@@ -177,6 +177,7 @@ install(
 foreach(EXAMPLE
   example_buoyancy
   example_controller
+  example_elevator
   example_mass_shifter
   example_rudder
   example_spawn
@@ -236,6 +237,7 @@ if(BUILD_TESTING)
     test_buoyancy_action
     test_controller
     test_drop_weight
+    test_elevator
     test_mass_shifter
     test_mission_depth_vbs
     test_mission_pitch_mass
