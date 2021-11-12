@@ -55,12 +55,21 @@ void commandVehicleForward(const std::string &_name)
           "/model/" + _name + "/joint/propeller_joint/cmd_pos");
 
   msgs::Double thrustCmd;
-  thrustCmd.set_data(-6.7);
 
-  for (int i = 0; i < 3; i++)
+  // 300 rpm -> 31.42rads^-1
+  //   -> (31.42rads^-1)^2 * 0.004422 (thrust coeff) * 1000 (fluid density) 
+  //      * 0.2m ^ 4 (prop diameter) = 6.9857
+  thrustCmd.set_data(-6.9857);
+
+  int sleep{0};
+  int maxSleep{30};
+  for (; !pub.HasConnections() && sleep < maxSleep; ++sleep)
   {
-    pub.Publish(thrustCmd);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
+  ASSERT_LT(sleep, maxSleep);
+  pub.Publish(thrustCmd);
+
 }
 
 //////////////////////////////////////////////////
@@ -89,6 +98,7 @@ void checkDamping(const std::vector<ignition::math::Vector3d> &_velocities)
     }
 
     idx++;
+
     if(idx > 30) // Wait few iterations for message to be received :(
     {
       EXPECT_LE(acc.Length(), prevAcc.Length());
@@ -247,7 +257,7 @@ TEST(HydrodynamicsTest, DampForwardThrust)
   
   // This value seems a little off. Possibly due to the sinking motion
   EXPECT_NEAR(
-    velocitiesV1.rbegin()->Length(), 1.01, 1e-2);
+    velocitiesV1.rbegin()->Length(), 1.01, 1e-1);
 
   // Should not have a Z velocity.
   // TODO(arjo): We seem to have a very slight 0.3mm/s sinking motion
