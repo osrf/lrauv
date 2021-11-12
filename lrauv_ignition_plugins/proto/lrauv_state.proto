@@ -43,9 +43,13 @@ message LRAUVState
   int32 errorPad_                 = 2;
   int32 utmZone_                  = 3;
   int32 northernHemi_             = 4;
-  float propOmega_                = 5;
-  float propThrust_               = 6;
-  float propTorque_               = 7;
+  float propOmega_                = 5;  // Current angular velocity of the
+                                        // propeller. Unit: rad / s. Positive
+                                        // values rotate the propeller
+                                        // clockwise when looking from the back,
+                                        // and propel the vehicle forward.
+  float propThrust_               = 6;  // Not populated
+  float propTorque_               = 7;  // Not populated
   float rudderAngle_              = 8;  // Angle that the rudder joint is
                                         // currently at. Unit: radians.
                                         // Higher values have the vertical fins

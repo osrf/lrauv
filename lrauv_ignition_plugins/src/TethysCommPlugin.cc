@@ -414,10 +414,15 @@ void TethysCommPlugin::CommandCallback(
   // Thruster
   ignition::msgs::Double thrusterMsg;
   // TODO(arjo):
-  // Conversion from rpm-> force b/c thruster plugin takes force
+  // Conversion from angular velocity to force b/c thruster plugin takes force
   // Maybe we should change that?
+  // https://github.com/osrf/lrauv/issues/75
   auto angVel = _msg.propomegaaction_();
-  auto force = -0.004422 * 1000 * 0.0016 * angVel * angVel;
+
+  // force = thrust_coefficient * fluid_density * omega ^ 2 * 
+  //         propeller_diameter ^ 4
+  // These values are defined in the model's Thruster plugin's SDF
+  auto force = 0.00004422 * 1000 * 0.2 * angVel * angVel;
   if (angVel < 0)
   {
     force *=-1;
@@ -500,7 +505,7 @@ void TethysCommPlugin::PostUpdate(
     ignerr << "Propeller joint has wrong size\n";
     return;
   }
-  stateMsg.set_propomega_(-propAngVelComp->Data()[0]);
+  stateMsg.set_propomega_(propAngVelComp->Data()[0]);
 
   // Rudder joint position
   auto rudderPosComp =

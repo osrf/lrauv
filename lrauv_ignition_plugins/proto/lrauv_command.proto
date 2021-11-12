@@ -37,7 +37,12 @@ message LRAUVCommand
   /// \brief Optional header data
   ignition.msgs.Header header  = 1;
 
-  float propOmega_             = 2;
+  float propOmega_             = 2;  // Angular velocity that the controller
+                                     // believes the propeller is currently at.
+                                     // Unit: rad / s. Positive values rotate
+                                     // the propeller clockwise when looking
+                                     // from the back, and propel the vehicle
+                                     // forward.
   float rudderAngle_           = 3;  // Angle that the controller believes the
                                      // rudder is currently at. Unit: radians.
                                      // Higher values have the vertical fins
@@ -60,7 +65,11 @@ message LRAUVCommand
   bool dropWeightState_        = 7;  // Indicator "dropweight OK"
                                      // 1 = in place, 0 = dropped
 
-  float propOmegaAction_       = 8;
+  float propOmegaAction_       = 8;  // Target angular velocity for the
+                                     // propeller. Unit: rad / s. Positive
+                                     // values rotate the propeller clockwise
+                                     // when looking from the back, and propel
+                                     // the vehicle forward.
   float rudderAngleAction_     = 9;  // Target angle for rudder joint. Unit:
                                      // radians. Higher values rotate the
                                      // vertical fins clockwise when looking

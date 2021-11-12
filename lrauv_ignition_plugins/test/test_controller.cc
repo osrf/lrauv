@@ -37,11 +37,12 @@ TEST_F(LrauvTestFixture, Command)
   EXPECT_EQ(100, this->tethysPoses.size());
   EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().X(), 1e-6);
 
-  // Propel vehicle
+  // Propel vehicle forward by giving the propeller a positive angular velocity
   lrauv_ignition_plugins::msgs::LRAUVCommand cmdMsg;
   cmdMsg.set_propomegaaction_(30);
 
   // Neutral buoyancy
+  cmdMsg.set_dropweightstate_(true);
   cmdMsg.set_buoyancyaction_(0.0005);
 
   // Run server until the command is processed and the model reaches a certain
