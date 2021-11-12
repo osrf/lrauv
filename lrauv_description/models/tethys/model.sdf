@@ -24,7 +24,9 @@
           <iyz>0</iyz>
           <izz>41.980233</izz-->
 
-          <!-- Guesstimated (decreased by 1/5) to account for battery -->
+          <!-- Taken by adding the inertias of the pressure, tailcone and the
+            nose.
+          -->
           <ixx>1.157</ixx>
           <ixy>0.007</ixy>
           <ixz>0.033</ixz>
