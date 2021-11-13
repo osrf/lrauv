@@ -605,7 +605,7 @@ void TethysCommPlugin::PostUpdate(
   this->statePub.Publish(stateMsg);
 
   if (this->debugPrintout &&
-   _info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
+    _info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
   {
     igndbg << "[" << this->ns << "] Published state to " << this->stateTopic
       << " at time: " << stateMsg.header().stamp().sec()
