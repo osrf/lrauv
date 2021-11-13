@@ -22,10 +22,11 @@
 
 #include <ignition/msgs/pointcloud_packed.pb.h>
 
-#include <ignition/plugin/Register.hh>
 #include <ignition/common/SystemPaths.hh>
+#include <ignition/gazebo/World.hh>
 #include <ignition/math/SphericalCoordinates.hh>
 #include <ignition/msgs/Utility.hh>
+#include <ignition/plugin/Register.hh>
 #include <ignition/transport/Node.hh>
 
 #include <pcl/conversions.h>
@@ -39,9 +40,13 @@ using namespace tethys;
 
 class tethys::ScienceSensorsSystemPrivate
 {
+  /// \brief Initialize world origin in spherical coordinates
+  public: void UpdateWorldSphericalOrigin(
+    ignition::gazebo::EntityComponentManager &_ecm);
+
   /// \brief Shift point cloud with respect to the world origin in spherical
   /// coordinates, if available.
-  public: void GetWorldOriginSphericalCoords();
+  public: void ShiftDataToNewSphericalOrigin();
 
   /// \brief Reads csv file and populate various data fields
   public: void ReadData();
@@ -100,36 +105,37 @@ class tethys::ScienceSensorsSystemPrivate
   public: const std::string NORTH_CURRENT {
     "northward_sea_water_velocity_meter_per_sec"};
 
-  /// \brief Service name for getting the spherical coordinates associated with
-  /// the world origin
-  // public: std::string getWorldOriginSphericalService
-  //   {"/world_origin_spherical"};
-
   /// \brief Input data file name, relative to a path Ignition can find in its
   /// environment variables.
   public: std::string dataPath {"2003080103_mb_l3_las.csv"};
 
   /// \brief Indicates whether data has been loaded
-  public: bool initialized = false;
+  public: bool initialized {false};
 
-  /// World origin in spherical coordinates (latitude, longitude, elevation)
-  public: ignition::math::Vector3d worldOriginSphericalCoords = {0, 0, 0};
+  /// \brief Set to true after the spherical coordinates have been initialized.
+  /// This may happen at startup if the SDF file has them hardcoded, or at
+  /// runtime when the first vehicle is spawned. Assume the coordinates are
+  /// only shifted once.
+  public: bool worldSphericalCoordsInitialized {false};
+
+  /// \brief Spherical coordinates of world origin. Can change at any time.
+  public: ignition::math::SphericalCoordinates worldOriginSphericalCoords;
+
+  /// World origin in spherical position (latitude, longitude, elevation),
+  /// angles in degrees
+  public: ignition::math::Vector3d worldOriginSphericalPos = {0, 0, 0};
 
   /// World origin in Cartesian coordinates converted from spherical coordinates
-  public: ignition::math::Vector3d worldOriginEarthCartesianCoords = {0, 0, 0};
+  public: ignition::math::Vector3d worldOriginCartesianCoords = {0, 0, 0};
 
   /// \brief Whether using more than one time slices of data
-  public: bool multipleTimeSlices = false;
+  public: bool multipleTimeSlices {false};
 
   /// \brief Index of the latest time slice
-  public: int timeIdx = 0;
+  public: int timeIdx {0};
 
   /// \brief Timestamps to index slices of data
   public: std::vector<float> timestamps;
-
-  /// \brief Surface type, for converting spherical coordinates to Cartesian
-  public: ignition::math::SphericalCoordinates::SurfaceType surfaceType =
-    ignition::math::SphericalCoordinates::EARTH_WGS84;
 
   /// \brief Spatial coordinates of data
   /// Vector size: number of time slices. Indices correspond to those of
@@ -164,7 +170,10 @@ class tethys::ScienceSensorsSystemPrivate
   public: std::vector<pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>>
     spatialOctrees;
 
-  /// \brief Transport node
+  /// \brief World object to access world properties.
+  public: ignition::gazebo::World world;
+
+  /// \brief Node for communication
   public: ignition::transport::Node node;
 
   /// \brief Publisher for point clouds representing positions for science data
@@ -287,7 +296,8 @@ void ScienceSensorsSystemPrivate::ReadData()
   std::stringstream ss(line);
 
   // Spherical coordinates object for Cartesian conversions
-  ignition::math::SphericalCoordinates sc(this->surfaceType);
+  ignition::math::SphericalCoordinates sphCoord(
+    this->worldOriginSphericalCoords.Surface());
 
   // Tokenize header line into columns
   while (std::getline(ss, word, ','))
@@ -439,11 +449,11 @@ void ScienceSensorsSystemPrivate::ReadData()
         }
 
         // Convert spherical coordinates to Cartesian
-        ignition::math::Vector3d cart = sc.LocalFromSphericalPosition(
+        ignition::math::Vector3d cart = sphCoord.LocalFromSphericalPosition(
           {latitude, longitude, 0});
 
         // Shift to be relative to world origin spherical coordinates
-        cart -= this->worldOriginEarthCartesianCoords;
+        cart -= this->worldOriginCartesianCoords;
 
         // Performance trick. Scale down to see in view
         cart *= this->MINIATURE_SCALE;
@@ -492,83 +502,47 @@ void ScienceSensorsSystemPrivate::ReadData()
 }
 
 /////////////////////////////////////////////////
-void ScienceSensorsSystemPrivate::GetWorldOriginSphericalCoords()
+void ScienceSensorsSystemPrivate::UpdateWorldSphericalOrigin(
+  ignition::gazebo::EntityComponentManager &_ecm)
 {
-  // TODO don't hard code lat long. Initialize default value from SDF
-  // <spherical_coordinates> tag
-  this->worldOriginSphericalCoords = ignition::math::Vector3d(
-    36.8024781413352, -121.829647676843, 0);
-  // Convert spherical coordinates to Cartesian
-  ignition::math::SphericalCoordinates sc(this->surfaceType);
-  this->worldOriginEarthCartesianCoords = sc.LocalFromSphericalPosition(
-    this->worldOriginSphericalCoords);
-
-  // TODO: Need a good way (a service?) to get vehicle spawn lat long from
-  // WorldCommPlugin.cc. Cannot wait until vehicle is spawned, because could
-  // wait forever. After that, then must shift all the science coordinates AFTER
-  // ReadData(), to have Cartesian coordinates wrt new origin lat/long.
-  /*
-  ignition::msgs::Vector3d res;
-  bool success;
-
-  ignmsg << "Waiting for " << this->getWorldOriginSphericalService << "..."
-    << std::endl;
-
-  // Get world origin in spherical coordinates, if available.
-  if (!this->node.Request(this->getWorldOriginSphericalService, 5000, res,
-    success))
+  if (!this->worldSphericalCoordsInitialized)
   {
-    ignerr << "Failed to request service ["
-      << this->getWorldOriginSphericalService << "]" << std::endl;
-  }
+    auto latLon = this->world.SphericalCoordinates(_ecm);
+    if (latLon)
+    {
+      ignwarn << "New spherical coordinates detected: "
+          << latLon.value().LatitudeReference().Degree() << ", "
+          << latLon.value().LongitudeReference().Degree() << std::endl;
 
-  // If unsuccessful, a first vehicle hasn't been spawned, no long/lat info
-  if (!success)
-  {
-    ignwarn << "No long/lat information. "
-      << "Has a vehicle been spawned using the WorldCommPlugin service? "
-      << "Science data will be loaded without correcting for long/lat at world "
-      << "origin."
-      << std::endl;
-  }
-  else
-  {
-    this->worldOriginSphericalCoords = ignition::math::Vector3d(
-      res.x(), res.y(), res.z());
+      this->worldOriginSphericalCoords = latLon.value();
 
-    // Convert spherical coordinates to Cartesian
-    ignition::math::SphericalCoordinates sc(this->surfaceType);
-    this->worldOriginEarthCartesianCoords = sc.LocalFromSphericalPosition(
-      this->worldOriginSphericalCoords);
-  }
-  */
-}
+      // Extract world origin in (lat, long, elevation) from spherical coords
+      this->worldOriginSphericalPos = ignition::math::Vector3d(
+        this->worldOriginSphericalCoords.LatitudeReference().Degree(),
+        this->worldOriginSphericalCoords.LongitudeReference().Degree(),
+        0);
+      // Convert spherical coordinates to Cartesian
+      ignition::math::SphericalCoordinates sphCoord(
+        this->worldOriginSphericalCoords.Surface());
+      this->worldOriginCartesianCoords = sphCoord.LocalFromSphericalPosition(
+        this->worldOriginSphericalPos);
 
+      this->worldSphericalCoordsInitialized = true;
 
-/*
-  if (!this->node.Request(this->getWorldOriginSphericalService, 5000,
-      &ScienceSensorsSystemPrivate::WorldOriginSphericalCoordsCb(), this))
-  {
-    ignerr << "Failed to request service ["
-      << this->getWorldOriginSphericalService << "]" << std::endl;
+      //TODO(chapulina) Shift science data to new coordinates
+      // If data had been loaded before origin was updated, need to shift data
+      if (this->initialized)
+      {
+        this->ShiftDataToNewSphericalOrigin();
+      }
+    }
   }
 }
 
 /////////////////////////////////////////////////
-void ScienceSensorsSystemPrivate::WorldOriginSphericalCoordsCb(
-  const ignition::msgs::Vector3d &_res,
-  const bool _success)
+void ScienceSensorsSystemPrivate::ShiftDataToNewSphericalOrigin()
 {
-  if (_success)
-  {
-    this->worldOriginSphericalCoords = _res;
-
-    // Convert spherical coordinates to Cartesian
-    this->worldOriginEarthCartesianCoords = this->sc.LocalFromSphericalPosition(
-      this->worldOriginSphericalCoords);
-  }
 }
-*/
 
 /////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::GenerateOctrees()
@@ -646,6 +620,8 @@ void ScienceSensorsSystem::Configure(
   ignition::gazebo::EntityComponentManager &_ecm,
   ignition::gazebo::EventManager &_eventMgr)
 {
+  this->dataPtr->world = ignition::gazebo::World(_entity);
+
   if (_sdf->HasElement("data_path"))
   {
     this->dataPtr->dataPath = _sdf->Get<std::string>("data_path");
@@ -680,9 +656,9 @@ void ScienceSensorsSystem::Configure(
   this->dataPtr->salPub = this->dataPtr->node.Advertise<
       ignition::msgs::Float_V>("/salinity");
 
-  // TODO: Offer a way to shift after ReadData(), in case the first vehicle is
-  // spawned much later than when ScienceSensorsSystem plugin is loaded.
-  this->dataPtr->GetWorldOriginSphericalCoords();
+  // Initialize world origin in spherical coordinates, to data is loaded to the
+  // correct Cartesian positions.
+  this->dataPtr->UpdateWorldSphericalOrigin(_ecm);
 
   this->dataPtr->ReadData();
   this->dataPtr->GenerateOctrees();
@@ -696,6 +672,11 @@ void ScienceSensorsSystem::PreUpdate(
   const ignition::gazebo::UpdateInfo &,
   ignition::gazebo::EntityComponentManager &_ecm)
 {
+  if (!this->dataPtr->worldSphericalCoordsInitialized)
+  {
+    this->dataPtr->UpdateWorldSphericalOrigin(_ecm);
+  }
+
   _ecm.EachNew<ignition::gazebo::components::CustomSensor,
                ignition::gazebo::components::ParentEntity>(
     [&](const ignition::gazebo::Entity &_entity,
