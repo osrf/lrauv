@@ -17,26 +17,12 @@
         <pose>0.15556377681 0 0 0 0 0</pose>
         <!-- TODO: Get inertial matrix of base link WITHOUT battery -->
         <inertia>
-          <!--ixx>3.000000</ixx>
+          <ixx>3.000000</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
           <iyy>41.980233</iyy>
           <iyz>0</iyz>
-          <izz>41.980233</izz-->
-
-          <!-- Taken by adding the inertias of the pressure, tailcone and the
-            nose.
-          -->
-          <ixx>1.157</ixx>
-          <ixy>0.007</ixy>
-          <ixz>0.033</ixz>
-          <iyx>0.0005</iyx>
-          <iyy>9.65</iyy>
-          <iyz>0.002</iyz>
-          <izx>0.033</izx>
-          <izy>0.002</izy>
-          <izz>9.52</izz>
-
+          <izz>41.980233</izz>
         </inertia>
       </inertial>
 
@@ -376,7 +362,6 @@
     <link name="drop_weight">
       <pose>0 0 0 0 0 0</pose>
       <inertial>
-        <pose>0 0 0 0 0 0</pose>
         <mass>1</mass>
         <inertia>
           <ixx>0.000143971303</ixx>
