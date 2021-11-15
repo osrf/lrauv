@@ -13,7 +13,8 @@
         <!-- 146.5671 subtracted by battery mass -->
         <mass>114.8364</mass>
 
-        <!--This is calculated by taking the center of mass and subtractin-->
+        <!-- This is calculated by taking the center of mass and subtracting-->
+        <!-- the center of mass-->
         <pose>0.15444914765060455 0 0 0 0 0</pose>
         <!-- TODO: Get inertial matrix of base link WITHOUT battery -->
         <inertia>
@@ -27,7 +28,9 @@
       </inertial>
 
       <collision name="main_body_buoyancy">
-        <pose>0 0 0.007 0 0 0</pose>
+        <!-- This line applies righting moments to the vehicle.
+          Currently set fairly arbitrarily. Supposed to be 0.0017 -->
+        <pose>0 0 -0.02 0 0 0</pose>
         <geometry>
           <box>
             <size>2 0.3 0.245945166667</size>
@@ -237,7 +240,7 @@
       <pose>0 0 0 0 0 0</pose>
       <inertial>
         <!-- Non-zero y creates roll. Not fun to tune without actual base link inertia minus battery-->
-        <pose>-0.563 0 0 0 0 0</pose>
+        <pose>-0.563 0 -0.024 0 0 0</pose>
         <mass>31.7307</mass>
         <inertia>
           <ixx>0.2327</ixx>
@@ -360,7 +363,7 @@
 
     <!-- Drop weight -->
     <link name="drop_weight">
-      <pose>0.128 0 0 0 0 0</pose>
+      <pose>0.128 0 -0.142 0 0 0</pose>
       <inertial>
         <mass>1</mass>
         <inertia>
