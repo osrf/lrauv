@@ -14,7 +14,7 @@
         <mass>114.8364</mass>
 
         <!--This is calculated by taking the center of mass and subtractin-->
-        <pose>0.15556377681 0 0 0 0 0</pose>
+        <pose>0.15444914765060455 0 0 0 0 0</pose>
         <!-- TODO: Get inertial matrix of base link WITHOUT battery -->
         <inertia>
           <ixx>3.000000</ixx>
@@ -360,7 +360,7 @@
 
     <!-- Drop weight -->
     <link name="drop_weight">
-      <pose>0 0 0 0 0 0</pose>
+      <pose>0.128 0 0 0 0 0</pose>
       <inertial>
         <mass>1</mass>
         <inertia>
