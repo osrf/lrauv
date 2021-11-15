@@ -246,10 +246,7 @@ def main():
 
   # Overall figure title
   fig.suptitle(missionName + '\n' + title_suffix + ', %d runs' % len(timestamps))
-
   fig.savefig(os.path.join(out_path, title_suffix + '_' + missionName + '.png'), bbox_inches='tight')
-  plt.show()
-
 
 if __name__ == '__main__':
   main()
