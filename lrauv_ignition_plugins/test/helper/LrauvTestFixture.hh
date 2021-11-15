@@ -199,11 +199,11 @@ class LrauvTestFixture : public ::testing::Test
     
     cmd =
       std::string("sudo /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/plot_misions.py ") + _target;
-    system(cmd.cstr());
+    system(cmd.c_str());
 
     cmd = std::string("sudo cp -r /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/") +
       _target+ " /results/";
-    system(cmd.str());
+    system(cmd.c_str());
   }
 
   /// \brief Spin up a new process and execute the LRAUV controller.
