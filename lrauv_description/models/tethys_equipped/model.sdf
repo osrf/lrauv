@@ -151,6 +151,7 @@
         <namespace>tethys</namespace>
         <command_topic>tethys/command_topic</command_topic>
         <state_topic>tethys/state_topic</state_topic>
+        <debug_printout>0</debug_printout>
       </plugin>
       <plugin
         filename="HydrodynamicsPlugin"
