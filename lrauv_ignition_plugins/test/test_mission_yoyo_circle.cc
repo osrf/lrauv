@@ -75,12 +75,11 @@ TEST_F(LrauvTestFixture, YoYoCircle)
 
   ignmsg << "Logged [" << this->tethysPoses.size() << "] poses" << std::endl;
 
-  int maxIterations{28000};
-  ASSERT_LT(maxIterations, this->tethysPoses.size());
+  int minIterations{28000};
+  ASSERT_LT(minIterations, this->tethysPoses.size());
 
   // Check bounds
-  double dtSec = std::chrono::duration_cast<std::chrono::nanoseconds>(
-      this->dt).count() * 1e-9;
+  double dtSec = std::chrono::duration<double>(this->dt).count();
   ASSERT_LT(0.0, dtSec);
   double time100it = 100 * dtSec;
   for (unsigned int i = 100; i < this->tethysPoses.size(); i += 100)
@@ -110,7 +109,7 @@ TEST_F(LrauvTestFixture, YoYoCircle)
   }
 
   // Uncomment to get new expectations
-  // for (int i = 500; i <= maxIterations; i += 500)
+  // for (int i = 500; i <= minIterations; i += 500)
   // {
   //   auto pose = this->tethysPoses[i];
   //   std::cout << "this->CheckRange(" << i << ", {"

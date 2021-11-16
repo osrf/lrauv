@@ -419,7 +419,7 @@ void TethysCommPlugin::CommandCallback(
   // https://github.com/osrf/lrauv/issues/75
   auto angVel = _msg.propomegaaction_();
 
-  // force = thrust_coefficient * fluid_density * omega ^ 2 * 
+  // force = thrust_coefficient * fluid_density * omega ^ 2 *
   //         propeller_diameter ^ 4
   // These values are defined in the model's Thruster plugin's SDF
   auto force = 0.00004422 * 1000 * 0.2 * angVel * angVel;
@@ -484,8 +484,8 @@ void TethysCommPlugin::PostUpdate(
   const ignition::gazebo::UpdateInfo &_info,
   const ignition::gazebo::EntityComponentManager &_ecm)
 {
-  ignition::gazebo::Link baseLink(modelLink);
-  auto modelPose = ignition::gazebo::worldPose(modelLink, _ecm);
+  ignition::gazebo::Link baseLink(this->modelLink);
+  auto modelPose = ignition::gazebo::worldPose(this->modelLink, _ecm);
 
   // Publish state
   lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
@@ -558,7 +558,7 @@ void TethysCommPlugin::PostUpdate(
   // Speed
   auto linearVelocity =
     _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
-    modelLink);
+    this->modelLink);
   stateMsg.set_speed_(linearVelocity->Data().Length());
 
   // Lat long

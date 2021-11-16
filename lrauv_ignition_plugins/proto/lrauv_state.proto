@@ -68,7 +68,8 @@ message LRAUVState
 
   ignition.msgs.Vector3d rph_     = 13;  // roll_, pitch_, heading_ in SimResultStruct (rad)
 
-  float speed_                    = 14;
+  float speed_                    = 14;  // Magnitude of linear velocity in the
+                                         // world frame. Unit: m / s
   double latitudeDeg_             = 15;
   double longitudeDeg_            = 16;
   float netBuoy_                  = 17;  // Net buoyancy forces applied to the
