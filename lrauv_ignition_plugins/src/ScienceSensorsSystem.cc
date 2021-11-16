@@ -49,13 +49,13 @@ class tethys::ScienceSensorsSystemPrivate
   /// interpolate among.
   /// \param[in] _pt Location in space to interpolate for
   /// \param[in] _inds Indices in _arr
-  /// \param[in] _dists Distances of elements in _arr
+  /// \param[in] _sqrDists Distances of elements in _arr
   /// \param[out] _interpolatorIndsRV Result. Indices of points to interpolate
   /// among
   public: void FindInterpolators(
     pcl::PointXYZ &_pt,
     std::vector<int> &_inds,
-    std::vector<float> &_dists,
+    std::vector<float> &_sqrDists,
     std::vector<int> &_interpolatorIndsRV);
 
   /// \brief Create a slice from a point cloud, represented in a matrix of size
@@ -89,12 +89,12 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Interpolate floating point data based on distance
   /// \param[in] _arr Array of data from which to find elements to interpolate
   /// \param[in] _inds Indices in _arr
-  /// \param[in] _dists Distances of elements in _arr
+  /// \param[in] _sqrDists Distances of elements in _arr
   /// \return Interpolated value, or quiet NaN if inputs invalid.
   public: float InterpolateData(
     std::vector<float> _arr,
     std::vector<int> &_inds,
-    std::vector<float> &_dists);
+    std::vector<float> &_sqrDists);
 
   /// \brief csv field name for timestamp of data
   public: const std::string TIME {"elapsed_time_second"};
@@ -470,7 +470,7 @@ void ScienceSensorsSystemPrivate::GenerateOctrees()
 void ScienceSensorsSystemPrivate::FindInterpolators(
   pcl::PointXYZ &_pt,
   std::vector<int> &_inds,
-  std::vector<float> &_dists,
+  std::vector<float> &_sqrDists,
   std::vector<int> &_interpolatorIndsRV)
 {
   // Sanity checks
@@ -484,15 +484,15 @@ void ScienceSensorsSystemPrivate::FindInterpolators(
   {
     return;
   }
-  if (_inds.size() == 0 || _dists.size() == 0)
+  if (_inds.size() == 0 || _sqrDists.size() == 0)
   {
     ignwarn << "FindInterpolators(): Invalid neighbors aray size ("
-            << _inds.size() << " and " << _dists.size()
+            << _inds.size() << " and " << _sqrDists.size()
             << "). No neighbors to use for interpolation. Returning NaN."
             << std::endl;
     return;
   }
-  if (_inds.size() != _dists.size())
+  if (_inds.size() != _sqrDists.size())
   {
     ignwarn << "FindInterpolators(): Number of neighbors != number of "
             << "distances. Invalid input. Returning NaN." << std::endl;
@@ -500,19 +500,18 @@ void ScienceSensorsSystemPrivate::FindInterpolators(
   }
 
   // Closest neighbor
-  // The distances from kNN search are sorted, so can always just take _dists[0]
+  // The distances from kNN search are sorted, so can always just take [0]th
   int nnIdx = _inds[0];
-  float minDist = _dists[0];
-  ignerr << this->timeSpaceCoords[this->timeIdx]->size() << " points. "
-         << "nnIdx " << nnIdx << " _inds[0] " << _inds[0] << std::endl;
+  float minDist = _sqrDists[0];
   // Get z of neighbor
   float nnZ = this->timeSpaceCoords[this->timeIdx]->at(nnIdx).z;
 
+  // TODO: Remove all points at the z of the closest neighbor, so the second
+  // closest neighbor will fall into another slice
+
   // Second-closest neighbor
   int nnIdx2 = _inds[1];
-  float minDist2 = _dists[1];
-  ignerr << this->timeSpaceCoords[this->timeIdx]->size() << " points. "
-         << "nnIdx2 " << nnIdx2 << std::endl;
+  float minDist2 = _sqrDists[1];
   // Get z of neighbor
   float nnZ2 = this->timeSpaceCoords[this->timeIdx]->at(nnIdx2).z;
 
@@ -534,8 +533,15 @@ void ScienceSensorsSystemPrivate::FindInterpolators(
   std::vector<int> interpolatorInds1, interpolatorInds2;
   std::vector<float> interpolatorSqrDists1, interpolatorSqrDists2;
 
+  igndbg << this->timeSpaceCoords[this->timeIdx]->size() << " points"
+    << std::endl;
+  igndbg << "Slice 1 nnIdx " << nnIdx << ", dist " << sqrt(minDist)
+    << std::endl;
   this->CreateDepthSlice(_pt, nnZ, points, zSlice1, zSliceInds1,
     interpolatorInds1, interpolatorSqrDists1);
+
+  igndbg << "Slice 2 nnIdx " << nnIdx2 << ", dist " << sqrt(minDist2)
+    << std::endl;
   this->CreateDepthSlice(_pt, nnZ2, points, zSlice2, zSliceInds2,
     interpolatorInds2, interpolatorSqrDists2);
 
@@ -644,18 +650,18 @@ void ScienceSensorsSystemPrivate::PublishData()
 float ScienceSensorsSystemPrivate::InterpolateData(
   std::vector<float> _arr,
   std::vector<int> &_inds,
-  std::vector<float> &_dists)
+  std::vector<float> &_sqrDists)
 {
   // Sanity checks
-  if (_inds.size() == 0 || _dists.size() == 0)
+  if (_inds.size() == 0 || _sqrDists.size() == 0)
   {
     ignwarn << "InterpolateData(): Invalid neighbors aray size ("
-            << _inds.size() << " and " << _dists.size()
+            << _inds.size() << " and " << _sqrDists.size()
             << "). No neighbors to use for interpolation. Returning NaN."
             << std::endl;
     return std::numeric_limits<float>::quiet_NaN();
   }
-  if (_inds.size() != _dists.size())
+  if (_inds.size() != _sqrDists.size())
   {
     ignwarn << "InterpolateData(): Number of neighbors != number of distances."
             << "Invalid input. Returning NaN." << std::endl;
@@ -664,25 +670,25 @@ float ScienceSensorsSystemPrivate::InterpolateData(
 
   // Find closest neighbor
   int nnIdx = _inds[0];
-  float minDist = _dists[0];
+  float minDist = _sqrDists[0];
   for (int i = 0; i < _inds.size(); ++i)
   {
-    if (_dists[i] < minDist)
+    if (_sqrDists[i] < minDist)
     {
       nnIdx = _inds[i];
-      minDist = _dists[i];
+      minDist = _sqrDists[i];
     }
   }
 
   // Find second-closest neighbor
   int secondNnIdx = _inds[0];
-  float secondMinDist = _dists[secondNnIdx];
+  float secondMinDist = _sqrDists[secondNnIdx];
   for (int i = 0; i < _inds.size(); ++i)
   {
-    if (_dists[_inds[i]] < secondMinDist && i != nnIdx)
+    if (_sqrDists[_inds[i]] < secondMinDist && i != nnIdx)
     {
       secondNnIdx = _inds[i];
-      secondMinDist = _dists[secondNnIdx];
+      secondMinDist = _sqrDists[secondNnIdx];
     }
   }
 
@@ -803,6 +809,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     for (auto &[entity, sensor] : this->entitySensorMap)
     {
       // Sensor pose in lat/lon, used to search for data by spatial coordinates
+      // TODO: Convert to Cartesian!!!
       auto sensorLatLon = ignition::gazebo::sphericalCoordinates(entity, _ecm);
       if (!sensorLatLon)
       {
@@ -819,6 +826,11 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
           sensorLatLon.value().X(),
           sensorLatLon.value().Y(),
           sensorLatLon.value().Z());
+
+      igndbg << "Searching around sensor location "
+        << searchPoint.x << ", "
+        << searchPoint.y << ", "
+        << searchPoint.z << std::endl;
 
       // kNN search (alternatives are voxel search and radius search. kNN
       // search is good for variable resolution when the distance to the next
