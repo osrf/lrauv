@@ -46,6 +46,12 @@ class tethys::ScienceSensorsSystemPrivate
   public: void UpdateWorldSphericalOrigin(
     ignition::gazebo::EntityComponentManager &_ecm);
 
+  /// \brief Convert (lat, lon, 0) to Cartesian XYZ, including shifting by
+  /// world origin
+  public: void ConvertLatLonToCart(
+    const ignition::math::Vector3d &_latlon,
+    ignition::math::Vector3d &_cart);
+
   /// \brief Shift point cloud with respect to the world origin in spherical
   /// coordinates, if available.
   public: void ShiftDataToNewSphericalOrigin();
@@ -126,12 +132,16 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Spherical coordinates of world origin. Can change at any time.
   public: ignition::math::SphericalCoordinates worldOriginSphericalCoords;
 
-  /// World origin in spherical position (latitude, longitude, elevation),
-  /// angles in degrees
+  /// \brief World origin in spherical position (latitude, longitude,
+  /// elevation), angles in degrees
   public: ignition::math::Vector3d worldOriginSphericalPos = {0, 0, 0};
 
-  /// World origin in Cartesian coordinates converted from spherical coordinates
+  /// \brief World origin in Cartesian coordinates converted from spherical
+  /// coordinates
   public: ignition::math::Vector3d worldOriginCartesianCoords = {0, 0, 0};
+
+  /// \brief For conversions
+  public: ignition::math::SphericalCoordinates sphCoord;
 
   /// \brief Whether using more than one time slices of data
   public: bool multipleTimeSlices {false};
@@ -206,14 +216,14 @@ class tethys::ScienceSensorsSystemPrivate
   public: int repeatPubTimes = 1;
 
   // TODO This is a workaround pending upstream Ignition orbit tool improvements
-  // Scale down in order to see in view
+  // \brief Scale down in order to see in view
   // For 2003080103_mb_l3_las_1x1km.csv
   //public: const float MINIATURE_SCALE = 0.01;
   // For 2003080103_mb_l3_las.csv
   public: const float MINIATURE_SCALE = 0.0001;
 
   // TODO This is a workaround pending upstream Marker performance improvements.
-  // Performance trick. Skip depths below this z, so have memory to
+  // \brief Performance trick. Skip depths below this z, so have memory to
   // visualize higher layers at higher resolution.
   // This is only for visualization, so that MAX_PTS_VIS can calculate close
   // to the actual number of points visualized.
@@ -303,10 +313,6 @@ void ScienceSensorsSystemPrivate::ReadData()
   std::getline(fs, line);
 
   std::stringstream ss(line);
-
-  // Spherical coordinates object for Cartesian conversions
-  ignition::math::SphericalCoordinates sphCoord(
-    this->worldOriginSphericalCoords.Surface());
 
   // Tokenize header line into columns
   while (std::getline(ss, word, ','))
@@ -458,11 +464,8 @@ void ScienceSensorsSystemPrivate::ReadData()
         }
 
         // Convert spherical coordinates to Cartesian
-        ignition::math::Vector3d cart = sphCoord.LocalFromSphericalPosition(
-          {latitude, longitude, 0});
-
-        // Shift to be relative to world origin spherical coordinates
-        cart -= this->worldOriginCartesianCoords;
+        ignition::math::Vector3d cart;
+        this->ConvertLatLonToCart({latitude, longitude, 0}, cart);
 
         // Performance trick. Scale down to see in view
         cart *= this->MINIATURE_SCALE;
@@ -534,10 +537,11 @@ void ScienceSensorsSystemPrivate::UpdateWorldSphericalOrigin(
         this->worldOriginSphericalCoords.LongitudeReference().Degree(),
         0);
       // Convert spherical coordinates to Cartesian
-      ignition::math::SphericalCoordinates sphCoord(
+      this->sphCoord = ignition::math::SphericalCoordinates(
         this->worldOriginSphericalCoords.Surface());
-      this->worldOriginCartesianCoords = sphCoord.LocalFromSphericalPosition(
-        this->worldOriginSphericalPos);
+      this->worldOriginCartesianCoords =
+        this->sphCoord.LocalFromSphericalPosition(
+          this->worldOriginSphericalPos);
 
       this->worldSphericalCoordsInitialized = true;
 
@@ -549,6 +553,18 @@ void ScienceSensorsSystemPrivate::UpdateWorldSphericalOrigin(
       }
     }
   }
+}
+
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::ConvertLatLonToCart(
+  const ignition::math::Vector3d &_latlon,
+  ignition::math::Vector3d &_cart)
+{
+  // Convert spherical coordinates to Cartesian
+  _cart = this->sphCoord.LocalFromSphericalPosition(_latlon);
+
+  // Shift to be relative to world origin spherical coordinates
+  _cart -= this->worldOriginCartesianCoords;
 }
 
 /////////////////////////////////////////////////
