@@ -20,6 +20,8 @@
  * Research Institute (MBARI) and the David and Lucile Packard Foundation
  */
 
+#include <mutex>
+
 #include <ignition/msgs/pointcloud_packed.pb.h>
 
 #include <ignition/common/SystemPaths.hh>
@@ -117,6 +119,9 @@ class tethys::ScienceSensorsSystemPrivate
   /// runtime when the first vehicle is spawned. Assume the coordinates are
   /// only shifted once.
   public: bool worldSphericalCoordsInitialized {false};
+
+  /// \brief Mutex for writing to world origin association to lat/long
+  public: std::mutex mtx;
 
   /// \brief Spherical coordinates of world origin. Can change at any time.
   public: ignition::math::SphericalCoordinates worldOriginSphericalCoords;
@@ -284,6 +289,10 @@ ScienceSensorsSystem::ScienceSensorsSystem()
 /////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::ReadData()
 {
+  // Lock modifications to world origin spherical association until finish
+  // reading and transforming data
+  std::lock_guard<std::mutex> lock(mtx);
+
   std::fstream fs;
   fs.open(this->dataPath, std::ios::in);
 
@@ -505,6 +514,9 @@ void ScienceSensorsSystemPrivate::ReadData()
 void ScienceSensorsSystemPrivate::UpdateWorldSphericalOrigin(
   ignition::gazebo::EntityComponentManager &_ecm)
 {
+  // Lock for changes to worldOriginSpherical* until update complete
+  std::lock_guard<std::mutex> lock(mtx);
+
   if (!this->worldSphericalCoordsInitialized)
   {
     auto latLon = this->world.SphericalCoordinates(_ecm);
@@ -542,6 +554,9 @@ void ScienceSensorsSystemPrivate::UpdateWorldSphericalOrigin(
 /////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::ShiftDataToNewSphericalOrigin()
 {
+  // Lock modifications to world origin spherical association until finish
+  // transforming data
+  std::lock_guard<std::mutex> lock(mtx);
 }
 
 /////////////////////////////////////////////////
