@@ -88,7 +88,7 @@ message LRAUVCommand
                                       // Volumes higher than the neutral volume
                                       // make the vehicle float.
 
-  float density_               = 13;
-  float dt_                    = 14;
-  double time_                 = 15;
+  float density_               = 13;  // Not used
+  float dt_                    = 14;  // Not used
+  double time_                 = 15;  // Not used
 }

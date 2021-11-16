@@ -27,6 +27,7 @@
 
 #include <ignition/gazebo/Link.hh>
 #include <ignition/gazebo/System.hh>
+#include <ignition/math/Pose3.hh>
 #include <ignition/math/Temperature.hh>
 #include <ignition/transport/Node.hh>
 
@@ -190,8 +191,11 @@ namespace tethys
     /// sanity check
     private: std::chrono::steady_clock::duration prevPubPrintTime =
       std::chrono::steady_clock::duration::zero();
-    private: std::chrono::steady_clock::duration prevSubPrintTime =
-      std::chrono::steady_clock::duration::zero();
+
+    /// \brief Initial model pose expressed in North-East-Down.
+    /// The first vehicle in simulation usually has zero pose expressed in ENU,
+    /// so the initial NED pose is non-zero.
+    private: std::optional<ignition::math::Pose3d> initialModelPoseNED;
 
     /// Transport node for message passing
     private: ignition::transport::Node node;

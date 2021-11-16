@@ -41,6 +41,22 @@
 
 #include "TethysCommPlugin.hh"
 
+// East-North-Up to North-East-Down
+#define ENU_TO_NED ignition::math::Pose3d(0, 0, 0, IGN_PI, 0, IGN_PI * 0.5)
+
+// Transform model frame to FSK
+// Tethys model is currently setup as:
+// X: Back
+// Y: Starboard (right)
+// Z: Up
+// The controller expects FSK:
+// X: Forward
+// Y: Starboard (right)
+// Z: Keel (down)
+// We should make our lives easier by aligning the model with FSK, see
+// https://github.com/osrf/lrauv/issues/80
+#define MODEL_TO_FSK ignition::math::Pose3d(0, 0, 0, 0, IGN_PI, 0)
+
 using namespace tethys;
 
 /// \brief Calculates water pressure based on depth and latitude.
@@ -162,15 +178,6 @@ void AddWorldLinearVelocity(
     _ecm.CreateComponent(_entity,
       ignition::gazebo::components::WorldLinearVelocity());
   }
-}
-
-// Convert ROS coordinate frame convention (x forward, y left, z up) to
-// FSK (x fore, y starboard right, z keel down). A 180 degree rotation wrt
-// x (roll axis), i.e. flip signs on y (pitch axis) and z (heading axis).
-void ROSToFSK(ignition::math::Vector3d &_vec)
-{
-  _vec.Y(-_vec.Y());
-  _vec.Z(-_vec.Z());
 }
 
 void TethysCommPlugin::Configure(
@@ -390,15 +397,10 @@ void TethysCommPlugin::SetupEntities(
 void TethysCommPlugin::CommandCallback(
   const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg)
 {
-  // Lazy timestamp conversion just for printing
-  //if (std::chrono::seconds(int(floor(_msg.time_()))) - this->prevSubPrintTime
-  //    > std::chrono::milliseconds(1000))
   if (this->debugPrintout)
   {
     igndbg << "[" << this->ns << "] Received command: " << std::endl
       << _msg.DebugString() << std::endl;
-
-    this->prevSubPrintTime = std::chrono::seconds(int(floor(_msg.time_())));
   }
 
   // Rudder
@@ -484,17 +486,21 @@ void TethysCommPlugin::PostUpdate(
   const ignition::gazebo::UpdateInfo &_info,
   const ignition::gazebo::EntityComponentManager &_ecm)
 {
-  ignition::gazebo::Link baseLink(this->modelLink);
-  auto modelPose = ignition::gazebo::worldPose(this->modelLink, _ecm);
+  if (_info.paused)
+    return;
 
-  // Publish state
   lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
 
+  ///////////////////////////////////
+  // Header
   stateMsg.mutable_header()->mutable_stamp()->set_sec(
     std::chrono::duration_cast<std::chrono::seconds>(_info.simTime).count());
   stateMsg.mutable_header()->mutable_stamp()->set_nsec(
     int(std::chrono::duration_cast<std::chrono::nanoseconds>(
     _info.simTime).count()) - stateMsg.header().stamp().sec() * 1000000000);
+
+  ///////////////////////////////////
+  // Actuators
 
   // TODO(anyone) Maybe angular velocity should come from ThrusterPlugin
   // Propeller angular velocity
@@ -542,26 +548,26 @@ void TethysCommPlugin::PostUpdate(
   // Buoyancy position
   stateMsg.set_buoyancyposition_(this->buoyancyBladderVolume);
 
-  // Depth
-  stateMsg.set_depth_(-modelPose.Pos().Z());
+  ///////////////////////////////////
+  // Position
 
-  // Roll, pitch, heading
-  auto rph = modelPose.Rot().Euler();
-  // The LRAUV application seems not to use standard FSK when defining rotation.
-  // In particular it uses the following convention:
-  // - pitch +Ve - up
-  // - roll +Ve - starboard
-  // - yaw +Ve - starboard // Ignition/ROS coordinates are +Ve - port
-  rph.Z(-rph.Z());
-  ignition::msgs::Set(stateMsg.mutable_rph_(), rph);
+  // Gazebo is using ENU, controller expects NED
+  auto modelPoseENU = ignition::gazebo::worldPose(this->modelLink, _ecm);
+  auto modelPoseNED = ENU_TO_NED * modelPoseENU;
+  if (!this->initialModelPoseNED)
+  {
+    this->initialModelPoseNED = modelPoseNED;
+  }
 
-  // Speed
-  auto linearVelocity =
-    _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
-    this->modelLink);
-  stateMsg.set_speed_(linearVelocity->Data().Length());
+  stateMsg.set_depth_(-modelPoseENU.Pos().Z());
 
-  // Lat long
+  // w.r.t. initial pose in NED
+  auto poseOffsetNED = modelPoseNED *
+      this->initialModelPoseNED.value().Inverse();
+  ignition::msgs::Set(stateMsg.mutable_pos_(), poseOffsetNED.Pos());
+  ignition::msgs::Set(stateMsg.mutable_rph_(), poseOffsetNED.Rot().Euler());
+  ignition::msgs::Set(stateMsg.mutable_posrph_(), poseOffsetNED.Rot().Euler());
+
   auto latlon = ignition::gazebo::sphericalCoordinates(this->modelLink, _ecm);
   if (latlon)
   {
@@ -569,24 +575,39 @@ void TethysCommPlugin::PostUpdate(
     stateMsg.set_longitudedeg_(latlon.value().Y());
   }
 
-  // Robot position
-  ignition::math::Vector3d pos = modelPose.Pos();
-  ROSToFSK(pos);
-  ignition::msgs::Set(stateMsg.mutable_pos_(), pos);
+  ///////////////////////////////////
+  // Velocity
 
-  // Robot linear velocity wrt ground
-  ignition::math::Vector3d veloGround = linearVelocity->Data();
-  ROSToFSK(veloGround);
-  ignition::msgs::Set(stateMsg.mutable_posdot_(), veloGround);
+  auto linVelComp =
+    _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
+    this->modelLink);
+  if (nullptr != linVelComp)
+  {
+    auto linVelENU = linVelComp->Data();
+    stateMsg.set_speed_(linVelENU.Length());
 
-  // Water velocity
-  // rateUVW
-  // TODO(anyone)
+    // World frame in NED
+    auto linVelNED = ENU_TO_NED.Rot() * linVelENU;
+    ignition::msgs::Set(stateMsg.mutable_posdot_(), linVelNED);
 
-  // Rate of robot roll, pitch, yaw
-  // ratePQR
-  // TODO(anyone)
+    // Vehicle frame in FSK
+    auto linVelFSK = MODEL_TO_FSK.Rot() * linVelENU;
+    ignition::msgs::Set(stateMsg.mutable_rateuvw_(), linVelFSK);
+  }
 
+  auto angVelComp =
+    _ecm.Component<ignition::gazebo::components::WorldAngularVelocity>(
+    this->modelLink);
+  if (nullptr != angVelComp)
+  {
+    auto angVelENU = angVelComp->Data();
+
+    // Vehicle frame in FSK
+    auto angVelFSK = MODEL_TO_FSK.Rot() * angVelENU;
+    ignition::msgs::Set(stateMsg.mutable_ratepqr_(), angVelFSK);
+  }
+
+  ///////////////////////////////////
   // Sensor data
   stateMsg.set_salinity_(this->latestSalinity);
   stateMsg.set_temperature_(this->latestTemperature.Celsius());
@@ -595,7 +616,7 @@ void TethysCommPlugin::PostUpdate(
   double pressure = 0.0;
   if (latlon)
   {
-    auto calcPressure = pressureFromDepthLatitude(-modelPose.Pos().Z(),
+    auto calcPressure = pressureFromDepthLatitude(-modelPoseENU.Pos().Z(),
       latlon.value().X());
     if (calcPressure >= 0)
       pressure = calcPressure;
@@ -605,7 +626,8 @@ void TethysCommPlugin::PostUpdate(
 
   stateMsg.set_eastcurrent_(this->latestCurrent.X());
   stateMsg.set_northcurrent_(this->latestCurrent.Y());
-  stateMsg.set_vertcurrent_(this->latestCurrent.Z());
+  // Not populating vertCurrent because we're not getting it from the science
+  // data
 
   this->statePub.Publish(stateMsg);
 
