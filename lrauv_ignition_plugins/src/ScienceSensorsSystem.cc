@@ -165,12 +165,6 @@ class tethys::ScienceSensorsSystemPrivate
   /// World origin in Cartesian coordinates converted from spherical coordinates
   public: ignition::math::Vector3d worldOriginCartesianCoords = {0, 0, 0};
 
-  /// \brief Set to true after the spherical coordinates have been initialized.
-  /// This may happen at startup if the SDF file has them hardcoded, or at
-  /// runtime when the first vehicle is spawned. Assume the coordinates are
-  /// only shifted once.
-  public: bool worldSphericalCoordsInitialized {false};
-
   /// \brief Whether using more than one time slices of data
   public: bool multipleTimeSlices {false};
 
@@ -1022,10 +1016,10 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       std::vector<float> spatialSqrDist;
 
       // Search in octree to find spatial index of science data
-      if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].getLeafCount()
+      if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]->getLeafCount()
         > 0)
       {
-        if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].nearestKSearch(
+        if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]->nearestKSearch(
           searchPoint, k, spatialIdx, spatialSqrDist) <= 0)
         {
           ignwarn << "No data found near sensor location " << sensorLatLon.value()
