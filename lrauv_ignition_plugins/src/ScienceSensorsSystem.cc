@@ -22,9 +22,10 @@
 
 #include <ignition/msgs/pointcloud_packed.pb.h>
 
-#include <ignition/plugin/Register.hh>
 #include <ignition/common/SystemPaths.hh>
+#include <ignition/gazebo/World.hh>
 #include <ignition/msgs/Utility.hh>
+#include <ignition/plugin/Register.hh>
 #include <ignition/transport/Node.hh>
 
 #include <pcl/conversions.h>
@@ -132,6 +133,12 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Indicates whether data has been loaded
   public: bool initialized = false;
 
+  /// \brief Set to true after the spherical coordinates have been initialized.
+  /// This may happen at startup if the SDF file has them hardcoded, or at
+  /// runtime when the first vehicle is spawned. Assume the coordinates are
+  /// only shifted once.
+  public: bool worldSphericalCoordsInitialized {false};
+
   /// \brief Whether using more than one time slices of data
   public: bool multipleTimeSlices = false;
 
@@ -173,6 +180,9 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Science data. Same size as temperatureArr.
   public: std::vector<std::vector<float>> northCurrentArr;
+
+  /// \brief World object to access world properties.
+  public: ignition::gazebo::World world;
 
   /// \brief Node for communication
   public: ignition::transport::Node node;
@@ -701,6 +711,8 @@ void ScienceSensorsSystem::Configure(
   ignition::gazebo::EntityComponentManager &_ecm,
   ignition::gazebo::EventManager &_eventMgr)
 {
+  this->dataPtr->world = ignition::gazebo::World(_entity);
+
   if (_sdf->HasElement("data_path"))
   {
     this->dataPtr->dataPath = _sdf->Get<std::string>("data_path");
@@ -737,6 +749,17 @@ void ScienceSensorsSystem::PreUpdate(
   const ignition::gazebo::UpdateInfo &,
   ignition::gazebo::EntityComponentManager &_ecm)
 {
+  if (!this->dataPtr->sphericalCoordinatesInitialized)
+  {
+    auto latLon = this->dataPtr->world.SphericalCoordinates(_ecm);
+    if (latLon)
+    {
+      ignwarn << "New spherical coordinates detected." << std::endl;
+      //TODO(chapulina) Shift science data to new coordinates
+      this->dataPtr->sphericalCoordinatesInitialized = true;
+    }
+  }
+
   _ecm.EachNew<ignition::gazebo::components::CustomSensor,
                ignition::gazebo::components::ParentEntity>(
     [&](const ignition::gazebo::Entity &_entity,

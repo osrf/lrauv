@@ -198,13 +198,17 @@ void TethysCommPlugin::Configure(
   {
     this->stateTopic = _sdf->Get<std::string>("state_topic");
   }
+  if (_sdf->HasElement("debug_printout"))
+  {
+    this->debugPrintout = _sdf->Get<bool>("debug_printout");
+  }
 
   // Initialize transport
   if (!this->node.Subscribe(this->commandTopic,
       &TethysCommPlugin::CommandCallback, this))
   {
-    ignerr << "Error subscribing to topic " << "[" << this->commandTopic << "]. "
-      << std::endl;
+    ignerr << "Error subscribing to topic " << "[" << this->commandTopic
+      << "]. " << std::endl;
     return;
   }
 
@@ -389,6 +393,7 @@ void TethysCommPlugin::CommandCallback(
   // Lazy timestamp conversion just for printing
   //if (std::chrono::seconds(int(floor(_msg.time_()))) - this->prevSubPrintTime
   //    > std::chrono::milliseconds(1000))
+  if (this->debugPrintout)
   {
     igndbg << "[" << this->ns << "] Received command: " << std::endl
       << _msg.DebugString() << std::endl;
@@ -599,7 +604,8 @@ void TethysCommPlugin::PostUpdate(
 
   this->statePub.Publish(stateMsg);
 
-  if (_info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
+  if (this->debugPrintout &&
+    _info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
   {
     igndbg << "[" << this->ns << "] Published state to " << this->stateTopic
       << " at time: " << stateMsg.header().stamp().sec()
