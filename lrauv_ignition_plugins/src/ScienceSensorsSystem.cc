@@ -325,6 +325,9 @@ void ScienceSensorsSystemPrivate::ReadData()
   // reading and transforming data
   std::lock_guard<std::mutex> lock(mtx);
 
+  igndbg << "World lat/long in ReadData(): "
+    << this->worldOriginSphericalPos << std::endl;
+
   std::fstream fs;
   fs.open(this->dataPath, std::ios::in);
 
@@ -675,6 +678,8 @@ void ScienceSensorsSystemPrivate::FindInterpolators(
   std::vector<int> interpolatorInds1, interpolatorInds2;
   std::vector<float> interpolatorSqrDists1, interpolatorSqrDists2;
 
+  // Too spammy. temporarily comment out to get sci viz to work on this branch
+  /*
   igndbg << this->timeSpaceCoords[this->timeIdx]->size() << " points"
     << std::endl;
   igndbg << "Slice 1 nnIdx " << nnIdx << ", dist " << sqrt(minDist)
@@ -686,6 +691,7 @@ void ScienceSensorsSystemPrivate::FindInterpolators(
     << std::endl;
   this->CreateDepthSlice(_pt, nnZ2, points, zSlice2, zSliceInds2,
     interpolatorInds2, interpolatorSqrDists2);
+  */
 
   // TODO: Return indices of 8 points in original point cloud, using zSliceInds
   //interpolatorIndsRV
@@ -755,7 +761,7 @@ void ScienceSensorsSystemPrivate::CreateDepthSlice(
 
   int k = 4;
 
-  // TODO debug seg fault
+  /* TODO debug seg fault
   // Search in the depth slice to find 4 closest neighbors
   if (octree.nearestKSearch(
     _searchPt, k, _interpolatorInds, _interpolatorSqrDists) <= 0)
@@ -779,7 +785,7 @@ void ScienceSensorsSystemPrivate::CreateDepthSlice(
              << " m" << std::endl;
     }
   }
-  //
+  */
 }
 
 /////////////////////////////////////////////////
@@ -825,34 +831,11 @@ float ScienceSensorsSystemPrivate::InterpolateData(
     }
   }
 
-  // Find second-closest neighbor
-  int secondNnIdx = _inds[0];
-  float secondMinDist = _sqrDists[secondNnIdx];
-  for (int i = 0; i < _inds.size(); ++i)
-  {
-    if (_sqrDists[_inds[i]] < secondMinDist && i != nnIdx)
-    {
-      secondNnIdx = _inds[i];
-      secondMinDist = _sqrDists[secondNnIdx];
-    }
-  }
-
-  // Interpolate between closest and second-closest neighbors
-
-
-
-
-
   // Dummy: Just return the closest element
   return _arr[nnIdx];
 
-  // TODO Return a weighted sum, based on distance, of the elements to
-  // interpolate among
-  // TODO: Look at x and y only? Depth resolution much finer and tips kNN
-  // search. Or use radiusSearch().
 
-
-
+  // TODO trilinear interpolation using the 8 interpolators found
 }
 
 /////////////////////////////////////////////////
@@ -972,19 +955,24 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       this->dataPtr->repeatPubTimes++;
     }
 
-    // For each sensor, get its pose, search in the octree for the closest
-    // neighbors, and interpolate to get approximate data at this sensor pose.
+    // Spherical coordinates object for conversions
+    ignition::math::SphericalCoordinates sphCoord(
+      this->dataPtr->worldOriginSphericalCoords.Surface());
+
+    // Get a sensor's pose, search in the octree for the closest neighbors, and
+    // interpolate to get approximate data at this sensor pose.
+    // Only need to done for one sensor. All sensors are on the robot, doesn't
+    // make a big difference to data location.
     for (auto &[entity, sensor] : this->entitySensorMap)
     {
       // Sensor pose in lat/lon, used to search for data by spatial coordinates
-      // TODO convert to Cartesian
       auto sensorLatLon = ignition::gazebo::sphericalCoordinates(entity, _ecm);
-      /*
-      // TODO DEBUG what is the sensor attached to?? World? Not robot?
-      ignerr << "sensor lat long: "
-             << sensorLatLon.value().X() << ", " << sensorLatLon.value().Y()
-             << std::endl;
-      */
+      //
+      igndbg << "Sensor (lat, long, elevation): "
+        << sensorLatLon.value().X() << ", "
+        << sensorLatLon.value().Y() << ", "
+        << sensorLatLon.value().Z() << std::endl;
+      //
       if (!sensorLatLon)
       {
         static std::unordered_set<ignition::gazebo::Entity> warnedEntities;
@@ -996,15 +984,27 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         }
         continue;
       }
-      pcl::PointXYZ searchPoint(
-          sensorLatLon.value().X(),
-          sensorLatLon.value().Y(),
-          sensorLatLon.value().Z());
 
-      igndbg << "Searching around sensor location "
+      // Convert spherical coordinates to Cartesian
+      // TODO: This conversion result is HUGE! Why??
+      ignition::math::Vector3d sensorCart = sphCoord.LocalFromSphericalPosition(
+        sensorLatLon.value());
+      // Shift to be relative to world origin spherical coordinates
+      sensorCart -= this->dataPtr->worldOriginCartesianCoords;
+      //
+      igndbg << "Sensor Cartesian XYZ: "
+        << sensorCart.X() << ", "
+        << sensorCart.Y() << ", "
+        << sensorCart.Z() << std::endl;
+      //
+
+      pcl::PointXYZ searchPoint(sensorCart.X(), sensorCart.Y(), sensorCart.Z());
+      /*
+      igndbg << "Searching around sensor Cartesian location "
         << searchPoint.x << ", "
         << searchPoint.y << ", "
         << searchPoint.z << std::endl;
+      */
 
       // kNN search (alternatives are voxel search and radius search. kNN
       // search is good for variable resolution when the distance to the next
@@ -1022,7 +1022,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]->nearestKSearch(
           searchPoint, k, spatialIdx, spatialSqrDist) <= 0)
         {
-          ignwarn << "No data found near sensor location " << sensorLatLon.value()
+          ignwarn << "No data found near sensor location " << sensorCart
                   << std::endl;
           continue;
         }
@@ -1047,15 +1047,21 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         }
         */
 
-        // TODO: Remove all points matching z of first neighbor, then search
-        // again for a point in another z slice.
+        // TODO Remove all points matching z of first neighbor, then search
+        // again for 4 points in another z slice. Then pass 2 sets of 4 points
+        // to InterpolateData() for trilinear interpolation. Rewrite
+        // InterpolateData().
+        // Temporary commented out to see if sci viz works
+        /*
         std::vector<int> interpolatorInds;
         this->dataPtr->FindInterpolators(searchPoint, spatialIdx, spatialSqrDist,
           interpolatorInds);
 
-        // TODO trilinear interpolation using the 8 interpolators found
-
         // For the correct sensor, grab closest neighbors and interpolate
+        // TODO Does InterpolateData() really need to be called on every sensor
+        // separately, or can it just be called once each loop, i.e. assume
+        // a location has all types of measurements? These sensors are all on
+        // the robot, it's not like they're in vastly different locations!!
         if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
         {
           float sal = this->dataPtr->InterpolateData(
@@ -1098,7 +1104,17 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         {
           ignerr << "Unsupported sensor type, failed to set data" << std::endl;
         }
+        */ // temp comment out to get sci viz to work on this branch
       }
+
+      // Only need to find position ONCE for the entire robot. Don't need to
+      // repeat for every sensor.
+      break;
+    }
+
+    // Update all the sensors
+    for (auto &[entity, sensor] : this->entitySensorMap)
+    {
       sensor->Update(_info.simTime, false);
     }
   }
