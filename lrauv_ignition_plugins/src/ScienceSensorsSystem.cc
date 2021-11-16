@@ -46,6 +46,12 @@ class tethys::ScienceSensorsSystemPrivate
   public: void UpdateWorldSphericalOrigin(
     ignition::gazebo::EntityComponentManager &_ecm);
 
+  /// \brief Convert (lat, lon, 0) to Cartesian XYZ, including shifting by
+  /// world origin
+  public: void ConvertLatLonToCart(
+    const ignition::math::Vector3d &_latlon,
+    ignition::math::Vector3d &_cart);
+
   /// \brief Shift point cloud with respect to the world origin in spherical
   /// coordinates, if available.
   public: void ShiftDataToNewSphericalOrigin();
@@ -158,12 +164,16 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Spherical coordinates of world origin. Can change at any time.
   public: ignition::math::SphericalCoordinates worldOriginSphericalCoords;
 
-  /// World origin in spherical position (latitude, longitude, elevation),
-  /// angles in degrees
+  /// \brief World origin in spherical position (latitude, longitude,
+  /// elevation), angles in degrees
   public: ignition::math::Vector3d worldOriginSphericalPos = {0, 0, 0};
 
-  /// World origin in Cartesian coordinates converted from spherical coordinates
+  /// \brief World origin in Cartesian coordinates converted from spherical
+  /// coordinates
   public: ignition::math::Vector3d worldOriginCartesianCoords = {0, 0, 0};
+
+  /// \brief For conversions
+  public: ignition::math::SphericalCoordinates sphCoord;
 
   /// \brief Whether using more than one time slices of data
   public: bool multipleTimeSlices {false};
@@ -339,10 +349,6 @@ void ScienceSensorsSystemPrivate::ReadData()
 
   std::stringstream ss(line);
 
-  // Spherical coordinates object for Cartesian conversions
-  ignition::math::SphericalCoordinates sphCoord(
-    this->worldOriginSphericalCoords.Surface());
-
   // Tokenize header line into columns
   while (std::getline(ss, word, ','))
   {
@@ -493,11 +499,8 @@ void ScienceSensorsSystemPrivate::ReadData()
         }
 
         // Convert spherical coordinates to Cartesian
-        ignition::math::Vector3d cart = sphCoord.LocalFromSphericalPosition(
-          {latitude, longitude, 0});
-
-        // Shift to be relative to world origin spherical coordinates
-        cart -= this->worldOriginCartesianCoords;
+        ignition::math::Vector3d cart;
+        this->ConvertLatLonToCart({latitude, longitude, 0}, cart);
 
         // Performance trick. Scale down to see in view
         cart *= this->MINIATURE_SCALE;
@@ -569,10 +572,11 @@ void ScienceSensorsSystemPrivate::UpdateWorldSphericalOrigin(
         this->worldOriginSphericalCoords.LongitudeReference().Degree(),
         0);
       // Convert spherical coordinates to Cartesian
-      ignition::math::SphericalCoordinates sphCoord(
+      this->sphCoord = ignition::math::SphericalCoordinates(
         this->worldOriginSphericalCoords.Surface());
-      this->worldOriginCartesianCoords = sphCoord.LocalFromSphericalPosition(
-        this->worldOriginSphericalPos);
+      this->worldOriginCartesianCoords =
+        this->sphCoord.LocalFromSphericalPosition(
+          this->worldOriginSphericalPos);
 
       this->worldSphericalCoordsInitialized = true;
 
@@ -584,6 +588,18 @@ void ScienceSensorsSystemPrivate::UpdateWorldSphericalOrigin(
       }
     }
   }
+}
+
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::ConvertLatLonToCart(
+  const ignition::math::Vector3d &_latlon,
+  ignition::math::Vector3d &_cart)
+{
+  // Convert spherical coordinates to Cartesian
+  _cart = this->sphCoord.LocalFromSphericalPosition(_latlon);
+
+  // Shift to be relative to world origin spherical coordinates
+  _cart -= this->worldOriginCartesianCoords;
 }
 
 /////////////////////////////////////////////////
@@ -955,10 +971,6 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       this->dataPtr->repeatPubTimes++;
     }
 
-    // Spherical coordinates object for conversions
-    ignition::math::SphericalCoordinates sphCoord(
-      this->dataPtr->worldOriginSphericalCoords.Surface());
-
     // Get a sensor's pose, search in the octree for the closest neighbors, and
     // interpolate to get approximate data at this sensor pose.
     // Only need to done for one sensor. All sensors are on the robot, doesn't
@@ -986,11 +998,10 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       }
 
       // Convert spherical coordinates to Cartesian
-      // TODO: This conversion result is HUGE! Why??
-      ignition::math::Vector3d sensorCart = sphCoord.LocalFromSphericalPosition(
-        sensorLatLon.value());
-      // Shift to be relative to world origin spherical coordinates
-      sensorCart -= this->dataPtr->worldOriginCartesianCoords;
+      ignition::math::Vector3d sensorCart;
+      this->dataPtr->ConvertLatLonToCart(
+        {sensorLatLon.value().X(), sensorLatLon.value().Y(), 0}, sensorCart);
+
       //
       igndbg << "Sensor Cartesian XYZ: "
         << sensorCart.X() << ", "
