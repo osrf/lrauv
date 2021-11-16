@@ -749,14 +749,14 @@ void ScienceSensorsSystem::PreUpdate(
   const ignition::gazebo::UpdateInfo &,
   ignition::gazebo::EntityComponentManager &_ecm)
 {
-  if (!this->dataPtr->sphericalCoordinatesInitialized)
+  if (!this->dataPtr->worldSphericalCoordsInitialized)
   {
     auto latLon = this->dataPtr->world.SphericalCoordinates(_ecm);
     if (latLon)
     {
       ignwarn << "New spherical coordinates detected." << std::endl;
       //TODO(chapulina) Shift science data to new coordinates
-      this->dataPtr->sphericalCoordinatesInitialized = true;
+      this->dataPtr->worldSphericalCoordsInitialized = true;
     }
   }
 
