@@ -92,6 +92,9 @@ namespace tethys
     /// \param[in] _ns Namespace to prepend to topic names
     private: void SetupControlTopics(const std::string &_ns);
 
+    /// Enable debug printout
+    private: bool debugPrintout = false;
+
     /// Namespace for topics.
     private: std::string ns{""};
 
