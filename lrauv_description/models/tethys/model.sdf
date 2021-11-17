@@ -11,8 +11,8 @@
         <!-- to offset battery CoM before getting real parameters for vehicle without battery -->
         <pose>-0.119779049 0 0 0 0 0</pose>
         <!-- 146.5671 subtracted by battery mass -->
-        <!--<mass>114.8364</mass>-->
-        <mass>146.5671</mass>
+        <mass>114.8364</mass>
+        <!--<mass>146.5671</mass>-->
         <!-- TODO: Get inertial matrix of base link WITHOUT battery -->
         <inertia>
           <ixx>3.000000</ixx>
@@ -239,13 +239,14 @@
     <!-- Battery -->
     <!-- No separate collision for battery, because it is inside the vehicle.
          Additional collision requires buoyancy volume recalculation. -->
-     <!--<link name="battery">
-      TODO: On hold till mesh center adjusted to aft dome, then it will be 0.563, 0, 0.024.
-      <pose>0 0 0 0 0 0</pose>
-      <inertial>-->
+     <link name="battery">
+      <!--TODO: On hold till mesh center adjusted to aft dome, then it will be 0.563, 0, 0.024.-->
+      
+      <inertial>
         <!-- Non-zero y creates roll. Not fun to tune without actual base link inertia minus battery-->
         <!--pose>0 -0.0236 0 0 0 0</pose-->
-        <!--<mass>31.7307</mass>
+        <pose>-0.119779049 0 0 0 0 0</pose>
+        <mass>31.7307</mass>
         <inertia>
           <ixx>0.2327</ixx>
           <ixy>0</ixy>
@@ -258,9 +259,9 @@
 
       <visual name= "visual">
         <geometry>
-          <box>-->
+          <box>
             <!-- z is guesstimated from schematics. Visual doesn't matter. -->
-            <!--<size>0.6489446 0.24638 0.17415</size>
+            <size>0.6489446 0.24638 0.17415</size>
           </box>
         </geometry>
         <material>
@@ -268,7 +269,7 @@
           <specular>0.0 0.0 1.0 1.0</specular>
         </material>
       </visual>
-    </link>-->
+    </link>
 
     <!--<link name="buoyancy_engine">-->
       <!-- TODO: Determine location of buoyancy engine -->
@@ -360,7 +361,7 @@
     </joint>-->
 
     <!-- positive joint values move mass forward -->
-    <!--<joint name="battery_joint" type="prismatic">
+    <joint name="battery_joint" type="prismatic">
       <pose degrees="true">0 0 0   0 0 180</pose>
       <parent>base_link</parent>
       <child>battery</child>
@@ -373,7 +374,7 @@
           <velocity>0.0007</velocity>
         </limit>
       </axis>
-    </joint>-->
+    </joint>
 
     <!-- Drop weight -->
     <link name="drop_weight">
