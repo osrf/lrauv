@@ -12,7 +12,7 @@
         <pose>-0.1181 0 0 0 0 0</pose>
         <!-- 146.5671 subtracted by battery mass -->
         <!--<mass>114.8364</mass>-->
-        <mass>147.5671</mass>
+        <mass>146.5671</mass>
         <!-- TODO: Get inertial matrix of base link WITHOUT battery -->
         <inertia>
           <ixx>3.000000</ixx>
@@ -376,7 +376,7 @@
     </joint>-->
 
     <!-- Drop weight -->
-    <!--<link name="drop_weight">
+    <link name="drop_weight">
       <pose>0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
@@ -390,7 +390,7 @@
           <izz>0.000033571862</izz>
         </inertia>
       </inertial>
-    </link>-->
+    </link>
 
   </model>
 </sdf>
