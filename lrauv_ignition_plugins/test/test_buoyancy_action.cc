@@ -57,7 +57,7 @@ TEST_F(LrauvTestFixture, Sink)
   EXPECT_GT(targetZ, this->tethysPoses.back().Pos().Z());
 
   // It pitches backwards because the buoyancy engine is closer to the back
-  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 0.13);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 0.14);
 
   // Roll and yaw aren't affected
   EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Roll(), 1e-6);
@@ -65,7 +65,7 @@ TEST_F(LrauvTestFixture, Sink)
 
   // TODO(anyone) Fix residual movement
   // https://github.com/osrf/lrauv/issues/132
-  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().X(), 2.5);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().X(), 2.8);
   EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Y(), 1.1);
 }
 
