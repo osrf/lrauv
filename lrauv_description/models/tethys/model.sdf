@@ -11,23 +11,23 @@
         <!-- to offset battery CoM before getting real parameters for vehicle without battery -->
         <!--pose>0 0.0236 0 0 0 0</pose-->
         <!-- 146.5671 subtracted by battery mass -->
-        <mass>114.8364</mass>
+        <!--<mass>114.8364</mass>-->
+        <mass>147.5671</mass>
         <!-- TODO: Get inertial matrix of base link WITHOUT battery -->
         <inertia>
-          <!--ixx>3.000000</ixx>
+          <ixx>3.000000</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
           <iyy>41.980233</iyy>
           <iyz>0</iyz>
-          <izz>41.980233</izz-->
-
+          <izz>41.980233</izz>
           <!-- Guesstimated (decreased by 1/5) to account for battery -->
-          <ixx>2.4</ixx>
+          <!--<ixx>2.4</ixx>
           <ixy>0</ixy>
           <ixz>0.0004</ixz>
           <iyy>33.5841864</iyy>
           <iyz>0</iyz>
-          <izz>33.5841864</izz>
+          <izz>33.5841864</izz>-->
 
         </inertia>
       </inertial>
@@ -37,6 +37,7 @@
         <geometry>
           <box>
             <size>2 0.3 0.245945166667</size>
+            <!--<size>2 0.2 0.36891775</size>-->
           </box>
         </geometry>
       </collision>
@@ -72,7 +73,7 @@
     </link>
 
     <!-- Horizontal fins -->
-    <link name="horizontal_fins">
+    <!--<link name="horizontal_fins">
       <pose>1.05 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 1.57 0 0.5</pose>
@@ -124,10 +125,10 @@
           </script>
         </material>
       </visual>
-    </link>
+    </link>-->
 
     <!-- Vertical fins -->
-    <link name="vertical_fins">
+    <!--<link name="vertical_fins">
       <pose>1.05 0 0 0 0 0</pose>
       <inertial>
         <mass>0.2</mass>
@@ -178,10 +179,10 @@
           </script>
         </material>
       </visual>
-    </link>
+    </link>-->
 
     <!-- Propeller -->
-    <link name="propeller">
+    <!--<link name="propeller">
       <pose>1.43162 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 1.570796 0 0</pose>
@@ -233,18 +234,18 @@
           </script>
         </material>
       </visual>
-    </link>
+    </link>-->
 
     <!-- Battery -->
     <!-- No separate collision for battery, because it is inside the vehicle.
          Additional collision requires buoyancy volume recalculation. -->
-    <link name="battery">
-      <!-- TODO: On hold till mesh center adjusted to aft dome, then it will be 0.563, 0, 0.024. -->
+     <!--<link name="battery">
+      TODO: On hold till mesh center adjusted to aft dome, then it will be 0.563, 0, 0.024.
       <pose>0 0 0 0 0 0</pose>
-      <inertial>
+      <inertial>-->
         <!-- Non-zero y creates roll. Not fun to tune without actual base link inertia minus battery-->
         <!--pose>0 -0.0236 0 0 0 0</pose-->
-        <mass>31.7307</mass>
+        <!--<mass>31.7307</mass>
         <inertia>
           <ixx>0.2327</ixx>
           <ixy>0</ixy>
@@ -257,9 +258,9 @@
 
       <visual name= "visual">
         <geometry>
-          <box>
+          <box>-->
             <!-- z is guesstimated from schematics. Visual doesn't matter. -->
-            <size>0.6489446 0.24638 0.17415</size>
+            <!--<size>0.6489446 0.24638 0.17415</size>
           </box>
         </geometry>
         <material>
@@ -267,11 +268,11 @@
           <specular>0.0 0.0 1.0 1.0</specular>
         </material>
       </visual>
-    </link>
+    </link>-->
 
-    <link name="buoyancy_engine">
+    <!--<link name="buoyancy_engine">-->
       <!-- TODO: Determine location of buoyancy engine -->
-      <pose>0.4 0 0 0 0 0</pose>
+      <!--<pose>0.4 0 0 0 0 0</pose>-->
 
       <!-- TODO: Remove inertial and collision
 
@@ -285,7 +286,7 @@
          (why?), so removing them makes the vehicle unstable.
 
       -->
-      <inertial>
+      <!--<inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.3</mass>
         <inertia>
@@ -304,10 +305,10 @@
           </box>
         </geometry>
       </collision>
-    </link>
+    </link>-->
 
     <!-- Joints -->
-    <joint name="buoyancy_engine_joint" type="fixed">
+    <!--<joint name="buoyancy_engine_joint" type="fixed">
       <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
       <child>buoyancy_engine</child>
@@ -356,10 +357,10 @@
           <velocity>-1</velocity>
         </limit>
       </axis>
-    </joint>
+    </joint>-->
 
     <!-- positive joint values move mass forward -->
-    <joint name="battery_joint" type="prismatic">
+    <!--<joint name="battery_joint" type="prismatic">
       <pose degrees="true">0 0 0   0 0 180</pose>
       <parent>base_link</parent>
       <child>battery</child>
@@ -372,10 +373,10 @@
           <velocity>0.0007</velocity>
         </limit>
       </axis>
-    </joint>
+    </joint>-->
 
     <!-- Drop weight -->
-    <link name="drop_weight">
+    <!--<link name="drop_weight">
       <pose>0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
@@ -389,7 +390,7 @@
           <izz>0.000033571862</izz>
         </inertia>
       </inertial>
-    </link>
+    </link>-->
 
   </model>
 </sdf>
