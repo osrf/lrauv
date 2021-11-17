@@ -47,7 +47,8 @@ class tethys::ScienceSensorsSystemPrivate
     ignition::gazebo::EntityComponentManager &_ecm);
 
   /// \brief Convert (lat, lon, 0) to Cartesian XYZ, including shifting by
-  /// world origin
+  /// world origin. Tack on elevation as final Z for depth. Elevation is
+  /// interpreted as z, negative is down.
   public: void ConvertLatLonToCart(
     const ignition::math::Vector3d &_latLonEle,
     ignition::math::Vector3d &_cart);
@@ -1005,8 +1006,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
 
       // Convert spherical coordinates to Cartesian
       ignition::math::Vector3d sensorCart;
-      this->dataPtr->ConvertLatLonToCart(
-        {sensorLatLon.value().X(), sensorLatLon.value().Y(), 0}, sensorCart);
+      this->dataPtr->ConvertLatLonToCart(sensorLatLon.value(), sensorCart);
 
       //
       igndbg << "Sensor Cartesian XYZ: "
