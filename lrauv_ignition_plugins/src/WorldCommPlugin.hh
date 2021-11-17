@@ -65,11 +65,6 @@ namespace tethys
     private: void ServiceResponse(const ignition::msgs::Boolean &_rep,
         const bool _result);
 
-    /// Service callback for world origin in spherical coordinates. Service is
-    /// only valid after a first vehicle has been spawned.
-    /// \param[out] _res World origin in spherical coordinates
-    private: bool WorldOriginSphericalService(ignition::msgs::Vector3d &_res);
-
     /// Topic used to spawn robots
     private: std::string spawnTopic{"lrauv/init"};
 
@@ -82,15 +77,8 @@ namespace tethys
     /// Service to create entities
     private: std::string createService;
 
-    /// Service to get world origin spherical coordinates, after a first
-    /// vehicle has been spawned.
-    private: std::string getWorldOriginSphericalService;
-
     /// Count how many vehicles have been spawned
     private: int spawnCount{0};
-
-    /// World origin in spherical coordinates (latitude, longitude, elevation)
-    private: ignition::math::Vector3d worldOriginSphericalCoords;
   };
 }
 
