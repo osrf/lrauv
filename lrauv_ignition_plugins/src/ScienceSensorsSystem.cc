@@ -170,26 +170,8 @@ class tethys::ScienceSensorsSystemPrivate
   public: const std::string NORTH_CURRENT {
     "northward_sea_water_velocity_meter_per_sec"};
 
-  //////////////////////////////
-  // Constants for visualization
-
-  // TODO This is a workaround pending upstream Ignition orbit tool improvements
-  // \brief Scale down in order to see in view
-  // For 2003080103_mb_l3_las_1x1km.csv
-  //public: const float MINIATURE_SCALE = 0.01;
-  // For 2003080103_mb_l3_las.csv
-  public: const float MINIATURE_SCALE = 0.0001;
-
-  // TODO This is a workaround pending upstream Marker performance improvements.
-  // \brief Performance trick. Skip depths below this z, so have memory to
-  // visualize higher layers at higher resolution.
-  // This is only for visualization, so that MAX_PTS_VIS can calculate close
-  // to the actual number of points visualized.
-  // Sensors shouldn't use this.
-  public: const float SKIP_Z_BELOW = -20;
-
   ////////////////////////////
-  // Variables for bookkeeping
+  // Fields for bookkeeping
 
   /// \brief Input data file name, relative to a path Ignition can find in its
   /// environment variables.
@@ -197,6 +179,16 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Indicates whether data has been loaded
   public: bool initialized {false};
+
+  /// \brief Spherical coordinates where sensor location was last interpolated.
+  /// Use spherical, not Cartesian, because world origin's association to lat/
+  /// long can change at any given time!
+  /// Helps to determine whether sensor location needs to be updated
+  public: ignition::math::Vector3d lastSensorUpdateCartesian;
+
+  /// \brief Distance robot needs to move before another data interpolation
+  /// (based on sensor location) takes place.
+  public: const float INTERPOLATE_DIST_THRESH = 50.0;
 
   ///////////////////////////////
   // Variables for coordinate system
@@ -301,6 +293,24 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Publish a few more times for visualization plugin to get them
   public: int repeatPubTimes = 1;
+
+  //////////////////////////////
+  // Constants for visualization
+
+  // TODO This is a workaround pending upstream Ignition orbit tool improvements
+  // \brief Scale down in order to see in view
+  // For 2003080103_mb_l3_las_1x1km.csv
+  //public: const float MINIATURE_SCALE = 0.01;
+  // For 2003080103_mb_l3_las.csv
+  public: const float MINIATURE_SCALE = 0.0001;
+
+  // TODO This is a workaround pending upstream Marker performance improvements.
+  // \brief Performance trick. Skip depths below this z, so have memory to
+  // visualize higher layers at higher resolution.
+  // This is only for visualization, so that MAX_PTS_VIS can calculate close
+  // to the actual number of points visualized.
+  // Sensors shouldn't use this.
+  public: const float SKIP_Z_BELOW = -20;
 };
 
 /////////////////////////////////////////////////
@@ -1129,11 +1139,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       this->dataPtr->repeatPubTimes++;
     }
 
-    // TODO: Don't need to do this EVERY PostUpdate(). That's overkill. Only
-    // do this after robot have moved a distance from when we did the previous
-    // update.
-    // Get a sensor's pose, search in the octree for the closest neighbors, and
-    // interpolate to get approximate data at this sensor pose.
+    // Get a sensor's pose, search in the octree for the closest neighbors,
+    // and interpolate to get approximate data at this sensor pose.
     // Only need to done for one sensor. All sensors are on the robot, doesn't
     // make a big difference to data location.
     for (auto &[entity, sensor] : this->entitySensorMap)
@@ -1156,6 +1163,16 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
           warnedEntities.insert(entity);
         }
         continue;
+      }
+
+      // Don't need to interpolate EVERY PostUpdate(). That's overkill.
+      // Only need to do it after robot has moved a distance from when we did
+      // the previous interpolation
+      if (sensorLatLon.value().Distance(
+          this->dataPtr->lastSensorUpdateCartesian) <
+        this->dataPtr->INTERPOLATE_DIST_THRESH)
+      {
+        break;
       }
 
       // Convert spherical coordinates to Cartesian
@@ -1224,8 +1241,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
 
         /*
         // For the correct sensor, grab closest neighbors and interpolate
-        // TODO Does InterpolateData() really need to be called on every sensor
-        // separately, or can it just be called once each loop, i.e. assume
+        // TODO InterpolateData() doesn't need to be called on every sensor
+        // separately. It can just be called once each loop, i.e. assume
         // a location has all types of measurements? These sensors are all on
         // the robot, it's not like they're in vastly different locations!!
         if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
@@ -1254,7 +1271,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
             spatialSqrDist);
           casted->SetData(chlor);
         }
-        else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(sensor))
+        else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(
+          sensor))
         {
           float eCurr = this->dataPtr->InterpolateData(
             this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx], spatialIdx,
@@ -1272,6 +1290,9 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         }
         */ // temp comment out to get sci viz to work on this branch
       }
+
+      // Update last update position to the current position
+      this->dataPtr->lastSensorUpdateCartesian = sensorLatLon.value();
 
       // Only need to find position ONCE for the entire robot. Don't need to
       // repeat for every sensor.
