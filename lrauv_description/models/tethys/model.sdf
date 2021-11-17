@@ -9,7 +9,7 @@
     <link name="base_link">
       <inertial>
         <!-- to offset battery CoM before getting real parameters for vehicle without battery -->
-        <pose>-0.1181 0 0 0 0 0</pose>
+        <pose>-0.119779049 0 0 0 0 0</pose>
         <!-- 146.5671 subtracted by battery mass -->
         <!--<mass>114.8364</mass>-->
         <mass>146.5671</mass>
@@ -377,16 +377,12 @@
 
     <!-- Drop weight -->
     <link name="drop_weight">
-      <pose>0 0 0 0 0 0</pose>
+      <pose>0.128 0 -0.142 0 0 0</pose>
       <inertial>
-        <pose>0 0 0 0 0 0</pose>
         <mass>1</mass>
         <inertia>
           <ixx>0.000143971303</ixx>
-          <ixy>0.000000000008</ixy>
-          <ixz>-0.000000000224</ixz>
           <iyy>0.000140915448</iyy>
-          <iyz>-0.000025236433</iyz>
           <izz>0.000033571862</izz>
         </inertia>
       </inertial>
