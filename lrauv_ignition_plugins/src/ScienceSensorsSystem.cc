@@ -892,7 +892,6 @@ void ScienceSensorsSystemPrivate::SearchInDepthSlice(
          << depthInds.count() << std::endl;
 
   // Init ret val. Pre-allocate only the number of points in the z slice
-  //_zSlice = Eigen::MatrixXf::Zero(3, depthInds.count());
   _zSlice = pcl::PointCloud<pcl::PointXYZ>();
   _zSlice.points.resize(depthInds.count());
   _zSliceInds.clear();
@@ -910,15 +909,10 @@ void ScienceSensorsSystemPrivate::SearchInDepthSlice(
       _zSliceInds.push_back(i);
 
       // Retrieve the corresponding point in the original point cloud
-      //_zSlice.block<3, 1>(0, zSliceIdx) = _points.block<3, 1>(0, i);
       _zSlice.points[zSliceIdx++] = pcl::PointXYZ(
         _points(0, i),
         _points(1, i),
         _points(2, i));
-
-      //igndbg << "Filtered point: " << _points(0, i) << ","
-      //                             << _points(1, i) << ","
-      //                             << _points(2, i) << std::endl;
     }
   }
 
@@ -941,7 +935,6 @@ void ScienceSensorsSystemPrivate::SearchInDepthSlice(
         << std::endl;
       return;
     }
-    // Debug output
     else
     {
       igndbg << "Found " << _interpolatorInds.size()
@@ -1167,6 +1160,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       ignition::math::Vector3d sensorCart;
       this->dataPtr->ConvertLatLonToCart(sensorLatLon.value(), sensorCart);
 
+      pcl::PointXYZ searchPoint(sensorCart.X(), sensorCart.Y(), sensorCart.Z());
+
       //
       igndbg << "Sensor (lat, long, elevation): "
         << sensorLatLon.value().X() << ", "
@@ -1177,8 +1172,6 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         << sensorCart.Y() << ", "
         << sensorCart.Z() << std::endl;
       //
-
-      pcl::PointXYZ searchPoint(sensorCart.X(), sensorCart.Y(), sensorCart.Z());
       /*
       igndbg << "Searching around sensor Cartesian location "
         << searchPoint.x << ", "
