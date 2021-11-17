@@ -105,11 +105,6 @@ void WorldCommPlugin::Configure(
   this->createService = "/world/" + topicWorldName + "/create";
   this->setSphericalCoordsService = "/world/" + topicWorldName
     + "/set_spherical_coordinates";
-
-  // Advertise service for world origin in spherical coordinates
-  this->getWorldOriginSphericalService = "/world_origin_spherical";
-  this->node.Advertise(this->getWorldOriginSphericalService,
-    &WorldCommPlugin::WorldOriginSphericalService, this);
 }
 
 /////////////////////////////////////////////////
@@ -150,9 +145,6 @@ void WorldCommPlugin::SpawnCallback(
     scReq.set_latitude_deg(lat);
     scReq.set_longitude_deg(lon);
     scReq.set_elevation(ele);
-
-    // Save world origin spherical coordinates for future service calls
-    this->worldOriginSphericalCoords = {lat, lon, ele};
 
     // Use zero heading so world is always aligned with lat / lon,
     // rotate vehicle instead.
@@ -240,25 +232,6 @@ std::string WorldCommPlugin::TethysSdfString(const std::string &_id)
   </sdf>)";
 
   return sdfStr;
-}
-
-/////////////////////////////////////////////////
-bool WorldCommPlugin::WorldOriginSphericalService(
-  ignition::msgs::Vector3d &_res)
-{
-  if (this->spawnCount > 1)
-  {
-    _res.set_x(this->worldOriginSphericalCoords.X());
-    _res.set_y(this->worldOriginSphericalCoords.Y());
-    _res.set_z(this->worldOriginSphericalCoords.Z());
-    return true;
-  }
-  else
-  {
-    ignwarn << "No vehicles spawned yet. Request for world origin in "
-      << "spherical coordinates cannot be fulfilled." << std::endl;
-    return false;
-  }
 }
 
 IGNITION_ADD_PLUGIN(

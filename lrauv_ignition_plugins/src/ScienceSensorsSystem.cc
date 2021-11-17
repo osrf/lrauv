@@ -49,7 +49,7 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Convert (lat, lon, 0) to Cartesian XYZ, including shifting by
   /// world origin
   public: void ConvertLatLonToCart(
-    const ignition::math::Vector3d &_latlon,
+    const ignition::math::Vector3d &_latLonEle,
     ignition::math::Vector3d &_cart);
 
   /// \brief Shift point cloud with respect to the world origin in spherical
@@ -248,14 +248,14 @@ class tethys::ScienceSensorsSystemPrivate
   public: int repeatPubTimes = 1;
 
   // TODO This is a workaround pending upstream Ignition orbit tool improvements
-  // Scale down in order to see in view
+  // \brief Scale down in order to see in view
   // For 2003080103_mb_l3_las_1x1km.csv
   //public: const float MINIATURE_SCALE = 0.01;
   // For 2003080103_mb_l3_las.csv
   public: const float MINIATURE_SCALE = 0.0001;
 
   // TODO This is a workaround pending upstream Marker performance improvements.
-  // Performance trick. Skip depths below this z, so have memory to
+  // \brief Performance trick. Skip depths below this z, so have memory to
   // visualize higher layers at higher resolution.
   // This is only for visualization, so that MAX_PTS_VIS can calculate close
   // to the actual number of points visualized.
@@ -500,10 +500,12 @@ void ScienceSensorsSystemPrivate::ReadData()
 
         // Convert spherical coordinates to Cartesian
         ignition::math::Vector3d cart;
-        this->ConvertLatLonToCart({latitude, longitude, 0}, cart);
+        this->ConvertLatLonToCart({latitude, longitude, -depth}, cart);
 
         // Performance trick. Scale down to see in view
         cart *= this->MINIATURE_SCALE;
+        // Revert Z to the unscaled depth
+        cart.Z() = -depth;
 
         // Performance trick. Skip points beyond some distance from origin
         if (abs(cart.X()) > 1000 || abs(cart.Y()) > 1000)
@@ -515,7 +517,7 @@ void ScienceSensorsSystemPrivate::ReadData()
         // for indexing this time slice of data.
         // Flip sign of z, because positive depth is negative z.
         this->timeSpaceCoords[lineTimeIdx]->push_back(
-          pcl::PointXYZ(cart.X(), cart.Y(), -depth));
+          pcl::PointXYZ(cart.X(), cart.Y(), cart.Z()));
 
         // Populate science data
         this->temperatureArr[lineTimeIdx].push_back(temp);
@@ -592,14 +594,18 @@ void ScienceSensorsSystemPrivate::UpdateWorldSphericalOrigin(
 
 /////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::ConvertLatLonToCart(
-  const ignition::math::Vector3d &_latlon,
+  const ignition::math::Vector3d &_latLonEle,
   ignition::math::Vector3d &_cart)
 {
   // Convert spherical coordinates to Cartesian
-  _cart = this->sphCoord.LocalFromSphericalPosition(_latlon);
+  _cart = this->sphCoord.LocalFromSphericalPosition(
+    ignition::math::Vector3d(_latLonEle.X(), _latLonEle.Y(), 0));
 
   // Shift to be relative to world origin spherical coordinates
   _cart -= this->worldOriginCartesianCoords;
+
+  // Set depth
+  _cart.Z() = _latLonEle.Z();
 }
 
 /////////////////////////////////////////////////
