@@ -43,6 +43,9 @@ using namespace tethys;
 
 class tethys::ScienceSensorsSystemPrivate
 {
+  //////////////////////////////////
+  // Functions for coordinate system
+
   /// \brief Initialize world origin in spherical coordinates
   public: void UpdateWorldSphericalOrigin(
     ignition::gazebo::EntityComponentManager &_ecm);
@@ -57,6 +60,9 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Shift point cloud with respect to the world origin in spherical
   /// coordinates, if available.
   public: void ShiftDataToNewSphericalOrigin();
+
+  //////////////////////////////////
+  // Functions for data manipulation
 
   /// \brief Reads csv file and populate various data fields
   public: void ReadData();
@@ -107,6 +113,19 @@ class tethys::ScienceSensorsSystemPrivate
     std::vector<float> &_interpolatorSqrDists,
     int _k=4);
 
+  /// \brief Interpolate floating point data based on distance
+  /// \param[in] _arr Array of data from which to find elements to interpolate
+  /// \param[in] _inds Indices in _arr
+  /// \param[in] _sqrDists Distances of elements in _arr
+  /// \return Interpolated value, or quiet NaN if inputs invalid.
+  public: float InterpolateData(
+    std::vector<float> _arr,
+    std::vector<int> &_inds,
+    std::vector<float> &_sqrDists);
+
+  //////////////////////////////
+  // Functions for communication
+
   /// \brief Publish the latest point cloud
   public: void PublishData();
 
@@ -118,15 +137,8 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Returns a point cloud message populated with the latest sensor data
   public: ignition::msgs::PointCloudPacked PointCloudMsg();
 
-  /// \brief Interpolate floating point data based on distance
-  /// \param[in] _arr Array of data from which to find elements to interpolate
-  /// \param[in] _inds Indices in _arr
-  /// \param[in] _sqrDists Distances of elements in _arr
-  /// \return Interpolated value, or quiet NaN if inputs invalid.
-  public: float InterpolateData(
-    std::vector<float> _arr,
-    std::vector<int> &_inds,
-    std::vector<float> &_sqrDists);
+  ///////////////////////////////
+  // Constants for data manipulation
 
   /// \brief csv field name for timestamp of data
   public: const std::string TIME {"elapsed_time_second"};
@@ -158,12 +170,36 @@ class tethys::ScienceSensorsSystemPrivate
   public: const std::string NORTH_CURRENT {
     "northward_sea_water_velocity_meter_per_sec"};
 
+  //////////////////////////////
+  // Constants for visualization
+
+  // TODO This is a workaround pending upstream Ignition orbit tool improvements
+  // \brief Scale down in order to see in view
+  // For 2003080103_mb_l3_las_1x1km.csv
+  //public: const float MINIATURE_SCALE = 0.01;
+  // For 2003080103_mb_l3_las.csv
+  public: const float MINIATURE_SCALE = 0.0001;
+
+  // TODO This is a workaround pending upstream Marker performance improvements.
+  // \brief Performance trick. Skip depths below this z, so have memory to
+  // visualize higher layers at higher resolution.
+  // This is only for visualization, so that MAX_PTS_VIS can calculate close
+  // to the actual number of points visualized.
+  // Sensors shouldn't use this.
+  public: const float SKIP_Z_BELOW = -20;
+
+  ////////////////////////////
+  // Variables for bookkeeping
+
   /// \brief Input data file name, relative to a path Ignition can find in its
   /// environment variables.
   public: std::string dataPath {"2003080103_mb_l3_las.csv"};
 
   /// \brief Indicates whether data has been loaded
   public: bool initialized {false};
+
+  ///////////////////////////////
+  // Variables for coordinate system
 
   /// \brief Set to true after the spherical coordinates have been initialized.
   /// This may happen at startup if the SDF file has them hardcoded, or at
@@ -187,6 +223,9 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief For conversions
   public: ignition::math::SphericalCoordinates sphCoord;
+
+  //////////////////////////////////
+  // Variables for data manipulation
 
   /// \brief Whether using more than one time slices of data
   public: bool multipleTimeSlices {false};
@@ -230,6 +269,9 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Science data. Same size as temperatureArr.
   public: std::vector<std::vector<float>> northCurrentArr;
 
+  //////////////////////////////
+  // Variables for communication
+
   /// \brief World object to access world properties.
   public: ignition::gazebo::World world;
 
@@ -259,21 +301,6 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Publish a few more times for visualization plugin to get them
   public: int repeatPubTimes = 1;
-
-  // TODO This is a workaround pending upstream Ignition orbit tool improvements
-  // \brief Scale down in order to see in view
-  // For 2003080103_mb_l3_las_1x1km.csv
-  //public: const float MINIATURE_SCALE = 0.01;
-  // For 2003080103_mb_l3_las.csv
-  public: const float MINIATURE_SCALE = 0.0001;
-
-  // TODO This is a workaround pending upstream Marker performance improvements.
-  // \brief Performance trick. Skip depths below this z, so have memory to
-  // visualize higher layers at higher resolution.
-  // This is only for visualization, so that MAX_PTS_VIS can calculate close
-  // to the actual number of points visualized.
-  // Sensors shouldn't use this.
-  public: const float SKIP_Z_BELOW = -20;
 };
 
 /////////////////////////////////////////////////
@@ -741,7 +768,7 @@ void ScienceSensorsSystemPrivate::FindInterpolators(
     this->timeSpaceCoords[this->timeIdx]->getMatrixXfMap(3, 4, 0).block(
       0, 0, 3, this->timeSpaceCoords[this->timeIdx]->size());
 
-  // Search in z slice of 1st NN for 4 nearest neighbors in this slice
+  // Search in z slice of 1st NN for 4 nearest neighbors
   this->SearchInDepthSlice(_pt, nnZ, allPoints, zSlice1, zSliceInds1,
     interpolatorInds1, interpolatorSqrDists1);
   if (interpolatorInds1.size() < 4 || interpolatorSqrDists1.size() < 4)
@@ -901,7 +928,6 @@ void ScienceSensorsSystemPrivate::SearchInDepthSlice(
   octree.setInputCloud(_zSlice.makeShared());
   octree.addPointsFromInputCloud();
 
-  // TODO debug seg fault. Update: added outer if-stmt, does that fix it?
   // Search in the depth slice to find 4 closest neighbors
   if (octree.getLeafCount() > 0)
   {
@@ -934,16 +960,6 @@ void ScienceSensorsSystemPrivate::SearchInDepthSlice(
       << "Cannot find neighbors in this slice to do trilinear interpolation."
       << std::endl;
   }
-  //
-}
-
-/////////////////////////////////////////////////
-void ScienceSensorsSystemPrivate::PublishData()
-{
-  this->cloudPub.Publish(this->PointCloudMsg());
-  this->tempPub.Publish(this->tempMsg);
-  this->chlorPub.Publish(this->chlorMsg);
-  this->salPub.Publish(this->salMsg);
 }
 
 /////////////////////////////////////////////////
@@ -985,6 +1001,15 @@ float ScienceSensorsSystemPrivate::InterpolateData(
 
 
   // TODO trilinear interpolation using the 8 interpolators found
+}
+
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::PublishData()
+{
+  this->cloudPub.Publish(this->PointCloudMsg());
+  this->tempPub.Publish(this->tempMsg);
+  this->chlorPub.Publish(this->chlorMsg);
+  this->salPub.Publish(this->salMsg);
 }
 
 /////////////////////////////////////////////////
@@ -1104,6 +1129,9 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       this->dataPtr->repeatPubTimes++;
     }
 
+    // TODO: Don't need to do this EVERY PostUpdate(). That's overkill. Only
+    // do this after robot have moved a distance from when we did the previous
+    // update.
     // Get a sensor's pose, search in the octree for the closest neighbors, and
     // interpolate to get approximate data at this sensor pose.
     // Only need to done for one sensor. All sensors are on the robot, doesn't
