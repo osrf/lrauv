@@ -82,13 +82,15 @@ class tethys::ScienceSensorsSystemPrivate
   /// \param[in] _pt Location in space to interpolate for
   /// \param[in] _inds Indices in _arr
   /// \param[in] _sqrDists Distances of elements in _arr
-  /// \param[out] _interpolatorIndsRV Result. Indices of points to interpolate
+  /// \param[out] _interpolators1 XYZ points on a z slice to interpolate among
+  /// \param[out] _interpolators2 XYZ points on a second z slice to interpolate
   /// among
   public: void FindInterpolators(
     pcl::PointXYZ &_pt,
     std::vector<int> &_inds,
     std::vector<float> &_sqrDists,
-    std::vector<int> &_interpolatorIndsRV);
+    std::vector<pcl::PointXYZ> &_interpolators1,
+    std::vector<pcl::PointXYZ> &_interpolators2);
 
   /// \brief Create a z slice from a point cloud represented in a matrix of
   /// size 3 x n. Slice contains points sharing the same given z value. Search
@@ -101,6 +103,7 @@ class tethys::ScienceSensorsSystemPrivate
   /// point cloud _points
   /// \param[out] _interpolatorInds Result of octree search, indices of points.
   /// \param[out] _interpolatorSqrDists Result of octree search, distances.
+  /// \param[out] _interpolators XYZ of the k nearest neighbors found.
   /// \param[in] _k Number of nearest neighbors. Default to 4, for trilinear
   /// interpolation between two z slices of 4 points per slice.
   public: void SearchInDepthSlice(
@@ -111,6 +114,7 @@ class tethys::ScienceSensorsSystemPrivate
     std::vector<int> &_zSliceInds,
     std::vector<int> &_interpolatorInds,
     std::vector<float> &_interpolatorSqrDists,
+    std::vector<pcl::PointXYZ> &_interpolators,
     int _k=4);
 
   /// \brief Interpolate floating point data based on distance
@@ -719,7 +723,8 @@ void ScienceSensorsSystemPrivate::FindInterpolators(
   pcl::PointXYZ &_pt,
   std::vector<int> &_inds,
   std::vector<float> &_sqrDists,
-  std::vector<int> &_interpolatorIndsRV)
+  std::vector<pcl::PointXYZ> &_interpolators1,
+  std::vector<pcl::PointXYZ> &_interpolators2)
 {
   // Sanity checks
   // Vector not populated
@@ -780,7 +785,7 @@ void ScienceSensorsSystemPrivate::FindInterpolators(
 
   // Search in z slice of 1st NN for 4 nearest neighbors
   this->SearchInDepthSlice(_pt, nnZ, allPoints, zSlice1, zSliceInds1,
-    interpolatorInds1, interpolatorSqrDists1);
+    interpolatorInds1, interpolatorSqrDists1, _interpolators1);
   if (interpolatorInds1.size() < 4 || interpolatorSqrDists1.size() < 4)
   {
     ignwarn << "Could not find enough neighbors in 1st slice z = " << nnZ
@@ -857,25 +862,12 @@ void ScienceSensorsSystemPrivate::FindInterpolators(
 
   // Search in z slice of 1st NN for 4 nearest neighbors in this slice
   this->SearchInDepthSlice(_pt, nnZ2, matrixExceptZSlice1, zSlice2, zSliceInds2,
-    interpolatorInds2, interpolatorSqrDists2);
+    interpolatorInds2, interpolatorSqrDists2, _interpolators2);
   if (interpolatorInds2.size() < 4 || interpolatorSqrDists2.size() < 4)
   {
     ignwarn << "Could not find enough neighbors in 2nd slice z = " << nnZ
       << " for trilinear interpolation." << std::endl;
   }
-
-
-
-
-
-  // TODO
-  // Then pass 2 sets of 4 points to InterpolateData() for trilinear
-  // interpolation. Rewrite InterpolateData().
-
-
-
-  // TODO: Return indices of 8 points in original point cloud, using zSliceInds
-  //interpolatorIndsRV
 }
 
 /////////////////////////////////////////////////
@@ -887,6 +879,7 @@ void ScienceSensorsSystemPrivate::SearchInDepthSlice(
   std::vector<int> &_zSliceInds,
   std::vector<int> &_interpolatorInds,
   std::vector<float> &_interpolatorSqrDists,
+  std::vector<pcl::PointXYZ> &_interpolators,
   int _k)
 {
   // Find indices of points with z matching the given z. These points are on
@@ -957,6 +950,7 @@ void ScienceSensorsSystemPrivate::SearchInDepthSlice(
       for (std::size_t i = 0; i < _interpolatorInds.size(); ++i)
       {
         pcl::PointXYZ nbrPt = _zSlice.at(_interpolatorInds[i]);
+        _interpolators.push_back(nbrPt);
 
         igndbg << "Neighbor at ("
           << nbrPt.x << ", " << nbrPt.y << ", " << nbrPt.z << "), "
@@ -1147,12 +1141,6 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     {
       // Sensor pose in lat/lon, used to search for data by spatial coordinates
       auto sensorLatLon = ignition::gazebo::sphericalCoordinates(entity, _ecm);
-      //
-      igndbg << "Sensor (lat, long, elevation): "
-        << sensorLatLon.value().X() << ", "
-        << sensorLatLon.value().Y() << ", "
-        << sensorLatLon.value().Z() << std::endl;
-      //
       if (!sensorLatLon)
       {
         static std::unordered_set<ignition::gazebo::Entity> warnedEntities;
@@ -1180,6 +1168,10 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       this->dataPtr->ConvertLatLonToCart(sensorLatLon.value(), sensorCart);
 
       //
+      igndbg << "Sensor (lat, long, elevation): "
+        << sensorLatLon.value().X() << ", "
+        << sensorLatLon.value().Y() << ", "
+        << sensorLatLon.value().Z() << std::endl;
       igndbg << "Sensor Cartesian XYZ: "
         << sensorCart.X() << ", "
         << sensorCart.Y() << ", "
@@ -1234,12 +1226,16 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         }
         */
 
-        // Temporary commented out to see if sci viz works
-        std::vector<int> interpolatorInds;
+        // Find 2 sets of 4 nearest neighbors, each set on a different z slice,
+        // to use as inputs for trilinear interpolation
+        std::vector<pcl::PointXYZ> interpolatorsSlice1, interpolatorsSlice2;
         this->dataPtr->FindInterpolators(searchPoint, spatialIdx,
-          spatialSqrDist, interpolatorInds);
+          spatialSqrDist, interpolatorsSlice1, interpolatorsSlice2);
 
-        /*
+        // TODO
+        // Pass 2 sets of 4 points to InterpolateData().
+        // Rewrite InterpolateData() to do trilinear interpolation.
+
         // For the correct sensor, grab closest neighbors and interpolate
         // TODO InterpolateData() doesn't need to be called on every sensor
         // separately. It can just be called once each loop, i.e. assume
@@ -1288,7 +1284,6 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         {
           ignerr << "Unsupported sensor type, failed to set data" << std::endl;
         }
-        */ // temp comment out to get sci viz to work on this branch
       }
 
       // Update last update position to the current position
