@@ -20,6 +20,7 @@
  * Research Institute (MBARI) and the David and Lucile Packard Foundation
  */
 
+#include <functional>
 #include <mutex>
 
 #include <ignition/msgs/pointcloud_packed.pb.h>
@@ -62,6 +63,13 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Generate octree from spatial data, for searching
   public: void GenerateOctrees();
+
+  /// \brief Comparison function for std::set_difference().
+  /// Comparison between points is arbitrary. This function is only used for
+  /// set operations, not for literal sorting.
+  public: bool comparePclPoints(
+    const pcl::PointXYZ &a,
+    const pcl::PointXYZ &b);
 
   /// \brief Find XYZ locations of points in the two closest z slices to
   /// interpolate among.
@@ -639,6 +647,37 @@ void ScienceSensorsSystemPrivate::GenerateOctrees()
 }
 
 /////////////////////////////////////////////////
+bool ScienceSensorsSystemPrivate::comparePclPoints(
+  const pcl::PointXYZ &a,
+  const pcl::PointXYZ &b)
+{
+  // Comparison between points is arbitrary. This function is only used for
+  // set operations, not for literal sorting.
+  if (a.x < b.x)
+  {
+    if (a.y < b.y)
+    {
+      if (a.z < b.z)
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+    else
+    {
+      return false;
+    }
+  }
+  else
+  {
+    return false;
+  }
+}
+
+/////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::FindInterpolators(
   pcl::PointXYZ &_pt,
   std::vector<int> &_inds,
@@ -672,14 +711,16 @@ void ScienceSensorsSystemPrivate::FindInterpolators(
   }
 
   // Two slices of different depth z values
-  //Eigen::MatrixXf zSlice1, zSlice2;
   pcl::PointCloud<pcl::PointXYZ> zSlice1, zSlice2;
+  // Indices of points in the z slices
   std::vector<int> zSliceInds1, zSliceInds2;
 
   // Indices and distances of neighboring points in the search results
   // 4 above, 4 below
   std::vector<int> interpolatorInds1, interpolatorInds2;
   std::vector<float> interpolatorSqrDists1, interpolatorSqrDists2;
+
+  // Step 1: 1st NN, in its z slice, search for 4 NNs
 
   // 1st nearest neighbor
   // The distances from kNN search are sorted, so can always just take [0]th
@@ -694,47 +735,107 @@ void ScienceSensorsSystemPrivate::FindInterpolators(
   igndbg << "Slice 1 nnIdx " << nnIdx << ", dist " << sqrt(minDist)
     << std::endl;
 
-  // Get raw Eigen matrix of all spatial points.
+  // Get raw Eigen matrix of all points in cloud
   // Matrix size 3 x n
-  Eigen::MatrixXf points =
+  Eigen::MatrixXf allPoints =
     this->timeSpaceCoords[this->timeIdx]->getMatrixXfMap(3, 4, 0).block(
       0, 0, 3, this->timeSpaceCoords[this->timeIdx]->size());
 
   // Search in z slice of 1st NN for 4 nearest neighbors in this slice
-  this->SearchInDepthSlice(_pt, nnZ, points, zSlice1, zSliceInds1,
+  this->SearchInDepthSlice(_pt, nnZ, allPoints, zSlice1, zSliceInds1,
     interpolatorInds1, interpolatorSqrDists1);
   if (interpolatorInds1.size() < 4 || interpolatorSqrDists1.size() < 4)
   {
-    ignwarn << "Could not find enough neighbors in slice z = " << nnZ
+    ignwarn << "Could not find enough neighbors in 1st slice z = " << nnZ
       << " for trilinear interpolation." << std::endl;
   }
 
-  // TODO: Remove all points at the z of the closest neighbor, so the second
-  // closest neighbor will fall into another depth z slice.
-  // Then search again for 4 points in another z slice.
+  // Step 2: exclude z slice of 1st NN from further searches.
+
+  // Remove all points in the z slice of the 1st NN, so that the 2nd NN will be
+  // found in another z slice.
+  // Take the set difference between original point cloud and the point cloud
+  // of the z slice of the 1st NN, to get the remaining points not on the 1st z
+  // slice.
+  std::vector<pcl::PointXYZ> ptsExceptZSlice1;
+  std::set_difference(
+    this->timeSpaceCoords[this->timeIdx]->points.begin(),
+    this->timeSpaceCoords[this->timeIdx]->points.end(),
+    zSlice1.points.begin(),
+    zSlice1.points.end(),
+    std::inserter(ptsExceptZSlice1, ptsExceptZSlice1.begin()),
+    std::bind(&ScienceSensorsSystemPrivate::comparePclPoints, this,
+      std::placeholders::_1, std::placeholders::_2));
+
+  // Step 3: Look for 2nd NN everywhere except z slice of 1st NN.
+  // In this 2nd z-slice, search for 4 NNs
+
+  // Create point cloud from set difference result
+  pcl::PointCloud<pcl::PointXYZ> cloudExceptZSlice1;
+  cloudExceptZSlice1.points.insert(cloudExceptZSlice1.points.begin(),
+    ptsExceptZSlice1.begin(), ptsExceptZSlice1.end());
+
+  // Create octree
+  auto octreeExceptZSlice1 = pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>(
+    this->spatialRes);
+  octreeExceptZSlice1.setInputCloud(cloudExceptZSlice1.makeShared());
+  octreeExceptZSlice1.addPointsFromInputCloud();
+
+  // Search results
+  std::vector<int> inds2;
+  std::vector<float> sqrDists2;
+  int nnIdx2 = -1;
+  float minDist2 = -1.0f;
+  float nnZ2 = -1.0f;
+
+  // Look for 2nd NN
+  if (octreeExceptZSlice1.getLeafCount() > 0)
+  {
+    if (octreeExceptZSlice1.nearestKSearch(_pt, 1, inds2, sqrDists2)
+      <= 0)
+    {
+      ignwarn << "Cannot find 2nd NN for trilinear interpolation" << std::endl;
+      return;
+    }
+    else
+    {
+      // Take closest point as 2nd NN
+      nnIdx2 = inds2[0];
+      minDist2 = sqrDists2[0];
+      // Get z of neighbor
+      nnZ2 = cloudExceptZSlice1.at(nnIdx2).z;
+
+      igndbg << "Slice 2 nnIdx " << nnIdx2 << ", dist " << sqrt(minDist2)
+        << std::endl;
+    }
+  }
+
+  // Step 4: Look for 4 NNs in the z slice of 2nd NN
+
+  // Get raw Eigen matrix
+  // Matrix size 3 x n
+  Eigen::MatrixXf matrixExceptZSlice1 =
+    cloudExceptZSlice1.getMatrixXfMap(3, 4, 0).block(
+      0, 0, 3, cloudExceptZSlice1.size());
+
+  // Search in z slice of 1st NN for 4 nearest neighbors in this slice
+  this->SearchInDepthSlice(_pt, nnZ2, matrixExceptZSlice1, zSlice2, zSliceInds2,
+    interpolatorInds2, interpolatorSqrDists2);
+  if (interpolatorInds2.size() < 4 || interpolatorSqrDists2.size() < 4)
+  {
+    ignwarn << "Could not find enough neighbors in 2nd slice z = " << nnZ
+      << " for trilinear interpolation." << std::endl;
+  }
+
+
+
+
+
+  // TODO
   // Then pass 2 sets of 4 points to InterpolateData() for trilinear
   // interpolation. Rewrite InterpolateData().
 
 
-
-
-
-
-  /*
-  // 2nd nearest neighbor
-  int nnIdx2 = _inds[1];
-  float minDist2 = _sqrDists[1];
-  // Get z of neighbor
-  float nnZ2 = this->timeSpaceCoords[this->timeIdx]->at(nnIdx2).z;
-  */
-
-  // Too spammy. temporarily comment out to get sci viz to work on this branch
-  /*
-  igndbg << "Slice 2 nnIdx " << nnIdx2 << ", dist " << sqrt(minDist2)
-    << std::endl;
-  this->SearchInDepthSlice(_pt, nnZ2, points, zSlice2, zSliceInds2,
-    interpolatorInds2, interpolatorSqrDists2);
-  */
 
   // TODO: Return indices of 8 points in original point cloud, using zSliceInds
   //interpolatorIndsRV
@@ -791,7 +892,7 @@ void ScienceSensorsSystemPrivate::SearchInDepthSlice(
     }
   }
 
-  igndbg << "Number of points in this z slice: " << zSliceIdx << std::endl;
+  // Make sure number of points in z-slice cloud == number of pts matching z
   assert(zSliceIdx == depthInds.count());
 
   // Create octree for this depth slice
@@ -808,22 +909,22 @@ void ScienceSensorsSystemPrivate::SearchInDepthSlice(
       _searchPt, _k, _interpolatorInds, _interpolatorSqrDists) <= 0)
     {
       ignwarn << "No data found in slice near search point " << _searchPt
-              << std::endl;
+        << std::endl;
       return;
     }
     // Debug output
     else
     {
       igndbg << "Found " << _interpolatorInds.size()
-             << " neighbors in this slice." << std::endl;
+        << " neighbors in this slice." << std::endl;
 
       for (std::size_t i = 0; i < _interpolatorInds.size(); ++i)
       {
         pcl::PointXYZ nbrPt = _zSlice.at(_interpolatorInds[i]);
 
-        igndbg << "Neighbor at (" << nbrPt.x << ", " << nbrPt.y << ", "
-               << nbrPt.z << "), squared distance " << _interpolatorSqrDists[i]
-               << " m" << std::endl;
+        igndbg << "Neighbor at ("
+          << nbrPt.x << ", " << nbrPt.y << ", " << nbrPt.z << "), "
+          << "distance " << sqrt(_interpolatorSqrDists[i]) << " m" << std::endl;
       }
     }
   }
@@ -1048,11 +1149,6 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         << searchPoint.z << std::endl;
       */
 
-      // kNN search (alternatives are voxel search and radius search. kNN
-      // search is good for variable resolution when the distance to the next
-      // neighbor is unknown).
-      int k = 8;
-
       // Indices and distances of neighboring points in the search results
       std::vector<int> spatialIdx;
       std::vector<float> spatialSqrDist;
@@ -1062,8 +1158,11 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]->getLeafCount()
         > 0)
       {
+        // kNN search (alternatives are voxel search and radius search. kNN
+        // search is good for variable resolution when the distance to the next
+        // neighbor is unknown).
         if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]
-          ->nearestKSearch(searchPoint, k, spatialIdx, spatialSqrDist) <= 0)
+          ->nearestKSearch(searchPoint, 1, spatialIdx, spatialSqrDist) <= 0)
         {
           ignwarn << "No data found near sensor location " << sensorCart
                   << std::endl;
