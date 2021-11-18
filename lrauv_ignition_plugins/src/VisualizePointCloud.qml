@@ -31,7 +31,7 @@ GridLayout {
   columns: 6
   columnSpacing: 10
   Layout.minimumWidth: 350
-  Layout.minimumHeight: 200
+  Layout.minimumHeight: 300
   anchors.fill: parent
   anchors.leftMargin: 10
   anchors.rightMargin: 10
@@ -102,6 +102,90 @@ GridLayout {
     ToolTip.visible: hovered
     ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
     ToolTip.text: qsTr("Ignition transport topics publishing FloatV messages")
+  }
+
+  Label {
+    Layout.columnSpan: 1
+    text: "Min"
+  }
+
+  Label {
+    Layout.columnSpan: 1
+    Layout.maximumWidth: 50
+    text: VisualizePointCloud.minFloatV.toFixed(2)
+    elide: Text.ElideRight
+  }
+
+  Button {
+    Layout.columnSpan: 1
+    id: minColorButton
+    Layout.fillWidth: true
+    ToolTip.visible: hovered
+    ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+    ToolTip.text: qsTr("Color for minimum value")
+    onClicked: minColorDialog.open()
+    background: Rectangle {
+      implicitWidth: 40
+      implicitHeight: 40
+      radius: 5
+      border.color: VisualizePointCloud.minColor
+      border.width: 2
+      color: VisualizePointCloud.minColor
+    }
+    ColorDialog {
+      id: minColorDialog
+      title: "Choose a color for the minimum value"
+      visible: false
+      onAccepted: {
+        VisualizePointCloud.SetMinColor(minColorDialog.color)
+        minColorDialog.close()
+      }
+      onRejected: {
+        minColorDialog.close()
+      }
+    }
+  }
+
+  Button {
+    Layout.columnSpan: 1
+    id: maxColorButton
+    Layout.fillWidth: true
+    ToolTip.visible: hovered
+    ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+    ToolTip.text: qsTr("Color for maximum value")
+    onClicked: maxColorDialog.open()
+    background: Rectangle {
+      implicitWidth: 40
+      implicitHeight: 40
+      radius: 5
+      border.color: VisualizePointCloud.maxColor
+      border.width: 2
+      color: VisualizePointCloud.maxColor
+    }
+    ColorDialog {
+      id: maxColorDialog
+      title: "Choose a color for the maximum value"
+      visible: false
+      onAccepted: {
+        VisualizePointCloud.SetMaxColor(maxColorDialog.color)
+        maxColorDialog.close()
+      }
+      onRejected: {
+        maxColorDialog.close()
+      }
+    }
+  }
+
+  Label {
+    Layout.columnSpan: 1
+    Layout.maximumWidth: 50
+    text: VisualizePointCloud.maxFloatV.toFixed(2)
+    elide: Text.ElideRight
+  }
+
+  Label {
+    Layout.columnSpan: 1
+    text: "Max"
   }
 
   Item {

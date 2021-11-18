@@ -55,6 +55,38 @@ namespace tethys
       NOTIFY FloatVTopicListChanged
     )
 
+    /// \brief Color for minimum value
+    Q_PROPERTY(
+      QColor minColor
+      READ MinColor
+      WRITE SetMinColor
+      NOTIFY MinColorChanged
+    )
+
+    /// \brief Color for maximum value
+    Q_PROPERTY(
+      QColor maxColor
+      READ MaxColor
+      WRITE SetMaxColor
+      NOTIFY MaxColorChanged
+    )
+
+    /// \brief Minimum value
+    Q_PROPERTY(
+      float minFloatV
+      READ MinFloatV
+      WRITE SetMinFloatV
+      NOTIFY MinFloatVChanged
+    )
+
+    /// \brief Maximum value
+    Q_PROPERTY(
+      float maxFloatV
+      READ MaxFloatV
+      WRITE SetMaxFloatV
+      NOTIFY MaxFloatVChanged
+    )
+
     /// \brief Constructor
     public: VisualizePointCloud();
 
@@ -115,6 +147,50 @@ namespace tethys
     /// \brief Set topic to subscribe to for float vectors.
     /// \param[in] _topicName Name of selected topic
     public: Q_INVOKABLE void OnFloatVTopic(const QString &_topicName);
+
+    /// \brief Get the minimum color
+    /// \return Minimum color
+    public: Q_INVOKABLE QColor MinColor() const;
+
+    /// \brief Set the minimum color
+    /// \param[in] _minColor Minimum color.
+    public: Q_INVOKABLE void SetMinColor(const QColor &_minColor);
+
+    /// \brief Notify that minimum color has changed
+    signals: void MinColorChanged();
+
+    /// \brief Get the maximum color
+    /// \return Maximum color
+    public: Q_INVOKABLE QColor MaxColor() const;
+
+    /// \brief Set the maximum color
+    /// \param[ax] _maxColor Maximum color.
+    public: Q_INVOKABLE void SetMaxColor(const QColor &_maxColor);
+
+    /// \brief Notify that maximum color has changed
+    signals: void MaxColorChanged();
+
+    /// \brief Get the minimum value
+    /// \return Minimum value
+    public: Q_INVOKABLE float MinFloatV() const;
+
+    /// \brief Set the minimum value
+    /// \param[in] _minFloatV Minimum value.
+    public: Q_INVOKABLE void SetMinFloatV(float _minFloatV);
+
+    /// \brief Notify that minimum value has changed
+    signals: void MinFloatVChanged();
+
+    /// \brief Get the maximum value
+    /// \return Maximum value
+    public: Q_INVOKABLE float MaxFloatV() const;
+
+    /// \brief Set the maximum value
+    /// \param[ax] _maxFloatV Maximum value.
+    public: Q_INVOKABLE void SetMaxFloatV(float _maxFloatV);
+
+    /// \brief Notify that maximum value has changed
+    signals: void MaxFloatVChanged();
 
     /// \brief Set whether to show the point cloud.
     /// \param[in] _show Boolean value for displaying the points.

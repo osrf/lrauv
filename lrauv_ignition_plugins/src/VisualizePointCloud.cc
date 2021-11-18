@@ -33,8 +33,11 @@
 
 #include <ignition/plugin/Register.hh>
 
+#include <ignition/math/Color.hh>
 #include <ignition/math/Vector3.hh>
 #include <ignition/math/Pose3.hh>
+
+#include <ignition/msgs/Utility.hh>
 
 #include <ignition/transport/Node.hh>
 
@@ -110,6 +113,18 @@ namespace tethys
 
     /// \brief Parameter to calculate Marker size in z.
     public: const float RES_Z = 10;
+
+    /// \brief Minimum value in latest float vector
+    public: float minFloatV{std::numeric_limits<float>::max()};
+
+    /// \brief Maximum value in latest float vector
+    public: float maxFloatV{std::numeric_limits<float>::min()};
+
+    /// \brief Color for minimum value
+    public: ignition::math::Color minColor{255, 0, 0, 255};
+
+    /// \brief Color for maximum value
+    public: ignition::math::Color maxColor{0, 255, 0, 255};
   };
 }
 
@@ -302,6 +317,16 @@ void VisualizePointCloud::OnFloatV(const ignition::msgs::Float_V &_msg)
 {
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
   this->dataPtr->floatVMsg = _msg;
+
+  for (auto i = 0; i < _msg.data_size(); ++i)
+  {
+    auto data = _msg.data(i);
+    if (data < this->dataPtr->minFloatV)
+      this->SetMinFloatV(data);
+    if (data > this->dataPtr->maxFloatV)
+      this->SetMaxFloatV(data);
+  }
+
   this->PublishMarkers();
 }
 
@@ -314,10 +339,7 @@ void VisualizePointCloud::OnPointCloudService(
     ignerr << "Service request failed." << std::endl;
     return;
   }
-
-  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
-  this->dataPtr->pointCloudMsg = _msg;
-  this->PublishMarkers();
+  this->OnPointCloud(_msg);
 }
 
 //////////////////////////////////////////////////
@@ -329,10 +351,7 @@ void VisualizePointCloud::OnFloatVService(
     ignerr << "Service request failed." << std::endl;
     return;
   }
-
-  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
-  this->dataPtr->floatVMsg = _msg;
-  this->PublishMarkers();
+  this->OnFloatV(_msg);
 }
 
 //////////////////////////////////////////////////
@@ -359,111 +378,100 @@ void VisualizePointCloud::PublishMarkers()
   PointCloudPackedIterator<float> iterY(this->dataPtr->pointCloudMsg, "y");
   PointCloudPackedIterator<float> iterZ(this->dataPtr->pointCloudMsg, "z");
 
-  // TODO(chapulina) Make min and max configurable
-  // Ranges to scale marker colors
-  float minVal = 0.0f;
-  float maxVal = 10000.0f;
-
   // Index of point in point cloud, visualized or not
   int ptIdx{0};
   // Number of points actually visualized
   int nPtsViz{0};
-  while (iterX != iterX.end() &&
-         iterY != iterY.end() &&
-         iterZ != iterZ.end())
+  for (;iterX != iterX.end() &&
+        iterY != iterY.end() &&
+        iterZ != iterZ.end(); ++iterX, ++iterY, ++iterZ, ++ptIdx)
   {
     // Performance trick. Only publish every nth. Skip z below some depth
-    if (this->dataPtr->renderEvery != 0 &&
-        ptIdx % this->dataPtr->renderEvery == 0 &&
-        *iterZ > this->dataPtr->SKIP_Z_BELOW)
+    if (this->dataPtr->renderEvery == 0 ||
+        ptIdx % this->dataPtr->renderEvery != 0 ||
+        *iterZ < this->dataPtr->SKIP_Z_BELOW)
     {
-      // Science data value
-      float dataVal = std::numeric_limits<float>::quiet_NaN();
-      if (this->dataPtr->floatVMsg.data().size() > ptIdx)
-      {
-        dataVal = this->dataPtr->floatVMsg.data(ptIdx);
-      }
-
-      // Don't visualize NaN
-      if (!std::isnan(dataVal))
-      {
-        auto msg = markers.add_marker();
-
-        msg->set_ns(this->dataPtr->pointCloudTopic);
-        msg->set_id(nPtsViz + 1);
-
-        msg->mutable_material()->mutable_ambient()->set_r(
-          (dataVal - minVal) / (maxVal - minVal));
-        msg->mutable_material()->mutable_ambient()->set_g(
-          1 - (dataVal - minVal) / (maxVal - minVal));
-        msg->mutable_material()->mutable_ambient()->set_a(0.5);
-
-        msg->mutable_material()->mutable_diffuse()->set_r(
-          (dataVal - minVal) / (maxVal - minVal));
-        msg->mutable_material()->mutable_diffuse()->set_g(
-          1 - (dataVal - minVal) / (maxVal - minVal));
-        msg->mutable_material()->mutable_diffuse()->set_a(0.5);
-        msg->set_action(ignition::msgs::Marker::ADD_MODIFY);
-
-        // TODO: Use POINTS or LINE_LIST, but need per-vertex color
-        msg->set_type(ignition::msgs::Marker::BOX);
-        msg->set_visibility(ignition::msgs::Marker::GUI);
-        // Performance trick. Make boxes exact dimension of x and y gaps to
-        // resemble "voxels". Then scale up by renderEvery to cover the space
-        // where all the points are skipped.
-        float dimX = this->dataPtr->RES_X * this->dataPtr->MINIATURE_SCALE
-          * this->dataPtr->renderEvery * this->dataPtr->renderEvery
-          * this->dataPtr->dimFactor;
-        float dimY = this->dataPtr->RES_Y * this->dataPtr->MINIATURE_SCALE
-          * this->dataPtr->renderEvery * this->dataPtr->renderEvery
-          * this->dataPtr->dimFactor;
-        float dimZ = this->dataPtr->RES_Z * this->dataPtr->MINIATURE_SCALE
-          * this->dataPtr->renderEvery * this->dataPtr->renderEvery
-          * this->dataPtr->dimFactor;
-        ignition::msgs::Set(msg->mutable_scale(),
-          ignition::math::Vector3d(dimX, dimY, dimZ));
-
-        ignition::msgs::Set(msg->mutable_pose(), ignition::math::Pose3d(
-          *iterX,
-          *iterY,
-          *iterZ,
-          0, 0, 0));
-
-        /*
-        // Use POINTS type and array for better performance, pending per-point
-        // color.
-        // One marker per point cloud, many points.
-        // TODO Implement in ign-gazebo per-point color like RViz point arrays,
-        // so can have just 1 marker, many points in it, each with a specified
-        // color, to improve performance. Color is the limiting factor that
-        // requires us to use many markers here, 1 point per marker.
-        // https://github.com/osrf/lrauv/issues/52
-        ignition::msgs::Set(msg->mutable_pose(), ignition::math::Pose3d(
-          0, 0, 0, 0, 0, 0));
-        auto pt = msg->add_point();
-        pt->set_x(*iterX);
-        pt->set_y(*iterY);
-        pt->set_z(*iterZ);
-        */
-
-        if (nPtsViz < 10)
-        {
-          igndbg << "Added point " << nPtsViz << " at "
-                 << msg->pose().position().x() << ", "
-                 << msg->pose().position().y() << ", "
-                 << msg->pose().position().z() << ", "
-                 << "value " << dataVal << ", "
-                 << "dimX " << dimX
-                 << std::endl;
-        }
-        ++nPtsViz;
-      }
+      continue;
     }
 
-    ++iterX;
-    ++iterY;
-    ++iterZ;
-    ++ptIdx;
+    // Value from float vector
+    float dataVal = std::numeric_limits<float>::quiet_NaN();
+    if (this->dataPtr->floatVMsg.data().size() > ptIdx)
+    {
+      dataVal = this->dataPtr->floatVMsg.data(ptIdx);
+    }
+
+    // Don't visualize NaN
+    if (std::isnan(dataVal))
+      continue;
+
+    auto msg = markers.add_marker();
+
+    msg->set_ns(this->dataPtr->pointCloudTopic);
+    msg->set_id(nPtsViz + 1);
+
+    auto ratio = (dataVal - this->dataPtr->minFloatV) /
+        (this->dataPtr->maxFloatV - this->dataPtr->minFloatV);
+    auto color = this->dataPtr->minColor +
+        (this->dataPtr->maxColor - this->dataPtr->minColor) * ratio;
+
+    ignition::msgs::Set(msg->mutable_material()->mutable_ambient(), color);
+    ignition::msgs::Set(msg->mutable_material()->mutable_diffuse(), color);
+    msg->mutable_material()->mutable_diffuse()->set_a(0.5);
+    msg->set_action(ignition::msgs::Marker::ADD_MODIFY);
+
+    // TODO: Use POINTS or LINE_LIST, but need per-vertex color
+    msg->set_type(ignition::msgs::Marker::BOX);
+    msg->set_visibility(ignition::msgs::Marker::GUI);
+    // Performance trick. Make boxes exact dimension of x and y gaps to
+    // resemble "voxels". Then scale up by renderEvery to cover the space
+    // where all the points are skipped.
+    float dimX = this->dataPtr->RES_X * this->dataPtr->MINIATURE_SCALE
+      * this->dataPtr->renderEvery * this->dataPtr->renderEvery
+      * this->dataPtr->dimFactor;
+    float dimY = this->dataPtr->RES_Y * this->dataPtr->MINIATURE_SCALE
+      * this->dataPtr->renderEvery * this->dataPtr->renderEvery
+      * this->dataPtr->dimFactor;
+    float dimZ = this->dataPtr->RES_Z * this->dataPtr->MINIATURE_SCALE
+      * this->dataPtr->renderEvery * this->dataPtr->renderEvery
+      * this->dataPtr->dimFactor;
+    ignition::msgs::Set(msg->mutable_scale(),
+      ignition::math::Vector3d(dimX, dimY, dimZ));
+
+    ignition::msgs::Set(msg->mutable_pose(), ignition::math::Pose3d(
+      *iterX,
+      *iterY,
+      *iterZ,
+      0, 0, 0));
+
+    /*
+    // Use POINTS type and array for better performance, pending per-point
+    // color.
+    // One marker per point cloud, many points.
+    // TODO Implement in ign-gazebo per-point color like RViz point arrays,
+    // so can have just 1 marker, many points in it, each with a specified
+    // color, to improve performance. Color is the limiting factor that
+    // requires us to use many markers here, 1 point per marker.
+    // https://github.com/osrf/lrauv/issues/52
+    ignition::msgs::Set(msg->mutable_pose(), ignition::math::Pose3d(
+      0, 0, 0, 0, 0, 0));
+    auto pt = msg->add_point();
+    pt->set_x(*iterX);
+    pt->set_y(*iterY);
+    pt->set_z(*iterZ);
+    */
+
+    if (nPtsViz < 10)
+    {
+      igndbg << "Added point " << nPtsViz << " at "
+             << msg->pose().position().x() << ", "
+             << msg->pose().position().y() << ", "
+             << msg->pose().position().z() << ", "
+             << "value " << dataVal << ", "
+             << "dimX " << dimX
+             << std::endl;
+    }
+    ++nPtsViz;
   }
 
   igndbg << "Visualizing " << markers.marker().size() << " markers"
@@ -490,6 +498,58 @@ void VisualizePointCloud::ClearMarkers()
   msg.set_action(ignition::msgs::Marker::DELETE_ALL);
 
   this->dataPtr->node.Request("/marker", msg);
+}
+
+/////////////////////////////////////////////////
+QColor VisualizePointCloud::MinColor() const
+{
+  return ignition::gui::convert(this->dataPtr->minColor);
+}
+
+/////////////////////////////////////////////////
+void VisualizePointCloud::SetMinColor(const QColor &_minColor)
+{
+  this->dataPtr->minColor = ignition::gui::convert(_minColor);
+  this->MinColorChanged();
+}
+
+/////////////////////////////////////////////////
+QColor VisualizePointCloud::MaxColor() const
+{
+  return ignition::gui::convert(this->dataPtr->maxColor);
+}
+
+/////////////////////////////////////////////////
+void VisualizePointCloud::SetMaxColor(const QColor &_maxColor)
+{
+  this->dataPtr->maxColor = ignition::gui::convert(_maxColor);
+  this->MaxColorChanged();
+}
+
+/////////////////////////////////////////////////
+float VisualizePointCloud::MinFloatV() const
+{
+  return this->dataPtr->minFloatV;
+}
+
+/////////////////////////////////////////////////
+void VisualizePointCloud::SetMinFloatV(float _minFloatV)
+{
+  this->dataPtr->minFloatV = _minFloatV;
+  this->MinFloatVChanged();
+}
+
+/////////////////////////////////////////////////
+float VisualizePointCloud::MaxFloatV() const
+{
+  return this->dataPtr->maxFloatV;
+}
+
+/////////////////////////////////////////////////
+void VisualizePointCloud::SetMaxFloatV(float _maxFloatV)
+{
+  this->dataPtr->maxFloatV = _maxFloatV;
+  this->MaxFloatVChanged();
 }
 
 // Register this plugin
