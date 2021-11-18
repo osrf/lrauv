@@ -118,7 +118,7 @@ namespace tethys
     public: float minFloatV{std::numeric_limits<float>::max()};
 
     /// \brief Maximum value in latest float vector
-    public: float maxFloatV{std::numeric_limits<float>::min()};
+    public: float maxFloatV{-std::numeric_limits<float>::max()};
 
     /// \brief Color for minimum value
     public: ignition::math::Color minColor{255, 0, 0, 255};
@@ -317,6 +317,9 @@ void VisualizePointCloud::OnFloatV(const ignition::msgs::Float_V &_msg)
 {
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
   this->dataPtr->floatVMsg = _msg;
+
+  this->dataPtr->minFloatV = std::numeric_limits<float>::max();
+  this->dataPtr->maxFloatV = -std::numeric_limits<float>::max();
 
   for (auto i = 0; i < _msg.data_size(); ++i)
   {
