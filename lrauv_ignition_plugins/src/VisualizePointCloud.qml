@@ -36,15 +36,14 @@ GridLayout {
   anchors.leftMargin: 10
   anchors.rightMargin: 10
 
-  // TODO Use switch
-  CheckBox {
+  Switch {
     Layout.alignment: Qt.AlignHCenter
     id: displayVisual
-    Layout.columnSpan: 6
+    Layout.columnSpan: 5
     Layout.fillWidth: true
     text: qsTr("Show")
     checked: true
-    onClicked: {
+    onToggled: {
       VisualizePointCloud.Show(checked)
     }
   }
@@ -54,30 +53,55 @@ GridLayout {
     text: "\u21bb"
     Material.background: Material.primary
     onClicked: {
-      combo.currentIndex = 0
       VisualizePointCloud.OnRefresh();
+      pcCombo.currentIndex = 0
+      floatCombo.currentIndex = 0
     }
     ToolTip.visible: hovered
-    ToolTip.delay: tooltipDelay
-    ToolTip.timeout: tooltipTimeout
-    ToolTip.text: qsTr("Refresh list of topics publishing point clouds")
+    ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+    ToolTip.text: qsTr("Refresh list of topics publishing point clouds and float vectors")
+  }
+
+  Label {
+    Layout.columnSpan: 1
+    text: "Point cloud"
   }
 
   ComboBox {
     Layout.columnSpan: 5
-    id: combo
+    id: pcCombo
     Layout.fillWidth: true
-    model: VisualizePointCloud.topicList
+    model: VisualizePointCloud.pointCloudTopicList
     currentIndex: 0
     onCurrentIndexChanged: {
       if (currentIndex < 0)
         return;
-      VisualizePointCloud.OnTopic(textAt(currentIndex));
+      VisualizePointCloud.OnPointCloudTopic(textAt(currentIndex));
     }
     ToolTip.visible: hovered
-    ToolTip.delay: tooltipDelay
-    ToolTip.timeout: tooltipTimeout
+    ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
     ToolTip.text: qsTr("Ignition transport topics publishing PointCloudPacked messages")
+  }
+
+  Label {
+    Layout.columnSpan: 1
+    text: "Float vector"
+  }
+
+  ComboBox {
+    Layout.columnSpan: 5
+    id: floatCombo
+    Layout.fillWidth: true
+    model: VisualizePointCloud.floatVTopicList
+    currentIndex: 0
+    onCurrentIndexChanged: {
+      if (currentIndex < 0)
+        return;
+      VisualizePointCloud.OnFloatVTopic(textAt(currentIndex));
+    }
+    ToolTip.visible: hovered
+    ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+    ToolTip.text: qsTr("Ignition transport topics publishing FloatV messages")
   }
 
   Item {

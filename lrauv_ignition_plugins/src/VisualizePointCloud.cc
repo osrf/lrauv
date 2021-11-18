@@ -51,32 +51,26 @@ namespace tethys
     /// \brief Transport node
     public: ignition::transport::Node node;
 
-    /// \brief Science data type-specific topic name to subscribe
-    public: std::string topicName{""};
+    /// \brief Name of topic for PointCloudPacked
+    public: std::string pointCloudTopic{""};
 
-    /// \brief List of science data topics
-    public: QStringList topicList;
+    /// \brief Name of topic for FloatV
+    public: std::string floatVTopic{""};
+
+    /// \brief List of topics publishing PointCloudPacked.
+    public: QStringList pointCloudTopicList;
+
+    /// \brief List of topics publishing FloatV.
+    public: QStringList floatVTopicList;
 
     /// \brief Protect variables changed from transport and the user
     public: std::recursive_mutex mutex;
 
-    /// \brief Generic point cloud topic name
-    public: std::string pcTopic = {"/science_data"};
-
-    /// \brief Generic point cloud service name
-    public: std::string pcSrv = {"/science_data_srv"};
-
     /// \brief Point cloud message containing location of data
-    public: ignition::msgs::PointCloudPacked pcMsg;
+    public: ignition::msgs::PointCloudPacked pointCloudMsg;
 
-    /// \brief Temperature data to visualize
-    public: ignition::msgs::Float_V tempMsg;
-
-    /// \brief Chlorophyll data to visualize
-    public: ignition::msgs::Float_V chlorMsg;
-
-    /// \brief Salinity data to visualize
-    public: ignition::msgs::Float_V salMsg;
+    /// \brief Message holding a float vector.
+    public: ignition::msgs::Float_V floatVMsg;
 
     /// \brief Performance trick. Cap number of points to visualize, to save
     /// memory.
@@ -140,77 +134,72 @@ void VisualizePointCloud::LoadConfig(const tinyxml2::XMLElement *)
   if (this->title.empty())
     this->title = "Visualize point cloud";
 
-  if (!this->dataPtr->node.Subscribe("/temperature",
-                            &VisualizePointCloud::OnTemperature, this))
-  {
-    ignerr << "Unable to subscribe to topic ["
-           << "/temperature" << "]\n";
-    return;
-  }
-  if (!this->dataPtr->node.Subscribe("/chlorophyll",
-                            &VisualizePointCloud::OnChlorophyll, this))
-  {
-    ignerr << "Unable to subscribe to topic ["
-           << "/chlorophyll" << "]\n";
-    return;
-  }
-  if (!this->dataPtr->node.Subscribe("/salinity",
-                            &VisualizePointCloud::OnSalinity, this))
-  {
-    ignerr << "Unable to subscribe to topic ["
-           << "/salinity" << "]\n";
-    return;
-  }
-
   ignition::gui::App()->findChild<
     ignition::gui::MainWindow *>()->installEventFilter(this);
 }
 
 //////////////////////////////////////////////////
-void VisualizePointCloud::OnTopic(const QString &_topicName)
+void VisualizePointCloud::OnPointCloudTopic(const QString &_pointCloudTopic)
 {
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
   // Unsubscribe from previous choice
-  /*
-  if (!this->dataPtr->topicName.empty() &&
-      !this->dataPtr->node.Unsubscribe(this->dataPtr->topicName))
+  if (!this->dataPtr->pointCloudTopic.empty() &&
+      !this->dataPtr->node.Unsubscribe(this->dataPtr->pointCloudTopic))
   {
     ignerr << "Unable to unsubscribe from topic ["
-           << this->dataPtr->topicName <<"]" <<std::endl;
+           << this->dataPtr->pointCloudTopic <<"]" <<std::endl;
   }
-  */
-  this->dataPtr->topicName = _topicName.toStdString();
-
-  // Request service
-  this->dataPtr->node.Request(this->dataPtr->pcSrv,
-      &VisualizePointCloud::OnService, this);
-
-  // Create new subscription
-  if (!this->dataPtr->node.Subscribe(this->dataPtr->pcTopic,
-                            &VisualizePointCloud::OnCloud, this))
-  {
-    ignerr << "Unable to subscribe to topic ["
-           << this->dataPtr->pcTopic << "]\n";
-    return;
-  }
-  ignmsg << "Subscribed to " << this->dataPtr->pcTopic << std::endl;
-
-  // This doesn't work correctly. Values do not correspond to the right type
-  // of data. Maybe doesn't have time to subscribe befores markers go out.
-  // Better to subscribe individually - worked more reliably.
-  /*
-  if (!this->dataPtr->node.Subscribe(this->dataPtr->topicName,
-                            &VisualizePointCloud::OnFloatData, this))
-  {
-    ignerr << "Unable to subscribe to topic ["
-           << this->dataPtr->topicName << "]\n";
-    return;
-  }
-  ignmsg << "Subscribed to " << this->dataPtr->topicName << std::endl;
-  */
 
   // Clear visualization
   this->ClearMarkers();
+
+  this->dataPtr->pointCloudTopic = _pointCloudTopic.toStdString();
+
+  // Request service
+  this->dataPtr->node.Request(this->dataPtr->pointCloudTopic,
+      &VisualizePointCloud::OnPointCloudService, this);
+
+  // Create new subscription
+  if (!this->dataPtr->node.Subscribe(this->dataPtr->pointCloudTopic,
+                            &VisualizePointCloud::OnPointCloud, this))
+  {
+    ignerr << "Unable to subscribe to topic ["
+           << this->dataPtr->pointCloudTopic << "]\n";
+    return;
+  }
+  ignmsg << "Subscribed to " << this->dataPtr->pointCloudTopic << std::endl;
+}
+
+//////////////////////////////////////////////////
+void VisualizePointCloud::OnFloatVTopic(const QString &_floatVTopic)
+{
+  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
+  // Unsubscribe from previous choice
+  if (!this->dataPtr->floatVTopic.empty() &&
+      !this->dataPtr->node.Unsubscribe(this->dataPtr->floatVTopic))
+  {
+    ignerr << "Unable to unsubscribe from topic ["
+           << this->dataPtr->floatVTopic <<"]" <<std::endl;
+  }
+
+  // Clear visualization
+  this->ClearMarkers();
+
+  this->dataPtr->floatVTopic = _floatVTopic.toStdString();
+
+  // Request service
+  this->dataPtr->node.Request(this->dataPtr->floatVTopic,
+      &VisualizePointCloud::OnPointCloudService, this);
+
+  // Create new subscription
+  if (!this->dataPtr->node.Subscribe(this->dataPtr->floatVTopic,
+                            &VisualizePointCloud::OnFloatV, this))
+  {
+    ignerr << "Unable to subscribe to topic ["
+           << this->dataPtr->floatVTopic << "]\n";
+    return;
+  }
+  ignmsg << "Subscribed to " << this->dataPtr->floatVTopic << std::endl;
 }
 
 //////////////////////////////////////////////////
@@ -233,7 +222,8 @@ void VisualizePointCloud::OnRefresh()
   ignmsg << "Refreshing topic list for point cloud messages." << std::endl;
 
   // Clear
-  this->dataPtr->topicList.clear();
+  this->dataPtr->pointCloudTopicList.clear();
+  this->dataPtr->floatVTopicList.clear();
 
   bool gotCloud = false;
 
@@ -246,82 +236,78 @@ void VisualizePointCloud::OnRefresh()
     this->dataPtr->node.TopicInfo(topic, publishers);
     for (auto pub : publishers)
     {
-      // Have a fixed topic for point cloud locations. Let user choose
-      // which science data type to visualize
       if (pub.MsgTypeName() == "ignition.msgs.PointCloudPacked")
       {
-        //this->dataPtr->topicList.push_back(QString::fromStdString(topic));
-        //break;
-        gotCloud = true;
+        this->dataPtr->pointCloudTopicList.push_back(
+            QString::fromStdString(topic));
       }
       else if (pub.MsgTypeName() == "ignition.msgs.Float_V")
       {
-        this->dataPtr->topicList.push_back(QString::fromStdString(topic));
+        this->dataPtr->floatVTopicList.push_back(QString::fromStdString(topic));
       }
     }
   }
-  if (gotCloud && this->dataPtr->topicList.size() > 0)
+  if (this->dataPtr->pointCloudTopicList.size() > 0)
   {
-    this->OnTopic(this->dataPtr->topicList.at(0));
+    this->OnPointCloudTopic(this->dataPtr->pointCloudTopicList.at(0));
+  }
+  if (this->dataPtr->floatVTopicList.size() > 0)
+  {
+    this->OnFloatVTopic(this->dataPtr->floatVTopicList.at(0));
   }
 
-  this->TopicListChanged();
+  this->PointCloudTopicListChanged();
+  this->FloatVTopicListChanged();
 }
 
 /////////////////////////////////////////////////
-QStringList VisualizePointCloud::TopicList() const
+QStringList VisualizePointCloud::PointCloudTopicList() const
 {
-  return this->dataPtr->topicList;
+  return this->dataPtr->pointCloudTopicList;
 }
 
 /////////////////////////////////////////////////
-void VisualizePointCloud::SetTopicList(const QStringList &_topicList)
+void VisualizePointCloud::SetPointCloudTopicList(
+    const QStringList &_pointCloudTopicList)
 {
-  this->dataPtr->topicList = _topicList;
-  this->TopicListChanged();
+  this->dataPtr->pointCloudTopicList = _pointCloudTopicList;
+  this->PointCloudTopicListChanged();
+}
+
+/////////////////////////////////////////////////
+QStringList VisualizePointCloud::FloatVTopicList() const
+{
+  return this->dataPtr->floatVTopicList;
+}
+
+/////////////////////////////////////////////////
+void VisualizePointCloud::SetFloatVTopicList(
+    const QStringList &_floatVTopicList)
+{
+  this->dataPtr->floatVTopicList = _floatVTopicList;
+  this->FloatVTopicListChanged();
 }
 
 //////////////////////////////////////////////////
-void VisualizePointCloud::OnCloud(const ignition::msgs::PointCloudPacked &_msg)
+void VisualizePointCloud::OnPointCloud(
+    const ignition::msgs::PointCloudPacked &_msg)
 {
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
-  this->dataPtr->pcMsg = _msg;
+  this->dataPtr->pointCloudMsg = _msg;
   this->PublishMarkers();
 }
 
-/*
 //////////////////////////////////////////////////
-void VisualizePointCloud::OnFloatData(const ignition::msgs::Float_V &_msg)
+void VisualizePointCloud::OnFloatV(const ignition::msgs::Float_V &_msg)
 {
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
-  this->dataPtr->valMsg = _msg;
-}
-*/
-
-//////////////////////////////////////////////////
-void VisualizePointCloud::OnTemperature(const ignition::msgs::Float_V &_msg)
-{
-  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
-  this->dataPtr->tempMsg = _msg;
+  this->dataPtr->floatVMsg = _msg;
+  this->PublishMarkers();
 }
 
 //////////////////////////////////////////////////
-void VisualizePointCloud::OnChlorophyll(const ignition::msgs::Float_V &_msg)
-{
-  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
-  this->dataPtr->chlorMsg = _msg;
-}
-
-//////////////////////////////////////////////////
-void VisualizePointCloud::OnSalinity(const ignition::msgs::Float_V &_msg)
-{
-  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
-  this->dataPtr->salMsg = _msg;
-}
-
-//////////////////////////////////////////////////
-void VisualizePointCloud::OnService(const ignition::msgs::PointCloudPacked &_msg,
-    bool _result)
+void VisualizePointCloud::OnPointCloudService(
+    const ignition::msgs::PointCloudPacked &_msg, bool _result)
 {
   if (!_result)
   {
@@ -330,7 +316,22 @@ void VisualizePointCloud::OnService(const ignition::msgs::PointCloudPacked &_msg
   }
 
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
-  this->dataPtr->pcMsg = _msg;
+  this->dataPtr->pointCloudMsg = _msg;
+  this->PublishMarkers();
+}
+
+//////////////////////////////////////////////////
+void VisualizePointCloud::OnFloatVService(
+    const ignition::msgs::Float_V &_msg, bool _result)
+{
+  if (!_result)
+  {
+    ignerr << "Service request failed." << std::endl;
+    return;
+  }
+
+  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
+  this->dataPtr->floatVMsg = _msg;
   this->PublishMarkers();
 }
 
@@ -339,50 +340,29 @@ void VisualizePointCloud::PublishMarkers()
 {
   // If point cloud empty, do nothing. (PointCloudPackedIteratorBase errors on
   // empty cloud.)
-  if (this->dataPtr->pcMsg.height() == 0 && this->dataPtr->pcMsg.width() == 0)
+  if (this->dataPtr->pointCloudMsg.height() == 0 &&
+      this->dataPtr->pointCloudMsg.width() == 0)
   {
     return;
   }
 
   // Used to calculate cap of number of points to visualize, to save memory
-  int nPts = this->dataPtr->pcMsg.height() * this->dataPtr->pcMsg.width();
+  int nPts = this->dataPtr->pointCloudMsg.height() *
+      this->dataPtr->pointCloudMsg.width();
   this->dataPtr->renderEvery = (int) round(
     nPts / (double) this->dataPtr->MAX_PTS_VIS);
 
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
   ignition::msgs::Marker_V markers;
 
-  PointCloudPackedIterator<float> iterX(this->dataPtr->pcMsg, "x");
-  PointCloudPackedIterator<float> iterY(this->dataPtr->pcMsg, "y");
-  PointCloudPackedIterator<float> iterZ(this->dataPtr->pcMsg, "z");
-  // FIXME: publish point cloud fields instead of float arrays
-  //PointCloudPackedIterator<float> iterTemp(this->dataPtr->pcMsg, "temperature");
+  PointCloudPackedIterator<float> iterX(this->dataPtr->pointCloudMsg, "x");
+  PointCloudPackedIterator<float> iterY(this->dataPtr->pointCloudMsg, "y");
+  PointCloudPackedIterator<float> iterZ(this->dataPtr->pointCloudMsg, "z");
 
-  // Type of data to visualize
-  std::string dataType = this->dataPtr->topicName;
+  // TODO(chapulina) Make min and max configurable
   // Ranges to scale marker colors
   float minVal = 0.0f;
   float maxVal = 10000.0f;
-  if (dataType == "/temperature")
-  {
-    minVal = 6.0f;
-    maxVal = 20.0f;
-  }
-  else if (dataType == "/chlorophyll")
-  {
-    //minVal = -6.0f;
-    minVal = 0.0f;
-    maxVal = 6.5f;
-  }
-  else if (dataType == "/salinity")
-  {
-    minVal = 32.0f;
-    maxVal = 34.5f;
-  }
-
-  igndbg << "First point in cloud (size "
-         << this->dataPtr->pcMsg.height() * this->dataPtr->pcMsg.width()
-         << "): " << *iterX << ", " << *iterY << ", " << *iterZ << std::endl;
 
   // Index of point in point cloud, visualized or not
   int ptIdx{0};
@@ -399,27 +379,9 @@ void VisualizePointCloud::PublishMarkers()
     {
       // Science data value
       float dataVal = std::numeric_limits<float>::quiet_NaN();
-      // Sanity check array size
-      if (dataType == "/temperature")
+      if (this->dataPtr->floatVMsg.data().size() > ptIdx)
       {
-        if (this->dataPtr->tempMsg.data().size() > ptIdx)
-        {
-          dataVal = this->dataPtr->tempMsg.data(ptIdx);
-        }
-      }
-      else if (dataType == "/chlorophyll")
-      {
-        if (this->dataPtr->chlorMsg.data().size() > ptIdx)
-        {
-          dataVal = this->dataPtr->chlorMsg.data(ptIdx);
-        }
-      }
-      else if (dataType == "/salinity")
-      {
-        if (this->dataPtr->salMsg.data().size() > ptIdx)
-        {
-          dataVal = this->dataPtr->salMsg.data(ptIdx);
-        }
+        dataVal = this->dataPtr->floatVMsg.data(ptIdx);
       }
 
       // Don't visualize NaN
@@ -427,7 +389,7 @@ void VisualizePointCloud::PublishMarkers()
       {
         auto msg = markers.add_marker();
 
-        msg->set_ns(this->dataPtr->pcTopic);
+        msg->set_ns(this->dataPtr->pointCloudTopic);
         msg->set_id(nPtsViz + 1);
 
         msg->mutable_material()->mutable_ambient()->set_r(
@@ -491,7 +453,6 @@ void VisualizePointCloud::PublishMarkers()
                  << msg->pose().position().y() << ", "
                  << msg->pose().position().z() << ", "
                  << "value " << dataVal << ", "
-                 << "type " << dataType << ", "
                  << "dimX " << dimX
                  << std::endl;
         }
@@ -524,7 +485,7 @@ void VisualizePointCloud::ClearMarkers()
 {
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
   ignition::msgs::Marker msg;
-  msg.set_ns(this->dataPtr->pcTopic);
+  msg.set_ns(this->dataPtr->pointCloudTopic);
   msg.set_id(0);
   msg.set_action(ignition::msgs::Marker::DELETE_ALL);
 
