@@ -125,6 +125,9 @@ namespace tethys
 
     /// \brief Color for maximum value
     public: ignition::math::Color maxColor{0, 255, 0, 255};
+
+    /// \brief True if showing
+    public: bool showing{true};
   };
 }
 
@@ -220,6 +223,7 @@ void VisualizePointCloud::OnFloatVTopic(const QString &_floatVTopic)
 //////////////////////////////////////////////////
 void VisualizePointCloud::Show(bool _show)
 {
+  this->dataPtr->showing = _show;
   if (_show)
   {
     this->PublishMarkers();
@@ -360,6 +364,9 @@ void VisualizePointCloud::OnFloatVService(
 //////////////////////////////////////////////////
 void VisualizePointCloud::PublishMarkers()
 {
+  if (!this->dataPtr->showing)
+    return;
+
   // If point cloud empty, do nothing. (PointCloudPackedIteratorBase errors on
   // empty cloud.)
   if (this->dataPtr->pointCloudMsg.height() == 0 &&
@@ -410,7 +417,8 @@ void VisualizePointCloud::PublishMarkers()
 
     auto msg = markers.add_marker();
 
-    msg->set_ns(this->dataPtr->pointCloudTopic);
+    msg->set_ns(this->dataPtr->pointCloudTopic + "-" +
+        this->dataPtr->floatVTopic);
     msg->set_id(nPtsViz + 1);
 
     auto ratio = (dataVal - this->dataPtr->minFloatV) /
@@ -496,7 +504,7 @@ void VisualizePointCloud::ClearMarkers()
 {
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
   ignition::msgs::Marker msg;
-  msg.set_ns(this->dataPtr->pointCloudTopic);
+  msg.set_ns(this->dataPtr->pointCloudTopic + "-" + this->dataPtr->floatVTopic);
   msg.set_id(0);
   msg.set_action(ignition::msgs::Marker::DELETE_ALL);
 
@@ -514,6 +522,7 @@ void VisualizePointCloud::SetMinColor(const QColor &_minColor)
 {
   this->dataPtr->minColor = ignition::gui::convert(_minColor);
   this->MinColorChanged();
+  this->PublishMarkers();
 }
 
 /////////////////////////////////////////////////
@@ -527,6 +536,7 @@ void VisualizePointCloud::SetMaxColor(const QColor &_maxColor)
 {
   this->dataPtr->maxColor = ignition::gui::convert(_maxColor);
   this->MaxColorChanged();
+  this->PublishMarkers();
 }
 
 /////////////////////////////////////////////////
