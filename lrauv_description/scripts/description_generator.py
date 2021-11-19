@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+
+# Copyright (C) 2021 Open Source Robotics Foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Development of this module has been funded by the Monterey Bay Aquarium
+# Research Institute (MBARI) and the David and Lucile Packard Foundation
+
+# Usage:
+#   description_generator.py <input_sdf_file> <output_file>
+# This file takes in the model.sdf.in file and generates an output model.sdf.
+# The aim is to produce a perfectly stable model, despite of adding control
+# elements.
+
+import xml.etree.ElementTree as ET
+import numpy as np
+import sys
+
+## These are parameters of the WHOLE VEHICLE
+# TODO(arjo): Implement inertia. Need to implement Inertial<T>::operator-(const Inertial<T>&) first
+total_mass = 147.5671 # Total mass of the vehicle
+buoyancy_z_offset = 0.007 # Buoyancy offset
+fluid_density = 1000 #fluid density
+
+def read_pose(element):
+    """ Read pose element."""
+    return [float(token) for token in element.text.split()]
+
+def write_float_array(pose):
+    res = ""
+    for p in pose:
+        res += str(p) + " "
+    return res
+
+def calculate_center_of_mass(total_mass, template_path, output_path):
+
+    sdf_file_input = ET.parse(template_path)
+
+    for sdf in sdf_file_input.iter("sdf"):
+        for model in sdf.iter("model"):
+            moments = []
+            main_body_com_tag = None
+            main_body_com_pose = None
+            collision_tag = None
+            ## Get all links
+            for links in model.iter("link"):
+                link_pose = links.find(".pose")
+                if link_pose is None:
+                    center_of_mass = [0] * 6
+                else:
+                    # TODO(arjo) generate errors, perform protection
+                    center_of_mass = [float(token) for token in link_pose.text.split()]               
+
+                ## Get inertial value of part            
+                inertia_element = links.find(".inertial")
+                collision_element = links.find(".collision")
+                
+                ## Calculate buoyancy
+                if collision_element is not None:
+                    if collision_element.text.strip() == "@calculated":
+                        collision_tag = collision_element
+                    else:
+                        # TODO(arjo): Calculate moments arising from collision
+                        pass
+
+                ## Calculate moments due to inertia
+                if inertia_element is not None:
+                    # TODO(arjo): Just put a @calculated on the whole inertia itself
+                    mass = links.find(".inertial/mass")
+                    pose = links.find(".inertial/pose")
+                    if mass.text.strip() == "@calculated":
+                        main_body_com_tag = mass
+                        main_body_com_pose = pose
+                        continue
+                    else:
+                        # add the moment into our moment list
+                        if pose is not None:
+                            center_of_mass = [float(token) for token in pose.text.split()]
+                    assert len(center_of_mass) == 6
+                    moments.append((float(mass.text), np.array(center_of_mass)))
+
+            # get the moments in the model
+            total_moment = sum([mass * com for mass, com in moments])
+            component_mass = sum([mass for mass, _ in moments])
+            remaining_mass = total_mass - component_mass
+            main_body_com = - total_moment / remaining_mass
+
+            main_body_com_tag.text = str(remaining_mass)
+            main_body_com_pose.text = write_float_array(main_body_com)
+
+            # calculate buoyancy position
+            cube_length = total_mass / (2 * 0.2 * fluid_density)
+            collision_tag.text = ""
+            pose_tag = ET.SubElement(collision_tag, "pose")
+            pose_tag.text = write_float_array([0, 0, buoyancy_z_offset, 0, 0, 0])
+
+            geometry = ET.SubElement(collision_tag, "geometry")
+            box = ET.SubElement(geometry, "box")
+            size = ET.SubElement(box, "size")
+            size.text = write_float_array([2, 0.2, cube_length])
+
+    sdf_file_input.write(output_path)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Usage:")
+        print("description_generator.py <infile> <outfile>")
+        exit(-100)
+    
+    calculate_center_of_mass(total_mass, sys.argv[1], sys.argv[2])

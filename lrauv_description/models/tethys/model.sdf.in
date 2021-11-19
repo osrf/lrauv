@@ -9,9 +9,9 @@
     <link name="base_link">
       <inertial>
         <!-- to offset battery CoM before getting real parameters for vehicle without battery -->
-        <pose>-0.119779049 0 0 0 0 0</pose>
+        <pose>@calculated</pose>
         <!-- 146.5671 subtracted by battery mass -->
-        <mass>114.8364</mass>
+        <mass>@calculated</mass>
         <!--<mass>146.5671</mass>-->
         <!-- TODO: Get inertial matrix of base link WITHOUT battery -->
         <inertia>
@@ -33,13 +33,13 @@
       </inertial>
 
       <collision name="main_body_buoyancy">
-        <pose>-0.1181 0 0.007 0 0 0</pose>
+        <!--<pose>-0.1181 0 0.007 0 0 0</pose>
         <geometry>
           <box>
             <size>2 0.3 0.245945166667</size>
-            <!--<size>2 0.2 0.36891775</size>-->
           </box>
-        </geometry>
+        </geometry>-->
+        @calculated
       </collision>
 
       <visual name="visual">
@@ -361,7 +361,7 @@
     </joint>-->
 
     <!-- positive joint values move mass forward -->
-    <joint name="battery_joint" type="prismatic">
+   <!-- <joint name="battery_joint" type="prismatic">
       <pose degrees="true">0 0 0   0 0 180</pose>
       <parent>base_link</parent>
       <child>battery</child>
@@ -374,7 +374,7 @@
           <velocity>0.0007</velocity>
         </limit>
       </axis>
-    </joint>
+    </joint>-->
 
     <!-- Drop weight -->
     <link name="drop_weight">
