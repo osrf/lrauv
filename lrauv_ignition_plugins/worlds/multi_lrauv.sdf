@@ -123,7 +123,7 @@
         <sensor element_id="base_link::current_sensor" action="modify">
           <topic>/model/triton/current</topic>
         </sensor>
-        <plugin element_id="tethys::Thruster" action="modify">
+        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
           <namespace>triton</namespace>
         </plugin>
         <plugin element_id="tethys::TethysCommPlugin" action="modify">
@@ -166,7 +166,7 @@
         <sensor element_id="base_link::current_sensor" action="modify">
           <topic>/model/daphne/current</topic>
         </sensor>
-        <plugin element_id="tethys::Thruster" action="modify">
+        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
           <namespace>daphne</namespace>
         </plugin>
         <plugin element_id="tethys::TethysCommPlugin" action="modify">
