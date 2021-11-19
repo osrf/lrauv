@@ -41,10 +41,50 @@ namespace tethys
 
     /// \brief List of topics publishing PointCloudPacked messages
     Q_PROPERTY(
-      QStringList topicList
-      READ TopicList
-      WRITE SetTopicList
-      NOTIFY TopicListChanged
+      QStringList pointCloudTopicList
+      READ PointCloudTopicList
+      WRITE SetPointCloudTopicList
+      NOTIFY PointCloudTopicListChanged
+    )
+
+    /// \brief List of topics publishing FloatV messages
+    Q_PROPERTY(
+      QStringList floatVTopicList
+      READ FloatVTopicList
+      WRITE SetFloatVTopicList
+      NOTIFY FloatVTopicListChanged
+    )
+
+    /// \brief Color for minimum value
+    Q_PROPERTY(
+      QColor minColor
+      READ MinColor
+      WRITE SetMinColor
+      NOTIFY MinColorChanged
+    )
+
+    /// \brief Color for maximum value
+    Q_PROPERTY(
+      QColor maxColor
+      READ MaxColor
+      WRITE SetMaxColor
+      NOTIFY MaxColorChanged
+    )
+
+    /// \brief Minimum value
+    Q_PROPERTY(
+      float minFloatV
+      READ MinFloatV
+      WRITE SetMinFloatV
+      NOTIFY MinFloatVChanged
+    )
+
+    /// \brief Maximum value
+    Q_PROPERTY(
+      float maxFloatV
+      READ MaxFloatV
+      WRITE SetMaxFloatV
+      NOTIFY MaxFloatVChanged
     )
 
     /// \brief Constructor
@@ -56,36 +96,101 @@ namespace tethys
     // Documentation inherited
     public: void LoadConfig(const tinyxml2::XMLElement *_pluginElem) override;
 
-    /// \brief Callback function to get data from the message
+    /// \brief Callback function for point cloud topic.
     /// \param[in]_msg Point cloud message
-    public: void OnCloud(const ignition::msgs::PointCloudPacked &_msg);
+    public: void OnPointCloud(const ignition::msgs::PointCloudPacked &_msg);
 
-    // TODO TEMPORARY HACK float arrays instead of point cloud fields
-    public: void OnTemperature(const ignition::msgs::Float_V &_msg);
-    public: void OnChlorophyll(const ignition::msgs::Float_V &_msg);
-    public: void OnSalinity(const ignition::msgs::Float_V &_msg);
-    public: void OnFloatData(const ignition::msgs::Float_V &_msg);
-
-    /// \brief Callback function to get data from the message
+    /// \brief Callback function for point cloud service
     /// \param[in]_msg Point cloud message
     /// \param[out]_result True on success.
-    public: void OnService(const ignition::msgs::PointCloudPacked &_msg,
-        bool _result);
+    public: void OnPointCloudService(
+        const ignition::msgs::PointCloudPacked &_msg, bool _result);
 
     /// \brief Get the topic list
     /// \return List of topics
-    public: Q_INVOKABLE QStringList TopicList() const;
+    public: Q_INVOKABLE QStringList PointCloudTopicList() const;
 
     /// \brief Set the topic list from a string
-    /// \param[in] _topicList List of topics.
-    public: Q_INVOKABLE void SetTopicList(const QStringList &_topicList);
+    /// \param[in] _pointCloudTopicList List of topics.
+    public: Q_INVOKABLE void SetPointCloudTopicList(
+        const QStringList &_pointCloudTopicList);
 
     /// \brief Notify that topic list has changed
-    signals: void TopicListChanged();
+    signals: void PointCloudTopicListChanged();
 
-    /// \brief Set topic to subscribe to.
+    /// \brief Set topic to subscribe to for point cloud.
     /// \param[in] _topicName Name of selected topic
-    public: Q_INVOKABLE void OnTopic(const QString &_topicName);
+    public: Q_INVOKABLE void OnPointCloudTopic(const QString &_topicName);
+
+    /// \brief Callback function for float vector topic.
+    /// \param[in]_msg Float vector message
+    public: void OnFloatV(const ignition::msgs::Float_V &_msg);
+
+    /// \brief Callback function for point cloud service
+    /// \param[in]_msg Float vector message
+    /// \param[out]_result True on success.
+    public: void OnFloatVService(
+        const ignition::msgs::Float_V &_msg, bool _result);
+
+    /// \brief Get the topic list
+    /// \return List of topics
+    public: Q_INVOKABLE QStringList FloatVTopicList() const;
+
+    /// \brief Set the topic list from a string
+    /// \param[in] _floatVTopicList List of topics.
+    public: Q_INVOKABLE void SetFloatVTopicList(
+        const QStringList &_floatVTopicList);
+
+    /// \brief Notify that topic list has changed
+    signals: void FloatVTopicListChanged();
+
+    /// \brief Set topic to subscribe to for float vectors.
+    /// \param[in] _topicName Name of selected topic
+    public: Q_INVOKABLE void OnFloatVTopic(const QString &_topicName);
+
+    /// \brief Get the minimum color
+    /// \return Minimum color
+    public: Q_INVOKABLE QColor MinColor() const;
+
+    /// \brief Set the minimum color
+    /// \param[in] _minColor Minimum color.
+    public: Q_INVOKABLE void SetMinColor(const QColor &_minColor);
+
+    /// \brief Notify that minimum color has changed
+    signals: void MinColorChanged();
+
+    /// \brief Get the maximum color
+    /// \return Maximum color
+    public: Q_INVOKABLE QColor MaxColor() const;
+
+    /// \brief Set the maximum color
+    /// \param[ax] _maxColor Maximum color.
+    public: Q_INVOKABLE void SetMaxColor(const QColor &_maxColor);
+
+    /// \brief Notify that maximum color has changed
+    signals: void MaxColorChanged();
+
+    /// \brief Get the minimum value
+    /// \return Minimum value
+    public: Q_INVOKABLE float MinFloatV() const;
+
+    /// \brief Set the minimum value
+    /// \param[in] _minFloatV Minimum value.
+    public: Q_INVOKABLE void SetMinFloatV(float _minFloatV);
+
+    /// \brief Notify that minimum value has changed
+    signals: void MinFloatVChanged();
+
+    /// \brief Get the maximum value
+    /// \return Maximum value
+    public: Q_INVOKABLE float MaxFloatV() const;
+
+    /// \brief Set the maximum value
+    /// \param[ax] _maxFloatV Maximum value.
+    public: Q_INVOKABLE void SetMaxFloatV(float _maxFloatV);
+
+    /// \brief Notify that maximum value has changed
+    signals: void MaxFloatVChanged();
 
     /// \brief Set whether to show the point cloud.
     /// \param[in] _show Boolean value for displaying the points.
