@@ -30,6 +30,7 @@
 #include "VisualizePointCloud.hh"
 
 #include <ignition/common/Console.hh>
+#include <ignition/common/Profiler.hh>
 
 #include <ignition/plugin/Register.hh>
 
@@ -206,6 +207,8 @@ void VisualizePointCloud::OnService(const ignition::msgs::PointCloudPacked &_res
 //////////////////////////////////////////////////
 void VisualizePointCloud::PublishMarkers()
 {
+  IGN_PROFILE("VisualizePointCloud::PublishMarkers");
+
   // If point cloud empty, do nothing. (PointCloudPackedIteratorBase errors on
   // empty cloud.)
   if (this->dataPtr->pcMsg.height() == 0 && this->dataPtr->pcMsg.width() == 0)
