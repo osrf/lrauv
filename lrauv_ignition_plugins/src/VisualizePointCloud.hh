@@ -87,6 +87,14 @@ namespace tethys
       NOTIFY MaxFloatVChanged
     )
 
+    /// \brief Point size
+    Q_PROPERTY(
+      float pointSize
+      READ PointSize
+      WRITE SetPointSize
+      NOTIFY PointSizeChanged
+    )
+
     /// \brief Constructor
     public: VisualizePointCloud();
 
@@ -191,6 +199,17 @@ namespace tethys
 
     /// \brief Notify that maximum value has changed
     signals: void MaxFloatVChanged();
+
+    /// \brief Get the point size
+    /// \return Maximum value
+    public: Q_INVOKABLE float PointSize() const;
+
+    /// \brief Set the point size
+    /// \param[ax] _pointSize Maximum value.
+    public: Q_INVOKABLE void SetPointSize(float _pointSize);
+
+    /// \brief Notify that point size has changed
+    signals: void PointSizeChanged();
 
     /// \brief Set whether to show the point cloud.
     /// \param[in] _show Boolean value for displaying the points.

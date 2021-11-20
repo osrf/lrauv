@@ -190,23 +190,6 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Publish a few more times for visualization plugin to get them
   public: int repeatPubTimes = 1;
-
-  // TODO This is a workaround pending upstream Ignition orbit tool improvements
-  // \brief Scale down in order to see in view
-  // For 2003080103_mb_l3_las_1x1km.csv
-  //public: const float MINIATURE_SCALE = 0.01;
-  // For 2003080103_mb_l3_las.csv
-  public: const float MINIATURE_SCALE = 0.0001;
-  // For simple_test.csv
-  //public: const float MINIATURE_SCALE = 1.0;
-
-  // TODO This is a workaround pending upstream Marker performance improvements.
-  // \brief Performance trick. Skip depths below this z, so have memory to
-  // visualize higher layers at higher resolution.
-  // This is only for visualization, so that MAX_PTS_VIS can calculate close
-  // to the actual number of points visualized.
-  // Sensors shouldn't use this.
-  public: const float SKIP_Z_BELOW = -20;
 };
 
 /////////////////////////////////////////////////
@@ -445,29 +428,12 @@ void ScienceSensorsSystemPrivate::ReadData(
       // Check validity of spatial coordinates
       if (!std::isnan(latitude) && !std::isnan(longitude) && !std::isnan(depth))
       {
-        // Performance trick. Skip points below a certain depth
-        if (-depth < this->SKIP_Z_BELOW)
-        {
-          continue;
-        }
-
         // Convert lat / lon / elevation to Cartesian ENU
         auto cart = this->world.SphericalCoordinates(_ecm).value()
             .PositionTransform({IGN_DTOR(latitude), IGN_DTOR(longitude), 0.0},
             ignition::math::SphericalCoordinates::SPHERICAL,
             ignition::math::SphericalCoordinates::LOCAL2);
         cart.Z() = -depth;
-
-        // Performance trick. Scale down to see in view
-        cart *= this->MINIATURE_SCALE;
-        // Revert Z to the unscaled depth
-        cart.Z() = -depth;
-
-        // Performance trick. Skip points beyond some distance from origin
-        if (abs(cart.X()) > 1000 || abs(cart.Y()) > 1000)
-        {
-          continue;
-        }
 
         // Gather spatial coordinates, 3 fields in the line, into point cloud
         // for indexing this time slice of data.
@@ -855,11 +821,6 @@ ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
     {
       {"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32},
     });
-
-  // TODO optimization for visualization:
-  // Use PCL methods to chop off points beyond some distance from sensor
-  // pose. Don't need to visualize beyond that. Might want to put that on a
-  // different topic specifically for visualization.
 
   msg.mutable_header()->mutable_stamp()->set_sec(this->timestamps[this->timeIdx]);
 

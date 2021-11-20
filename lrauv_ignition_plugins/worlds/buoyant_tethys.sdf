@@ -11,6 +11,8 @@
       <!-- For default gray ambient -->
       <!--background>0.8 0.8 0.8</background-->
       <background>0.0 0.7 0.8</background>
+
+      <grid>false</grid>
     </scene>
 
     <physics name="1ms" type="dart">
@@ -100,6 +102,12 @@
         <ambient_light>0.4 0.4 0.4</ambient_light>
         <background_color>0.8 0.8 0.8</background_color>
         <camera_pose>0 6 6 0 0.5 -1.57</camera_pose>
+        <camera_clip>
+          <!-- ortho view needs low near clip -->
+          <near>0.001</near>
+          <!-- See 300 km away -->
+          <far>300000</far>
+        </camera_clip>
       </plugin>
 
       <!-- Plugins that add functionality to the scene -->
@@ -238,9 +246,7 @@
       <plugin filename="Plot3D" name="Plot 3D">
         <ignition-gui>
           <title>Plot Tethys 3D path</title>
-          <property type="string" key="state">floating_collapsed</property>
-          <property key="x" type="double">0</property>
-          <property key="y" type="double">0</property>
+          <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
         <entity_name>tethys</entity_name>
         <color>0 0 1</color>
@@ -250,16 +256,32 @@
       <plugin filename="ComponentInspector" name="Component Inspector">
         <ignition-gui>
           <title>Inspector</title>
-          <property type="string" key="state">floating_collapsed</property>
-          <property type="double" key="x">400</property>
+          <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
       </plugin>
       <plugin filename="VisualizePointCloud" name="Visualize science data">
         <ignition-gui>
           <title>Visualize science data</title>
-          <property type="string" key="state">floating_collapsed</property>
-          <property key="x" type="double">800</property>
+          <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
+      </plugin>
+      <plugin filename="ViewAngle" name="Camera controls">
+        <ignition-gui>
+          <title>Camera controls</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="GridConfig" name="Grid config">
+        <ignition-gui>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+        <!-- 300 km x 300 km -->
+        <cell_count>6</cell_count>
+        <vertical_cell_count>0</vertical_cell_count>
+        <!-- 50 km -->
+        <cell_length>50000</cell_length>
+        <pose>0 100000 0  0 0 0.32</pose>
+        <color>0 1 0 1</color>
       </plugin>
     </gui>
 
