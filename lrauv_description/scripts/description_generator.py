@@ -26,6 +26,8 @@
 import xml.etree.ElementTree as ET
 import numpy as np
 import sys
+import os
+import os.path as path
 
 ## These are parameters of the WHOLE VEHICLE
 # TODO(arjo): Implement inertia. Need to implement Inertial<T>::operator-(const Inertial<T>&) first
@@ -103,12 +105,16 @@ def calculate_center_of_mass(total_mass, template_path, output_path):
             cube_length = total_mass / (2 * 0.2 * fluid_density)
             collision_tag.text = ""
             pose_tag = ET.SubElement(collision_tag, "pose")
-            pose_tag.text = write_float_array([0, 0, buoyancy_z_offset, 0, 0, 0])
+            pose_tag.text = write_float_array([main_body_com[0], main_body_com[1], buoyancy_z_offset, 0, 0, 0])
 
             geometry = ET.SubElement(collision_tag, "geometry")
             box = ET.SubElement(geometry, "box")
             size = ET.SubElement(box, "size")
             size.text = write_float_array([2, 0.2, cube_length])
+
+    dir_name = path.dirname(output_path)
+    if not path.exists(dir_name):
+        os.makedirs(dir_name)
 
     sdf_file_input.write(output_path)
 
