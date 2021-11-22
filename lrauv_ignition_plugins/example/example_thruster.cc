@@ -21,7 +21,10 @@
  */
 
 /**
- * Send velocity commands to the thruster.
+ * Send angular velocity commands to the propeller.
+ *
+ * Positive values rotate the propeller clockwise when looking
+ * from the back, and propel the vehicle forward.
  *
  * Usage:
  *   $ LRAUV_example_thruster <vehicle_name> <rad_per_sec>
