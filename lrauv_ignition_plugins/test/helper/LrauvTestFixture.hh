@@ -71,6 +71,8 @@ class LrauvTestFixture : public ::testing::Test
       [&](const ignition::gazebo::UpdateInfo &_info,
       const ignition::gazebo::EntityComponentManager &_ecm)
       {
+        this->dt = _info.dt;
+
         auto worldEntity = ignition::gazebo::worldEntity(_ecm);
         ignition::gazebo::World world(worldEntity);
 
@@ -232,6 +234,9 @@ class LrauvTestFixture : public ::testing::Test
 
   /// \brief How many times has OnPostUpdate been run
   public: unsigned int iterations{0u};
+
+  /// \brief Latest simulation time step.
+  public: std::chrono::steady_clock::duration dt{0};
 
   /// \brief All tethys world poses in order
   public: std::vector<ignition::math::Pose3d> tethysPoses;
