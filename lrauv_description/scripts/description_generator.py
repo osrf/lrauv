@@ -115,9 +115,6 @@ def calculate_center_of_mass(total_mass, template_path, output_path):
             size = ET.SubElement(box, "size")
             size.text = write_float_array([2, 0.3, cube_length])
 
-            print(total_moment + main_body_com * remaining_mass, file=sys.stderr)
-            print(main_body_com, file=sys.stderr)
-
             assert sum(total_moment + main_body_com * remaining_mass) == 0
 
     dir_name = path.dirname(output_path)
