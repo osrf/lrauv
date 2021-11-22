@@ -51,7 +51,7 @@ def calculate_center_of_mass(total_mass, template_path, output_path):
 
     for sdf in sdf_file_input.iter("sdf"):
         for model in sdf.iter("model"):
-            moments = []
+            moments = [(0, np.array([0,0,0,0,0,0]))]
             main_body_com_tag = None
             main_body_com_pose = None
             collision_tag = None
@@ -94,23 +94,31 @@ def calculate_center_of_mass(total_mass, template_path, output_path):
 
             # get the moments in the model
             total_moment = sum([mass * com for mass, com in moments])
+
+            # this is the mass of the various other payloads
             component_mass = sum([mass for mass, _ in moments])
             remaining_mass = total_mass - component_mass
+            print(component_mass, file=sys.stderr)
             main_body_com = - total_moment / remaining_mass
 
             main_body_com_tag.text = str(remaining_mass)
             main_body_com_pose.text = write_float_array(main_body_com)
 
             # calculate buoyancy position
-            cube_length = total_mass / (2 * 0.2 * fluid_density)
+            cube_length = total_mass / (2 * 0.3 * fluid_density)
             collision_tag.text = ""
             pose_tag = ET.SubElement(collision_tag, "pose")
-            pose_tag.text = write_float_array([main_body_com[0], main_body_com[1], buoyancy_z_offset, 0, 0, 0])
+            pose_tag.text = write_float_array([0, 0, buoyancy_z_offset, 0, 0, 0])
 
             geometry = ET.SubElement(collision_tag, "geometry")
             box = ET.SubElement(geometry, "box")
             size = ET.SubElement(box, "size")
-            size.text = write_float_array([2, 0.2, cube_length])
+            size.text = write_float_array([2, 0.3, cube_length])
+
+            print(total_moment + main_body_com * remaining_mass, file=sys.stderr)
+            print(main_body_com, file=sys.stderr)
+
+            assert sum(total_moment + main_body_com * remaining_mass) == 0
 
     dir_name = path.dirname(output_path)
     if not path.exists(dir_name):
