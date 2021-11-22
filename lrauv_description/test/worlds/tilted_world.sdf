@@ -17,7 +17,7 @@
 
     <physics name="1ms" type="dart">
       <max_step_size>0.02</max_step_size>
-      <real_time_factor>1</real_time_factor>
+      <real_time_factor>0</real_time_factor>
     </physics>
     <plugin
       filename="ignition-gazebo-physics-system"
