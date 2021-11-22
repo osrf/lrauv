@@ -63,6 +63,8 @@ if(BUILD_TESTING)
   include(GoogleTest)
 
   add_executable(test_hydrostatic_stability test/test_hydrostatic_stability.cc)
+  target_include_directories(test_hydrostatic_stability
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
   target_link_libraries(test_hydrostatic_stability
     PUBLIC gtest_main
     PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}

@@ -17,7 +17,7 @@
 
     <physics name="1ms" type="dart">
       <max_step_size>0.02</max_step_size>
-      <real_time_factor>1</real_time_factor>
+      <real_time_factor>0</real_time_factor>
     </physics>
     <plugin
       filename="ignition-gazebo-physics-system"
@@ -36,7 +36,7 @@
       filename="ignition-gazebo-buoyancy-system"
       name="ignition::gazebo::systems::Buoyancy">
       <!-- TODO: fix behaviour near surface, see https://github.com/osrf/lrauv/issues/102 -->
-        <!--<graded_buoyancy>
+      <!--<graded_buoyancy>
         <default_density>1000</default_density>
         <density_change>
           <above_depth>5</above_depth>
