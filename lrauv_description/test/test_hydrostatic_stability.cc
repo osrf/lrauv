@@ -119,7 +119,7 @@ TEST(Stability, TiltedWorld)
     EXPECT_NEAR(prev_pose.Pos().X(), pose.Pos().X(), 1e-2);
     EXPECT_NEAR(prev_pose.Pos().Y(), pose.Pos().Y(), 1e-2);
     EXPECT_NEAR(prev_pose.Pos().Z(), pose.Pos().Z(), 1e-2);
-    auto pitch = pose.Rot().Euler();
+    auto pitch = pose.Rot().Euler().Y();
     if (pitch > maxPitch)
     {
       maxPitch = pitch;
