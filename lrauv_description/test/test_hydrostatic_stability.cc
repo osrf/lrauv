@@ -74,3 +74,62 @@ TEST(Stability, FlatWorld)
   EXPECT_EQ(prev_pose.Pos(), ignition::math::Vector3d(0,0,0));
   EXPECT_EQ(prev_pose.Rot(), ignition::math::Quaterniond(1,0,0,0)); 
 }
+
+TEST(Stability, TiltedWorld)
+{
+  auto fixture = std::make_unique<ignition::gazebo::TestFixture>(
+    ignition::common::joinPaths(
+    std::string(PROJECT_SOURCE_PATH), "test", "worlds", "tilted_world.sdf"));
+  
+  std::vector<ignition::math::Pose3d> tethysPoses;
+  
+  fixture->OnPostUpdate(
+    [&](const ignition::gazebo::UpdateInfo &_info,
+    const ignition::gazebo::EntityComponentManager &_ecm)
+    {
+      auto worldEntity = ignition::gazebo::worldEntity(_ecm);
+      ignition::gazebo::World world(worldEntity);
+
+      auto modelEntity = world.ModelByName(_ecm, "tethys");
+      EXPECT_NE(ignition::gazebo::kNullEntity, modelEntity);
+
+      tethysPoses.push_back(
+          ignition::gazebo::worldPose(modelEntity, _ecm));
+    }
+  );
+
+  fixture->Finalize();
+
+  fixture->Server()->Run(true, 10000, false);
+  EXPECT_EQ(10000, tethysPoses.size());
+
+  bool first = true;
+
+  double maxPitch {std::numeric_limits<double>::min()},
+    minPitch{std::numeric_limits<double>::max()};
+  ignition::math::Pose3d prev_pose;
+  for (const auto &pose: tethysPoses)
+  {
+    if (first)
+    {
+      prev_pose = pose;
+      first = true;
+      continue;
+    }
+    EXPECT_NEAR(prev_pose.Pos().X(), pose.Pos().X(), 1e-2);
+    EXPECT_NEAR(prev_pose.Pos().Y(), pose.Pos().Y(), 1e-2);
+    EXPECT_NEAR(prev_pose.Pos().Z(), pose.Pos().Z(), 1e-2);
+    auto pitch = pose.Rot().Euler();
+    if (pitch > maxPitch)
+    {
+      maxPitch = pitch;
+    }
+    
+    if (pitch < minPitch)
+    {
+      minPitch = pitch;
+    }
+
+    prev_pose = pose;
+  }
+}
