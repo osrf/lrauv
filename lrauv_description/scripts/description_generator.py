@@ -28,7 +28,6 @@ import numpy as np
 import sys
 import os
 import os.path as path
-from ignition.math import Vector3d, MassMatrix3d, Inertiald
 
 ## These are parameters of the WHOLE VEHICLE
 # TODO(arjo): Implement inertia. Need to implement Inertial<T>::operator-(const Inertial<T>&) first
@@ -45,40 +44,6 @@ def write_float_array(pose):
     for p in pose:
         res += str(p) + " "
     return res
-
-def read_mass_matrix(tag, mass):
-    #TODO(arjo): Handle diagonal terms
-
-    tag = inertia_tag.find(".inertial/inertia")
-
-    if tag is None:
-        raise Exception("Inertial not defined")
-    
-    ixx, iyy, izz = (0, 0, 0)
-
-    ixx_tag = tag.find("ixx")
-    if ixx_tag is not None:
-        ixx = float(ixx_tag.text)
-
-    iyy_tag = tag.find("iyy")
-    if iyy_tag is not None:
-        iyy = float(iyy_tag.text)
-    
-    izz_tag = tag.find("iyy")
-    if izz_tag is not None:
-        izz = float(izz_tag.text)
-    
-    vec = Vector3d(ixx, iyy, izz)
-    return MassMatrix3d(mass, vec)
-
-    
-def read_inertial_tag(link):
-    mass_tag = link.find(".inertial/mass")
-
-    if mass_tag is None:
-        raise Exception("Mass not defined")
-    
-    inertial = read_inertial_tag(link, float(mass_tag.text))
 
 
 def calculate_center_of_mass(total_mass, template_path, output_path):
