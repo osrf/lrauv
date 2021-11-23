@@ -110,7 +110,7 @@
     </link>
 
     <!-- Vertical fins -->
-    <!--<link name="vertical_fins">
+    <link name="vertical_fins">
       <pose>1.05 0 0 0 0 0</pose>
       <inertial>
         <mass>0.2</mass>
@@ -124,12 +124,8 @@
         </inertia>
       </inertial>
 
-      <collision name="collision">
-         <geometry>
-          <box>
-            <size>0.1 0.1 0.02</size>
-          </box>
-        </geometry>
+      <collision name="vertical_fin_buoyancy">
+        @neutral_buoyancy
       </collision>
 
       <visual name= "visual">
@@ -161,7 +157,7 @@
           </script>
         </material>
       </visual>
-    </link>-->
+    </link>
 
     <!-- Propeller -->
     <!--<link name="propeller">
@@ -310,7 +306,7 @@
       </axis>
     </joint>
 
-    <!--<joint name="vertical_fins_joint" type="revolute">
+    <joint name="vertical_fins_joint" type="revolute">
       <pose degrees="true">0 0 0   180 0 0</pose>
       <parent>base_link</parent>
       <child>vertical_fins</child>
@@ -323,7 +319,7 @@
           <velocity>-1</velocity>
         </limit>
       </axis>
-    </joint>-->
+    </joint>
     <!--
     <joint name="propeller_joint" type="revolute">
       <pose>0 0 0 0 0 0</pose>
