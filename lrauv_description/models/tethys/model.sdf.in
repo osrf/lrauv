@@ -243,9 +243,9 @@
       </visual>
     </link>
 
-    <!--<link name="buoyancy_engine">-->
+    <link name="buoyancy_engine">
       <!-- TODO: Determine location of buoyancy engine -->
-      <!--<pose>0.4 0 0 0 0 0</pose>-->
+      <pose>0.4 0 0 0 0 0</pose>
 
       <!-- TODO: Remove inertial and collision
 
@@ -259,7 +259,7 @@
          (why?), so removing them makes the vehicle unstable.
 
       -->
-      <!--<inertial>
+      <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.3</mass>
         <inertia>
@@ -271,14 +271,10 @@
           <izz>0.000033571862</izz>
         </inertia>
       </inertial>
-      <collision name="collision">
-        <geometry>
-          <box>
-            <size>0.03 0.1 0.1</size>
-          </box>
-        </geometry>
+      <collision name="buoyancy_engine">
+        @neutral_buoyancy
       </collision>
-    </link>-->
+    </link>
 
     <!-- Joints -->
     <!--<joint name="buoyancy_engine_joint" type="fixed">
