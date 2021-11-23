@@ -27,12 +27,18 @@
 #include "lrauv_command.pb.h"
 #include "lrauv_state.pb.h"
 
-// Check actuators that don't change throughout the test
-void unchangedActuators(const lrauv_ignition_plugins::msgs::LRAUVState &_msg)
+// Checks that don't change throughout the test
+void commonChecks(const lrauv_ignition_plugins::msgs::LRAUVState &_msg)
 {
+  // Check actuators that don't change throughout the test
   EXPECT_NEAR(0.0, _msg.elevatorangle_(), 1e-4);
   EXPECT_NEAR(0.0, _msg.massposition_(), 1e-6);
   EXPECT_NEAR(0.0005, _msg.buoyancyposition_(), 1e-6);
+
+  // rph is equal to posRPH
+  EXPECT_DOUBLE_EQ(_msg.posrph_().x(), _msg.rph_().x());
+  EXPECT_DOUBLE_EQ(_msg.posrph_().y(), _msg.rph_().y());
+  EXPECT_DOUBLE_EQ(_msg.posrph_().z(), _msg.rph_().z());
 }
 
 //////////////////////////////////////////////////
@@ -43,47 +49,44 @@ TEST_F(LrauvTestFixture, Command)
   EXPECT_EQ(100, this->stateMsgs.size());
 
   auto latest = this->stateMsgs.back();
+  commonChecks(latest);
 
   // Actuators
-  unchangedActuators(latest);
   EXPECT_NEAR(0.0, latest.propomega_(), 1e-6);
   EXPECT_NEAR(0.0, latest.rudderangle_(), 1e-6);
 
   // Position
-  // TODO(chapulina) Shouldn't start sinking
+  // TODO(chapulina) Reduce tolerances, vehicle shouldn't be sinking and pitching
   EXPECT_NEAR(0.0, latest.depth_(), 0.02);
-  EXPECT_NEAR(0.0, latest.rph_().x(), 0.007);
-  // TODO(chapulina) Shouldn't be pitching
-  EXPECT_NEAR(0.0, latest.rph_().y(), 1e-2);
-  EXPECT_NEAR(0.0, latest.rph_().z(), 1e-6);
-  // TODO(chapulina) Shouldn't be moving
-  EXPECT_NEAR(0.0, latest.speed_(), 1e-2);
   EXPECT_NEAR(0.0, latest.latitudedeg_(), 1e-6);
   EXPECT_NEAR(0.0, latest.longitudedeg_(), 1e-6);
+
+  // NED world frame
   EXPECT_NEAR(0.0, latest.pos_().x(), 1e-6);
   EXPECT_NEAR(0.0, latest.pos_().y(), 1e-6);
   EXPECT_NEAR(0.0, latest.pos_().z(), 0.015);
   EXPECT_NEAR(0.0, latest.posrph_().x(), 0.007);
   EXPECT_NEAR(0.0, latest.posrph_().y(), 1e-2);
   EXPECT_NEAR(0.0, latest.posrph_().z(), 1e-6);
+
+  // Velocity
+  EXPECT_NEAR(0.0, latest.speed_(), 1e-2);
+
+  // NED world frame
   EXPECT_NEAR(0.0, latest.posdot_().x(), 1e-6);
   EXPECT_NEAR(0.0, latest.posdot_().y(), 1e-5);
-  // TODO(chapulina) Shouldn't start sinking
   EXPECT_NEAR(0.0, latest.posdot_().z(), 0.006);
+
+  // FSK vehicle frame
   EXPECT_NEAR(0.0, latest.rateuvw_().x(), 1e-5);
   EXPECT_NEAR(0.0, latest.rateuvw_().y(), 1e-6);
   EXPECT_NEAR(0.0, latest.rateuvw_().z(), 0.06);
   EXPECT_NEAR(0.0, latest.ratepqr_().x(), 1e-6);
   EXPECT_NEAR(0.0, latest.ratepqr_().y(), 0.002);
   EXPECT_NEAR(0.0, latest.ratepqr_().z(), 1e-6);
+
   // TODO(chapulina) Check sensor data once interpolation is complete
-  // EXPECT_NEAR(0.0, latest.northcurrent_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.eastcurrent_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.temperature_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.salinity_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.density_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.values_(0), 1e-6);
-  // EXPECT_NEAR(0.0, latest.values_(1), 1e-6);
+  // https://github.com/osrf/lrauv/issues/5
 
   // Propel vehicle forward by giving the propeller a positive angular velocity
   // Vehicle is supposed to move at around 1 m/s with 300 RPM.
@@ -107,48 +110,40 @@ TEST_F(LrauvTestFixture, Command)
   // NED: -Y
   // FSK: +X
   latest = this->stateMsgs.back();
+  commonChecks(latest);
 
   // Actuators
-  unchangedActuators(latest);
-  // TODO(chapulina)
   EXPECT_NEAR(10.0 * IGN_PI, latest.propomega_(), 1e-3);
   EXPECT_NEAR(0.0, latest.rudderangle_(), 1e-3);
 
-
-  // TODO(chapulina) Shouldn't start sinking
+  // Position
   EXPECT_NEAR(0.0, latest.depth_(), 0.03);
-  EXPECT_NEAR(0.0, latest.rph_().x(), 1e-3);
-  // TODO(chapulina) Shouldn't be pitching
-  EXPECT_NEAR(0.0, latest.rph_().y(), 1e-2);
-  EXPECT_NEAR(0.0, latest.rph_().z(), 1e-5);
-  // TODO(chapulina) Shouldn't be moving
-  EXPECT_NEAR(1.0, latest.speed_(), 0.16);
   EXPECT_NEAR(0.0, latest.latitudedeg_(), 1e-6);
   EXPECT_NEAR(0.0, latest.longitudedeg_(), 1e-3);
+
+  // NED world frame: vehicle is going West with no rotation
   EXPECT_NEAR(0.0, latest.pos_().x(), 1e-3);
-  EXPECT_GT(-30.0, latest.pos_().y());
+  EXPECT_GT(-28.0, latest.pos_().y());
   EXPECT_NEAR(0.0, latest.pos_().z(), 0.03);
   EXPECT_NEAR(0.0, latest.posrph_().x(), 1e-3);
   EXPECT_NEAR(0.0, latest.posrph_().y(), 1e-2);
   EXPECT_NEAR(0.0, latest.posrph_().z(), 1e-5);
+
+  // Velocity
+  EXPECT_NEAR(1.0, latest.speed_(), 0.16);
+
+  // NED world frame: vehicle is going West with no rotation
   EXPECT_NEAR(0.0, latest.posdot_().x(), 1e-4);
   EXPECT_NEAR(-1.0, latest.posdot_().y(), 0.16);
-  // TODO(chapulina) Shouldn't start sinking
   EXPECT_NEAR(0.0, latest.posdot_().z(), 0.006);
+
+  // FSK vehicle frame: vehicle is going forward with no rotation
   EXPECT_NEAR(1.0, latest.rateuvw_().x(), 0.16);
   EXPECT_NEAR(0.0, latest.rateuvw_().y(), 1e-4);
   EXPECT_NEAR(0.0, latest.rateuvw_().z(), 1e-4);
-  EXPECT_NEAR(0.0, latest.ratepqr_().x(), 0.017);
+  EXPECT_NEAR(0.0, latest.ratepqr_().x(), 0.017); // Roll? Should this be pitch?!
   EXPECT_NEAR(0.0, latest.ratepqr_().y(), 1e-5);
   EXPECT_NEAR(0.0, latest.ratepqr_().z(), 1e-4);
-  // TODO(chapulina) Check sensor data once interpolation is complete
-  // EXPECT_NEAR(0.0, latest.northcurrent_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.eastcurrent_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.temperature_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.salinity_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.density_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.values_(0), 1e-6);
-  // EXPECT_NEAR(0.0, latest.values_(1), 1e-6);
 
   // Keep propelling vehicle forward
   cmdMsg.set_propomegaaction_(10 * IGN_PI);
@@ -168,53 +163,47 @@ TEST_F(LrauvTestFixture, Command)
     return this->stateMsgs.size() < 300;
   });
 
-  // We expect the vehicle to rotate towards North,
+  // We expect the vehicle to rotate towards North.
   // The vehicle starts facing West and is propelled forward.
   // We expect to see the position and velocity increase on:
   // ENU: -X, +Y and -yaw
   // NED: -Y, +X and +yaw
   // FSK: +X, +Y and +yaw
   latest = this->stateMsgs.back();
-  unchangedActuators(latest);
-  // TODO(chapulina)
-  // EXPECT_NEAR(10.0 * IGN_PI, latest.propomega_(), 1e-3);
+  commonChecks(latest);
+
+  // Actuators
+  EXPECT_NEAR(10.0 * IGN_PI, latest.propomega_(), 1e-3);
   EXPECT_NEAR(-0.5, latest.rudderangle_(), 0.06);
 
   // Position
-  // TODO(chapulina) Shouldn't start sinking
   EXPECT_NEAR(0.0, latest.depth_(), 0.041);
-  EXPECT_NEAR(0.0, latest.rph_().x(), 0.0051);
-  // TODO(chapulina) Shouldn't be pitching
-  EXPECT_NEAR(0.0, latest.rph_().y(), 1e-2);
-  EXPECT_LT(1.2, latest.rph_().z());
-  // TODO(chapulina) Shouldn't be moving
-  EXPECT_NEAR(1.0, latest.speed_(), 0.16);
   EXPECT_NEAR(0.0, latest.latitudedeg_(), 1e-4);
   EXPECT_NEAR(0.0, latest.longitudedeg_(), 1e-3);
-  EXPECT_LT(1.9, latest.pos_().x());
+
+  // NED world frame: vehicle is going North West with positive yaw
+  EXPECT_LT(1.4, latest.pos_().x());
   EXPECT_GT(-30.0, latest.pos_().y());
   EXPECT_NEAR(0.0, latest.pos_().z(), 0.05);
-  EXPECT_NEAR(0.0, latest.posrph_().x(), 0.0051);
+  EXPECT_NEAR(0.0, latest.posrph_().x(), 0.0051); // Roll?
   EXPECT_NEAR(0.0, latest.posrph_().y(), 1e-2);
-  EXPECT_LT(1.2, latest.posrph_().z());
-  EXPECT_LT(0.75, latest.posdot_().x());
-  // EXPECT_NEAR(-1.0, latest.posdot_().y(), 0.16); // ?
-  // TODO(chapulina) Shouldn't start sinking
+  EXPECT_LT(1.1, latest.posrph_().z());
+
+  // Velocity
+  EXPECT_NEAR(1.0, latest.speed_(), 0.16);
+
+  // NED world frame: vehicle is going North West with positive yaw
+  EXPECT_LT(0.6, latest.posdot_().x());
+  EXPECT_GT(-0.5, latest.posdot_().y());
   EXPECT_NEAR(0.0, latest.posdot_().z(), 0.006);
+
+  // FSK vehicle frame: vehicle is going forward and to the right
   EXPECT_LT(0.4, latest.rateuvw_().x());
   EXPECT_GT(1.0, latest.rateuvw_().x());
-  EXPECT_LT(0.7, latest.rateuvw_().y());
+  EXPECT_LT(0.6, latest.rateuvw_().y());
   EXPECT_NEAR(0.0, latest.rateuvw_().z(), 0.006);
-  EXPECT_NEAR(0.0, latest.ratepqr_().x(), 0.017);
-  EXPECT_NEAR(0.0, latest.ratepqr_().y(), 0.017);
-  EXPECT_LT(0.2, latest.ratepqr_().z());
-  // TODO(chapulina) Check sensor data once interpolation is complete
-  // EXPECT_NEAR(0.0, latest.northcurrent_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.eastcurrent_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.temperature_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.salinity_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.density_(), 1e-6);
-  // EXPECT_NEAR(0.0, latest.values_(0), 1e-6);
-  // EXPECT_NEAR(0.0, latest.values_(1), 1e-6);
+  EXPECT_NEAR(0.0, latest.ratepqr_().x(), 0.001);
+  EXPECT_NEAR(0.0, latest.ratepqr_().y(), 0.0017);
+  EXPECT_LT(0.18, latest.ratepqr_().z());
 }
 
