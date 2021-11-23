@@ -132,4 +132,7 @@ TEST(Stability, TiltedWorld)
 
     prev_pose = pose;
   }
+
+  // Since we start the system at 0.08 pitch, we should not exceed this.
+  EXPECT_NEAR(maxPitch, 0.08, 1e-3);
 }
