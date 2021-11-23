@@ -40,7 +40,7 @@ install(FILES
 # Tests
 if(BUILD_TESTING)
 
-  find_package(ignition-gazebo6 REQUIRED COMPONENTS gui)
+  find_package(ignition-gazebo6 REQUIRED)
   set(IGN_GAZEBO_VER ${ignition-gazebo6_VERSION_MAJOR})
 
   # Fetch and configure GTest
