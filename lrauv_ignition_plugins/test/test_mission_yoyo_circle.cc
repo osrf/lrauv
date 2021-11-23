@@ -97,10 +97,10 @@ TEST_F(LrauvTestFixture, YoYoCircle)
 
     // Depth is above 20m, and below 2m after initial descent, with some
     // tolerance
-    EXPECT_LT(-22.1, pose.Pos().Z()) << i;
+    EXPECT_LT(-22.4, pose.Pos().Z()) << i;
     if (i > 2000)
     {
-      EXPECT_GT(0.0, pose.Pos().Z()) << i;
+      EXPECT_GT(0.23, pose.Pos().Z()) << i;
     }
 
     // Pitch is between -20 and 20 deg
