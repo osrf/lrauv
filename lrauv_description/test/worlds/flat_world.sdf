@@ -49,14 +49,21 @@
     <include>
       <pose>0 0 0 0 0 0</pose>
       <uri>tethys</uri>
-      <!--<plugin
+      <plugin
         filename="ignition-gazebo-detachable-joint-system"
         name="ignition::gazebo::systems::DetachableJoint">
         <parent_link>base_link</parent_link>
         <child_model>__model__</child_model>
         <child_link>drop_weight</child_link>
         <topic>/model/tethys/drop_weight</topic>
-      </plugin>-->
+      </plugin>
+      <plugin
+        filename="ignition-gazebo-joint-position-controller-system"
+        name="ignition::gazebo::systems::JointPositionController">
+        <joint_name>battery_joint</joint_name>
+        <use_velocity_commands>true</use_velocity_commands>
+        <cmd_max>0.0007</cmd_max>
+      </plugin>
     </include>
 
   </world>

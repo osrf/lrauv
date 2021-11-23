@@ -60,10 +60,9 @@
     </link>
 
     <!-- Horizontal fins -->
-    <!--<link name="horizontal_fins">
+    <link name="horizontal_fins">
       <pose>1.05 0 0 0 0 0</pose>
       <inertial>
-        <pose>0 0 0 1.57 0 0.5</pose>
         <mass>0.2</mass>
         <inertia>
           <ixx>0.0007924568755</ixx>
@@ -75,12 +74,8 @@
         </inertia>
       </inertial>
 
-      <collision name="collision">
-        <geometry>
-          <box>
-            <size>0.1 0.1 0.02</size>
-          </box>
-        </geometry>
+      <collision name="horizontal_fins_buoyancy">
+        @neutral_buoyancy
       </collision>
 
       <visual name= "visual">
@@ -112,7 +107,7 @@
           </script>
         </material>
       </visual>
-    </link>-->
+    </link>
 
     <!-- Vertical fins -->
     <!--<link name="vertical_fins">
@@ -299,7 +294,7 @@
       <parent>base_link</parent>
       <child>buoyancy_engine</child>
       <namespace>tethys</namespace>
-    </joint>
+    </joint>-->
     <joint name="horizontal_fins_joint" type="revolute">
       <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
@@ -315,7 +310,7 @@
       </axis>
     </joint>
 
-    <joint name="vertical_fins_joint" type="revolute">
+    <!--<joint name="vertical_fins_joint" type="revolute">
       <pose degrees="true">0 0 0   180 0 0</pose>
       <parent>base_link</parent>
       <child>vertical_fins</child>
@@ -328,8 +323,8 @@
           <velocity>-1</velocity>
         </limit>
       </axis>
-    </joint>
-
+    </joint>-->
+    <!--
     <joint name="propeller_joint" type="revolute">
       <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
@@ -362,7 +357,7 @@
     </joint>
 
     <!-- Drop weight -->
-    <!--<link name="drop_weight">
+    <link name="drop_weight">
       <pose>0.128 0 0 0 0 0</pose>
       <inertial>
         <mass>1</mass>
@@ -372,6 +367,6 @@
           <izz>0.000033571862</izz>
         </inertia>
       </inertial>
-    </link>-->
+    </link>
   </model>
 </sdf>

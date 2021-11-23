@@ -9,7 +9,7 @@
       <uri>tethys</uri>
 
       <!-- Sensors -->
-      <!--<experimental:params>
+      <experimental:params>
         <sensor
           element_id="base_link"
           action="add"
@@ -74,9 +74,9 @@
             </noise>
           </ignition:current>
         </sensor>
-      </experimental:params>-->
+      </experimental:params>
       <!-- Joint controllers -->
-      <!--<plugin
+      <plugin
         filename="ignition-gazebo-joint-position-controller-system"
         name="ignition::gazebo::systems::JointPositionController">
         <joint_name>horizontal_fins_joint</joint_name>
@@ -104,10 +104,10 @@
         <joint_name>battery_joint</joint_name>
         <use_velocity_commands>true</use_velocity_commands>
         <cmd_max>0.0007</cmd_max>
-      </plugin>-->
+      </plugin>
       <!-- Lift and drag -->
       <!-- Vertical fin -->
-      <!--<plugin
+      <plugin
         filename="ignition-gazebo-lift-drag-system"
         name="ignition::gazebo::systems::LiftDrag">
         <air_density>1000</air_density>
@@ -119,14 +119,14 @@
         <a0>0</a0>
         <area>0.0244</area>-->
         <!-- Link's Y is perpendicular to the control surface -->
-        <!--<upward>0 1 0</upward>-->
+        <upward>0 1 0</upward>
         <!-- Link's X is pointing towards the back -->
-        <!--<forward>-1 0 0</forward>
+        <forward>-1 0 0</forward>
         <link_name>vertical_fins</link_name>
         <cp>0 0 0</cp>
-      </plugin>-->
+      </plugin>
       <!-- Horizontal fin -->
-      <!--<plugin
+      <plugin
         filename="ignition-gazebo-lift-drag-system"
         name="ignition::gazebo::systems::LiftDrag">
         <air_density>1000</air_density>
@@ -136,24 +136,24 @@
         <cda_stall>0.03</cda_stall>
         <alpha_stall>0.17</alpha_stall>
         <a0>0</a0>
-        <area>0.0244</area>-->
+        <area>0.0244</area>
         <!-- Link's Z is perpendicular to the control surface -->
-        <!--<upward>0 0 1</upward>-->
+        <upward>0 0 1</upward>-
         <!-- Link's X is pointing towards the back -->
-        <!--<forward>-1 0 0</forward>
+        <forward>-1 0 0</forward>
         <link_name>horizontal_fins</link_name>
         <cp>0 0 0</cp>
-      </plugin>-->
+      </plugin>
       <!-- Interface with LRAUV Main Vehicle Application for each vehicle -->
-      <!--<plugin
+      <plugin
         filename="TethysCommPlugin"
         name="tethys::TethysCommPlugin">
         <namespace>tethys</namespace>
         <command_topic>tethys/command_topic</command_topic>
         <state_topic>tethys/state_topic</state_topic>
         <debug_printout>0</debug_printout>
-      </plugin>-->
-      <!--<plugin
+      </plugin>
+      <plugin
         filename="HydrodynamicsPlugin"
         name="tethys::HydrodynamicsPlugin">
         <link_name>base_link</link_name>
@@ -176,23 +176,23 @@
         <mQ>0</mQ>
         <nRR>-632.698957</nRR>
         <nR>0</nR>
-      </plugin>-->
-      <!--<plugin
+      </plugin>
+      <plugin
         filename="ignition-gazebo-buoyancy-engine-system"
         name="ignition::gazebo::v6::systems::BuoyancyEnginePlugin">
         <link_name>buoyancy_engine</link_name>
         <namespace>tethys</namespace>
-        <fluid_density>1000</fluid_density>-->
+        <fluid_density>1000</fluid_density>
         <!-- 80 cc == 0.00008 m^3 -->
-        <!--<min_volume>0.000080</min_volume>-->
+        <min_volume>0.000080</min_volume>
         <!-- 500 cc == 0.0005 m^3 -->
-        <!--<neutral_volume>0.0005</neutral_volume>-->
-        <!--<default_volume>0.0005</default_volume>-->
+        <neutral_volume>0.0005</neutral_volume>
+        <default_volume>0.0005</default_volume>
         <!-- 955 cc == 0.000955 m^3 -->
-        <!--<max_volume>0.000955</max_volume>-->
+        <max_volume>0.000955</max_volume>
         <!-- m^3/s -->
-        <!--<max_inflation_rate>0.000003</max_inflation_rate>
-      </plugin>-->
+        <max_inflation_rate>0.000003</max_inflation_rate>
+      </plugin>
       <plugin
         filename="ignition-gazebo-detachable-joint-system"
         name="ignition::gazebo::systems::DetachableJoint">
@@ -202,7 +202,7 @@
         <topic>/model/tethys/drop_weight</topic>
       </plugin>
 
-      <!--<plugin
+      <plugin
         filename="AcousticCommsPlugin"
         name="tethys::AcousticCommsPlugin">
         <address>1</address>
@@ -221,7 +221,7 @@
         <speed_of_sound>1500</speed_of_sound>
         <link_name>base_link</link_name>
         <namespace>tethys</namespace>
-      </plugin>-->
+      </plugin>
 
     </include>
   </model>

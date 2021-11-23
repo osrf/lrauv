@@ -28,11 +28,12 @@ import numpy as np
 import sys
 import os
 import os.path as path
+from ignition.math import Vector3d, MassMatrix3d, Inertiald
 
 ## These are parameters of the WHOLE VEHICLE
 # TODO(arjo): Implement inertia. Need to implement Inertial<T>::operator-(const Inertial<T>&) first
 total_mass = 147.5671 # Total mass of the vehicle
-buoyancy_z_offset = 0.007 # Buoyancy offset
+buoyancy_z_offset = 0.07 # Buoyancy offset
 fluid_density = 1000 #fluid density
 
 def read_pose(element):
@@ -45,16 +46,52 @@ def write_float_array(pose):
         res += str(p) + " "
     return res
 
+def read_mass_matrix(tag, mass):
+    #TODO(arjo): Handle diagonal terms
+
+    tag = inertia_tag.find(".inertial/inertia")
+
+    if tag is None:
+        raise Exception("Inertial not defined")
+    
+    ixx, iyy, izz = (0, 0, 0)
+
+    ixx_tag = tag.find("ixx")
+    if ixx_tag is not None:
+        ixx = float(ixx_tag.text)
+
+    iyy_tag = tag.find("iyy")
+    if iyy_tag is not None:
+        iyy = float(iyy_tag.text)
+    
+    izz_tag = tag.find("iyy")
+    if izz_tag is not None:
+        izz = float(izz_tag.text)
+    
+    vec = Vector3d(ixx, iyy, izz)
+    return MassMatrix3d(mass, vec)
+
+    
+def read_inertial_tag(link):
+    mass_tag = link.find(".inertial/mass")
+
+    if mass_tag is None:
+        raise Exception("Mass not defined")
+    
+    inertial = read_inertial_tag(link, float(mass_tag.text))
+
+
 def calculate_center_of_mass(total_mass, template_path, output_path):
 
     sdf_file_input = ET.parse(template_path)
 
     for sdf in sdf_file_input.iter("sdf"):
         for model in sdf.iter("model"):
-            moments = [(0, np.array([0,0,0,0,0,0]))]
+            moments = []
             main_body_com_tag = None
             main_body_com_pose = None
             collision_tag = None
+            skipped_masses = []
             ## Get all links
             for links in model.iter("link"):
                 link_pose = links.find(".pose")
@@ -72,9 +109,22 @@ def calculate_center_of_mass(total_mass, template_path, output_path):
                 if collision_element is not None:
                     if collision_element.text.strip() == "@calculated":
                         collision_tag = collision_element
+                    elif collision_element.text.strip() == "@neutral_buoyancy":
+                        collision_element.text = ""
+                        geometry = ET.SubElement(collision_element, "geometry")
+                        box = ET.SubElement(geometry, "box")
+                        size = ET.SubElement(box, "size")
+                        mass = links.find(".inertial/mass")
+                        if mass is None:
+                            raise Exception("Mass not found")
+                    
+                        sz = float(mass.text) / (0.01 * 0.01 * fluid_density)
+                        size.text = write_float_array([0.01, 0.01, sz])
+                        skipped_masses.append(mass)
+                        continue
                     else:
                         # TODO(arjo): Calculate moments arising from collision
-                        pass
+                        continue
 
                 ## Calculate moments due to inertia
                 if inertia_element is not None:
@@ -90,22 +140,21 @@ def calculate_center_of_mass(total_mass, template_path, output_path):
                         if pose is not None:
                             center_of_mass = [float(token) for token in pose.text.split()]
                     assert len(center_of_mass) == 6
-                    moments.append((float(mass.text), np.array(center_of_mass)))
+                    moments.append((float(mass.text), np.array([center_of_mass[0]] + [0]*5)))
 
             # get the moments in the model
-            total_moment = sum([mass * com for mass, com in moments])
+            total_moment =  sum([mass * com for mass, com in moments])
 
             # this is the mass of the various other payloads
             component_mass = sum([mass for mass, _ in moments])
             remaining_mass = total_mass - component_mass
-            print(component_mass, file=sys.stderr)
             main_body_com = - total_moment / remaining_mass
 
             main_body_com_tag.text = str(remaining_mass)
-            main_body_com_pose.text = write_float_array(main_body_com)
+            main_body_com_pose.text = write_float_array([main_body_com[0], 0, 0, 0, 0, 0])
 
             # calculate buoyancy position
-            cube_length = total_mass / (2 * 0.3 * fluid_density)
+            cube_length = total_mass / (2 * 0.4 * fluid_density)
             collision_tag.text = ""
             pose_tag = ET.SubElement(collision_tag, "pose")
             pose_tag.text = write_float_array([0, 0, buoyancy_z_offset, 0, 0, 0])
@@ -113,12 +162,12 @@ def calculate_center_of_mass(total_mass, template_path, output_path):
             geometry = ET.SubElement(collision_tag, "geometry")
             box = ET.SubElement(geometry, "box")
             size = ET.SubElement(box, "size")
-            size.text = write_float_array([2, 0.3, cube_length])
+            size.text = write_float_array([2, 0.4, cube_length])
 
-            assert sum(total_moment + main_body_com * remaining_mass) == 0
+            assert (total_moment + main_body_com * remaining_mass == np.array([0]*6)).all()
 
     dir_name = path.dirname(output_path)
-    if not path.exists(dir_name):
+    if dir_name != '' and not path.exists(dir_name):
         os.makedirs(dir_name)
 
     sdf_file_input.write(output_path)
