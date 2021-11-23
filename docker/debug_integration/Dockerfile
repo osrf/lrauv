@@ -41,7 +41,6 @@ RUN apt-get update \
 
 # Add Ignition's latest packages, which may be more up-to-date than the ones from the MBARI image
 RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list' && \
-    /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-prerelease `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-prerelease.list' && \
     /bin/sh -c 'wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add -'
 
 # Install the latest Ignition binaries
