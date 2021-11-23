@@ -317,11 +317,11 @@
       </axis>
     </joint>
     
-    <joint name="propeller_joint" type="fixed">
+    <joint name="propeller_joint" type="revolute">
       <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
       <child>propeller</child>
-      <!--<axis>
+      <axis>
         <xyz>1 0 0</xyz>
         <limit>
           <lower>-1e+12</lower>
@@ -329,7 +329,7 @@
           <effort>1e6</effort>
           <velocity>-1</velocity>
         </limit>
-      </axis>-->
+      </axis>
     </joint>
 
     <!-- positive joint values move mass forward -->
