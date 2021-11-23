@@ -484,8 +484,8 @@ void TethysCommPlugin::PostUpdate(
   const ignition::gazebo::UpdateInfo &_info,
   const ignition::gazebo::EntityComponentManager &_ecm)
 {
-  ignition::gazebo::Link baseLink(this->modelLink);
-  auto modelPose = ignition::gazebo::worldPose(this->modelLink, _ecm);
+  if (_info.paused)
+    return;
 
   // Publish state
   lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
@@ -543,6 +543,7 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.set_buoyancyposition_(this->buoyancyBladderVolume);
 
   // Depth
+  auto modelPose = ignition::gazebo::worldPose(this->modelLink, _ecm);
   stateMsg.set_depth_(-modelPose.Pos().Z());
 
   // Roll, pitch, heading
