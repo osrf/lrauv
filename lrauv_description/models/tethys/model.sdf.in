@@ -160,7 +160,7 @@
     </link>
 
     <!-- Propeller -->
-    <!--<link name="propeller">
+    <link name="propeller">
       <pose>1.43162 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 1.570796 0 0</pose>
@@ -175,12 +175,8 @@
         </inertia>
       </inertial>
 
-      <collision name="collision">
-        <geometry>
-          <box>
-            <size>0.03 0.1 0.03</size>
-          </box>
-        </geometry>
+      <collision name="propeller_buoyancy">
+        @neutral_buoyancy
       </collision>
 
       <visual name= "visual">
@@ -212,7 +208,7 @@
           </script>
         </material>
       </visual>
-    </link>-->
+    </link>
 
     <!-- Battery -->
     <!-- No separate collision for battery, because it is inside the vehicle.
@@ -320,12 +316,12 @@
         </limit>
       </axis>
     </joint>
-    <!--
-    <joint name="propeller_joint" type="revolute">
+    
+    <joint name="propeller_joint" type="fixed">
       <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
       <child>propeller</child>
-      <axis>
+      <!--<axis>
         <xyz>1 0 0</xyz>
         <limit>
           <lower>-1e+12</lower>
@@ -333,8 +329,8 @@
           <effort>1e6</effort>
           <velocity>-1</velocity>
         </limit>
-      </axis>
-    </joint>-->
+      </axis>-->
+    </joint>
 
     <!-- positive joint values move mass forward -->
     <joint name="battery_joint" type="prismatic">
