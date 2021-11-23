@@ -104,7 +104,7 @@ COPY . /home/colcon_ws/src
 WORKDIR /home/colcon_ws
 RUN [ "/bin/bash" , "-c" , \
   "source ${IGN_WS}/install/setup.bash \
-  && colcon build \
+  && colcon build --cmake-args='-DBUILD_TESTING=ON' \
   && apt-get -qq clean" ]
 
 COPY docker/entrypoint.bash /
