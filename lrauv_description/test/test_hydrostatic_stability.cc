@@ -100,8 +100,8 @@ TEST(Stability, TiltedWorld)
 
   fixture->Finalize();
 
-  fixture->Server()->Run(true, 10000, false);
-  EXPECT_EQ(10000, tethysPoses.size());
+  fixture->Server()->Run(true, 100000, false);
+  EXPECT_EQ(100000, tethysPoses.size());
 
   bool first = true;
 
@@ -134,5 +134,5 @@ TEST(Stability, TiltedWorld)
   }
 
   // Since we start the system at 0.08 pitch, we should not exceed this.
-  EXPECT_NEAR(maxPitch, 0.08, 1e-3);
+  EXPECT_LT(maxPitch, 0.08);
 }

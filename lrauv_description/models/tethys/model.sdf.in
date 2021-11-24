@@ -245,7 +245,7 @@
 
     <link name="buoyancy_engine">
       <!-- TODO: Determine location of buoyancy engine -->
-      <pose>0.4 0 0 0 0 0</pose>
+      <pose>0.137 0 0 0 0 0</pose>
 
       <!-- TODO: Remove inertial and collision
 
@@ -277,12 +277,12 @@
     </link>
 
     <!-- Joints -->
-    <!--<joint name="buoyancy_engine_joint" type="fixed">
+    <joint name="buoyancy_engine_joint" type="fixed">
       <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
       <child>buoyancy_engine</child>
       <namespace>tethys</namespace>
-    </joint>-->
+    </joint>
     <joint name="horizontal_fins_joint" type="revolute">
       <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
