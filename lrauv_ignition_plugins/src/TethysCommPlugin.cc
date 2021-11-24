@@ -414,10 +414,15 @@ void TethysCommPlugin::CommandCallback(
   // Thruster
   ignition::msgs::Double thrusterMsg;
   // TODO(arjo):
-  // Conversion from rpm-> force b/c thruster plugin takes force
+  // Conversion from angular velocity to force b/c thruster plugin takes force
   // Maybe we should change that?
+  // https://github.com/osrf/lrauv/issues/75
   auto angVel = _msg.propomegaaction_();
-  auto force = -0.004422 * 1000 * 0.0016 * angVel * angVel;
+
+  // force = thrust_coefficient * fluid_density * omega ^ 2 *
+  //         propeller_diameter ^ 4
+  // These values are defined in the model's Thruster plugin's SDF
+  auto force = 0.004422 * 1000 * pow(0.2, 4) * angVel * angVel;
   if (angVel < 0)
   {
     force *=-1;
@@ -479,8 +484,8 @@ void TethysCommPlugin::PostUpdate(
   const ignition::gazebo::UpdateInfo &_info,
   const ignition::gazebo::EntityComponentManager &_ecm)
 {
-  ignition::gazebo::Link baseLink(modelLink);
-  auto modelPose = ignition::gazebo::worldPose(modelLink, _ecm);
+  ignition::gazebo::Link baseLink(this->modelLink);
+  auto modelPose = ignition::gazebo::worldPose(this->modelLink, _ecm);
 
   // Publish state
   lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
@@ -500,7 +505,7 @@ void TethysCommPlugin::PostUpdate(
     ignerr << "Propeller joint has wrong size\n";
     return;
   }
-  stateMsg.set_propomega_(-propAngVelComp->Data()[0]);
+  stateMsg.set_propomega_(propAngVelComp->Data()[0]);
 
   // Rudder joint position
   auto rudderPosComp =
@@ -553,7 +558,7 @@ void TethysCommPlugin::PostUpdate(
   // Speed
   auto linearVelocity =
     _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
-    modelLink);
+    this->modelLink);
   stateMsg.set_speed_(linearVelocity->Data().Length());
 
   // Lat long
