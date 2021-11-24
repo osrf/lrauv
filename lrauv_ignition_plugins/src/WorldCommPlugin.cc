@@ -204,7 +204,7 @@ std::string WorldCommPlugin::TethysSdfString(const std::string &_id)
           <topic>/model/)" + _id + R"(/current</topic>
         </sensor>
 
-        <plugin element_id="tethys::Thruster" action="modify">
+        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
           <namespace>)" + _id + R"(</namespace>
         </plugin>
 
