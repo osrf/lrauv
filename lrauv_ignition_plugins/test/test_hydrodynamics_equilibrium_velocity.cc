@@ -143,87 +143,63 @@ TEST(HydrodynamicsTest, DampForwardThrust)
         auto worldEntity = gazebo::worldEntity(_ecm);
         gazebo::World world(worldEntity);
 
-        vehicle1 = world.ModelByName(_ecm, "tethys");
-        if (gazebo::kNullEntity != vehicle1)
         {
+          vehicle1 = world.ModelByName(_ecm, "tethys");
+          ASSERT_NE(gazebo::kNullEntity, vehicle1);
+
           auto baselink = gazebo::Model(vehicle1).LinkByName(_ecm, "base_link");
           gazebo::Link link(baselink);
           auto velocity = link.WorldLinearVelocity(_ecm);
           auto pose = link.WorldPose(_ecm);
-          if(!pose.has_value() || !velocity.has_value())
-          {
-            ignerr << "No pose/velocity\n";
-            return;
-          }
+
+          ASSERT_TRUE(pose.has_value());
+          ASSERT_TRUE(velocity.has_value());
           velocitiesV1.push_back(velocity.value());
           posesV1.push_back(pose.value());
         }
-        else
+        
         {
-          ignerr << "Model tethys not found\n";
-          return;
-        }
+          vehicle2 = world.ModelByName(_ecm, "tethys2");
+          ASSERT_NE(gazebo::kNullEntity, vehicle2);
 
-        vehicle2 = world.ModelByName(_ecm, "tethys2");
-        if (gazebo::kNullEntity != vehicle2)
-        {
           auto baselink = gazebo::Model(vehicle2).LinkByName(_ecm, "base_link");
           gazebo::Link link(baselink);
           auto velocity = link.WorldLinearVelocity(_ecm);
           auto pose = link.WorldPose(_ecm);
-          if(!pose.has_value() || !velocity.has_value())
-          {
-            ignerr << "No pose/velocity\n";
-          }
+          ASSERT_TRUE(pose.has_value());
+          ASSERT_TRUE(velocity.has_value());
           velocitiesV2.push_back(velocity.value());
           posesV2.push_back(pose.value());
         }
-        else
-        {
-          ignerr << "Model tethys2 not found\n";
-          return;
-        }
+     
 
-        vehicle3 = world.ModelByName(_ecm, "tethys3");
-        if (gazebo::kNullEntity != vehicle3)
         {
+          vehicle3 = world.ModelByName(_ecm, "tethys3");
+          ASSERT_NE(gazebo::kNullEntity, vehicle3);
+
           auto baselink = gazebo::Model(vehicle3).LinkByName(_ecm, "base_link");
           gazebo::Link link(baselink);
           auto velocity = link.WorldLinearVelocity(_ecm);
           auto pose = link.WorldPose(_ecm);
-          if(!pose.has_value() || !velocity.has_value())
-          {
-            ignerr << "No pose/velocity\n";
-            return;
-          }
+          ASSERT_TRUE(pose.has_value());
+          ASSERT_TRUE(velocity.has_value());
           velocitiesV3.push_back(velocity.value());
           posesV3.push_back(pose.value());
         }
-        else
-        {
-          ignerr << "Model tethys3 not found\n";
-          return;
-        }
+  
 
-        vehicle4 = world.ModelByName(_ecm, "tethys4");
-        if (ignition::gazebo::kNullEntity != vehicle4)
         {
+          vehicle4 = world.ModelByName(_ecm, "tethys4");
+          ASSERT_NE(gazebo::kNullEntity, vehicle4);
+
           auto baselink = gazebo::Model(vehicle4).LinkByName(_ecm, "base_link");
           gazebo::Link link(baselink);
           auto velocity = link.WorldLinearVelocity(_ecm);
           auto pose = link.WorldPose(_ecm);
-          if(!pose.has_value() || !velocity.has_value())
-          {
-            ignerr << "No pose/velocity\n";
-            return;
-          }
+          ASSERT_TRUE(pose.has_value());
+          ASSERT_TRUE(velocity.has_value());
           velocitiesV4.push_back(velocity.value());
           posesV4.push_back(pose.value());
-        }
-        else
-        {
-          ignerr << "Model tethys4 not found\n";
-          return;
         }
       });
   fixture->Finalize();
