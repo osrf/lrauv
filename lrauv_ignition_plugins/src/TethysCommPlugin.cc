@@ -198,13 +198,17 @@ void TethysCommPlugin::Configure(
   {
     this->stateTopic = _sdf->Get<std::string>("state_topic");
   }
+  if (_sdf->HasElement("debug_printout"))
+  {
+    this->debugPrintout = _sdf->Get<bool>("debug_printout");
+  }
 
   // Initialize transport
   if (!this->node.Subscribe(this->commandTopic,
       &TethysCommPlugin::CommandCallback, this))
   {
-    ignerr << "Error subscribing to topic " << "[" << this->commandTopic << "]. "
-      << std::endl;
+    ignerr << "Error subscribing to topic " << "[" << this->commandTopic
+      << "]. " << std::endl;
     return;
   }
 
@@ -389,6 +393,7 @@ void TethysCommPlugin::CommandCallback(
   // Lazy timestamp conversion just for printing
   //if (std::chrono::seconds(int(floor(_msg.time_()))) - this->prevSubPrintTime
   //    > std::chrono::milliseconds(1000))
+  if (this->debugPrintout)
   {
     igndbg << "[" << this->ns << "] Received command: " << std::endl
       << _msg.DebugString() << std::endl;
@@ -443,7 +448,6 @@ void TethysCommPlugin::CommandCallback(
 void TethysCommPlugin::BuoyancyStateCallback(
   const ignition::msgs::Double &_msg)
 {
-  // Units: cubic centimeters
   this->buoyancyBladderVolume = _msg.data();
 }
 
@@ -531,8 +535,7 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.set_massposition_(massShifterPosComp->Data()[0]);
 
   // Buoyancy position
-  // Convert from cubic centimeters to cubic meters
-  stateMsg.set_buoyancyposition_(buoyancyBladderVolume);
+  stateMsg.set_buoyancyposition_(this->buoyancyBladderVolume);
 
   // Depth
   stateMsg.set_depth_(-modelPose.Pos().Z());
@@ -601,7 +604,8 @@ void TethysCommPlugin::PostUpdate(
 
   this->statePub.Publish(stateMsg);
 
-  if (_info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
+  if (this->debugPrintout &&
+    _info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
   {
     igndbg << "[" << this->ns << "] Published state to " << this->stateTopic
       << " at time: " << stateMsg.header().stamp().sec()
@@ -613,6 +617,7 @@ void TethysCommPlugin::PostUpdate(
       << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl
       << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl
       << "\tMass shifter (m): " << stateMsg.massposition_() << std::endl
+      << "\tVBS volume (m^3): " << stateMsg.buoyancyposition_() << std::endl
       << "\tPitch angle (deg): "
         << stateMsg.rph_().y() * 180 / M_PI << std::endl
       << "\tCurrent (ENU, m/s): "
