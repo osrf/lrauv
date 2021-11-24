@@ -94,7 +94,7 @@
         <namespace>tethys</namespace>
         <joint_name>propeller_joint</joint_name>
         <!-- Be sure to update TethysComm when updating these numbers -->
-        <thrust_coefficient>0.00004422</thrust_coefficient>
+        <thrust_coefficient>0.004422</thrust_coefficient>
         <fluid_density>1000</fluid_density>
         <propeller_diameter>0.2</propeller_diameter>
         <velocity_control>true</velocity_control>
