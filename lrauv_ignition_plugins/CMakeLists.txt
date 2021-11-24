@@ -243,7 +243,8 @@ if(BUILD_TESTING)
     test_mission_pitch_mass
     test_mission_yoyo_circle
     test_rudder
-    test_spawn)
+    test_spawn
+    test_state_msg)
 
     add_executable(
       ${TEST_TARGET}
@@ -256,6 +257,7 @@ if(BUILD_TESTING)
       PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
       lrauv_command
       lrauv_init
+      lrauv_state
     )
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
     gtest_discover_tests(${TEST_TARGET})
