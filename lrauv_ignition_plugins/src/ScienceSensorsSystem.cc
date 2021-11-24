@@ -194,6 +194,9 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Publisher for point clouds representing positions for science data
   public: ignition::transport::Node::Publisher cloudPub;
 
+  /// \brief Name used for both the point cloud topic and service
+  public: std::string cloudTopic {"/science_data"};
+
   /// \brief Publisher for temperature
   public: ignition::transport::Node::Publisher tempPub;
 
@@ -522,6 +525,7 @@ void ScienceSensorsSystemPrivate::UpdateWorldSphericalOrigin(
   // Lock for changes to worldOriginSpherical* until update complete
   std::lock_guard<std::mutex> lock(mtx);
 
+  // Data positions have not been transformed wrt world origin lat/long
   if (!this->worldSphericalCoordsInitialized)
   {
     auto latLon = this->world.SphericalCoordinates(_ecm);
@@ -537,23 +541,36 @@ void ScienceSensorsSystemPrivate::UpdateWorldSphericalOrigin(
       this->worldOriginSphericalPos = ignition::math::Vector3d(
         this->worldOriginSphericalCoords.LatitudeReference().Degree(),
         this->worldOriginSphericalCoords.LongitudeReference().Degree(),
+        // TODO look into why converting with elevation don't give depth as z
+        // Details https://github.com/osrf/lrauv/pull/70#discussion_r755679895
+        //this->worldOriginSphericalCoords.ElevationReference());
         0);
       // Convert spherical coordinates to Cartesian
       this->sphCoord = ignition::math::SphericalCoordinates(
         this->worldOriginSphericalCoords.Surface());
       this->worldOriginCartesianCoords =
+        // TODO look into why converting with worldOriginSphericalCoords gives
+        // unexpected positions.
+        // Details https://github.com/osrf/lrauv/pull/70#discussion_r755681564
+        //this->worldOriginSphericalCoords.LocalFromSphericalPosition(
         this->sphCoord.LocalFromSphericalPosition(
           this->worldOriginSphericalPos);
 
-      this->worldSphericalCoordsInitialized = true;
+      igndbg << "Data will be transformed wrt world origin in Cartesian ("
+             << this->worldOriginCartesianCoords.X() << ", "
+             << this->worldOriginCartesianCoords.Y() << ", "
+             << this->worldOriginCartesianCoords.Z() << ")" << std::endl;
 
-      //TODO(chapulina) Shift science data to new coordinates
-      // If data had been loaded before origin was updated, need to shift data
-      if (this->initialized)
-      {
-        this->ShiftDataToNewSphericalOrigin();
-      }
+      this->worldSphericalCoordsInitialized = true;
     }
+  }
+
+  // TODO(chapulina) Shift science data to new coordinates. This logic might
+  // need to be updated.
+  // If data had been loaded before origin was updated, need to shift data
+  if (this->initialized)
+  {
+    this->ShiftDataToNewSphericalOrigin();
   }
 }
 
@@ -571,6 +588,13 @@ void ScienceSensorsSystemPrivate::ConvertLatLonToCart(
 
   // Set depth
   _cart.Z() = _latLonEle.Z();
+
+  /*
+  igndbg << "Data point at Cartesian ("
+         << _cart.X() << ", "
+         << _cart.Y() << ", "
+         << _cart.Z() << ")" << std::endl;
+  */
 }
 
 /////////////////////////////////////////////////
@@ -680,9 +704,9 @@ void ScienceSensorsSystem::Configure(
   }
 
   this->dataPtr->cloudPub = this->dataPtr->node.Advertise<
-      ignition::msgs::PointCloudPacked>("/science_data");
+      ignition::msgs::PointCloudPacked>(this->dataPtr->cloudTopic);
 
-  this->dataPtr->node.Advertise("/science_data_srv",
+  this->dataPtr->node.Advertise(this->dataPtr->cloudTopic,
       &ScienceSensorsSystemPrivate::ScienceDataService, this->dataPtr.get());
 
   // Advertise science data topics
@@ -693,7 +717,7 @@ void ScienceSensorsSystem::Configure(
   this->dataPtr->salPub = this->dataPtr->node.Advertise<
       ignition::msgs::Float_V>("/salinity");
 
-  // Initialize world origin in spherical coordinates, to data is loaded to the
+  // Initialize world origin in spherical coordinates, so data is loaded to the
   // correct Cartesian positions.
   this->dataPtr->UpdateWorldSphericalOrigin(_ecm);
 
@@ -709,6 +733,7 @@ void ScienceSensorsSystem::PreUpdate(
   const ignition::gazebo::UpdateInfo &,
   ignition::gazebo::EntityComponentManager &_ecm)
 {
+  // TODO: Test this logic once ShiftDataToNewSphericalOrigin() is implemented
   if (!this->dataPtr->worldSphericalCoordsInitialized)
   {
     this->dataPtr->UpdateWorldSphericalOrigin(_ecm);
