@@ -25,44 +25,36 @@
 
 #include "helper/LrauvTestFixture.hh"
 #include "lrauv_command.pb.h"
-
-#include <fstream>
+#include "lrauv_state.pb.h"
 
 //////////////////////////////////////////////////
-TEST_F(LrauvTestFixture, Rudder)
+TEST_F(LrauvTestFixture, Command)
 {
+  // TODO(chapulina) Test other fields, see
+  // https://github.com/osrf/lrauv/pull/81
+
+  // Initial state
   this->fixture->Server()->Run(true, 100, false);
-  EXPECT_EQ(100, this->iterations);
-  EXPECT_EQ(100, this->tethysPoses.size());
-  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().X(), 1e-6);
-  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Y(), 1e-6);
+  EXPECT_EQ(100, this->stateMsgs.size());
 
-  // Propel vehicle
+  auto latest = this->stateMsgs.back();
+  EXPECT_NEAR(0.0, latest.propomega_(), 1e-6);
+
+  // Propel vehicle forward by giving the propeller a positive angular velocity
   lrauv_ignition_plugins::msgs::LRAUVCommand cmdMsg;
-
-  // Move forward
-  cmdMsg.set_propomegaaction_(30);
-
-  // Rotate rudder clockwise when looking from the top, which causes the
-  // vehicle to move in a counter-clockwise arch
-  cmdMsg.set_rudderangleaction_(0.8);
+  cmdMsg.set_propomegaaction_(10 * IGN_PI);
 
   // Neutral buoyancy
   cmdMsg.set_buoyancyaction_(0.0005);
+  cmdMsg.set_dropweightstate_(true);
 
-  // Run server until the command is processed and the model reaches a certain
-  // point laterally
-  double targetY{-1.5};
+  // Run server until we collect more states
   this->PublishCommandWhile(cmdMsg, [&]()
   {
-    return this->tethysPoses.back().Pos().Y() > targetY;
+    return this->stateMsgs.size() < 2000;
   });
 
-  EXPECT_LT(100, this->iterations);
-  EXPECT_LT(100, this->tethysPoses.size());
-
-  // Vehicle makes a clockwise arch looking from the top
-  EXPECT_GT(targetY, this->tethysPoses.back().Pos().Y());
-  EXPECT_GT(-1.0, this->tethysPoses.back().Pos().X());
+  latest = this->stateMsgs.back();
+  EXPECT_NEAR(10.0 * IGN_PI, latest.propomega_(), 1e-6);
 }
 

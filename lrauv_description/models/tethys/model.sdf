@@ -344,7 +344,7 @@
     </joint>
 
     <joint name="propeller_joint" type="revolute">
-      <pose>0 0 0 0 0 0</pose>
+      <pose degrees="true">0 0 0   0 180 0</pose>
       <parent>base_link</parent>
       <child>propeller</child>
       <axis>
