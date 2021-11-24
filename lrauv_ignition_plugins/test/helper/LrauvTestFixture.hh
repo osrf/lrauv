@@ -32,6 +32,7 @@
 #include <ignition/transport/Node.hh>
 
 #include "lrauv_command.pb.h"
+#include "lrauv_state.pb.h"
 
 #include "TestConstants.hh"
 
@@ -61,6 +62,9 @@ class LrauvTestFixture : public ::testing::Test
     this->commandPub =
       this->node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(
       commandTopic);
+
+    auto stateTopic = "/tethys/state_topic";
+    this->node.Subscribe(stateTopic, &LrauvTestFixture::OnState, this);
 
     // Setup fixture
     this->fixture = std::make_unique<ignition::gazebo::TestFixture>(
@@ -104,6 +108,13 @@ class LrauvTestFixture : public ::testing::Test
       std::this_thread::sleep_for(100ms);
     }
     EXPECT_LT(sleep, maxSleep);
+  }
+
+  /// Callback function for state from TethysComm
+  /// \param[in] _msg State message
+  private: void OnState(const lrauv_ignition_plugins::msgs::LRAUVState &_msg)
+  {
+    this->stateMsgs.push_back(_msg);
   }
 
   /// \brief Check that a pose is within a given range.
@@ -240,6 +251,9 @@ class LrauvTestFixture : public ::testing::Test
 
   /// \brief All tethys world poses in order
   public: std::vector<ignition::math::Pose3d> tethysPoses;
+
+  /// \brief All state messages in order
+  public: std::vector<lrauv_ignition_plugins::msgs::LRAUVState> stateMsgs;
 
   /// \brief Test fixture
   public: std::unique_ptr<ignition::gazebo::TestFixture> fixture{nullptr};

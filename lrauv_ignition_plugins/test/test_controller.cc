@@ -71,7 +71,7 @@ TEST_F(LrauvTestFixture, Command)
   double dtSec = std::chrono::duration<double>(this->dt).count();
   ASSERT_LT(0.0, dtSec);
   double time100it = 100 * dtSec;
-  for (unsigned int i = 1000; i < this->tethysPoses.size(); i += 100)
+  for (unsigned int i = 1800; i < this->tethysPoses.size(); i += 100)
   {
     auto prevPose = this->tethysPoses[i - 100];
     auto pose = this->tethysPoses[i];
@@ -80,9 +80,7 @@ TEST_F(LrauvTestFixture, Command)
 
     auto linVel = dist / time100it;
     EXPECT_LT(0.0, linVel);
-
-    // TODO(chapulina) Decrease tolerance
-    EXPECT_NEAR(1.0, linVel, 0.19) << i;
+    EXPECT_NEAR(1.0, linVel, 0.06) << i;
   }
 }
 
