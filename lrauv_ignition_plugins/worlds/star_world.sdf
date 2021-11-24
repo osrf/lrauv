@@ -88,7 +88,7 @@
         <sensor element_id="base_link::current_sensor" action="modify">
           <topic>/model/tethys2/current</topic>
         </sensor>
-        <plugin element_id="tethys::Thruster" action="modify">
+        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
           <namespace>tethys2</namespace>
         </plugin>
         <plugin element_id="tethys::TethysCommPlugin" action="modify">
@@ -129,7 +129,7 @@
         <sensor element_id="base_link::current_sensor" action="modify">
           <topic>/model/tethys3/current</topic>
         </sensor>
-        <plugin element_id="tethys::Thruster" action="modify">
+        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
           <namespace>tethys3</namespace>
         </plugin>
         <plugin element_id="tethys::TethysCommPlugin" action="modify">
@@ -170,7 +170,7 @@
         <sensor element_id="base_link::current_sensor" action="modify">
           <topic>/model/tethys4/current</topic>
         </sensor>
-        <plugin element_id="tethys::Thruster" action="modify">
+        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
           <namespace>tethys4</namespace>
         </plugin>
         <plugin element_id="tethys::TethysCommPlugin" action="modify">

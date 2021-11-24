@@ -52,14 +52,14 @@ void commandVehicleForward(const std::string &_name)
   transport::Node node;
   auto pub =
       node.Advertise<msgs::Double>(
-          "/model/" + _name + "/joint/propeller_joint/cmd_pos");
+          "/model/" + _name + "/joint/propeller_joint/cmd_thrust");
 
   msgs::Double thrustCmd;
 
   // 300 rpm -> 31.42rads^-1
   //   -> (31.42rads^-1)^2 * 0.004422 (thrust coeff) * 1000 (fluid density) 
   //      * 0.2m ^ 4 (prop diameter) = 6.9857
-  thrustCmd.set_data(-6.9857);
+  thrustCmd.set_data(6.9857);
 
   int sleep{0};
   int maxSleep{30};
@@ -67,7 +67,7 @@ void commandVehicleForward(const std::string &_name)
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
-  ASSERT_LT(sleep, maxSleep);
+  ASSERT_LE(sleep, maxSleep);
   pub.Publish(thrustCmd);
 
 }
@@ -233,7 +233,6 @@ TEST(HydrodynamicsTest, DampForwardThrust)
   commandVehicleForward("tethys3");
   commandVehicleForward("tethys4");
 
-  // Check that vehicles don't exist
   fixture->Server()->Run(true, 50000, false);
 
   ASSERT_EQ(velocitiesV1.size(), 50000);
