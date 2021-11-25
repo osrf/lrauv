@@ -42,20 +42,6 @@ using namespace tethys;
 
 class tethys::ScienceSensorsSystemPrivate
 {
-  /// \brief Initialize world origin in spherical coordinates
-  public: void UpdateWorldSphericalOrigin(
-    ignition::gazebo::EntityComponentManager &_ecm);
-
-  /// \brief Convert (lat, lon, 0) to Cartesian XYZ, including shifting by
-  /// world origin
-  public: void ConvertLatLonToCart(
-    const ignition::math::Vector3d &_latLonEle,
-    ignition::math::Vector3d &_cart);
-
-  /// \brief Shift point cloud with respect to the world origin in spherical
-  /// coordinates, if available.
-  public: void ShiftDataToNewSphericalOrigin();
-
   /// \brief Reads csv file and populate various data fields
   public: void ReadData();
 
@@ -120,28 +106,8 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Indicates whether data has been loaded
   public: bool initialized {false};
 
-  /// \brief Set to true after the spherical coordinates have been initialized.
-  /// This may happen at startup if the SDF file has them hardcoded, or at
-  /// runtime when the first vehicle is spawned. Assume the coordinates are
-  /// only shifted once.
-  public: bool worldSphericalCoordsInitialized {false};
-
   /// \brief Mutex for writing to world origin association to lat/long
   public: std::mutex mtx;
-
-  /// \brief Spherical coordinates of world origin. Can change at any time.
-  public: ignition::math::SphericalCoordinates worldOriginSphericalCoords;
-
-  /// \brief World origin in spherical position (latitude, longitude,
-  /// elevation), angles in degrees
-  public: ignition::math::Vector3d worldOriginSphericalPos = {0, 0, 0};
-
-  /// \brief World origin in Cartesian coordinates converted from spherical
-  /// coordinates
-  public: ignition::math::Vector3d worldOriginCartesianCoords = {0, 0, 0};
-
-  /// \brief For conversions
-  public: ignition::math::SphericalCoordinates sphCoord;
 
   /// \brief Whether using more than one time slices of data
   public: bool multipleTimeSlices {false};
@@ -223,7 +189,9 @@ class tethys::ScienceSensorsSystemPrivate
   // For 2003080103_mb_l3_las_1x1km.csv
   //public: const float MINIATURE_SCALE = 0.01;
   // For 2003080103_mb_l3_las.csv
-  public: const float MINIATURE_SCALE = 0.0001;
+  //public: const float MINIATURE_SCALE = 0.0001;
+  // For simple_test.csv
+  public: const float MINIATURE_SCALE = 1000.0;
 
   // TODO This is a workaround pending upstream Marker performance improvements.
   // \brief Performance trick. Skip depths below this z, so have memory to
@@ -466,9 +434,8 @@ void ScienceSensorsSystemPrivate::ReadData()
           continue;
         }
 
-        // Convert spherical coordinates to Cartesian
-        ignition::math::Vector3d cart;
-        this->ConvertLatLonToCart({latitude, longitude, -depth}, cart);
+        // TODO: Convert spherical coordinates to Cartesian
+        ignition::math::Vector3d cart = {latitude, longitude, -depth};
 
         // Performance trick. Scale down to see in view
         cart *= this->MINIATURE_SCALE;
@@ -483,7 +450,6 @@ void ScienceSensorsSystemPrivate::ReadData()
 
         // Gather spatial coordinates, 3 fields in the line, into point cloud
         // for indexing this time slice of data.
-        // Flip sign of z, because positive depth is negative z.
         this->timeSpaceCoords[lineTimeIdx]->push_back(
           pcl::PointXYZ(cart.X(), cart.Y(), cart.Z()));
 
@@ -516,93 +482,6 @@ void ScienceSensorsSystemPrivate::ReadData()
   }
 
   this->initialized = true;
-}
-
-/////////////////////////////////////////////////
-void ScienceSensorsSystemPrivate::UpdateWorldSphericalOrigin(
-  ignition::gazebo::EntityComponentManager &_ecm)
-{
-  // Lock for changes to worldOriginSpherical* until update complete
-  std::lock_guard<std::mutex> lock(mtx);
-
-  // Data positions have not been transformed wrt world origin lat/long
-  if (!this->worldSphericalCoordsInitialized)
-  {
-    auto latLon = this->world.SphericalCoordinates(_ecm);
-    if (latLon)
-    {
-      ignwarn << "New spherical coordinates detected: "
-          << latLon.value().LatitudeReference().Degree() << ", "
-          << latLon.value().LongitudeReference().Degree() << std::endl;
-
-      this->worldOriginSphericalCoords = latLon.value();
-
-      // Extract world origin in (lat, long, elevation) from spherical coords
-      this->worldOriginSphericalPos = ignition::math::Vector3d(
-        this->worldOriginSphericalCoords.LatitudeReference().Degree(),
-        this->worldOriginSphericalCoords.LongitudeReference().Degree(),
-        // TODO look into why converting with elevation don't give depth as z
-        // Details https://github.com/osrf/lrauv/pull/70#discussion_r755679895
-        //this->worldOriginSphericalCoords.ElevationReference());
-        0);
-      // Convert spherical coordinates to Cartesian
-      this->sphCoord = ignition::math::SphericalCoordinates(
-        this->worldOriginSphericalCoords.Surface());
-      this->worldOriginCartesianCoords =
-        // TODO look into why converting with worldOriginSphericalCoords gives
-        // unexpected positions.
-        // Details https://github.com/osrf/lrauv/pull/70#discussion_r755681564
-        //this->worldOriginSphericalCoords.LocalFromSphericalPosition(
-        this->sphCoord.LocalFromSphericalPosition(
-          this->worldOriginSphericalPos);
-
-      igndbg << "Data will be transformed wrt world origin in Cartesian ("
-             << this->worldOriginCartesianCoords.X() << ", "
-             << this->worldOriginCartesianCoords.Y() << ", "
-             << this->worldOriginCartesianCoords.Z() << ")" << std::endl;
-
-      this->worldSphericalCoordsInitialized = true;
-    }
-  }
-
-  // TODO(chapulina) Shift science data to new coordinates. This logic might
-  // need to be updated.
-  // If data had been loaded before origin was updated, need to shift data
-  if (this->initialized)
-  {
-    this->ShiftDataToNewSphericalOrigin();
-  }
-}
-
-/////////////////////////////////////////////////
-void ScienceSensorsSystemPrivate::ConvertLatLonToCart(
-  const ignition::math::Vector3d &_latLonEle,
-  ignition::math::Vector3d &_cart)
-{
-  // Convert spherical coordinates to Cartesian
-  _cart = this->sphCoord.LocalFromSphericalPosition(
-    ignition::math::Vector3d(_latLonEle.X(), _latLonEle.Y(), 0));
-
-  // Shift to be relative to world origin spherical coordinates
-  _cart -= this->worldOriginCartesianCoords;
-
-  // Set depth
-  _cart.Z() = _latLonEle.Z();
-
-  /*
-  igndbg << "Data point at Cartesian ("
-         << _cart.X() << ", "
-         << _cart.Y() << ", "
-         << _cart.Z() << ")" << std::endl;
-  */
-}
-
-/////////////////////////////////////////////////
-void ScienceSensorsSystemPrivate::ShiftDataToNewSphericalOrigin()
-{
-  // Lock modifications to world origin spherical association until finish
-  // transforming data
-  std::lock_guard<std::mutex> lock(mtx);
 }
 
 /////////////////////////////////////////////////
@@ -717,10 +596,6 @@ void ScienceSensorsSystem::Configure(
   this->dataPtr->salPub = this->dataPtr->node.Advertise<
       ignition::msgs::Float_V>("/salinity");
 
-  // Initialize world origin in spherical coordinates, so data is loaded to the
-  // correct Cartesian positions.
-  this->dataPtr->UpdateWorldSphericalOrigin(_ecm);
-
   this->dataPtr->ReadData();
   this->dataPtr->GenerateOctrees();
 
@@ -733,12 +608,6 @@ void ScienceSensorsSystem::PreUpdate(
   const ignition::gazebo::UpdateInfo &,
   ignition::gazebo::EntityComponentManager &_ecm)
 {
-  // TODO: Test this logic once ShiftDataToNewSphericalOrigin() is implemented
-  if (!this->dataPtr->worldSphericalCoordsInitialized)
-  {
-    this->dataPtr->UpdateWorldSphericalOrigin(_ecm);
-  }
-
   _ecm.EachNew<ignition::gazebo::components::CustomSensor,
                ignition::gazebo::components::ParentEntity>(
     [&](const ignition::gazebo::Entity &_entity,
