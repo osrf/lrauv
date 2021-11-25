@@ -1,0 +1,5 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="ReferenceAxis/">
+  <file>ReferenceAxis.qml</file>
+</qresource>
+</RCC>

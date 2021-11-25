@@ -17,6 +17,9 @@ set(IGN_GAZEBO_VER ${ignition-gazebo6_VERSION_MAJOR})
 find_package(ignition-gui6 REQUIRED)
 set(IGN_GUI_VER ${ignition-gui6_VERSION_MAJOR})
 
+find_package(ignition-rendering6 REQUIRED)
+set(IGN_RENDERING_VER ${ignition-rendering6_VERSION_MAJOR})
+
 find_package(ignition-sensors6 REQUIRED)
 set(IGN_SENSORS_VER ${ignition-sensors6_VERSION_MAJOR})
 
@@ -42,7 +45,7 @@ add_subdirectory(proto)
 # Plugins
 
 # add_lrauv_plugin (<plugin_name>
-#              [PROTO] msg1 msg2 ... [PCL] [GUI] [PRIVATE_LINK_LIBS] [INCLUDE_COMMS])
+#              [PROTO] msg1 msg2 ... [PCL] [GUI] [RENDERING] [PRIVATE_LINK_LIBS] [INCLUDE_COMMS])
 #
 # Configure and install plugins.
 #
@@ -55,11 +58,13 @@ add_subdirectory(proto)
 #
 # [GUI]: Optional. Include for GUI plugins.
 #
+# [RENDERING]: Optional. Include to link against Ignition Rendering.
+#
 # [PRIVATE_LINK_LIBS]: Specify a list of libraries to be privately linked.
 #
 # [INCLUDE_COMMS]: Optional. Include comms header files.
 function(add_lrauv_plugin PLUGIN)
-  set(options PCL GUI INCLUDE_COMMS)
+  set(options PCL GUI RENDERING INCLUDE_COMMS)
   set(oneValueArgs)
   set(multiValueArgs PROTO PRIVATE_LINK_LIBS)
 
@@ -127,6 +132,14 @@ function(add_lrauv_plugin PLUGIN)
       PUBLIC ${PCL_INCLUDE_DIRS})
   endif()
 
+  # Rendering
+  if (add_lrauv_plugin_RENDERING)
+    target_link_libraries(${PLUGIN}
+      PRIVATE
+        ignition-rendering${IGN_RENDERING_VER}::ignition-rendering${IGN_RENDERING_VER}
+    )
+  endif()
+
   install(
     TARGETS ${PLUGIN}
     DESTINATION ${INSTALL_LIB})
@@ -149,6 +162,7 @@ add_lrauv_plugin(RangeBearingPlugin
     lrauv_range_bearing_request
     lrauv_range_bearing_response
     lrauv_acoustic_message)
+add_lrauv_plugin(ReferenceAxis GUI RENDERING)
 add_lrauv_plugin(ScienceSensorsSystem
   PCL
   PRIVATE_LINK_LIBS
