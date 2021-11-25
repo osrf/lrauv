@@ -113,7 +113,7 @@ TEST_F(LrauvTestFixture, Command)
   commonChecks(latest);
 
   // Actuators
-  EXPECT_NEAR(10.0 * IGN_PI, latest.propomega_(), 1e-3);
+  EXPECT_NEAR(10.0 * IGN_PI, latest.propomega_(), 1e-6);
   EXPECT_NEAR(0.0, latest.rudderangle_(), 1e-3);
 
   // Position
