@@ -32,7 +32,7 @@ import os.path as path
 ## These are parameters of the WHOLE VEHICLE
 # TODO(arjo): Implement inertia. Need to implement Inertial<T>::operator-(const Inertial<T>&) first
 total_mass = 147.5671 # Total mass of the vehicle
-buoyancy_z_offset = 0.07 # Buoyancy offset
+buoyancy_z_offset = 0.007 # Buoyancy offset
 fluid_density = 1000 #fluid density
 
 def read_pose(element):
@@ -64,12 +64,12 @@ def calculate_center_of_mass(total_mass, template_path, output_path):
                     center_of_mass = [0] * 6
                 else:
                     # TODO(arjo) generate errors, perform protection
-                    center_of_mass = [float(token) for token in link_pose.text.split()]               
+                    center_of_mass = [float(token) for token in link_pose.text.split()]
 
-                ## Get inertial value of part            
+                ## Get inertial value of part
                 inertia_element = links.find(".inertial")
                 collision_element = links.find(".collision")
-                
+
                 ## Calculate buoyancy
                 if collision_element is not None:
                     if collision_element.text.strip() == "@calculated":

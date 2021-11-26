@@ -35,9 +35,9 @@ TEST(Stability, FlatWorld)
   auto fixture = std::make_unique<ignition::gazebo::TestFixture>(
     ignition::common::joinPaths(
     std::string(PROJECT_SOURCE_PATH), "test", "worlds", "flat_world.sdf"));
-  
+
   std::vector<ignition::math::Pose3d> tethysPoses;
-  
+
   fixture->OnPostUpdate(
     [&](const ignition::gazebo::UpdateInfo &_info,
     const ignition::gazebo::EntityComponentManager &_ecm)
@@ -80,9 +80,9 @@ TEST(Stability, TiltedWorld)
   auto fixture = std::make_unique<ignition::gazebo::TestFixture>(
     ignition::common::joinPaths(
     std::string(PROJECT_SOURCE_PATH), "test", "worlds", "tilted_world.sdf"));
-  
+
   std::vector<ignition::math::Pose3d> tethysPoses;
-  
+
   fixture->OnPostUpdate(
     [&](const ignition::gazebo::UpdateInfo &_info,
     const ignition::gazebo::EntityComponentManager &_ecm)
@@ -124,7 +124,7 @@ TEST(Stability, TiltedWorld)
     {
       maxPitch = pitch;
     }
-    
+
     if (pitch < minPitch)
     {
       minPitch = pitch;
@@ -134,5 +134,5 @@ TEST(Stability, TiltedWorld)
   }
 
   // Since we start the system at 0.08 pitch, we should not exceed this.
-  EXPECT_LT(maxPitch, 0.08);
+  EXPECT_LE(maxPitch, 0.08);
 }
