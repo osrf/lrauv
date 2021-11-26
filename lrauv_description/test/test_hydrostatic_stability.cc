@@ -72,7 +72,7 @@ TEST(Stability, FlatWorld)
     prev_pose = pose;
   }
   EXPECT_EQ(prev_pose.Pos(), ignition::math::Vector3d(0,0,0));
-  EXPECT_EQ(prev_pose.Rot(), ignition::math::Quaterniond(1,0,0,0)); 
+  EXPECT_EQ(prev_pose.Rot(), ignition::math::Quaterniond(1,0,0,0));
 }
 
 TEST(Stability, TiltedWorld)
