@@ -52,6 +52,11 @@ Clone this repository then run
 colcon build
 ```
 
+Developers may want to build tests. Note that this would take longer:
+```
+colcon build --cmake-args "-DBUILD_TESTING=ON"
+```
+
 > You can pass `--cmake-args ' -DENABLE_PROFILER=1'` to use the profiler.
 > See more on [this tutorial](https://ignitionrobotics.org/api/common/4.4/profiler.html)
 

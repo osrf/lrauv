@@ -34,8 +34,11 @@
 
 #include <ignition/plugin/Register.hh>
 
+#include <ignition/math/Color.hh>
 #include <ignition/math/Vector3.hh>
 #include <ignition/math/Pose3.hh>
+
+#include <ignition/msgs/Utility.hh>
 
 #include <ignition/transport/Node.hh>
 
@@ -52,17 +55,95 @@ namespace tethys
     /// \brief Transport node
     public: ignition::transport::Node node;
 
-    /// \brief Topic name to subscribe
-    public: std::string topicName{""};
+    /// \brief Name of topic for PointCloudPacked
+    public: std::string pointCloudTopic{""};
 
-    /// \brief List of topics publishing LaserScan messages.
-    public: QStringList topicList;
+    /// \brief Name of topic for FloatV
+    public: std::string floatVTopic{""};
+
+    /// \brief List of topics publishing PointCloudPacked.
+    public: QStringList pointCloudTopicList;
+
+    /// \brief List of topics publishing FloatV.
+    public: QStringList floatVTopicList;
 
     /// \brief Protect variables changed from transport and the user
     public: std::recursive_mutex mutex;
 
-    /// \brief Latest point cloud message
-    public: ignition::msgs::PointCloudPacked pcMsg;
+    /// \brief Point cloud message containing location of data
+    public: ignition::msgs::PointCloudPacked pointCloudMsg;
+
+    /// \brief Message holding a float vector.
+    public: ignition::msgs::Float_V floatVMsg;
+
+    /// \brief Performance trick. Cap number of points to visualize, to save
+    /// memory.
+    public: const int MAX_PTS_VIS = 1000;
+
+    /// \brief Performance trick. Render only every other n. Increase to render
+    /// fewer markers (faster performance). Recalulated in function.
+    public: int renderEvery = 1;
+
+    /// \brief Performance trick. Skip depths below this z, so have memory to
+    /// visualize higher layers at higher resolution.
+    /// For less confusion, match the parameter in ScienceSensorsSystem.cc.
+    public: const float SKIP_Z_BELOW = -40;
+
+    /// \brief Scale down to see in view to skip orbit tool limits
+    /// For less confusion, match the parameter in ScienceSensorsSystem.cc.
+    // TODO This is a workaround pending upstream orbit tool improvements
+    // For 2003080103_mb_l3_las_1x1km.csv
+    //public: const float MINIATURE_SCALE = 0.01;
+    // For 2003080103_mb_l3_las.csv
+    //public: const float MINIATURE_SCALE = 0.0001;
+    // For simple_test.csv
+    public: const float MINIATURE_SCALE = 1000.0;
+
+    /// \brief Performance trick. Factor to multiply in calculating Marker sizes
+    // For 2003080103_mb_l3_las*.csv
+    //public: float dimFactor = 0.03;
+    // For simple_test.csv
+    public: float dimFactor = 0.003;
+
+    /// \brief Parameter to calculate Marker size in x.
+    /// Performance trick. Hardcode resolution to make markers resemble voxels.
+    // For 2003080103_mb_l3_las_1x1km.csv
+    //public: const float RES_X = 15 * MINIATURE_SCALE;
+    // For 2003080103_mb_l3_las.csv
+    //public: const float RES_X = 15;
+    // For simple_test.csv
+    public: const float RES_X = 0.15;
+
+    /// \brief Parameter to calculate Marker size in y.
+    // For 2003080103_mb_l3_las_1x1km.csv
+    //public: const float RES_Y = 22 * MINIATURE_SCALE;
+    // For 2003080103_mb_l3_las.csv
+    //public: const float RES_Y = 22;
+    // For simple_test.csv
+    public: const float RES_Y = 0.22;
+
+    /// \brief Parameter to calculate Marker size in z.
+    // For 2003080103_mb_l3_las_1x1km.csv
+    //public: const float RES_Z = 5 * MINIATURE_SCALE;
+    // For 2003080103_mb_l3_las.csv
+    //public: const float RES_Z = 10;
+    // For simple_test.csv
+    public: const float RES_Z = 0.10;
+
+    /// \brief Minimum value in latest float vector
+    public: float minFloatV{std::numeric_limits<float>::max()};
+
+    /// \brief Maximum value in latest float vector
+    public: float maxFloatV{-std::numeric_limits<float>::max()};
+
+    /// \brief Color for minimum value
+    public: ignition::math::Color minColor{255, 0, 0, 255};
+
+    /// \brief Color for maximum value
+    public: ignition::math::Color maxColor{0, 255, 0, 255};
+
+    /// \brief True if showing
+    public: bool showing{true};
   };
 }
 
@@ -92,39 +173,73 @@ void VisualizePointCloud::LoadConfig(const tinyxml2::XMLElement *)
 }
 
 //////////////////////////////////////////////////
-void VisualizePointCloud::OnTopic(const QString &_topicName)
+void VisualizePointCloud::OnPointCloudTopic(const QString &_pointCloudTopic)
 {
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
-  if (!this->dataPtr->topicName.empty() &&
-      !this->dataPtr->node.Unsubscribe(this->dataPtr->topicName))
+  // Unsubscribe from previous choice
+  if (!this->dataPtr->pointCloudTopic.empty() &&
+      !this->dataPtr->node.Unsubscribe(this->dataPtr->pointCloudTopic))
   {
     ignerr << "Unable to unsubscribe from topic ["
-           << this->dataPtr->topicName <<"]" <<std::endl;
+           << this->dataPtr->pointCloudTopic <<"]" <<std::endl;
   }
 
   // Clear visualization
   this->ClearMarkers();
 
-  this->dataPtr->topicName = _topicName.toStdString();
+  this->dataPtr->pointCloudTopic = _pointCloudTopic.toStdString();
 
   // Request service
-  this->dataPtr->node.Request(this->dataPtr->topicName,
-      &VisualizePointCloud::OnService, this);
+  this->dataPtr->node.Request(this->dataPtr->pointCloudTopic,
+      &VisualizePointCloud::OnPointCloudService, this);
 
   // Create new subscription
-  if (!this->dataPtr->node.Subscribe(this->dataPtr->topicName,
-                            &VisualizePointCloud::OnMessage, this))
+  if (!this->dataPtr->node.Subscribe(this->dataPtr->pointCloudTopic,
+                            &VisualizePointCloud::OnPointCloud, this))
   {
     ignerr << "Unable to subscribe to topic ["
-           << this->dataPtr->topicName << "]\n";
+           << this->dataPtr->pointCloudTopic << "]\n";
     return;
   }
-  ignmsg << "Subscribed to " << this->dataPtr->topicName << std::endl;
+  ignmsg << "Subscribed to " << this->dataPtr->pointCloudTopic << std::endl;
+}
+
+//////////////////////////////////////////////////
+void VisualizePointCloud::OnFloatVTopic(const QString &_floatVTopic)
+{
+  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
+  // Unsubscribe from previous choice
+  if (!this->dataPtr->floatVTopic.empty() &&
+      !this->dataPtr->node.Unsubscribe(this->dataPtr->floatVTopic))
+  {
+    ignerr << "Unable to unsubscribe from topic ["
+           << this->dataPtr->floatVTopic <<"]" <<std::endl;
+  }
+
+  // Clear visualization
+  this->ClearMarkers();
+
+  this->dataPtr->floatVTopic = _floatVTopic.toStdString();
+
+  // Request service
+  this->dataPtr->node.Request(this->dataPtr->floatVTopic,
+      &VisualizePointCloud::OnPointCloudService, this);
+
+  // Create new subscription
+  if (!this->dataPtr->node.Subscribe(this->dataPtr->floatVTopic,
+                            &VisualizePointCloud::OnFloatV, this))
+  {
+    ignerr << "Unable to subscribe to topic ["
+           << this->dataPtr->floatVTopic << "]\n";
+    return;
+  }
+  ignmsg << "Subscribed to " << this->dataPtr->floatVTopic << std::endl;
 }
 
 //////////////////////////////////////////////////
 void VisualizePointCloud::Show(bool _show)
 {
+  this->dataPtr->showing = _show;
   if (_show)
   {
     this->PublishMarkers();
@@ -142,7 +257,10 @@ void VisualizePointCloud::OnRefresh()
   ignmsg << "Refreshing topic list for point cloud messages." << std::endl;
 
   // Clear
-  this->dataPtr->topicList.clear();
+  this->dataPtr->pointCloudTopicList.clear();
+  this->dataPtr->floatVTopicList.clear();
+
+  bool gotCloud = false;
 
   // Get updated list
   std::vector<std::string> allTopics;
@@ -155,53 +273,108 @@ void VisualizePointCloud::OnRefresh()
     {
       if (pub.MsgTypeName() == "ignition.msgs.PointCloudPacked")
       {
-        this->dataPtr->topicList.push_back(QString::fromStdString(topic));
-        break;
+        this->dataPtr->pointCloudTopicList.push_back(
+            QString::fromStdString(topic));
+      }
+      else if (pub.MsgTypeName() == "ignition.msgs.Float_V")
+      {
+        this->dataPtr->floatVTopicList.push_back(QString::fromStdString(topic));
       }
     }
   }
-  if (this->dataPtr->topicList.size() > 0)
+  if (this->dataPtr->pointCloudTopicList.size() > 0)
   {
-    this->OnTopic(this->dataPtr->topicList.at(0));
+    this->OnPointCloudTopic(this->dataPtr->pointCloudTopicList.at(0));
+  }
+  if (this->dataPtr->floatVTopicList.size() > 0)
+  {
+    this->OnFloatVTopic(this->dataPtr->floatVTopicList.at(0));
   }
 
-  this->TopicListChanged();
+  this->PointCloudTopicListChanged();
+  this->FloatVTopicListChanged();
 }
 
 /////////////////////////////////////////////////
-QStringList VisualizePointCloud::TopicList() const
+QStringList VisualizePointCloud::PointCloudTopicList() const
 {
-  return this->dataPtr->topicList;
+  return this->dataPtr->pointCloudTopicList;
 }
 
 /////////////////////////////////////////////////
-void VisualizePointCloud::SetTopicList(const QStringList &_topicList)
+void VisualizePointCloud::SetPointCloudTopicList(
+    const QStringList &_pointCloudTopicList)
 {
-  this->dataPtr->topicList = _topicList;
-  this->TopicListChanged();
+  this->dataPtr->pointCloudTopicList = _pointCloudTopicList;
+  this->PointCloudTopicListChanged();
+}
+
+/////////////////////////////////////////////////
+QStringList VisualizePointCloud::FloatVTopicList() const
+{
+  return this->dataPtr->floatVTopicList;
+}
+
+/////////////////////////////////////////////////
+void VisualizePointCloud::SetFloatVTopicList(
+    const QStringList &_floatVTopicList)
+{
+  this->dataPtr->floatVTopicList = _floatVTopicList;
+  this->FloatVTopicListChanged();
 }
 
 //////////////////////////////////////////////////
-void VisualizePointCloud::OnMessage(const ignition::msgs::PointCloudPacked &_msg)
+void VisualizePointCloud::OnPointCloud(
+    const ignition::msgs::PointCloudPacked &_msg)
 {
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
-  this->dataPtr->pcMsg = _msg;
+  this->dataPtr->pointCloudMsg = _msg;
   this->PublishMarkers();
 }
 
 //////////////////////////////////////////////////
-void VisualizePointCloud::OnService(const ignition::msgs::PointCloudPacked &_res,
-    bool _result)
+void VisualizePointCloud::OnFloatV(const ignition::msgs::Float_V &_msg)
+{
+  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
+  this->dataPtr->floatVMsg = _msg;
+
+  this->dataPtr->minFloatV = std::numeric_limits<float>::max();
+  this->dataPtr->maxFloatV = -std::numeric_limits<float>::max();
+
+  for (auto i = 0; i < _msg.data_size(); ++i)
+  {
+    auto data = _msg.data(i);
+    if (data < this->dataPtr->minFloatV)
+      this->SetMinFloatV(data);
+    if (data > this->dataPtr->maxFloatV)
+      this->SetMaxFloatV(data);
+  }
+
+  this->PublishMarkers();
+}
+
+//////////////////////////////////////////////////
+void VisualizePointCloud::OnPointCloudService(
+    const ignition::msgs::PointCloudPacked &_msg, bool _result)
 {
   if (!_result)
   {
     ignerr << "Service request failed." << std::endl;
     return;
   }
+  this->OnPointCloud(_msg);
+}
 
-  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
-  this->dataPtr->pcMsg = _res;
-  this->PublishMarkers();
+//////////////////////////////////////////////////
+void VisualizePointCloud::OnFloatVService(
+    const ignition::msgs::Float_V &_msg, bool _result)
+{
+  if (!_result)
+  {
+    ignerr << "Service request failed." << std::endl;
+    return;
+  }
+  this->OnFloatV(_msg);
 }
 
 //////////////////////////////////////////////////
@@ -209,54 +382,134 @@ void VisualizePointCloud::PublishMarkers()
 {
   IGN_PROFILE("VisualizePointCloud::PublishMarkers");
 
+  if (!this->dataPtr->showing)
+    return;
+
   // If point cloud empty, do nothing. (PointCloudPackedIteratorBase errors on
   // empty cloud.)
-  if (this->dataPtr->pcMsg.height() == 0 && this->dataPtr->pcMsg.width() == 0)
+  if (this->dataPtr->pointCloudMsg.height() == 0 &&
+      this->dataPtr->pointCloudMsg.width() == 0)
   {
     return;
   }
 
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
+
+  // Used to calculate cap of number of points to visualize, to save memory
+  int nPts = this->dataPtr->pointCloudMsg.height() *
+      this->dataPtr->pointCloudMsg.width();
+  // If there are more points than we can render, render every n
+  if (nPts > this->dataPtr->MAX_PTS_VIS)
+  {
+    this->dataPtr->renderEvery = (int) round(
+      nPts / (double) this->dataPtr->MAX_PTS_VIS);
+  }
+
   ignition::msgs::Marker_V markers;
 
-  PointCloudPackedIterator<float> iter_x(this->dataPtr->pcMsg, "x");
-  PointCloudPackedIterator<float> iter_y(this->dataPtr->pcMsg, "y");
-  PointCloudPackedIterator<float> iter_z(this->dataPtr->pcMsg, "z");
+  PointCloudPackedIterator<float> iterX(this->dataPtr->pointCloudMsg, "x");
+  PointCloudPackedIterator<float> iterY(this->dataPtr->pointCloudMsg, "y");
+  PointCloudPackedIterator<float> iterZ(this->dataPtr->pointCloudMsg, "z");
 
-  int count{0};
-  while (iter_x != iter_x.end() &&
-         iter_y != iter_y.end() &&
-         iter_z != iter_z.end())
+  // Index of point in point cloud, visualized or not
+  int ptIdx{0};
+  // Number of points actually visualized
+  int nPtsViz{0};
+  for (;iterX != iterX.end() &&
+        iterY != iterY.end() &&
+        iterZ != iterZ.end(); ++iterX, ++iterY, ++iterZ, ++ptIdx)
   {
+    // Performance trick. Only publish every nth. Skip z below some depth
+    if (this->dataPtr->renderEvery == 0 ||
+        ptIdx % this->dataPtr->renderEvery != 0 ||
+        *iterZ < this->dataPtr->SKIP_Z_BELOW)
+    {
+      continue;
+    }
+
+    // Value from float vector
+    float dataVal = std::numeric_limits<float>::quiet_NaN();
+    if (this->dataPtr->floatVMsg.data().size() > ptIdx)
+    {
+      dataVal = this->dataPtr->floatVMsg.data(ptIdx);
+    }
+
+    // Don't visualize NaN
+    if (std::isnan(dataVal))
+      continue;
+
     auto msg = markers.add_marker();
 
-    msg->set_ns(this->dataPtr->topicName);
-    msg->set_id(count++);
-    msg->mutable_material()->mutable_ambient()->set_b(1);
-    msg->mutable_material()->mutable_ambient()->set_a(0.3);
-    msg->mutable_material()->mutable_diffuse()->set_b(1);
-    msg->mutable_material()->mutable_diffuse()->set_a(0.3);
+    msg->set_ns(this->dataPtr->pointCloudTopic + "-" +
+        this->dataPtr->floatVTopic);
+    msg->set_id(nPtsViz + 1);
+
+    auto ratio = (dataVal - this->dataPtr->minFloatV) /
+        (this->dataPtr->maxFloatV - this->dataPtr->minFloatV);
+    auto color = this->dataPtr->minColor +
+        (this->dataPtr->maxColor - this->dataPtr->minColor) * ratio;
+
+    ignition::msgs::Set(msg->mutable_material()->mutable_ambient(), color);
+    ignition::msgs::Set(msg->mutable_material()->mutable_diffuse(), color);
+    msg->mutable_material()->mutable_diffuse()->set_a(0.5);
     msg->set_action(ignition::msgs::Marker::ADD_MODIFY);
+
+    // TODO: Use POINTS or LINE_LIST, but need per-vertex color
     msg->set_type(ignition::msgs::Marker::BOX);
     msg->set_visibility(ignition::msgs::Marker::GUI);
+    // Performance trick. Make boxes exact dimension of x and y gaps to
+    // resemble "voxels". Then scale up by renderEvery to cover the space
+    // where all the points are skipped.
+    float dimX = this->dataPtr->RES_X * this->dataPtr->MINIATURE_SCALE
+      * this->dataPtr->renderEvery * this->dataPtr->renderEvery
+      * this->dataPtr->dimFactor;
+    float dimY = this->dataPtr->RES_Y * this->dataPtr->MINIATURE_SCALE
+      * this->dataPtr->renderEvery * this->dataPtr->renderEvery
+      * this->dataPtr->dimFactor;
+    float dimZ = this->dataPtr->RES_Z * this->dataPtr->MINIATURE_SCALE
+      * this->dataPtr->renderEvery * this->dataPtr->renderEvery
+      * this->dataPtr->dimFactor;
     ignition::msgs::Set(msg->mutable_scale(),
-                    ignition::math::Vector3d::One);
+      ignition::math::Vector3d(dimX, dimY, dimZ));
 
     ignition::msgs::Set(msg->mutable_pose(), ignition::math::Pose3d(
-      *iter_x,
-      *iter_y,
-      *iter_z,
+      *iterX,
+      *iterY,
+      *iterZ,
       0, 0, 0));
 
-    ++iter_x;
-    ++iter_y;
-    ++iter_z;
+    /*
+    // Use POINTS type and array for better performance, pending per-point
+    // color.
+    // One marker per point cloud, many points.
+    // TODO Implement in ign-gazebo per-point color like RViz point arrays,
+    // so can have just 1 marker, many points in it, each with a specified
+    // color, to improve performance. Color is the limiting factor that
+    // requires us to use many markers here, 1 point per marker.
+    // https://github.com/osrf/lrauv/issues/52
+    ignition::msgs::Set(msg->mutable_pose(), ignition::math::Pose3d(
+      0, 0, 0, 0, 0, 0));
+    auto pt = msg->add_point();
+    pt->set_x(*iterX);
+    pt->set_y(*iterY);
+    pt->set_z(*iterZ);
+    */
 
-    // FIXME: how to handle more points?
-    // https://github.com/osrf/lrauv/issues/85
-    if (count > 100)
-      break;
+    if (nPtsViz < 10)
+    {
+      igndbg << "Added point " << nPtsViz << " at "
+             << msg->pose().position().x() << ", "
+             << msg->pose().position().y() << ", "
+             << msg->pose().position().z() << ", "
+             << "value " << dataVal << ", "
+             << "dimX " << dimX
+             << std::endl;
+    }
+    ++nPtsViz;
   }
+
+  igndbg << "Visualizing " << markers.marker().size() << " markers"
+    << std::endl;
 
   ignition::msgs::Boolean res;
   bool result;
@@ -274,11 +527,69 @@ void VisualizePointCloud::ClearMarkers()
 {
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
   ignition::msgs::Marker msg;
-  msg.set_ns(this->dataPtr->topicName);
+  msg.set_ns(this->dataPtr->pointCloudTopic + "-" + this->dataPtr->floatVTopic);
   msg.set_id(0);
   msg.set_action(ignition::msgs::Marker::DELETE_ALL);
 
+  igndbg << "Clearing markers on "
+    << this->dataPtr->pointCloudTopic + "-" + this->dataPtr->floatVTopic
+    << std::endl;
+
   this->dataPtr->node.Request("/marker", msg);
+}
+
+/////////////////////////////////////////////////
+QColor VisualizePointCloud::MinColor() const
+{
+  return ignition::gui::convert(this->dataPtr->minColor);
+}
+
+/////////////////////////////////////////////////
+void VisualizePointCloud::SetMinColor(const QColor &_minColor)
+{
+  this->dataPtr->minColor = ignition::gui::convert(_minColor);
+  this->MinColorChanged();
+  this->PublishMarkers();
+}
+
+/////////////////////////////////////////////////
+QColor VisualizePointCloud::MaxColor() const
+{
+  return ignition::gui::convert(this->dataPtr->maxColor);
+}
+
+/////////////////////////////////////////////////
+void VisualizePointCloud::SetMaxColor(const QColor &_maxColor)
+{
+  this->dataPtr->maxColor = ignition::gui::convert(_maxColor);
+  this->MaxColorChanged();
+  this->PublishMarkers();
+}
+
+/////////////////////////////////////////////////
+float VisualizePointCloud::MinFloatV() const
+{
+  return this->dataPtr->minFloatV;
+}
+
+/////////////////////////////////////////////////
+void VisualizePointCloud::SetMinFloatV(float _minFloatV)
+{
+  this->dataPtr->minFloatV = _minFloatV;
+  this->MinFloatVChanged();
+}
+
+/////////////////////////////////////////////////
+float VisualizePointCloud::MaxFloatV() const
+{
+  return this->dataPtr->maxFloatV;
+}
+
+/////////////////////////////////////////////////
+void VisualizePointCloud::SetMaxFloatV(float _maxFloatV)
+{
+  this->dataPtr->maxFloatV = _maxFloatV;
+  this->MaxFloatVChanged();
 }
 
 // Register this plugin
