@@ -24,6 +24,7 @@
 
 #include <ignition/msgs/pointcloud_packed.pb.h>
 
+#include <ignition/common/Profiler.hh>
 #include <ignition/common/SystemPaths.hh>
 #include <ignition/gazebo/World.hh>
 #include <ignition/math/SphericalCoordinates.hh>
@@ -270,6 +271,8 @@ ScienceSensorsSystem::ScienceSensorsSystem()
 /////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::ReadData()
 {
+  IGN_PROFILE("ScienceSensorsSystemPrivate::ReadData");
+
   // Lock modifications to world origin spherical association until finish
   // reading and transforming data
   std::lock_guard<std::mutex> lock(mtx);
@@ -502,6 +505,7 @@ void ScienceSensorsSystemPrivate::GenerateOctrees()
 /////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::PublishData()
 {
+  IGN_PROFILE("ScienceSensorsSystemPrivate::PublishData");
   this->cloudPub.Publish(this->PointCloudMsg());
   this->tempPub.Publish(this->tempMsg);
   this->chlorPub.Publish(this->chlorMsg);
@@ -514,6 +518,8 @@ float ScienceSensorsSystemPrivate::InterpolateData(
   std::vector<int> &_inds,
   std::vector<float> &_dists)
 {
+  IGN_PROFILE("ScienceSensorsSystemPrivate::InterpolateData");
+
   // Sanity checks
   if (_inds.size() == 0 || _dists.size() == 0)
   {
@@ -626,6 +632,9 @@ void ScienceSensorsSystem::PreUpdate(
 void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   const ignition::gazebo::EntityComponentManager &_ecm)
 {
+  IGN_PROFILE_THREAD_NAME("ScienceSensorsSystem PostUpdate");
+  IGN_PROFILE("ScienceSensorsSystem::PostUpdate");
+
   // Only update and publish if data has been loaded and simulation is not
   // paused.
   if (this->dataPtr->initialized && !_info.paused)
@@ -703,6 +712,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].getLeafCount()
         > 0)
       {
+        IGN_PROFILE("ScienceSensorsSystem::PostUpdate nearestKSearch");
         if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].nearestKSearch(
           searchPoint, k, spatialIdx, spatialSqrDist) <= 0)
         {
@@ -786,6 +796,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
 void ScienceSensorsSystem::RemoveSensorEntities(
     const ignition::gazebo::EntityComponentManager &_ecm)
 {
+  IGN_PROFILE("ScienceSensorsSystem::RemoveSensorEntities");
+
   _ecm.EachRemoved<ignition::gazebo::components::CustomSensor>(
     [&](const ignition::gazebo::Entity &_entity,
         const ignition::gazebo::components::CustomSensor *)->bool
@@ -817,6 +829,8 @@ bool ScienceSensorsSystemPrivate::ScienceDataService(
 //////////////////////////////////////////////////
 ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
 {
+  IGN_PROFILE("ScienceSensorsSystemPrivate::PointCloudMsg");
+
   ignition::msgs::PointCloudPacked msg;
 
   if (this->timeIdx < 0 || this->timeIdx >= this->timestamps.size())

@@ -30,6 +30,7 @@
 #include "VisualizePointCloud.hh"
 
 #include <ignition/common/Console.hh>
+#include <ignition/common/Profiler.hh>
 
 #include <ignition/plugin/Register.hh>
 
@@ -379,6 +380,8 @@ void VisualizePointCloud::OnFloatVService(
 //////////////////////////////////////////////////
 void VisualizePointCloud::PublishMarkers()
 {
+  IGN_PROFILE("VisualizePointCloud::PublishMarkers");
+
   if (!this->dataPtr->showing)
     return;
 
