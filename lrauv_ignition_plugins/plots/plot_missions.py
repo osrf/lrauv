@@ -178,7 +178,7 @@ def main():
       'platform_pitch_angle',
     ]
     # Subplot to put each variable
-    varaxs = [0, 0, 1, 1, 2, 2]
+    varaxs = [0, 1,  2]
     colors = None
     nPlots = max(varaxs) + 1
     # Input data
@@ -186,7 +186,7 @@ def main():
       timestamps = read_input_list(os.path.join(missions_path, missionName,
         'plot_input_ref.txt'))
       # Legend label for axis [0]
-    lbls = ['state', 'cmd', 'state', 'cmd', 'state', 'cmd']
+    lbls = ['state', 'state', 'state']
 
   # Sanity check for user error
   if var is None:
