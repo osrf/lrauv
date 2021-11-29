@@ -1,6 +1,8 @@
 # vscode related...
 .vscode/
 
+results/
+
 # VIM related stuff...
 
 # Swap

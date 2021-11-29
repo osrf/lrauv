@@ -180,25 +180,25 @@ class LrauvTestFixture : public ::testing::Test
     }
 
     int res = system("sudo /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/unserialize_for_plotting.sh");
-    
+
     if (res != 0)
     {
       ignerr << "Failed to unserialize plots\n";
       return;
     }
     ignmsg << "Finished unserialize, copying.\n";
-    
+
     // WARNING: THIS CAN LEAD TO ARBITRARY CODE EXECUTION
     auto targetfile = _target + ".csv";
-    auto cmd = std::string("sudo cp -r /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/tmp/tmp.csv /results/") + targetfile;
+    auto cmd = std::string("sudo cp /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/tmp/tmp.csv /results/") + targetfile;
     res = system(cmd.c_str());
     if (res != 0)
     {
       ignerr << "Failed to copy logs\n";
     }
-    
+
     cmd =
-      std::string("sudo /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/plot_misions.py ") + _target;
+      std::string("sudo python3 /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/plot_missions.py ") + _target + " tmp";
     system(cmd.c_str());
 
     cmd = std::string("sudo cp -r /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/") +
@@ -259,7 +259,7 @@ class LrauvTestFixture : public ::testing::Test
       kill(pid, 9);
     }
 
-    pclose(pipe);   
+    pclose(pipe);
     ExportLogs(_shortname);
 
     ignmsg << "Completed command [" << cmd << "]" << std::endl;

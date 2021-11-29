@@ -116,8 +116,9 @@ def main():
     ]
     varaxs = [0, 0, 1, 1]
     # Input data
-    timestamps = read_input_list(os.path.join(missions_path, missionName,
-      'plot_input_ref.txt'))
+    if not usingTmp:
+      timestamps = read_input_list(os.path.join(missions_path, missionName,
+        'plot_input_ref.txt'))
     lbls = [
       'state', 'cmd',
       'state', 'cmd',
@@ -135,8 +136,9 @@ def main():
     # Subplot to put each variable
     varaxs = [0, 0, 1]
     # Input data
-    timestamps = read_input_list(os.path.join(missions_path, missionName,
-      'plot_input_ref.txt'))
+    if not usingTmp:
+      timestamps = read_input_list(os.path.join(missions_path, missionName,
+        'plot_input_ref.txt'))
     # Legend label for axis [0]
     lbls = ['state', 'cmd', 'state']
     # Color for each variable
@@ -156,8 +158,9 @@ def main():
     ]
     varaxs = [0, 0, 1, 1, 2, 2, 3]
     # Input data
-    timestamps = read_input_list(os.path.join(missions_path, missionName,
-      'plot_input_ref.txt'))
+    if not usingTmp:
+      timestamps = read_input_list(os.path.join(missions_path, missionName,
+        'plot_input_ref.txt'))
     lbls = [
       'state', 'cmd',
       'state', 'cmd',
@@ -175,14 +178,15 @@ def main():
       'platform_pitch_angle',
     ]
     # Subplot to put each variable
-    varaxs = [0, 1, 2]
+    varaxs = [0, 0, 1, 1, 2, 2]
     colors = None
     nPlots = max(varaxs) + 1
     # Input data
-    timestamps = read_input_list(os.path.join(missions_path, missionName,
-      'plot_input_ref.txt'))
-    # Legend label for axis [0]
-    lbls = ['Run ' + str(i) for i in range(len(timestamps))]
+    if not usingTmp:
+      timestamps = read_input_list(os.path.join(missions_path, missionName,
+        'plot_input_ref.txt'))
+      # Legend label for axis [0]
+    lbls = ['state', 'cmd', 'state', 'cmd', 'state', 'cmd']
 
   # Sanity check for user error
   if var is None:
@@ -190,7 +194,9 @@ def main():
     return
 
   title_suffix = ''
-  if len(timestamps) == 1:
+  if usingTmp:
+    title_suffix = 'Automated Test'
+  elif len(timestamps) == 1:
     title_suffix = timestamps[0]
   else:
     title_suffix = timestamps[0][:8] + 'multiRuns'
@@ -210,42 +216,38 @@ def main():
   plt.subplots_adjust(hspace=1)
 
   # Plot each mission log file
-  for t_i in range(len(timestamps)):
+  infile = os.path.join(missions_path, 'tmp', 'tmp.csv')
+ 
 
-    infile = os.path.join(missions_path, missionName, timestamps[t_i] + '.csv')
+  # x-axis is time
+  secs = read_csv(infile, 'EpochSeconds')
+  # Convert string to numbers
+  secs = np.array([float(sec) for sec in secs])
+  # Offset from first timestamp, so can have some reasonable xticks
+  secs = secs - secs[0]
 
-    if usingTmp:
-      infile = os.path.join(missions_path, 'tmp', 'tmp.csv')
+  lbl = ''
+  # Legend per file
+  #if missionName == 'testYoYoCircle':
+  #  lbl = lbls[t_i]
 
-    # x-axis is time
-    secs = read_csv(infile, 'EpochSeconds')
-    # Convert string to numbers
-    secs = np.array([float(sec) for sec in secs])
-    # Offset from first timestamp, so can have some reasonable xticks
-    secs = secs - secs[0]
+  # Plot each variable in the corresponding subplot
+  for v_i in range(len(var)):
+    # Legend by variable name
+    #if missionName != 'testYoYoCircle':
+    lbl = lbls[v_i]
 
-    lbl = ''
-    # Legend per file
-    if missionName == 'testYoYoCircle':
-      lbl = lbls[t_i]
-
-    # Plot each variable in the corresponding subplot
-    for v_i in range(len(var)):
-      # Legend by variable name
-      if missionName != 'testYoYoCircle':
-        lbl = lbls[v_i]
-
-      color = None
-      if colors != None:
-        color = colors[v_i]
-      read_and_plot_one_variable(infile, secs, var[v_i], axs[varaxs[v_i]], lbl,
-        color)
+    color = None
+    if colors != None:
+      color = colors[v_i]
+    read_and_plot_one_variable(infile, secs, var[v_i], axs[varaxs[v_i]], lbl,
+      color)
 
   # Only need legend on one subplot, all the colors are the same order
   axs[0].legend()
 
   # Overall figure title
-  fig.suptitle(missionName + '\n' + title_suffix + ', %d runs' % len(timestamps))
+  fig.suptitle(missionName + '\n' + title_suffix )
   fig.savefig(os.path.join(out_path, title_suffix + '_' + missionName + '.png'), bbox_inches='tight')
 
 if __name__ == '__main__':

@@ -46,7 +46,7 @@ RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable
 
 # Install the latest Ignition binaries
 RUN apt-get -qq update && apt-get -q -y install \
-  ignition-fortress
+  ignition-fortress python3-matplotlib python3-numpy
 
 # Install PCL
 RUN apt-get update \
@@ -57,7 +57,7 @@ RUN apt-get update \
 RUN rm -rf /var/lib/apt/lists/* \
   && apt-get -qq clean
 
-USER $USERNAME
+USER developer
 
 # We're in /home/developer/lrauv_ws/src/lrauv-application, go back to ~/lrauv_ws
 WORKDIR ../..
@@ -69,7 +69,7 @@ RUN rm -rf build log install src/lrauv
 COPY . src/lrauv
 
 # Use G++9 instead.
-ARG CC=gcc-9 
+ARG CC=gcc-9
 ARG CXX=g++-9
 
 # Build image
