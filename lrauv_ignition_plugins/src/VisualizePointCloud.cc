@@ -30,6 +30,7 @@
 #include "VisualizePointCloud.hh"
 
 #include <ignition/common/Console.hh>
+#include <ignition/common/Profiler.hh>
 
 #include <ignition/plugin/Register.hh>
 
@@ -80,7 +81,7 @@ namespace tethys
     public: const int MAX_PTS_VIS = 1000;
 
     /// \brief Performance trick. Render only every other n. Increase to render
-    /// fewer markers (faster performance).
+    /// fewer markers (faster performance). Recalulated in function.
     public: int renderEvery = 20;
 
     /// \brief Performance trick. Skip depths below this z, so have memory to
@@ -95,9 +96,14 @@ namespace tethys
     //public: const float MINIATURE_SCALE = 0.01;
     // For 2003080103_mb_l3_las.csv
     public: const float MINIATURE_SCALE = 0.0001;
+    // For simple_test.csv
+    // public: const float MINIATURE_SCALE = 1000.0;
 
     /// \brief Performance trick. Factor to multiply in calculating Marker sizes
+    // For 2003080103_mb_l3_las*.csv
     public: float dimFactor = 0.03;
+    // For simple_test.csv
+    // public: float dimFactor = 0.003;
 
     /// \brief Parameter to calculate Marker size in x.
     /// Performance trick. Hardcode resolution to make markers resemble voxels.
@@ -107,12 +113,24 @@ namespace tethys
     //public: const float RES_Z = 5 * MINIATURE_SCALE;
     // For 2003080103_mb_l3_las.csv
     public: const float RES_X = 15;
+    // For simple_test.csv
+    // public: const float RES_X = 0.15;
 
     /// \brief Parameter to calculate Marker size in y.
+    // For 2003080103_mb_l3_las_1x1km.csv
+    //public: const float RES_Y = 22 * MINIATURE_SCALE;
+    // For 2003080103_mb_l3_las.csv
     public: const float RES_Y = 22;
+    // For simple_test.csv
+    // public: const float RES_Y = 0.22;
 
     /// \brief Parameter to calculate Marker size in z.
+    // For 2003080103_mb_l3_las_1x1km.csv
+    //public: const float RES_Z = 5 * MINIATURE_SCALE;
+    // For 2003080103_mb_l3_las.csv
     public: const float RES_Z = 10;
+    // For simple_test.csv
+    // public: const float RES_Z = 0.10;
 
     /// \brief Minimum value in latest float vector
     public: float minFloatV{std::numeric_limits<float>::max()};
@@ -375,13 +393,18 @@ void VisualizePointCloud::PublishMarkers()
     return;
   }
 
+  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
+
   // Used to calculate cap of number of points to visualize, to save memory
   int nPts = this->dataPtr->pointCloudMsg.height() *
       this->dataPtr->pointCloudMsg.width();
-  this->dataPtr->renderEvery = (int) round(
-    nPts / (double) this->dataPtr->MAX_PTS_VIS);
+  // If there are more points than we can render, render every n
+  if (nPts > this->dataPtr->MAX_PTS_VIS)
+  {
+    this->dataPtr->renderEvery = (int) round(
+      nPts / (double) this->dataPtr->MAX_PTS_VIS);
+  }
 
-  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
   ignition::msgs::Marker_V markers;
 
   PointCloudPackedIterator<float> iterX(this->dataPtr->pointCloudMsg, "x");
@@ -507,6 +530,10 @@ void VisualizePointCloud::ClearMarkers()
   msg.set_ns(this->dataPtr->pointCloudTopic + "-" + this->dataPtr->floatVTopic);
   msg.set_id(0);
   msg.set_action(ignition::msgs::Marker::DELETE_ALL);
+
+  igndbg << "Clearing markers on "
+    << this->dataPtr->pointCloudTopic + "-" + this->dataPtr->floatVTopic
+    << std::endl;
 
   this->dataPtr->node.Request("/marker", msg);
 }
