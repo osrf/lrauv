@@ -52,6 +52,9 @@ Clone this repository then run
 colcon build
 ```
 
+> You can pass `--cmake-args ' -DENABLE_PROFILER=1'` to use the profiler.
+> See more on [this tutorial](https://ignitionrobotics.org/api/common/4.4/profiler.html)
+
 ## To test simulation in Ignition standalone (without MBARI integration)
 
 This package comes with an empty example world. To run this example world simply
