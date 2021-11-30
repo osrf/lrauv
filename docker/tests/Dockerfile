@@ -36,9 +36,11 @@ RUN apt-get update \
         curl \
         gnupg2 \
         lsb-release \
+        python3-numpy \
         tzdata \
-        wget \
-        python3-numpy
+        wget\
+  && rm -rf /var/lib/apt/lists/* \
+  && apt-get -qq clean
 
 # Add Ignition's latest packages, which may be more up-to-date than the ones from the MBARI image
 RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list' && \
@@ -47,15 +49,15 @@ RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable
 
 # Install and upgrade the latest Ignition binaries
 RUN apt-get -qq update && apt-get -q -y install \
-  ignition-garden && apt-get dist-upgrade -y
+  ignition-garden\
+  && rm -rf /var/lib/apt/lists/* \
+  && apt-get -qq clean && apt-get dist-upgrade -y
 
 # Install PCL
 RUN apt-get update \
- && apt-get install -y \
-        libpcl-dev
-
-# Clean up apt
-RUN rm -rf /var/lib/apt/lists/* \
+  && apt-get install -y \
+        libpcl-dev \
+  && rm -rf /var/lib/apt/lists/* \
   && apt-get -qq clean
 
 USER $USERNAME
