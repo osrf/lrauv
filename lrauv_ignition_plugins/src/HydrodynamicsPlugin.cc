@@ -247,8 +247,7 @@ void HydrodynamicsPlugin::PreUpdate(
   // Since we are transforming angular and linear velocity we only care about
   // rotation
   auto localLinearVelocity = pose->Rot().Inverse() * linearVelocity->Data();
-  auto localRotationalVelocity = pose->Rot().Inverse() * *rotationalVelocity /*
-    (2 * IGN_PI)*/;
+  auto localRotationalVelocity = pose->Rot().Inverse() * *rotationalVelocity;
 
   state(0) = localLinearVelocity.X();
   state(1) = localLinearVelocity.Y();
@@ -275,7 +274,7 @@ void HydrodynamicsPlugin::PreUpdate(
   Ma(3,3) = this->dataPtr->paramKdotP;
   Ma(4,4) = this->dataPtr->paramMdotQ;
   Ma(5,5) = this->dataPtr->paramNdotR;
-  const Eigen::VectorXd kAmassVec = - Ma * stateDot;
+  const Eigen::VectorXd kAmassVec = Ma * stateDot;
 
   // Coriollis and Centripetal forces for under water vehicles (Fossen P. 37)
   // Note: this is significantly different from VRX because we need to account
