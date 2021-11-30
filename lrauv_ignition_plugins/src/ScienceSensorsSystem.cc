@@ -121,6 +121,7 @@ class tethys::ScienceSensorsSystemPrivate
   /// Vector size: number of time slices. Indices correspond to those of
   /// this->timestamps.
   /// Point cloud: spatial coordinates to index science data by location
+  /// in the ENU world frame.
   public: std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> timeSpaceCoords;
 
   /// \brief Science data.
@@ -452,9 +453,10 @@ void ScienceSensorsSystemPrivate::ReadData(
 
         // Convert lat / lon / elevation to Cartesian ENU
         auto cart = this->world.SphericalCoordinates(_ecm).value()
-            .PositionTransform({latitude, longitude, -depth},
+            .PositionTransform({IGN_DTOR(latitude), IGN_DTOR(longitude), 0.0},
             ignition::math::SphericalCoordinates::SPHERICAL,
             ignition::math::SphericalCoordinates::LOCAL2);
+        cart.Z() = -depth;
 
         // Performance trick. Scale down to see in view
         cart *= this->MINIATURE_SCALE;
