@@ -66,7 +66,7 @@ RUN rm -rf build log install src/lrauv
 # Use current version of the code
 COPY . src/lrauv
 
-# Build image
+# Build workspace
 RUN [ "/bin/bash" , "-c" , "colcon build --cmake-args='-DBUILD_TESTING=true'" ]
 
 COPY docker/entrypoint.bash /
