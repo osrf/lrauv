@@ -24,7 +24,9 @@ Optionally, you may choose to build this repository using Docker, for
 convenience.
 Make sure you have a recent version of [Docker](https://docs.docker.com/) and
 [nvidia-docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
-installed. Next to get started simply run the following command.
+installed.
+And [rocker](https://github.com/osrf/rocker) available as debian package `python3-rocker` with the ROS packages.
+ Next to get started simply run the following command.
 ```
 docker/build_and_run_docker.sh
 ```
@@ -35,6 +37,41 @@ docker/join.sh mbari_lrauv
 . /home/ign_ws/install/setup.bash
 . /home/colcon_ws/install/setup.bash
 ```
+
+
+### Empty World from Source
+
+~ 90 minutes from scratch
+
+~ 70 seconds with only workspace changes
+
+```
+cd docker
+docker build -t mbari_lrauv -f empty_world/Dockerfile ..
+rocker --nvidia --x11 --user mbari_lrauv bash
+ign launch lrauv_world.ign
+```
+
+### Unit tests dockerfile
+
+Enter test environment
+
+```
+docker build -t mbari_lrauv_tests -f tests/Dockerfile ..
+rocker --nvidia --x11 --user mbari_lrauv_tests bash
+```
+
+Then run anything you want in the environment, unit tests are in `./build/lrauv_ignition_plugins`
+```
+./build/lrauv_ignition_plugins/test_buoyancy_action 
+```
+
+Or the main entry point
+
+```
+ign launch lrauv_world.ign
+```
+
 
 ## To build
 
