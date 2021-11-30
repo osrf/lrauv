@@ -23,60 +23,14 @@
 
 # Make sure processes in the container can connect to the x server
 # Necessary so gazebo can create a context for OpenGL rendering (even headless)
-XAUTH=/tmp/.docker.xauth
-if [ ! -f $XAUTH ]
-then
-    xauth_list=$(xauth nlist $DISPLAY)
-    xauth_list=$(sed -e 's/^..../ffff/' <<< "$xauth_list")
-    if [ ! -z "$xauth_list" ]
-    then
-        echo "$xauth_list" | xauth -f $XAUTH nmerge -
-    else
-        touch $XAUTH
-    fi
-    chmod a+r $XAUTH
-fi
-
-DOCKER_OPTS=
-
-# Get the current version of docker
-DOCKER_VER=$(docker version --format '{{.Server.Version}}')
-if dpkg --compare-versions 19.03 gt "$DOCKER_VER"
-then
-    echo "Docker version is less than 19.03, using nvidia-docker2 runtime"
-    if ! dpkg --list | grep nvidia-docker2
-    then
-        echo "Please either update docker-ce to a version greater than 19.03 or install nvidia-docker2"
-	exit 1
-    fi
-    DOCKER_OPTS="$DOCKER_OPTS --runtime=nvidia"
-else
-    DOCKER_OPTS="$DOCKER_OPTS --gpus all"
-fi
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-
-cd $DIR
 
 # exit if the docker image doesn't build
 set -e
 
-# Build the docker image
-docker build -t mbari_lrauv_debug -f $DIR/debug_integration/Dockerfile ..
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-# Run the image
-docker run -it \
-  -e DISPLAY \
-  -e QT_X11_NO_MITSHM=1 \
-  -e XAUTHORITY=$XAUTH \
-  -v "$XAUTH:$XAUTH" \
-  -v "/tmp/.X11-unix:/tmp/.X11-unix" \
-  -v "/etc/localtime:/etc/localtime:ro" \
-  -v "/dev/input:/dev/input" \
-  -v "$DIR/../../results:/results"\
-  --network host \
-  --rm \
-  --privileged \
-  --security-opt seccomp=unconfined \
-  $DOCKER_OPTS \
-  mbari_lrauv_debug
+cd $DIR
+# Build the docker image
+docker build -t mbari_lrauv_tests -f $DIR/tests/Dockerfile ..
+
+rocker --nvidia --x11 --user --user-override-name=developer --user-preserve-home -- mbari_lrauv_tests tmuxinator start debug_and_plot -n debug_session -p src/lrauv/docker/tests/debug_integration_mux.yml

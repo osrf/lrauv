@@ -38,8 +38,10 @@ RUN apt-get update \
         libpcl-dev \
         lsb-release \
         python3-numpy \
+        tmux \
+        tmuxinator \
         tzdata \
-        wget\
+        wget \
   && rm -rf /var/lib/apt/lists/* \
   && apt-get -qq clean
 
