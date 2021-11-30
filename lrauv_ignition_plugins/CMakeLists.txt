@@ -7,6 +7,15 @@ cmake_minimum_required(VERSION 3.10.2 FATAL_ERROR)
 
 project(lrauv_ignition_plugins)
 
+# Option to enable profiler
+option(ENABLE_PROFILER "Enable Ignition Profiler" FALSE)
+
+if(ENABLE_PROFILER)
+  add_definitions("-DIGN_PROFILER_ENABLE=1")
+else()
+  add_definitions("-DIGN_PROFILER_ENABLE=0")
+endif()
+
 #============================================================================
 # Find dependencies
 find_package(ignition-cmake2 REQUIRED)
@@ -30,6 +39,9 @@ set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
 
 find_package(ignition-utils1 REQUIRED)
 set(IGN_UTILS_VER ${ignition-utils1_VERSION_MAJOR})
+
+find_package(ignition-common4 REQUIRED COMPONENTS profiler)
+set(IGN_COMMON_VER ${ignition-common4_VERSION_MAJOR})
 
 find_package (Eigen3 3.3 REQUIRED)
 
@@ -87,6 +99,7 @@ function(add_lrauv_plugin PLUGIN)
   set_property(TARGET ${PLUGIN} PROPERTY CXX_STANDARD 17)
   target_link_libraries(${PLUGIN}
     PUBLIC
+      ignition-common${IGN_COMMON_VER}::profiler
       ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
       ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
     PRIVATE
@@ -158,7 +171,6 @@ add_lrauv_plugin(TethysCommPlugin
   PROTO
     lrauv_command
     lrauv_state)
-add_lrauv_plugin(ThrusterPlugin)
 add_lrauv_plugin(TimeAnalysisPlugin)
 add_lrauv_plugin(VisualizePointCloud GUI)
 add_lrauv_plugin(WorldCommPlugin
@@ -178,6 +190,7 @@ install(
 foreach(EXAMPLE
   example_buoyancy
   example_controller
+  example_elevator
   example_mass_shifter
   example_rudder
   example_spawn
@@ -237,12 +250,14 @@ if(BUILD_TESTING)
     test_buoyancy_action
     test_controller
     test_drop_weight
+    test_elevator
     test_mass_shifter
     test_mission_depth_vbs
     test_mission_pitch_mass
     test_mission_yoyo_circle
     test_rudder
-    test_spawn)
+    test_spawn
+    test_state_msg)
 
     add_executable(
       ${TEST_TARGET}
@@ -256,6 +271,7 @@ if(BUILD_TESTING)
       PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
       lrauv_command
       lrauv_init
+      lrauv_state
     )
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
     gtest_discover_tests(${TEST_TARGET})

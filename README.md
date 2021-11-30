@@ -18,9 +18,28 @@ provided to the public on MBARI's DockerHub (see below), the simulated robot
 can be controlled using the same code executed on the real robot.
 This enables the validation of scientific missions for oceanography research.
 
+## Using Docker for this repository (optional)
+
+Optionally, you may choose to build this repository using Docker, for
+convenience.
+Make sure you have a recent version of [Docker](https://docs.docker.com/) and
+[nvidia-docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
+installed. Next to get started simply run the following command.
+```
+docker/build_and_run_docker.sh
+```
+
+To join in a separate terminal, remember to source Ignition and the workspace:
+```
+docker/join.sh mbari_lrauv
+. /home/ign_ws/install/setup.bash
+. /home/colcon_ws/install/setup.bash
+```
+
 ## To build
 
-Make sure you have [Ignition Fortress](https://ignitionrobotics.org/docs/fortress) and
+To run the code in this repository natively without Docker, make sure you have
+[Ignition Fortress](https://ignitionrobotics.org/docs/fortress) and
 [colcon](https://colcon.readthedocs.io/en/released/), on Ubuntu Focal or higher.
 
 Install dependencies
@@ -33,7 +52,15 @@ Clone this repository then run
 colcon build
 ```
 
-## To test Ignition standalone (without MBARI integration)
+Developers may want to build tests. Note that this would take longer:
+```
+colcon build --cmake-args "-DBUILD_TESTING=ON"
+```
+
+> You can pass `--cmake-args ' -DENABLE_PROFILER=1'` to use the profiler.
+> See more on [this tutorial](https://ignitionrobotics.org/api/common/4.4/profiler.html)
+
+## To test simulation in Ignition standalone (without MBARI integration)
 
 This package comes with an empty example world. To run this example world simply
 source the colcon workspace and run:
@@ -54,43 +81,35 @@ LRAUV_keyboard_teleop
 
 > Tip: Type `LRAUV_` and press tab for autocomplete to show more example examples.
 
-## Using Docker
-
-You may also choose to use Docker for convenience. Make sure you have
-a recent version of [Docker](https://docs.docker.com/) and
-[nvidia-docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
-installed. Next to get started simply run the following command.
-```
-docker/build_and_run_docker.sh
-```
-
-To join in a separate terminal, remember to source Ignition and the workspace:
-```
-docker/join.sh mbari_lrauv
-. /home/ign_ws/install/setup.bash
-. /home/colcon_ws/install/setup.bash
-```
-
 ## To test integration with MBARI LRAUV code base
 
-MBARI's code base lives in a private repository. For people with access,
+MBARI's code base lives in a separate, private repository.
+For people with access,
 [here](https://bitbucket.org/mbari/lrauv-application/src/7b3b5fce1b0ad1af1734952adaf94f2a69193aec/docker_ignition/?at=feature%2F2021-02-12-ignition-sim)
-are instructions on setting it up from source.
+are instructions on setting it up from source and compiling.
+
+Alternatively, you can use the public Docker image (see below).
 
 The integration assumes that this repository is cloned as a sibling of
 the `lrauv-application` repository, i.e.:
 ```
 <workspace>
 |-- lrauv
-`-- lrauv-application
+└-- lrauv-application
 ```
 
-### Docker image
+For quick reference, compilation boils down to running this on the right branch:
+```
+make ignition
+```
+
+### MBARI public Docker image
 
 A public Docker image is available for people without access to the MBARI
 codebase.
 [MBARI's image on DockerHub](https://hub.docker.com/r/mbari/lrauv-ignition-sim)
 contains Ignition, MBARI's LRAUV code base, and this repository.
+All the code has been compiled.
 ```
 docker pull mbari/lrauv-ignition-sim
 ```
@@ -105,18 +124,16 @@ Once inside a container, source the colcon workspaces:
 ```
 This needs to be done for each terminal.
 
-### Setting up for a run
+### Run the Ignition simulation
 
 For ease of development, the following world is set up to run at a real time
 factor (RTF) of 0 (as fast as possible) and a step size of 0.02 seconds.
-
 That is significantly faster than the default Ignition setting of RTF 1 and
 step size 0.001 seconds, which will give real time performance and roughly the
 nominal vehicle speed of 1 m/s.
 
 The RTF and step size can be changed at run time via the GUI by going to the
 Inspector panel and then Physics Group.
-
 Alternatively, they can be changed prior to compilation in the world SDF under
 `<physics><max_step_size>` and `<physics><real_time_factor>`.
 
@@ -124,48 +141,52 @@ Launch the Ignition simulation:
 ```
 ign launch lrauv_world.ign
 ```
-
 For verbose debug output, add `--verbose 4`.
 
-Run the LRAUV Main Vehicle Application (MVA), which will bring you to a command prompt:
+Unpause Ignition by clicking on the triangle play button in the lower-left
+corner of the GUI, or by pressing the space bar.
+
+### Run the MBARI LRAUV application
+
+The MBARI LRAUV Main Vehicle Application (MVA) contains everything needed to
+control and operate the vehicle in the real world and in simulation.
+
+Time synchronization has been done between the MBARI application and the
+Ignition simulation, such that in most cases, the controller and the simulation
+should be running in synchronization.
+There may be corner cases that still need to be resolved.
+
+This section assumes you have either compiled the target from source or are
+using the MBARI public Docker image, which has everything pre-compiled.
+The paths assume you are using the MBARI public Docker image.
+
+Run the LRAUV Main Vehicle Application:
 ```
 cd ~/lrauv_ws/src/lrauv-application
 bin/LRAUV
 ```
+This will bring you to a command prompt.
 
-Unpause Ignition by clicking on the triangle play button in the lower-left
-corner of the GUI.
-
-At the LRAUV command prompt:
+At the LRAUV command prompt (you only need to do this once):
 ```
 >configset micromodem.loadatstartup 0 bool persist
 >restart app
 ```
-This sets the micromodem to not load at startup. `persist` means you only need
-to do this once.
+This sets the micromodem to not load at startup.
+`persist` means you only need to do this once.
 It will pause for a bit, you might not be able to type right away.
 
-Speed up 100 times for a bit to finish loading, before returning to normal
-speed.
-This allows the commands to finish loading, before you overwrite them with
-control commands.
-Otherwise the preloaded commands can kick in after you issue control commands
-and make the vehicle go to unexpected places
-```
->quick on
->quick off
-```
-Alternatively, if you have access to the config files, set SBIT.loadAtStartup
-to 0 bool in Config/BIT.cfg. This might already be set for you in the Docker
-image on MBARI DockerHub.
-
+On the vehicle, an app is always being run.
+If no missions are specified, then it is running the default.
+On the real vehicle, the default mission is `GoToSurface`.
+(NOTE: we have removed the default app in the MBARI public image until
+[this issue](https://github.com/osrf/lrauv/issues/38) is resolved.
+Currently, nothing is being run by default. Skip this check.)
 Verify that it is running the default `GoToSurface` app:
 ```
 >show stack
 2021-03-03T18:24:46.699Z,1614795886.699 [Default](IMPORTANT): Priority 0: Default:B.GoToSurface
 ```
-An app is always being run.
-If no missions are specified, then it is running the default.
 
 ### Control commands
 
@@ -223,6 +244,7 @@ run RegressionTests/IgnitionTests/testPitchMass.xml
 run RegressionTests/IgnitionTests/testPitchAndDepthMassVBS.xml
 run RegressionTests/IgnitionTests/testYoYoCircle.xml
 ```
+Some example behaviors are documented [here](https://github.com/osrf/lrauv/issues/21).
 
 Some parameters can be adjusted - see the mission XML file.
 For example, to change the commanded depth in the `testDepthVBS.xml` mission:
@@ -243,9 +265,21 @@ For example, this will run the yoyo mission and terminate after the mission ends
 bin/LRAUV -x "run RegressionTests/IgnitionTests/testYoYoCircle.xml quitAtEnd"
 ```
 
-### To run the original LRAUV simulation
+### To run the original MBARI LRAUV command-line simulation (optional)
 
-The original simulation is the baseline comparison for the Ignition simulation.
+The original simulation (`SimDaemon`) is the baseline comparison for the
+Ignition simulation.
+
+For developers, it helps to troubleshoot the Ignition simulation by comparing
+its values to the original MBARI simulation, which is a pure command-line
+interface.
+
+Do not run both Ignition and SimDaemon at the same time.
+Choose only one.
+
+```
+cd ~/lrauv_ws/src/lrauv-application
+```
 
 In the MBARI code base, open `Config/sim/Simulator.cfg`, change these lines to
 look like this:
@@ -255,10 +289,30 @@ look like this:
 ```
 This enables the original ExternalSim and disables the interface with Ignition.
 
-Try it out:
+Run the original command-line simulation:
+```
+bin/SimDaemon
+```
+The SimDaemon runs in the background by default.
+
+Then run the Main Vehicle Application as usual:
 ```
 bin/LRAUV
 ```
+
+Speed up 100 times for a bit to finish loading, before returning to normal
+speed.
+This allows the commands to finish loading, before you overwrite them with
+control commands.
+Otherwise the preloaded commands can kick in after you issue control commands
+and make the vehicle go to unexpected places
+```
+>quick on
+>quick off
+```
+Alternatively, if you have access to the config files, set SBIT.loadAtStartup
+to 0 bool in Config/BIT.cfg. This might already be set for you in the Docker
+image on MBARI DockerHub.
 
 Load the circle mission, which will perform two circles:
 ```
@@ -289,7 +343,7 @@ stop
 quit
 ```
 
-## Using Debug Container to debug the simulator
+### Using Debug Container to debug the simulator
 
 A simple dockerfile and tmux config exists that makes launching and debugging the different components of the project a lot easier. To use it simply run
 
@@ -298,7 +352,6 @@ $ docker/debug_integration.sh
 This will build a new container with the source code and launch a tmux session. The tmux session has 2 windows: 0:simulation and 1:logging. In the simulation window you will see the top pane runs the ignition simulation while the bottom pane runs the actual `bin/LRAUV` controller. The logging pane on the other hand will automatically convert the sim slate and write it to the results directory on your computer one layer above the directory to where you checked out.
 
 ![tmux_debug](https://user-images.githubusercontent.com/542272/137456870-a0eed740-7206-43c1-8ccf-215148ad4675.gif)
-
 
 ### LRAUV cheat sheet
 
@@ -448,6 +501,15 @@ Make sure to use
 quick on
 ```
 to let the system finish loading, before issuing control commands.
+
+#### Unserializing and plotting values
+
+On the MBARI Main Vehicle Application side, all values during the run are
+stored to disk.
+They can be retrieved after the run and plotted for debugging purposes.
+
+See [`lrauv_ignition_plugins/plots/README.md`](https://github.com/osrf/lrauv/blob/main/lrauv_ignition_plugins/plots/README.md)
+for instructions to unserialize and scripts for plotting.
 
 ## Science data
 

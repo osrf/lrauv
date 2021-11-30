@@ -198,13 +198,17 @@ void TethysCommPlugin::Configure(
   {
     this->stateTopic = _sdf->Get<std::string>("state_topic");
   }
+  if (_sdf->HasElement("debug_printout"))
+  {
+    this->debugPrintout = _sdf->Get<bool>("debug_printout");
+  }
 
   // Initialize transport
   if (!this->node.Subscribe(this->commandTopic,
       &TethysCommPlugin::CommandCallback, this))
   {
-    ignerr << "Error subscribing to topic " << "[" << this->commandTopic << "]. "
-      << std::endl;
+    ignerr << "Error subscribing to topic " << "[" << this->commandTopic
+      << "]. " << std::endl;
     return;
   }
 
@@ -389,6 +393,7 @@ void TethysCommPlugin::CommandCallback(
   // Lazy timestamp conversion just for printing
   //if (std::chrono::seconds(int(floor(_msg.time_()))) - this->prevSubPrintTime
   //    > std::chrono::milliseconds(1000))
+  if (this->debugPrintout)
   {
     igndbg << "[" << this->ns << "] Received command: " << std::endl
       << _msg.DebugString() << std::endl;
@@ -409,10 +414,15 @@ void TethysCommPlugin::CommandCallback(
   // Thruster
   ignition::msgs::Double thrusterMsg;
   // TODO(arjo):
-  // Conversion from rpm-> force b/c thruster plugin takes force
+  // Conversion from angular velocity to force b/c thruster plugin takes force
   // Maybe we should change that?
+  // https://github.com/osrf/lrauv/issues/75
   auto angVel = _msg.propomegaaction_();
-  auto force = -0.004422 * 1000 * 0.0016 * angVel * angVel;
+
+  // force = thrust_coefficient * fluid_density * omega ^ 2 *
+  //         propeller_diameter ^ 4
+  // These values are defined in the model's Thruster plugin's SDF
+  auto force = 0.004422 * 1000 * pow(0.2, 4) * angVel * angVel;
   if (angVel < 0)
   {
     force *=-1;
@@ -443,7 +453,6 @@ void TethysCommPlugin::CommandCallback(
 void TethysCommPlugin::BuoyancyStateCallback(
   const ignition::msgs::Double &_msg)
 {
-  // Units: cubic centimeters
   this->buoyancyBladderVolume = _msg.data();
 }
 
@@ -475,8 +484,8 @@ void TethysCommPlugin::PostUpdate(
   const ignition::gazebo::UpdateInfo &_info,
   const ignition::gazebo::EntityComponentManager &_ecm)
 {
-  ignition::gazebo::Link baseLink(modelLink);
-  auto modelPose = ignition::gazebo::worldPose(modelLink, _ecm);
+  if (_info.paused)
+    return;
 
   // Publish state
   lrauv_ignition_plugins::msgs::LRAUVState stateMsg;
@@ -496,7 +505,7 @@ void TethysCommPlugin::PostUpdate(
     ignerr << "Propeller joint has wrong size\n";
     return;
   }
-  stateMsg.set_propomega_(-propAngVelComp->Data()[0]);
+  stateMsg.set_propomega_(propAngVelComp->Data()[0]);
 
   // Rudder joint position
   auto rudderPosComp =
@@ -531,10 +540,10 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.set_massposition_(massShifterPosComp->Data()[0]);
 
   // Buoyancy position
-  // Convert from cubic centimeters to cubic meters
-  stateMsg.set_buoyancyposition_(buoyancyBladderVolume);
+  stateMsg.set_buoyancyposition_(this->buoyancyBladderVolume);
 
   // Depth
+  auto modelPose = ignition::gazebo::worldPose(this->modelLink, _ecm);
   stateMsg.set_depth_(-modelPose.Pos().Z());
 
   // Roll, pitch, heading
@@ -550,7 +559,7 @@ void TethysCommPlugin::PostUpdate(
   // Speed
   auto linearVelocity =
     _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
-    modelLink);
+    this->modelLink);
   stateMsg.set_speed_(linearVelocity->Data().Length());
 
   // Lat long
@@ -601,7 +610,8 @@ void TethysCommPlugin::PostUpdate(
 
   this->statePub.Publish(stateMsg);
 
-  if (_info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
+  if (this->debugPrintout &&
+    _info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
   {
     igndbg << "[" << this->ns << "] Published state to " << this->stateTopic
       << " at time: " << stateMsg.header().stamp().sec()
@@ -613,6 +623,7 @@ void TethysCommPlugin::PostUpdate(
       << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl
       << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl
       << "\tMass shifter (m): " << stateMsg.massposition_() << std::endl
+      << "\tVBS volume (m^3): " << stateMsg.buoyancyposition_() << std::endl
       << "\tPitch angle (deg): "
         << stateMsg.rph_().y() * 180 / M_PI << std::endl
       << "\tCurrent (ENU, m/s): "
