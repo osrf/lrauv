@@ -196,7 +196,7 @@ class tethys::ScienceSensorsSystemPrivate
   // For 2003080103_mb_l3_las_1x1km.csv
   //public: const float MINIATURE_SCALE = 0.01;
   // For 2003080103_mb_l3_las.csv
-  public: const float MINIATURE_SCALE = 0.000001;
+  public: const float MINIATURE_SCALE = 0.0001;
   // For simple_test.csv
   //public: const float MINIATURE_SCALE = 1.0;
 
