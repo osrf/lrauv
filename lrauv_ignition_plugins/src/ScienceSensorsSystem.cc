@@ -44,7 +44,8 @@ using namespace tethys;
 class tethys::ScienceSensorsSystemPrivate
 {
   /// \brief Reads csv file and populate various data fields
-  public: void ReadData();
+  /// \param[in] _ecm Immutable reference to the ECM
+  public: void ReadData(const ignition::gazebo::EntityComponentManager &_ecm);
 
   /// \brief Generate octree from spatial data, for searching
   public: void GenerateOctrees();
@@ -104,9 +105,6 @@ class tethys::ScienceSensorsSystemPrivate
   /// environment variables.
   public: std::string dataPath {"2003080103_mb_l3_las.csv"};
 
-  /// \brief Indicates whether data has been loaded
-  public: bool initialized {false};
-
   /// \brief Mutex for writing to world origin association to lat/long
   public: std::mutex mtx;
 
@@ -149,8 +147,15 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Octree for data search based on spatial location of sensor. One
   /// octree per point cloud in timeSpaceCoords.
+  /// Location stored in ENU world coordinates.
   public: std::vector<pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>>
     spatialOctrees;
+
+  /// \brief Set to true after the spherical coordinates have been initialized.
+  /// This may happen at startup if the SDF file has them hardcoded, or at
+  /// runtime when the first vehicle is spawned. Assume the coordinates are
+  /// only shifted once.
+  public: bool sphericalCoordinatesInitialized{false};
 
   /// \brief World object to access world properties.
   public: ignition::gazebo::World world;
@@ -190,9 +195,9 @@ class tethys::ScienceSensorsSystemPrivate
   // For 2003080103_mb_l3_las_1x1km.csv
   //public: const float MINIATURE_SCALE = 0.01;
   // For 2003080103_mb_l3_las.csv
-  //public: const float MINIATURE_SCALE = 0.0001;
+  public: const float MINIATURE_SCALE = 0.000001;
   // For simple_test.csv
-  public: const float MINIATURE_SCALE = 1000.0;
+  //public: const float MINIATURE_SCALE = 1.0;
 
   // TODO This is a workaround pending upstream Marker performance improvements.
   // \brief Performance trick. Skip depths below this z, so have memory to
@@ -269,9 +274,17 @@ ScienceSensorsSystem::ScienceSensorsSystem()
 }
 
 /////////////////////////////////////////////////
-void ScienceSensorsSystemPrivate::ReadData()
+void ScienceSensorsSystemPrivate::ReadData(
+    const ignition::gazebo::EntityComponentManager &_ecm)
 {
   IGN_PROFILE("ScienceSensorsSystemPrivate::ReadData");
+
+  if (!this->sphericalCoordinatesInitialized)
+  {
+    ignerr << "Trying to read data before spherical coordinates were "
+           << "initialized." << std::endl;
+    return;
+  }
 
   // Lock modifications to world origin spherical association until finish
   // reading and transforming data
@@ -437,8 +450,11 @@ void ScienceSensorsSystemPrivate::ReadData()
           continue;
         }
 
-        // TODO: Convert spherical coordinates to Cartesian
-        ignition::math::Vector3d cart = {latitude, longitude, -depth};
+        // Convert lat / lon / elevation to Cartesian ENU
+        auto cart = this->world.SphericalCoordinates(_ecm).value()
+            .PositionTransform({latitude, longitude, -depth},
+            ignition::math::SphericalCoordinates::SPHERICAL,
+            ignition::math::SphericalCoordinates::LOCAL2);
 
         // Performance trick. Scale down to see in view
         cart *= this->MINIATURE_SCALE;
@@ -483,8 +499,6 @@ void ScienceSensorsSystemPrivate::ReadData()
            << this->timeSpaceCoords[i]->size()
            << " spatial coordinates." << std::endl;
   }
-
-  this->initialized = true;
 }
 
 /////////////////////////////////////////////////
@@ -601,12 +615,6 @@ void ScienceSensorsSystem::Configure(
       ignition::msgs::Float_V>("/chlorophyll");
   this->dataPtr->salPub = this->dataPtr->node.Advertise<
       ignition::msgs::Float_V>("/salinity");
-
-  this->dataPtr->ReadData();
-  this->dataPtr->GenerateOctrees();
-
-  // Publish science data at the initial timestamp
-  this->dataPtr->PublishData();
 }
 
 /////////////////////////////////////////////////
@@ -635,161 +643,161 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   IGN_PROFILE_THREAD_NAME("ScienceSensorsSystem PostUpdate");
   IGN_PROFILE("ScienceSensorsSystem::PostUpdate");
 
-  // Only update and publish if data has been loaded and simulation is not
-  // paused.
-  if (this->dataPtr->initialized && !_info.paused)
+  this->RemoveSensorEntities(_ecm);
+
+  if (_info.paused)
+    return;
+
+  // Delay reading data and generating octrees until spherical coordinates are
+  // received.
+  if (!this->dataPtr->sphericalCoordinatesInitialized)
   {
-    double simTimeSeconds = std::chrono::duration_cast<std::chrono::seconds>(
-      _info.simTime).count();
-
-    // Update time index
-    if (this->dataPtr->multipleTimeSlices)
+    if (this->dataPtr->world.SphericalCoordinates(_ecm))
     {
-      // Only update if sim time exceeds the elapsed timestamp in data
-      if (!this->dataPtr->timestamps.empty() &&
-        simTimeSeconds >= this->dataPtr->timestamps[this->dataPtr->timeIdx])
-      {
-        // Increment for next point in time
-        this->dataPtr->timeIdx++;
+      this->dataPtr->sphericalCoordinatesInitialized = true;
 
-        // Publish science data at the next timestamp
-        this->dataPtr->PublishData();
-      }
-    }
-
-    // Publish every n iters so that VisualizePointCloud plugin gets it.
-    // Otherwise the initial publication in Configure() is not enough.
-    if (this->dataPtr->repeatPubTimes % 10000 == 0)
-    {
-      this->dataPtr->PublishData();
-      // Reset
-      this->dataPtr->repeatPubTimes = 1;
-    }
-    else
-    {
-      this->dataPtr->repeatPubTimes++;
-    }
-
-    // For each sensor, get its pose, search in the octree for the closest
-    // neighbors, and interpolate to get approximate data at this sensor pose.
-    for (auto &[entity, sensor] : this->entitySensorMap)
-    {
-      // Sensor pose in lat/lon, used to search for data by spatial coordinates
-      // TODO convert to Cartesian
-      auto sensorLatLon = ignition::gazebo::sphericalCoordinates(entity, _ecm);
-      /*
-      // TODO DEBUG what is the sensor attached to?? World? Not robot?
-      ignerr << "sensor lat long: "
-             << sensorLatLon.value().X() << ", " << sensorLatLon.value().Y()
-             << std::endl;
-      */
-      if (!sensorLatLon)
-      {
-        static std::unordered_set<ignition::gazebo::Entity> warnedEntities;
-        if (warnedEntities.find(entity) != warnedEntities.end())
-        {
-          ignwarn << "Failed to get spherical coordinates for sensor entity ["
-                  << entity << "]" << std::endl;
-          warnedEntities.insert(entity);
-        }
-        continue;
-      }
-      pcl::PointXYZ searchPoint(
-          sensorLatLon.value().X(),
-          sensorLatLon.value().Y(),
-          sensorLatLon.value().Z());
-
-      // kNN search (alternatives are voxel search and radius search. kNN
-      // search is good for variable resolution when the distance to the next
-      // neighbor is unknown).
-      int k = 8;
-
-      // Indices and distances of neighboring points in the search results
-      std::vector<int> spatialIdx;
-      std::vector<float> spatialSqrDist;
-
-      // Search in octree to find spatial index of science data
-      if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].getLeafCount()
-        > 0)
-      {
-        IGN_PROFILE("ScienceSensorsSystem::PostUpdate nearestKSearch");
-        if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].nearestKSearch(
-          searchPoint, k, spatialIdx, spatialSqrDist) <= 0)
-        {
-          ignwarn << "No data found near sensor location " << sensorLatLon.value()
-                  << std::endl;
-          continue;
-        }
-        // Debug output
-        /*
-        else
-        {
-          igndbg << "kNN search for sensor pose (" << sensorPose.X() << ", "
-                 << sensorPose.Y() << ", " << sensorPose.Z() << "):"
-                 << std::endl;
-
-          for (std::size_t i = 0; i < spatialIdx.size(); i++)
-          {
-            // Index the point cloud at the current time slice
-            pcl::PointXYZ nbrPt = (*(this->dataPtr->timeSpaceCoords[
-              this->dataPtr->timeIdx]))[spatialIdx[i]];
-
-            igndbg << "Neighbor at (" << nbrPt.x << ", " << nbrPt.y << ", "
-                   << nbrPt.z << "), squared distance " << spatialSqrDist[i]
-                   << " m" << std::endl;
-          }
-        }
-        */
-
-        // For the correct sensor, grab closest neighbors and interpolate
-        if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
-        {
-          float sal = this->dataPtr->InterpolateData(
-            this->dataPtr->salinityArr[this->dataPtr->timeIdx], spatialIdx,
-            spatialSqrDist);
-          casted->SetData(sal);
-        }
-        else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
-          sensor))
-        {
-          float temp = this->dataPtr->InterpolateData(
-            this->dataPtr->temperatureArr[this->dataPtr->timeIdx], spatialIdx,
-            spatialSqrDist);
-
-          ignition::math::Temperature tempC;
-          tempC.SetCelsius(temp);
-          casted->SetData(tempC);
-        }
-        else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
-          sensor))
-        {
-          float chlor = this->dataPtr->InterpolateData(
-            this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx], spatialIdx,
-            spatialSqrDist);
-          casted->SetData(chlor);
-        }
-        else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(sensor))
-        {
-          float eCurr = this->dataPtr->InterpolateData(
-            this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx], spatialIdx,
-            spatialSqrDist);
-          float nCurr = this->dataPtr->InterpolateData(
-            this->dataPtr->northCurrentArr[this->dataPtr->timeIdx], spatialIdx,
-            spatialSqrDist);
-
-          auto curr = ignition::math::Vector3d(eCurr, nCurr, 0.0);
-          casted->SetData(curr);
-        }
-        else
-        {
-          ignerr << "Unsupported sensor type, failed to set data" << std::endl;
-        }
-      }
-      sensor->Update(_info.simTime, false);
+      this->dataPtr->ReadData(_ecm);
+      this->dataPtr->GenerateOctrees();
     }
   }
 
-  this->RemoveSensorEntities(_ecm);
+  if (!this->dataPtr->sphericalCoordinatesInitialized)
+  {
+    ignwarn << "Science sensor data won't be published because spherical "
+            << "coordinates are unknown." << std::endl;
+    return;
+  }
+
+  double simTimeSeconds = std::chrono::duration_cast<std::chrono::seconds>(
+    _info.simTime).count();
+
+  // Update time index
+  if (this->dataPtr->multipleTimeSlices)
+  {
+    // Only update if sim time exceeds the elapsed timestamp in data
+    if (!this->dataPtr->timestamps.empty() &&
+      simTimeSeconds >= this->dataPtr->timestamps[this->dataPtr->timeIdx])
+    {
+      // Increment for next point in time
+      this->dataPtr->timeIdx++;
+
+      // Publish science data at the next timestamp
+      this->dataPtr->PublishData();
+    }
+  }
+
+  // Publish every n iters so that VisualizePointCloud plugin gets it.
+  // Otherwise the initial publication in Configure() is not enough.
+  if (this->dataPtr->repeatPubTimes % 10000 == 0)
+  {
+    this->dataPtr->PublishData();
+    // Reset
+    this->dataPtr->repeatPubTimes = 1;
+  }
+  else
+  {
+    this->dataPtr->repeatPubTimes++;
+  }
+
+  // For each sensor, get its pose, search in the octree for the closest
+  // neighbors, and interpolate to get approximate data at this sensor pose.
+  for (auto &[entity, sensor] : this->entitySensorMap)
+  {
+    // Sensor pose in ENU, used to search for data by spatial coordinates
+    auto sensorPosENU = ignition::gazebo::worldPose(entity, _ecm).Pos();
+    pcl::PointXYZ searchPoint(
+        sensorPosENU.X(),
+        sensorPosENU.Y(),
+        sensorPosENU.Z());
+
+    // kNN search (alternatives are voxel search and radius search. kNN
+    // search is good for variable resolution when the distance to the next
+    // neighbor is unknown).
+    int k = 8;
+
+    // Indices and distances of neighboring points in the search results
+    std::vector<int> spatialIdx;
+    std::vector<float> spatialSqrDist;
+
+    // Search in octree to find spatial index of science data
+    if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].getLeafCount()
+      > 0)
+    {
+      IGN_PROFILE("ScienceSensorsSystem::PostUpdate nearestKSearch");
+      if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].nearestKSearch(
+        searchPoint, k, spatialIdx, spatialSqrDist) <= 0)
+      {
+        ignwarn << "No data found near sensor location " << sensorPosENU
+                << std::endl;
+        continue;
+      }
+      // Debug output
+      /*
+      else
+      {
+        igndbg << "kNN search for sensor pose (" << sensorPose.X() << ", "
+               << sensorPose.Y() << ", " << sensorPose.Z() << "):"
+               << std::endl;
+
+        for (std::size_t i = 0; i < spatialIdx.size(); i++)
+        {
+          // Index the point cloud at the current time slice
+          pcl::PointXYZ nbrPt = (*(this->dataPtr->timeSpaceCoords[
+            this->dataPtr->timeIdx]))[spatialIdx[i]];
+
+          igndbg << "Neighbor at (" << nbrPt.x << ", " << nbrPt.y << ", "
+                 << nbrPt.z << "), squared distance " << spatialSqrDist[i]
+                 << " m" << std::endl;
+        }
+      }
+      */
+
+      // For the correct sensor, grab closest neighbors and interpolate
+      if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
+      {
+        float sal = this->dataPtr->InterpolateData(
+          this->dataPtr->salinityArr[this->dataPtr->timeIdx], spatialIdx,
+          spatialSqrDist);
+        casted->SetData(sal);
+      }
+      else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
+        sensor))
+      {
+        float temp = this->dataPtr->InterpolateData(
+          this->dataPtr->temperatureArr[this->dataPtr->timeIdx], spatialIdx,
+          spatialSqrDist);
+
+        ignition::math::Temperature tempC;
+        tempC.SetCelsius(temp);
+        casted->SetData(tempC);
+      }
+      else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
+        sensor))
+      {
+        float chlor = this->dataPtr->InterpolateData(
+          this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx], spatialIdx,
+          spatialSqrDist);
+        casted->SetData(chlor);
+      }
+      else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(sensor))
+      {
+        float eCurr = this->dataPtr->InterpolateData(
+          this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx], spatialIdx,
+          spatialSqrDist);
+        float nCurr = this->dataPtr->InterpolateData(
+          this->dataPtr->northCurrentArr[this->dataPtr->timeIdx], spatialIdx,
+          spatialSqrDist);
+
+        auto curr = ignition::math::Vector3d(eCurr, nCurr, 0.0);
+        casted->SetData(curr);
+      }
+      else
+      {
+        ignerr << "Unsupported sensor type, failed to set data" << std::endl;
+      }
+    }
+    sensor->Update(_info.simTime, false);
+  }
 }
 
 //////////////////////////////////////////////////
