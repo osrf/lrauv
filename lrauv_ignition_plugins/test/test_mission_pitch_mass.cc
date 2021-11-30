@@ -75,38 +75,49 @@ TEST_F(LrauvTestFixture, PitchMass)
   int maxIterations{28000};
   ASSERT_LT(maxIterations, this->tethysPoses.size());
 
-  // * Y, roll and yaw are kept pretty stable close to zero with low tolerances
-  // * The pitch target is 20 deg, but there's a lot of oscillation, so we need
-  //   the high tolerance
-  // * X and Y are meant to stay close to zero, but the vehicle goes forward
-  //   (-X, +Z) slowly. That could be caused by the pitch oscillation?
-  this->CheckRange(2000,  {-0.01, 0.00, -0.06, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(4000,  {-0.17, 0.00, -0.01, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(6000,  {-0.51, 0.00,  0.12, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(8000,  {-0.87, 0.00,  0.22, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(10000, {-1.21, 0.00,  0.34, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(12000, {-1.55, 0.00,  0.50, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(14000, {-1.90, 0.00,  0.63, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(16000, {-2.25, 0.00,  0.73, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(18000, {-2.60, 0.00,  0.86, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(20000, {-2.93, 0.00,  1.02, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(22000, {-3.29, 0.00,  1.13, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(24000, {-3.64, 0.00,  1.24, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(26000, {-3.97, 0.00,  1.39, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(28000, {-4.32, 0.00,  1.53, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  double totalPitchChange = 0, prevPitch = 0;
+  bool firstPitch = false, reachedTarget = false;
+
+  // Vehicle should have a max pitch of 20 degrees
+  for(auto pose: this->tethysPoses)
+  {
+    // Pitch 20 degrees
+    ASSERT_LT(pose.Rot().Euler().Y(), IGN_DTOR(21));
+    ASSERT_GT(pose.Rot().Euler().Y(), IGN_DTOR(-1));
+
+    // No roll or yaw
+    ASSERT_NEAR(pose.Rot().Euler().X(), IGN_DTOR(0), 1e-3);
+    ASSERT_NEAR(pose.Rot().Euler().Z(), IGN_DTOR(0), 1e-3);
+
+    // Check position holds
+    // TODO(arjo129): Tighten bounds after ignitionrobotics/ign-gazebo#1211 is
+    // merged.
+    EXPECT_NEAR(pose.Pos().X(), IGN_DTOR(0), 1);
+    EXPECT_NEAR(pose.Pos().Y(), IGN_DTOR(0), 1);
+    EXPECT_NEAR(pose.Pos().Z(), IGN_DTOR(0), 1);
+
+    // Used later for oscillation check.
+    if (firstPitch = false)
+    {
+      totalPitchChange += std::fabs(pose.Rot().Euler().Y() - prevPitch);
+    }
+
+    // Check if we cross the 20 degree mark
+    if (prevPitch <= IGN_DTOR(20) && pose.Rot().Euler().Y() >= IGN_DTOR(20))
+    {
+      reachedTarget = true;
+    }
+
+    prevPitch = pose.Rot().Euler().Y();
+    firstPitch = true;
+  }
+
+  // Check for oscillation by summing over abs delta in pitch
+  // Essentially \Sigma abs(f'(x)) < C. In this case C should be near 2*20
+  // degrees as the vehicle first pitches down and then comes back up.
+  ASSERT_LE(totalPitchChange, IGN_DTOR(21) * 2);
+
+  // Make sure the vehicle actually pitched to 20 degrees.
+  ASSERT_TRUE(reachedTarget);
 }
 
