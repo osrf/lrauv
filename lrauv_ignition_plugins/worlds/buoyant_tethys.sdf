@@ -14,18 +14,6 @@
       <background>0.0 0.7 0.8</background>
     </scene>
 
-    <!--
-      Set the coordinates for the world origin to 0 / 0
-    -->
-    <spherical_coordinates>
-      <surface_model>EARTH_WGS84</surface_model>
-      <world_frame_orientation>ENU</world_frame_orientation>
-      <latitude_deg>0</latitude_deg>
-      <longitude_deg>0</longitude_deg>
-      <elevation>0</elevation>
-      <heading_deg>0</heading_deg>
-    </spherical_coordinates>
-
     <physics name="1ms" type="dart">
       <max_step_size>0.02</max_step_size>
       <real_time_factor>0</real_time_factor>
@@ -62,11 +50,32 @@
       name="tethys::TimeAnalysisPlugin">
     </plugin-->
 
+    <!-- Spawn by default in a location with science data in csv -->
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+
+      <!-- For 2003080103_mb_l3_las.csv -->
+      <latitude_deg>35.5999984741211</latitude_deg>
+      <longitude_deg>-121.779998779297</longitude_deg>
+
+      <!-- For 2003080103_mb_l3_las_1x1km.csv -->
+      <!--latitude_deg>36.8024781413352</latitude_deg>
+      <longitude_deg>-121.829647676843</longitude_deg-->
+
+      <!-- For simple_test.csv -->
+      <latitude_deg>0</latitude_deg>
+      <longitude_deg>0</longitude_deg>
+
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
     <plugin
       filename="ScienceSensorsSystem"
       name="tethys::ScienceSensorsSystem">
-      <data_path>2003080103_mb_l3_las.csv</data_path>
-      <!--data_path>simple_test.csv</data_path-->
+      <!--data_path>2003080103_mb_l3_las.csv</data_path-->
+      <!--data_path>2003080103_mb_l3_las_1x1km.csv</data_path-->
+      <data_path>simple_test.csv</data_path>
     </plugin>
 
     <gui fullscreen="0">
