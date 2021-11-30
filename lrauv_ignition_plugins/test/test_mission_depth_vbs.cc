@@ -88,7 +88,7 @@ TEST_F(LrauvTestFixture, DepthVBS)
   for (int i = 1; i <= this->tethysPoses.size(); i ++)
   {
     // Vehicle should descend
-    EXPECT_LE(tethysPoses[i-1].Pos().Z(), tethysPoses[i].Pos().Z());
+    EXPECT_GE(tethysPoses[i-1].Pos().Z(), tethysPoses[i].Pos().Z());
 
     // Vehicle roll should be constant
     EXPECT_NEAR(tethysPoses[i].Rot().Euler().X(), 0, 1e-2);
