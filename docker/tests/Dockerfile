@@ -72,6 +72,9 @@ COPY . src/lrauv
 # Build image
 RUN [ "/bin/bash" , "-c" , "colcon build --cmake-args='-DBUILD_TESTING=true'" ]
 
+COPY docker/entrypoint.bash /
+# setup ignition environment
+ENTRYPOINT ["/entrypoint.bash"]
+
 # Run tests
-RUN [ "/bin/bash" , "-c" , ". ~/lrauv_ws/install/setup.sh; colcon test --event-handlers console_direct+" ]
-RUN [ "/bin/bash" , "-c" , ". ~/lrauv_ws/install/setup.sh; colcon test-result" ]
+CMD [ "/bin/bash" , "-c" , "colcon test --event-handlers console_direct+; colcon test-result" ]
