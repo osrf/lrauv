@@ -35,6 +35,7 @@ RUN apt-get update \
         build-essential \
         curl \
         gnupg2 \
+        libpcl-dev \
         lsb-release \
         python3-numpy \
         tzdata \
@@ -53,12 +54,6 @@ RUN apt-get -qq update && apt-get -q -y install \
   && rm -rf /var/lib/apt/lists/* \
   && apt-get -qq clean && apt-get dist-upgrade -y
 
-# Install PCL
-RUN apt-get update \
-  && apt-get install -y \
-        libpcl-dev \
-  && rm -rf /var/lib/apt/lists/* \
-  && apt-get -qq clean
 
 USER $USERNAME
 
