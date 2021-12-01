@@ -78,5 +78,11 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
     ASSERT_LT(pose.Pos().Z(), 0.1);
     ASSERT_GT(pose.Pos().Z(), 11.5);
 
+    ASSERT_NEAR(pose.Pos().X(), 0, 1e-1);
+    ASSERT_NEAR(pose.Pos().Y(), 0, 1e-1);
+
+    ASSERT_NEAR(pose.Rot().Euler().X(), 0, 1e-1);
+    ASSERT_NEAR(pose.Rot().Euler().Y(), 0, 1e-1);
+    ASSERT_NEAR(pose.Rot().Euler().Z(), 0, 1e-1);
   }
 }
