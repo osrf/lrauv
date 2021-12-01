@@ -26,7 +26,9 @@
 
 #include <ignition/plugin/Register.hh>
 
+#include <ignition/rendering/AxisVisual.hh>
 #include <ignition/rendering/Camera.hh>
+#include <ignition/rendering/Text.hh>
 #include <ignition/rendering/RenderingIface.hh>
 #include <ignition/rendering/Scene.hh>
 
@@ -53,6 +55,15 @@ namespace tethys
 
     /// \brief Pointer to the 3D scene
     public: ignition::rendering::ScenePtr scene{nullptr};
+
+    /// \brief ENU visual
+    public: ignition::rendering::VisualPtr enuVis{nullptr};
+
+    /// \brief NED visual
+    public: ignition::rendering::VisualPtr nedVis{nullptr};
+
+    /// \brief FSK visual
+    public: ignition::rendering::VisualPtr fskVis{nullptr};
   };
 }
 
@@ -127,11 +138,107 @@ void ReferenceAxisPrivate::OnRender()
 {
   this->Initialize();
 
-  // TODO(chapulina)
-  // Create axis visual
-  // Add movable text according to axis being displayed
-  // Set pose to be in front of camera (option to fix to world)
-  // Set orientation to match requested world orientation (ENU, NED, etc)
+  if (!this->camera)
+    return;
+
+  // ENU
+  if (nullptr == this->enuVis)
+  {
+    this->enuVis = this->scene->CreateAxisVisual();
+    this->scene->RootVisual()->AddChild(this->enuVis);
+
+    // Ogre2 doesn't support text yet
+    // https://github.com/ignitionrobotics/ign-rendering/issues/487
+    auto textGeom = this->scene->CreateText();
+    if (nullptr != textGeom)
+    {
+      textGeom->SetFontName("Liberation Sans");
+      textGeom->SetTextString("ENU");
+      textGeom->SetShowOnTop(true);
+      textGeom->SetCharHeight(0.4);
+      textGeom->SetTextAlignment(ignition::rendering::TextHorizontalAlign::RIGHT,
+                                 ignition::rendering::TextVerticalAlign::BOTTOM);
+
+      auto textVis = this->scene->CreateVisual();
+      textVis->AddGeometry(textGeom);
+      textVis->SetLocalPosition(0.2, 0.2, 0.5);
+
+      this->enuVis->AddChild(textVis);
+    }
+  }
+
+  // Set pose to be in front of camera
+  // TODO(chapulina) Fix jittery motion
+  // TODO(chapulina) Calculate position using camera's image size and fov
+  auto enuPlacement = ignition::math::Pose3d(5.0, 2.0, 2.0, 0.0, 0.0, 0.0);
+  auto enuPos = (this->camera->WorldPose() * enuPlacement).Pos();
+  this->enuVis->SetLocalPosition(enuPos);
+
+  // NED
+  if (nullptr == this->nedVis)
+  {
+    this->nedVis = this->scene->CreateAxisVisual();
+    this->scene->RootVisual()->AddChild(this->nedVis);
+    this->nedVis->SetLocalRotation(IGN_PI, 0, IGN_PI * 0.5);
+
+    // Ogre2 doesn't support text yet
+    auto textGeom = this->scene->CreateText();
+    if (nullptr != textGeom)
+    {
+      textGeom->SetFontName("Liberation Sans");
+      textGeom->SetTextString("NED");
+      textGeom->SetShowOnTop(true);
+      textGeom->SetCharHeight(0.4);
+      textGeom->SetTextAlignment(ignition::rendering::TextHorizontalAlign::LEFT,
+                                 ignition::rendering::TextVerticalAlign::TOP);
+
+      auto textVis = this->scene->CreateVisual();
+      textVis->AddGeometry(textGeom);
+      textVis->SetLocalPosition(0.2, 0.2, 0.5);
+
+      this->nedVis->AddChild(textVis);
+    }
+  }
+
+  // Set pose to be in front of camera
+  auto nedPlacement = ignition::math::Pose3d(5.0, -2.0, 2.5, 0.0, 0.0, 0.0);
+  auto nedPos = (this->camera->WorldPose() * nedPlacement).Pos();
+  this->nedVis->SetLocalPosition(nedPos);
+
+  // FSK
+  if (nullptr == this->fskVis)
+  {
+    // TODO(chapulina) Support other names
+    auto vehicleVis = this->scene->VisualByName("tethys");
+    if (nullptr == vehicleVis)
+    {
+      return;
+    }
+
+    this->fskVis = this->scene->CreateAxisVisual();
+    vehicleVis->AddChild(this->fskVis);
+    // TODO(chapulina) This rotation won't be needed if we update the model
+    // https://github.com/osrf/lrauv/issues/80
+    this->fskVis->SetLocalRotation(0, IGN_PI, 0);
+
+    // Ogre2 doesn't support text yet
+    auto textGeom = this->scene->CreateText();
+    if (nullptr != textGeom)
+    {
+      textGeom->SetFontName("Liberation Sans");
+      textGeom->SetTextString("FSK");
+      textGeom->SetShowOnTop(true);
+      textGeom->SetCharHeight(0.4);
+      textGeom->SetTextAlignment(ignition::rendering::TextHorizontalAlign::LEFT,
+                                 ignition::rendering::TextVerticalAlign::TOP);
+
+      auto textVis = this->scene->CreateVisual();
+      textVis->AddGeometry(textGeom);
+      textVis->SetLocalPosition(0.2, 0.2, 0.5);
+
+      this->fskVis->AddChild(textVis);
+    }
+  }
 }
 
 // Register this plugin
