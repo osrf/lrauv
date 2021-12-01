@@ -80,9 +80,11 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
     // FIXME(arjo): This should dive to a max of 10m I think
     EXPECT_GT(pose.Pos().Z(), -21.5);
 
+    // Vehicle should exhibit minimal lateral translation.
     EXPECT_NEAR(pose.Pos().X(), 0, 10); // FIXME(arjo): IMPORTANT!!
     EXPECT_NEAR(pose.Pos().Y(), 0, 1e-1);
 
+    // Vehicle should hold a fixed pitch
     // FIXME(arjo): Shouldnt be pitching this much
     EXPECT_NEAR(pose.Rot().Euler().X(), 0, 1e-1);
     EXPECT_NEAR(pose.Rot().Euler().Y(), 0, 4e-1);
@@ -101,9 +103,10 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
     prev_z = pose.Pos().Z();
     firstSample = false;
   }
+  // vehicle should have reached the desired target.
   EXPECT_TRUE(targetReached);
 
-  //vehicle should have reached
+  // vehicle should not oscillate when at target.
   // FIXME(arjo): Change this value. It should be 10.
   EXPECT_LT(totalDepthChange, 50);
 }
