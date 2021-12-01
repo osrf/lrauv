@@ -251,6 +251,7 @@ if(BUILD_TESTING)
     test_controller
     test_drop_weight
     test_elevator
+    test_hydrodynamics_equilibrium_velocity
     test_mass_shifter
     test_mission_depth_vbs
     test_mission_pitch_mass
