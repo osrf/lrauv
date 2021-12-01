@@ -66,7 +66,7 @@ This package comes with an empty example world. To run this example world simply
 source the colcon workspace and run:
 ```
 . install/setup.bash
-ign launch lrauv_world.ign
+ign gazebo buoyant_tethys.sdf
 ```
 
 Send example commands to move some joints:
