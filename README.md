@@ -52,13 +52,21 @@ Clone this repository then run
 colcon build
 ```
 
+Developers may want to build tests. Note that this would take longer:
+```
+colcon build --cmake-args "-DBUILD_TESTING=ON"
+```
+
+> You can pass `--cmake-args ' -DENABLE_PROFILER=1'` to use the profiler.
+> See more on [this tutorial](https://ignitionrobotics.org/api/common/4.4/profiler.html)
+
 ## To test simulation in Ignition standalone (without MBARI integration)
 
 This package comes with an empty example world. To run this example world simply
 source the colcon workspace and run:
 ```
 . install/setup.bash
-ign launch lrauv_world.ign
+ign gazebo buoyant_tethys.sdf
 ```
 
 Send example commands to move some joints:
@@ -131,7 +139,7 @@ Alternatively, they can be changed prior to compilation in the world SDF under
 
 Launch the Ignition simulation:
 ```
-ign launch lrauv_world.ign
+ign gazebo buoyant_tethys.sdf
 ```
 For verbose debug output, add `--verbose 4`.
 
