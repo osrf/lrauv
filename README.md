@@ -139,7 +139,7 @@ Alternatively, they can be changed prior to compilation in the world SDF under
 
 Launch the Ignition simulation:
 ```
-ign launch lrauv_world.ign
+ign gazebo buoyant_tethys.sdf
 ```
 For verbose debug output, add `--verbose 4`.
 
