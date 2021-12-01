@@ -33,7 +33,7 @@ import os.path as path
 # TODO(arjo): Implement inertia. Need to implement Inertial<T>::operator-(const Inertial<T>&) first
 total_mass = 147.5671 # Total mass of the vehicle
 buoyancy_z_offset = 0.007 # Buoyancy offset
-fluid_density = 1000 #fluid density
+fluid_density = 1025 #fluid density
 
 def read_pose(element):
     """ Read pose element."""
