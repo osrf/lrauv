@@ -27,59 +27,181 @@ import QtQuick.Controls.Material 2.1
 import QtQuick.Layouts 1.3
 import "qrc:/qml"
 
-GridLayout {
-  columns: 6
-  columnSpacing: 10
+ColumnLayout {
+  spacing: 10
   Layout.minimumWidth: 350
-  Layout.minimumHeight: 200
+  Layout.minimumHeight: 300
   anchors.fill: parent
   anchors.leftMargin: 10
   anchors.rightMargin: 10
 
-  // TODO Use switch
-  CheckBox {
-    Layout.alignment: Qt.AlignHCenter
-    id: displayVisual
-    Layout.columnSpan: 6
+  RowLayout {
+    spacing: 10
     Layout.fillWidth: true
-    text: qsTr("Show")
-    checked: true
-    onClicked: {
-      VisualizePointCloud.Show(checked)
+
+    Switch {
+      Layout.alignment: Qt.AlignHCenter
+      id: displayVisual
+      Layout.columnSpan: 5
+      Layout.fillWidth: true
+      text: qsTr("Show")
+      checked: true
+      onToggled: {
+        VisualizePointCloud.Show(checked)
+      }
+    }
+
+    RoundButton {
+      Layout.columnSpan: 1
+      text: "\u21bb"
+      Material.background: Material.primary
+      onClicked: {
+        VisualizePointCloud.OnRefresh();
+        pcCombo.currentIndex = 0
+        floatCombo.currentIndex = 0
+      }
+      ToolTip.visible: hovered
+      ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+      ToolTip.text: qsTr("Refresh list of topics publishing point clouds and float vectors")
     }
   }
 
-  RoundButton {
-    Layout.columnSpan: 1
-    text: "\u21bb"
-    Material.background: Material.primary
-    onClicked: {
-      combo.currentIndex = 0
-      VisualizePointCloud.OnRefresh();
-    }
-    ToolTip.visible: hovered
-    ToolTip.delay: tooltipDelay
-    ToolTip.timeout: tooltipTimeout
-    ToolTip.text: qsTr("Refresh list of topics publishing point clouds")
-  }
-
-  ComboBox {
-    Layout.columnSpan: 5
-    id: combo
+  GridLayout {
+    columns: 3
+    columnSpacing: 10
     Layout.fillWidth: true
-    model: VisualizePointCloud.topicList
-    currentIndex: 0
-    onCurrentIndexChanged: {
-      if (currentIndex < 0)
-        return;
-      VisualizePointCloud.OnTopic(textAt(currentIndex));
+
+    Label {
+      Layout.columnSpan: 1
+      text: "Point cloud"
     }
-    ToolTip.visible: hovered
-    ToolTip.delay: tooltipDelay
-    ToolTip.timeout: tooltipTimeout
-    ToolTip.text: qsTr("Ignition transport topics publishing PointCloudPacked messages")
+
+    ComboBox {
+      Layout.columnSpan: 2
+      id: pcCombo
+      Layout.fillWidth: true
+      model: VisualizePointCloud.pointCloudTopicList
+      currentIndex: 0
+      onCurrentIndexChanged: {
+        if (currentIndex < 0)
+          return;
+        VisualizePointCloud.OnPointCloudTopic(textAt(currentIndex));
+      }
+      ToolTip.visible: hovered
+      ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+      ToolTip.text: qsTr("Ignition transport topics publishing PointCloudPacked messages")
+    }
+
+    Label {
+      Layout.columnSpan: 1
+      text: "Float vector"
+    }
+
+    ComboBox {
+      Layout.columnSpan: 2
+      id: floatCombo
+      Layout.fillWidth: true
+      model: VisualizePointCloud.floatVTopicList
+      currentIndex: 0
+      onCurrentIndexChanged: {
+        if (currentIndex < 0)
+          return;
+        VisualizePointCloud.OnFloatVTopic(textAt(currentIndex));
+      }
+      ToolTip.visible: hovered
+      ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+      ToolTip.text: qsTr("Ignition transport topics publishing FloatV messages")
+    }
   }
 
+  RowLayout {
+    spacing: 10
+    Layout.fillWidth: true
+
+    Label {
+      Layout.columnSpan: 1
+      text: "Min"
+    }
+
+    Label {
+      Layout.columnSpan: 1
+      Layout.maximumWidth: 50
+      text: VisualizePointCloud.minFloatV.toFixed(2)
+      elide: Text.ElideRight
+    }
+
+    Button {
+      Layout.columnSpan: 1
+      id: minColorButton
+      Layout.fillWidth: true
+      ToolTip.visible: hovered
+      ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+      ToolTip.text: qsTr("Color for minimum value")
+      onClicked: minColorDialog.open()
+      background: Rectangle {
+        implicitWidth: 40
+        implicitHeight: 40
+        radius: 5
+        border.color: VisualizePointCloud.minColor
+        border.width: 2
+        color: VisualizePointCloud.minColor
+      }
+      ColorDialog {
+        id: minColorDialog
+        title: "Choose a color for the minimum value"
+        visible: false
+        onAccepted: {
+          VisualizePointCloud.SetMinColor(minColorDialog.color)
+          minColorDialog.close()
+        }
+        onRejected: {
+          minColorDialog.close()
+        }
+      }
+    }
+
+    Button {
+      Layout.columnSpan: 1
+      id: maxColorButton
+      Layout.fillWidth: true
+      ToolTip.visible: hovered
+      ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+      ToolTip.text: qsTr("Color for maximum value")
+      onClicked: maxColorDialog.open()
+      background: Rectangle {
+        implicitWidth: 40
+        implicitHeight: 40
+        radius: 5
+        border.color: VisualizePointCloud.maxColor
+        border.width: 2
+        color: VisualizePointCloud.maxColor
+      }
+      ColorDialog {
+        id: maxColorDialog
+        title: "Choose a color for the maximum value"
+        visible: false
+        onAccepted: {
+          VisualizePointCloud.SetMaxColor(maxColorDialog.color)
+          maxColorDialog.close()
+        }
+        onRejected: {
+          maxColorDialog.close()
+        }
+      }
+    }
+
+    Label {
+      Layout.columnSpan: 1
+      Layout.maximumWidth: 50
+      text: VisualizePointCloud.maxFloatV.toFixed(2)
+      elide: Text.ElideRight
+    }
+
+    Label {
+      Layout.columnSpan: 1
+      text: "Max"
+    }
+  }
 
   Item {
     Layout.columnSpan: 6
