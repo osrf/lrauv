@@ -76,6 +76,7 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
   // Pitch should be held relatively constant.
   for (const auto pose: this->tethysPoses)
   {
+    // Vehicle should dive down.
     EXPECT_LT(pose.Pos().Z(), 0.1);
     // FIXME(arjo): This should dive to a max of 10m I think
     EXPECT_GT(pose.Pos().Z(), -21.5);
