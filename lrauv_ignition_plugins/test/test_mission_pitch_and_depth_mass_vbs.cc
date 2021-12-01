@@ -70,7 +70,8 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
   int maxIterations{28000};
   ASSERT_LT(maxIterations, this->tethysPoses.size());
 
-  bool targetReached = false;
+  bool targetReached = false, firstSample = true;
+  double prev_z;
   // Vehicle should sink to 10 meters and hold there
   // Pitch should be held relatively constant.
   for (const auto pose: this->tethysPose)
@@ -84,5 +85,7 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
     ASSERT_NEAR(pose.Rot().Euler().X(), 0, 1e-1);
     ASSERT_NEAR(pose.Rot().Euler().Y(), 0, 1e-1);
     ASSERT_NEAR(pose.Rot().Euler().Z(), 0, 1e-1);
+
+    prev_z = pose.Pos().Z();
   }
 }
