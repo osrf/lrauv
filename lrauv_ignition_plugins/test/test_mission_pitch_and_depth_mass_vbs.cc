@@ -77,7 +77,7 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
   for (const auto pose: this->tethysPoses)
   {
     EXPECT_LT(pose.Pos().Z(), 0.1);
-    // FIXME(arjo) 
+    // FIXME(arjo): This should dive to a max of 10m I think
     EXPECT_GT(pose.Pos().Z(), -21.5);
 
     EXPECT_NEAR(pose.Pos().X(), 0, 10); // FIXME(arjo): IMPORTANT!!
