@@ -157,7 +157,7 @@ TEST(HydrodynamicsTest, DampForwardThrust)
           velocitiesV1.push_back(velocity.value());
           posesV1.push_back(pose.value());
         }
-        
+
         {
           vehicle2 = world.ModelByName(_ecm, "tethys2");
           ASSERT_NE(gazebo::kNullEntity, vehicle2);
@@ -171,7 +171,6 @@ TEST(HydrodynamicsTest, DampForwardThrust)
           velocitiesV2.push_back(velocity.value());
           posesV2.push_back(pose.value());
         }
-     
 
         {
           vehicle3 = world.ModelByName(_ecm, "tethys3");
@@ -186,7 +185,6 @@ TEST(HydrodynamicsTest, DampForwardThrust)
           velocitiesV3.push_back(velocity.value());
           posesV3.push_back(pose.value());
         }
-  
 
         {
           vehicle4 = world.ModelByName(_ecm, "tethys4");
@@ -229,7 +227,7 @@ TEST(HydrodynamicsTest, DampForwardThrust)
     velocitiesV1.rbegin()->Length(), velocitiesV3.rbegin()->Length(), 1e-3);
   EXPECT_NEAR(
     velocitiesV1.rbegin()->Length(), velocitiesV4.rbegin()->Length(), 1e-3);
-  
+
   // This value seems a little off. Possibly due to the sinking motion
   EXPECT_NEAR(
     velocitiesV1.rbegin()->Length(), 1.01, 1e-1);
@@ -245,7 +243,7 @@ TEST(HydrodynamicsTest, DampForwardThrust)
   checkDamping(velocitiesV3);
   checkDamping(velocitiesV4);
 
-  // Rotations should not have changed much throuh the course of the test
+  // Rotations should not have changed much through the course of the test
   EXPECT_EQ(posesV1.rbegin()->Rot(), posesV1.begin()->Rot());
   EXPECT_EQ(posesV2.rbegin()->Rot(), posesV2.begin()->Rot());
   EXPECT_EQ(posesV3.rbegin()->Rot(), posesV3.begin()->Rot());
