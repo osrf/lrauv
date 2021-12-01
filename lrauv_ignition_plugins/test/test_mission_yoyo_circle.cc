@@ -100,7 +100,7 @@ TEST_F(LrauvTestFixture, YoYoCircle)
     EXPECT_LT(-22.5, pose.Pos().Z()) << i;
     if (i > 2000)
     {
-      EXPECT_GT(0.23, pose.Pos().Z()) << i;
+      EXPECT_GT(0.3, pose.Pos().Z()) << i;
     }
 
     // Pitch is between -20 and 20 deg
