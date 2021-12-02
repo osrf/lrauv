@@ -29,8 +29,6 @@ set(IGN_GUI_VER ${ignition-gui6_VERSION_MAJOR})
 find_package(ignition-sensors6 REQUIRED)
 set(IGN_SENSORS_VER ${ignition-sensors6_VERSION_MAJOR})
 
-find_package(ignition-launch5 REQUIRED)
-
 find_package(ignition-msgs8 REQUIRED)
 set(IGN_MSGS_VER ${ignition-msgs8_VERSION_MAJOR})
 
@@ -309,7 +307,6 @@ endif()
 install(
   DIRECTORY
     data
-    launch
     models
     worlds
     ${CMAKE_CURRENT_BINARY_DIR}/hooks
