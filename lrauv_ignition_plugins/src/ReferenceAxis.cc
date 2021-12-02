@@ -45,7 +45,7 @@ namespace tethys
   class ReferenceAxisPrivate
   {
     /// \brief Perform rendering actions in the render thread
-    public: void OnRender();
+    public: void OnPreRender();
 
     /// \brief Initialize rendering
     public: void Initialize();
@@ -94,9 +94,9 @@ void ReferenceAxis::LoadConfig(const tinyxml2::XMLElement *)
 /////////////////////////////////////////////////
 bool ReferenceAxis::eventFilter(QObject *_obj, QEvent *_event)
 {
-  if (_event->type() == ignition::gui::events::Render::kType)
+  if (_event->type() == ignition::gui::events::PreRender::kType)
   {
-    this->dataPtr->OnRender();
+    this->dataPtr->OnPreRender();
   }
   // Standard event processing
   return QObject::eventFilter(_obj, _event);
@@ -134,7 +134,7 @@ void ReferenceAxisPrivate::Initialize()
 }
 
 /////////////////////////////////////////////////
-void ReferenceAxisPrivate::OnRender()
+void ReferenceAxisPrivate::OnPreRender()
 {
   this->Initialize();
 
