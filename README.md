@@ -25,8 +25,8 @@ convenience.
 Make sure you have a recent version of [Docker](https://docs.docker.com/) and
 [nvidia-docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
 installed.
-And [rocker](https://github.com/osrf/rocker) available as debian package `python3-rocker` with the ROS packages.
- Next to get started simply run the following command.
+And [rocker](https://github.com/osrf/rocker) installed.
+
 ```
 docker/build_and_run_docker.sh
 ```
