@@ -189,19 +189,6 @@
           <property key="showTitleBar" type="bool">false</property>
         </ignition-gui>
       </plugin>
-      <plugin filename="Spawn" name="Spawn Entities">
-        <ignition-gui>
-          <anchors target="Select entities">
-            <line own="right" target="right"/>
-            <line own="top" target="top"/>
-          </anchors>
-          <property key="resizable" type="bool">false</property>
-          <property key="width" type="double">5</property>
-          <property key="height" type="double">5</property>
-          <property key="state" type="string">floating</property>
-          <property key="showTitleBar" type="bool">false</property>
-        </ignition-gui>
-      </plugin>
 
       <!-- World control -->
       <plugin filename="WorldControl" name="World control">
@@ -329,20 +316,6 @@
     <include>
       <pose>0 0 0 0 0 0</pose>
       <uri>tethys_equipped</uri>
-    </include>
-
-    <include>
-      <name>ENU</name>
-      <static>true</static>
-      <pose>5 5 0   0 0 0</pose>
-      <uri>axes</uri>
-    </include>
-
-    <include>
-      <name>NED</name>
-      <static>true</static>
-      <pose degrees="true">0 0 0   180 0 90</pose>
-      <uri>axes</uri>
     </include>
 
   </world>

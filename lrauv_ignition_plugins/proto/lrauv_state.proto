@@ -103,13 +103,11 @@ message LRAUVState
 
   ignition.msgs.Vector3d pos_     = 19;  // Vehicle's offset position in "world frame"
                                          // (see above) with respect to its initial
-                                         // position. The vehicle starts facing West.
-                                         // Unit: meters
+                                         // position. Unit: meters
 
   ignition.msgs.Vector3d posRPH_  = 20;  // Vehicle's offset orientation in "world frame"
                                          // (see above) with respect to its initial
-                                         // orientation. The vehicle starts facing West.
-                                         // Unit: rad
+                                         // orientation. Unit: rad
 
   ignition.msgs.Vector3d posDot_  = 21;  // Vehicle's instantaneous linear velocity in
                                          // "world frame" (see above). Units: m / s
