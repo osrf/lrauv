@@ -30,6 +30,7 @@
 #include "VisualizePointCloud.hh"
 
 #include <ignition/common/Console.hh>
+#include <ignition/common/Profiler.hh>
 
 #include <ignition/plugin/Register.hh>
 
@@ -80,39 +81,8 @@ namespace tethys
     public: const int MAX_PTS_VIS = 1000;
 
     /// \brief Performance trick. Render only every other n. Increase to render
-    /// fewer markers (faster performance).
-    public: int renderEvery = 20;
-
-    /// \brief Performance trick. Skip depths below this z, so have memory to
-    /// visualize higher layers at higher resolution.
-    /// For less confusion, match the parameter in ScienceSensorsSystem.cc.
-    public: const float SKIP_Z_BELOW = -40;
-
-    /// \brief Scale down to see in view to skip orbit tool limits
-    /// For less confusion, match the parameter in ScienceSensorsSystem.cc.
-    // TODO This is a workaround pending upstream orbit tool improvements
-    // For 2003080103_mb_l3_las_1x1km.csv
-    //public: const float MINIATURE_SCALE = 0.01;
-    // For 2003080103_mb_l3_las.csv
-    public: const float MINIATURE_SCALE = 0.0001;
-
-    /// \brief Performance trick. Factor to multiply in calculating Marker sizes
-    public: float dimFactor = 0.03;
-
-    /// \brief Parameter to calculate Marker size in x.
-    /// Performance trick. Hardcode resolution to make markers resemble voxels.
-    // For 2003080103_mb_l3_las_1x1km.csv
-    //public: const float RES_X = 15 * MINIATURE_SCALE;
-    //public: const float RES_Y = 22 * MINIATURE_SCALE;
-    //public: const float RES_Z = 5 * MINIATURE_SCALE;
-    // For 2003080103_mb_l3_las.csv
-    public: const float RES_X = 15;
-
-    /// \brief Parameter to calculate Marker size in y.
-    public: const float RES_Y = 22;
-
-    /// \brief Parameter to calculate Marker size in z.
-    public: const float RES_Z = 10;
+    /// fewer markers (faster performance). Recalulated in function.
+    public: int renderEvery = 1;
 
     /// \brief Minimum value in latest float vector
     public: float minFloatV{std::numeric_limits<float>::max()};
@@ -364,6 +334,8 @@ void VisualizePointCloud::OnFloatVService(
 //////////////////////////////////////////////////
 void VisualizePointCloud::PublishMarkers()
 {
+  IGN_PROFILE("VisualizePointCloud::PublishMarkers");
+
   if (!this->dataPtr->showing)
     return;
 
@@ -375,13 +347,20 @@ void VisualizePointCloud::PublishMarkers()
     return;
   }
 
+  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
+
   // Used to calculate cap of number of points to visualize, to save memory
   int nPts = this->dataPtr->pointCloudMsg.height() *
       this->dataPtr->pointCloudMsg.width();
-  this->dataPtr->renderEvery = (int) round(
-    nPts / (double) this->dataPtr->MAX_PTS_VIS);
+  // If there are more points than we can render, render every n
+  if (nPts > this->dataPtr->MAX_PTS_VIS)
+  {
+    this->dataPtr->renderEvery = (int) round(
+      nPts / (double) this->dataPtr->MAX_PTS_VIS);
+    ignwarn << "Only rendering one science data point for each "
+            << this->dataPtr->renderEvery << std::endl;
+  }
 
-  std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
   ignition::msgs::Marker_V markers;
 
   PointCloudPackedIterator<float> iterX(this->dataPtr->pointCloudMsg, "x");
@@ -398,8 +377,7 @@ void VisualizePointCloud::PublishMarkers()
   {
     // Performance trick. Only publish every nth. Skip z below some depth
     if (this->dataPtr->renderEvery == 0 ||
-        ptIdx % this->dataPtr->renderEvery != 0 ||
-        *iterZ < this->dataPtr->SKIP_Z_BELOW)
+        ptIdx % this->dataPtr->renderEvery != 0)
     {
       continue;
     }
@@ -434,20 +412,8 @@ void VisualizePointCloud::PublishMarkers()
     // TODO: Use POINTS or LINE_LIST, but need per-vertex color
     msg->set_type(ignition::msgs::Marker::BOX);
     msg->set_visibility(ignition::msgs::Marker::GUI);
-    // Performance trick. Make boxes exact dimension of x and y gaps to
-    // resemble "voxels". Then scale up by renderEvery to cover the space
-    // where all the points are skipped.
-    float dimX = this->dataPtr->RES_X * this->dataPtr->MINIATURE_SCALE
-      * this->dataPtr->renderEvery * this->dataPtr->renderEvery
-      * this->dataPtr->dimFactor;
-    float dimY = this->dataPtr->RES_Y * this->dataPtr->MINIATURE_SCALE
-      * this->dataPtr->renderEvery * this->dataPtr->renderEvery
-      * this->dataPtr->dimFactor;
-    float dimZ = this->dataPtr->RES_Z * this->dataPtr->MINIATURE_SCALE
-      * this->dataPtr->renderEvery * this->dataPtr->renderEvery
-      * this->dataPtr->dimFactor;
     ignition::msgs::Set(msg->mutable_scale(),
-      ignition::math::Vector3d(dimX, dimY, dimZ));
+      ignition::math::Vector3d(0.2, 0.2, 0.2));
 
     ignition::msgs::Set(msg->mutable_pose(), ignition::math::Pose3d(
       *iterX,
@@ -479,14 +445,14 @@ void VisualizePointCloud::PublishMarkers()
              << msg->pose().position().y() << ", "
              << msg->pose().position().z() << ", "
              << "value " << dataVal << ", "
-             << "dimX " << dimX
              << std::endl;
     }
     ++nPtsViz;
   }
 
-  igndbg << "Visualizing " << markers.marker().size() << " markers"
-    << std::endl;
+  igndbg << "Received [" << nPts
+         << "] markers, visualizing [" << markers.marker().size() << "]"
+         << std::endl;
 
   ignition::msgs::Boolean res;
   bool result;
@@ -507,6 +473,10 @@ void VisualizePointCloud::ClearMarkers()
   msg.set_ns(this->dataPtr->pointCloudTopic + "-" + this->dataPtr->floatVTopic);
   msg.set_id(0);
   msg.set_action(ignition::msgs::Marker::DELETE_ALL);
+
+  igndbg << "Clearing markers on "
+    << this->dataPtr->pointCloudTopic + "-" + this->dataPtr->floatVTopic
+    << std::endl;
 
   this->dataPtr->node.Request("/marker", msg);
 }

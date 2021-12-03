@@ -7,6 +7,15 @@ cmake_minimum_required(VERSION 3.10.2 FATAL_ERROR)
 
 project(lrauv_ignition_plugins)
 
+# Option to enable profiler
+option(ENABLE_PROFILER "Enable Ignition Profiler" FALSE)
+
+if(ENABLE_PROFILER)
+  add_definitions("-DIGN_PROFILER_ENABLE=1")
+else()
+  add_definitions("-DIGN_PROFILER_ENABLE=0")
+endif()
+
 #============================================================================
 # Find dependencies
 find_package(ignition-cmake2 REQUIRED)
@@ -20,8 +29,6 @@ set(IGN_GUI_VER ${ignition-gui6_VERSION_MAJOR})
 find_package(ignition-sensors6 REQUIRED)
 set(IGN_SENSORS_VER ${ignition-sensors6_VERSION_MAJOR})
 
-find_package(ignition-launch5 REQUIRED)
-
 find_package(ignition-msgs8 REQUIRED)
 set(IGN_MSGS_VER ${ignition-msgs8_VERSION_MAJOR})
 
@@ -30,6 +37,9 @@ set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
 
 find_package(ignition-utils1 REQUIRED)
 set(IGN_UTILS_VER ${ignition-utils1_VERSION_MAJOR})
+
+find_package(ignition-common4 REQUIRED COMPONENTS profiler)
+set(IGN_COMMON_VER ${ignition-common4_VERSION_MAJOR})
 
 find_package (Eigen3 3.3 REQUIRED)
 
@@ -87,6 +97,7 @@ function(add_lrauv_plugin PLUGIN)
   set_property(TARGET ${PLUGIN} PROPERTY CXX_STANDARD 17)
   target_link_libraries(${PLUGIN}
     PUBLIC
+      ignition-common${IGN_COMMON_VER}::profiler
       ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
       ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
     PRIVATE
@@ -238,8 +249,10 @@ if(BUILD_TESTING)
     test_controller
     test_drop_weight
     test_elevator
+    test_hydrodynamics_equilibrium_velocity
     test_mass_shifter
     test_mission_depth_vbs
+    test_mission_pitch_and_depth_mass_vbs
     test_mission_pitch_mass
     test_mission_yoyo_circle
     test_rudder
@@ -295,7 +308,6 @@ endif()
 install(
   DIRECTORY
     data
-    launch
     models
     worlds
     ${CMAKE_CURRENT_BINARY_DIR}/hooks
