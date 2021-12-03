@@ -252,6 +252,7 @@ if(BUILD_TESTING)
     test_hydrodynamics_equilibrium_velocity
     test_mass_shifter
     test_mission_depth_vbs
+    test_mission_pitch_and_depth_mass_vbs
     test_mission_pitch_mass
     test_mission_yoyo_circle
     test_rudder
