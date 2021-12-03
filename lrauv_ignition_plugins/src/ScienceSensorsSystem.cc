@@ -63,8 +63,8 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Find XYZ locations of points in the two closest z slices to
   /// interpolate among.
   /// \param[in] _pt Location in space to interpolate for
-  /// \param[in] _inds Indices in _arr
-  /// \param[in] _sqrDists Distances of elements in _arr
+  /// \param[in] _inds Indices of nearest neighbors to _pt
+  /// \param[in] _sqrDists Distances of nearest neighbors to _pt
   /// \param[out] _interpolators1 XYZ points on a z slice to interpolate among
   /// \param[out] _interpolators2 XYZ points on a second z slice to interpolate
   /// among
@@ -610,28 +610,7 @@ bool ScienceSensorsSystemPrivate::comparePclPoints(
 {
   // Comparison between points is arbitrary. This function is only used for
   // set operations, not for literal sorting.
-  if (a.x < b.x)
-  {
-    if (a.y < b.y)
-    {
-      if (a.z < b.z)
-      {
-        return true;
-      }
-      else
-      {
-        return false;
-      }
-    }
-    else
-    {
-      return false;
-    }
-  }
-  else
-  {
-    return false;
-  }
+  return a.x < b.x && a.y < b.y && a.z < b.z;
 }
 
 /////////////////////////////////////////////////
