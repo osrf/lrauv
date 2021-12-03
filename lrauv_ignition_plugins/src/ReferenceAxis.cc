@@ -156,7 +156,7 @@ void ReferenceAxisPrivate::OnPreRender()
   double hFOV = 2.0 * atan(tan(vFOV / 2.0) / aspectRatio);
 
   // TODO(chapulina) Let user choose distance from camera
-  double xPos{10.0};
+  double xPos{2.0};
 
   // Viewable width in meters at the desired distance
   double widthMeters = xPos * tan(hFOV*0.5);
@@ -171,6 +171,7 @@ void ReferenceAxisPrivate::OnPreRender()
   {
     this->enuVis = this->scene->CreateAxisVisual();
     this->scene->RootVisual()->AddChild(this->enuVis);
+    this->enuVis->SetLocalScale(0.25, 0.25, 0.25);
 
     // Ogre2 doesn't support text yet
     // https://github.com/ignitionrobotics/ign-rendering/issues/487
@@ -180,24 +181,24 @@ void ReferenceAxisPrivate::OnPreRender()
       textGeom->SetFontName("Liberation Sans");
       textGeom->SetTextString("ENU");
       textGeom->SetShowOnTop(true);
-      textGeom->SetCharHeight(0.4);
+      textGeom->SetCharHeight(0.1);
       textGeom->SetTextAlignment(ignition::rendering::TextHorizontalAlign::RIGHT,
                                  ignition::rendering::TextVerticalAlign::BOTTOM);
 
       auto textVis = this->scene->CreateVisual();
       textVis->AddGeometry(textGeom);
-      textVis->SetLocalPosition(0.2, 0.2, 0.5);
+      textVis->SetLocalPosition(0.05, 0.05, 0.1);
 
       this->enuVis->AddChild(textVis);
     }
   }
 
   // TODO(chapulina) Let user choose Y offset
-  double yOffset{5};
+  double yOffset{1.0};
 
   // Set pose to be in front of camera
   double yPos = yOffset + (widthMeters - initialWidthMeters) * 0.5;
-  auto enuPlacement = ignition::math::Pose3d(xPos, yPos, 6.0, 0.0, 0.0, 0.0);
+  auto enuPlacement = ignition::math::Pose3d(xPos, yPos, 1.25, 0.0, 0.0, 0.0);
   auto enuPos = (this->camera->WorldPose() * enuPlacement).Pos();
   this->enuVis->SetLocalPosition(enuPos);
 
@@ -207,6 +208,7 @@ void ReferenceAxisPrivate::OnPreRender()
     this->nedVis = this->scene->CreateAxisVisual();
     this->scene->RootVisual()->AddChild(this->nedVis);
     this->nedVis->SetLocalRotation(IGN_PI, 0, IGN_PI * 0.5);
+    this->nedVis->SetLocalScale(0.25, 0.25, 0.25);
 
     // Ogre2 doesn't support text yet
     auto textGeom = this->scene->CreateText();
@@ -215,13 +217,13 @@ void ReferenceAxisPrivate::OnPreRender()
       textGeom->SetFontName("Liberation Sans");
       textGeom->SetTextString("NED");
       textGeom->SetShowOnTop(true);
-      textGeom->SetCharHeight(0.4);
+      textGeom->SetCharHeight(0.1);
       textGeom->SetTextAlignment(ignition::rendering::TextHorizontalAlign::LEFT,
                                  ignition::rendering::TextVerticalAlign::TOP);
 
       auto textVis = this->scene->CreateVisual();
       textVis->AddGeometry(textGeom);
-      textVis->SetLocalPosition(0.2, 0.2, 0.5);
+      textVis->SetLocalPosition(0.05, 0.05, 0.1);
 
       this->nedVis->AddChild(textVis);
     }
@@ -229,9 +231,9 @@ void ReferenceAxisPrivate::OnPreRender()
 
   // Set pose to be in front of camera
   // TODO(chapulina) Let user choose Y offset
-  yOffset = -5;
+  yOffset = -1.0;
   yPos = yOffset + (initialWidthMeters - widthMeters) * 0.5;
-  auto nedPlacement = ignition::math::Pose3d(xPos, yPos, 7.0, 0.0, 0.0, 0.0);
+  auto nedPlacement = ignition::math::Pose3d(xPos, yPos, 1.35, 0.0, 0.0, 0.0);
   auto nedPos = (this->camera->WorldPose() * nedPlacement).Pos();
   this->nedVis->SetLocalPosition(nedPos);
 
