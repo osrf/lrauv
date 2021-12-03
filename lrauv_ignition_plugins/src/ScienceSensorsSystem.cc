@@ -661,14 +661,15 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       this->dataPtr->ReadData(_ecm);
       this->dataPtr->GenerateOctrees();
     }
+    else
+    {
+      // TODO(chapulina) Throttle if it becomes spammy
+      ignwarn << "Science sensor data won't be published because spherical "
+              << "coordinates are unknown." << std::endl;
+      return;
+    }
   }
 
-  if (!this->dataPtr->sphericalCoordinatesInitialized)
-  {
-    ignwarn << "Science sensor data won't be published because spherical "
-            << "coordinates are unknown." << std::endl;
-    return;
-  }
 
   double simTimeSeconds = std::chrono::duration_cast<std::chrono::seconds>(
     _info.simTime).count();
