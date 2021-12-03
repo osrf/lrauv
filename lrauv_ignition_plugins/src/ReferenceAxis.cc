@@ -141,6 +141,31 @@ void ReferenceAxisPrivate::OnPreRender()
   if (!this->camera)
     return;
 
+  // Assume the vertical FOV never changes, but the horizontal FOV does.
+  // The API gives us HFOV only, so we calculate VFOV and store it.
+  double aspectRatio = static_cast<double>(this->camera->ImageHeight()) /
+      this->camera->ImageWidth();
+  static double vFOV = -1;
+  if (vFOV < 0)
+  {
+    double initialHFOV = this->camera->HFOV().Radian();
+    vFOV = 2.0 * atan(tan(initialHFOV / 2.0) * aspectRatio);
+  }
+
+  // Calculate current HFOV because the API is always giving the initial value.
+  double hFOV = 2.0 * atan(tan(vFOV / 2.0) / aspectRatio);
+
+  // TODO(chapulina) Let user choose distance from camera
+  double xPos{10.0};
+
+  // Viewable width in meters at the desired distance
+  double widthMeters = xPos * tan(hFOV*0.5);
+  static double initialWidthMeters{-1};
+  if (initialWidthMeters < 0)
+  {
+    initialWidthMeters = widthMeters;
+  }
+
   // ENU
   if (nullptr == this->enuVis)
   {
@@ -167,10 +192,12 @@ void ReferenceAxisPrivate::OnPreRender()
     }
   }
 
+  // TODO(chapulina) Let user choose Y offset
+  double yOffset{5};
+
   // Set pose to be in front of camera
-  // TODO(chapulina) Fix jittery motion
-  // TODO(chapulina) Calculate position using camera's image size and fov
-  auto enuPlacement = ignition::math::Pose3d(5.0, 2.0, 2.0, 0.0, 0.0, 0.0);
+  double yPos = yOffset + (widthMeters - initialWidthMeters) * 0.5;
+  auto enuPlacement = ignition::math::Pose3d(xPos, yPos, 6.0, 0.0, 0.0, 0.0);
   auto enuPos = (this->camera->WorldPose() * enuPlacement).Pos();
   this->enuVis->SetLocalPosition(enuPos);
 
@@ -201,7 +228,10 @@ void ReferenceAxisPrivate::OnPreRender()
   }
 
   // Set pose to be in front of camera
-  auto nedPlacement = ignition::math::Pose3d(5.0, -2.0, 2.5, 0.0, 0.0, 0.0);
+  // TODO(chapulina) Let user choose Y offset
+  yOffset = -5;
+  yPos = yOffset + (initialWidthMeters - widthMeters) * 0.5;
+  auto nedPlacement = ignition::math::Pose3d(xPos, yPos, 7.0, 0.0, 0.0, 0.0);
   auto nedPos = (this->camera->WorldPose() * nedPlacement).Pos();
   this->nedVis->SetLocalPosition(nedPos);
 
