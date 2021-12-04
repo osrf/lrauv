@@ -211,9 +211,9 @@ class tethys::ScienceSensorsSystemPrivate
   // For 2003080103_mb_l3_las_1x1km.csv
   //public: const float MINIATURE_SCALE = 0.01;
   // For 2003080103_mb_l3_las.csv
-  //public: const float MINIATURE_SCALE = 0.0001;
+  public: const float MINIATURE_SCALE = 0.0001;
   // For simple_test.csv
-  public: const float MINIATURE_SCALE = 1.0;
+  //public: const float MINIATURE_SCALE = 1.0;
 
   // TODO This is a workaround pending upstream Marker performance improvements.
   // \brief Performance trick. Skip depths below this z, so have memory to
@@ -542,7 +542,7 @@ void ScienceSensorsSystemPrivate::PublishData()
   this->salPub.Publish(this->salMsg);
 
   // Publish cloud last. The floatVs are optional, so if the GUI gets the cloud
-  // first it will display a monochrome cloud until it received the floats
+  // first it will display a monochrome cloud until it receives the floats
   this->cloudPub.Publish(this->PointCloudMsg());
 }
 
