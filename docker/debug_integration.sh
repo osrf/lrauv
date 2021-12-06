@@ -31,6 +31,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 cd $DIR
 # Build the docker image
-docker build -t mbari_lrauv_tests -f $DIR/tests/Dockerfile ..
+docker build -t osrf_lrauv_tests -f $DIR/tests/Dockerfile ..
 
-rocker --nvidia --x11 --user --user-override-name=developer --user-preserve-home -- mbari_lrauv_tests tmuxinator start debug_and_plot -n debug_session -p src/lrauv/docker/tests/debug_integration_mux.yml
+rocker --nvidia --x11 --user --user-override-name=developer --user-preserve-home -- osrf_lrauv_tests tmuxinator start debug_and_plot -n debug_session -p src/lrauv/docker/tests/debug_integration_mux.yml

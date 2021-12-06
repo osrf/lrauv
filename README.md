@@ -33,7 +33,7 @@ docker/build_and_run_docker.sh
 
 To join in a separate terminal, remember to source Ignition and the workspace:
 ```
-docker/join.sh mbari_lrauv
+docker/join.sh osrf_lrauv
 . /home/ign_ws/install/setup.bash
 . /home/colcon_ws/install/setup.bash
 ```
@@ -47,8 +47,8 @@ docker/join.sh mbari_lrauv
 
 ```
 cd docker
-docker build -t mbari_lrauv -f empty_world/Dockerfile ..
-rocker --nvidia --x11 --user mbari_lrauv bash
+docker build -t osrf_lrauv -f empty_world/Dockerfile ..
+rocker --nvidia --x11 --user osrf_lrauv bash
 ign launch lrauv_world.ign
 ```
 
@@ -57,8 +57,8 @@ ign launch lrauv_world.ign
 Enter test environment
 
 ```
-docker build -t mbari_lrauv_tests -f tests/Dockerfile ..
-rocker --nvidia --x11 --user mbari_lrauv_tests bash
+docker build -t osrf_lrauv_tests -f tests/Dockerfile ..
+rocker --nvidia --x11 --user osrf_lrauv_tests bash
 ```
 
 Then run anything you want in the environment, unit tests are in `./build/lrauv_ignition_plugins`
