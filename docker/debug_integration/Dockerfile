@@ -41,11 +41,12 @@ RUN apt-get update \
 
 # Add Ignition's latest packages, which may be more up-to-date than the ones from the MBARI image
 RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list' && \
+RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-nightly.list' && \
     /bin/sh -c 'wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add -'
 
 # Install the latest Ignition binaries
 RUN apt-get -qq update && apt-get -q -y install \
-  ignition-fortress
+  ignition-garden
 
 # Install PCL
 RUN apt-get update \
