@@ -145,6 +145,22 @@
         <link_name>horizontal_fins</link_name>
         <cp>0 0 0</cp>
       </plugin>
+
+      <plugin
+        filename="FinLiftDragPlugin"
+        name="tethys::FinLiftDragPlugin">
+        <link_name>horizontal_fins</link_name>
+        <drag_coeffs>
+          <spline_point>
+            <angle>0</angle>
+            <coeff>0</coeff>
+          </spline_point>
+          <spline_point>
+            <angle>10</angle>
+            <coeff>0.4</coeff>
+          </spline_point>
+        </drag_coeffs>
+      </plugin>
       <!-- Interface with LRAUV Main Vehicle Application for each vehicle -->
       <plugin
         filename="TethysCommPlugin"

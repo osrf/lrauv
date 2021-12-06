@@ -141,7 +141,7 @@ add_lrauv_plugin(AcousticCommsPlugin
     lrauv_internal_comms
   PRIVATE_LINK_LIBS
     CommsSupport)
-
+add_lrauv_plugin(FinLiftDragPlugin)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(RangeBearingPlugin
   INCLUDE_COMMS
