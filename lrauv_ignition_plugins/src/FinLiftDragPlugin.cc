@@ -134,6 +134,7 @@ class FinLiftDragPrivateData
   {
     this->model = ignition::gazebo::Model(_entity);
     this->splineCd = createSpline(_sdf, "drag_coeffs");
+    ConfigureLink(_ecm, _sdf);
 
     for(auto v : splineCd)
     {
@@ -189,23 +190,25 @@ class FinLiftDragPrivateData
   public: double GetAngleOfAttack(
     ignition::gazebo::EntityComponentManager &_ecm)
   {
-    ignition::gazebo::Link link(linkEntity);
+    ignition::gazebo::Link link(this->linkEntity);
     auto linVel = link.WorldLinearVelocity(_ecm);
     if (!linVel.has_value())
     {
-      ignerr << "could not get velocity of " << link.Name(_ecm) <<std::endl;
+      ignerr << "could not get velocity of " <<
+        link.Name(_ecm).value() << std::endl;
       return 0;
     }
     auto pose = link.WorldPose(_ecm);
     if (!pose.has_value())
     {
-      ignerr << "could not get velocity of " << link.Name(_ecm) <<std::endl;
+      ignerr << "could not get velocity of " <<
+        link.Name(_ecm).value() << std::endl;
       return 0;
     }
 
     auto localVel = pose.value().Rot().Inverse() * linVel.value();
 
-    ignerr << linVel << ", " << localVel << std::endl;
+    ignerr << linVel.value() << ", " << localVel << std::endl;
     return 0;
   }
 
@@ -246,7 +249,7 @@ void FinLiftDragPlugin::PreUpdate(
   const ignition::gazebo::UpdateInfo &_info,
   ignition::gazebo::EntityComponentManager &_ecm)
 {
-  if (_info.paused)
+  if (_info.paused || !this->dataPtr->validConfig)
     return;
   auto aoa = this->dataPtr->GetAngleOfAttack(_ecm);
 }
