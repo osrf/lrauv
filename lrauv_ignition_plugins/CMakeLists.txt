@@ -20,17 +20,17 @@ endif()
 # Find dependencies
 find_package(ignition-cmake2 REQUIRED)
 
-find_package(ignition-gazebo6 REQUIRED COMPONENTS gui)
-set(IGN_GAZEBO_VER ${ignition-gazebo6_VERSION_MAJOR})
+find_package(ignition-gazebo7 REQUIRED COMPONENTS gui)
+set(IGN_GAZEBO_VER ${ignition-gazebo7_VERSION_MAJOR})
 
-find_package(ignition-gui6 REQUIRED)
-set(IGN_GUI_VER ${ignition-gui6_VERSION_MAJOR})
+find_package(ignition-gui7 REQUIRED)
+set(IGN_GUI_VER ${ignition-gui7_VERSION_MAJOR})
 
-find_package(ignition-sensors6 REQUIRED)
-set(IGN_SENSORS_VER ${ignition-sensors6_VERSION_MAJOR})
+find_package(ignition-sensors7 REQUIRED)
+set(IGN_SENSORS_VER ${ignition-sensors7_VERSION_MAJOR})
 
-find_package(ignition-msgs8 REQUIRED)
-set(IGN_MSGS_VER ${ignition-msgs8_VERSION_MAJOR})
+find_package(ignition-msgs9 REQUIRED)
+set(IGN_MSGS_VER ${ignition-msgs9_VERSION_MAJOR})
 
 find_package(ignition-plugin1 REQUIRED COMPONENTS register)
 set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})

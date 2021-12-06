@@ -45,7 +45,7 @@ RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable
 
 # Install the latest Ignition binaries
 RUN apt-get -qq update && apt-get -q -y install \
-  ignition-fortress
+  ignition-garden
 
 # Install PCL
 RUN apt-get update \

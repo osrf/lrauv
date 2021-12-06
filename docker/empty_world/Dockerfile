@@ -73,8 +73,8 @@ RUN apt-get -qq update && apt-get -q -y install \
 ENV IGN_WS /home/ign_ws
 RUN mkdir -p ${IGN_WS}/src \
  && cd ${IGN_WS}/src \
- && wget https://raw.githubusercontent.com/ignition-tooling/gazebodistro/master/collection-fortress.yaml \
- && vcs import < collection-fortress.yaml
+ && wget https://raw.githubusercontent.com/ignition-tooling/gazebodistro/master/collection-garden.yaml \
+ && vcs import < collection-garden.yaml
 
 # Install Ignition dependencies
 # This parses Ignition source tree to find package dependencies

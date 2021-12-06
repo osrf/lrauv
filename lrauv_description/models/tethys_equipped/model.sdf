@@ -180,7 +180,7 @@
       </plugin>
       <plugin
         filename="ignition-gazebo-buoyancy-engine-system"
-        name="ignition::gazebo::v6::systems::BuoyancyEnginePlugin">
+        name="ignition::gazebo::systems::BuoyancyEngine">
         <link_name>buoyancy_engine</link_name>
         <namespace>tethys</namespace>
         <fluid_density>1000</fluid_density>
