@@ -190,10 +190,20 @@ class FinLiftDragPrivateData
     ignition::gazebo::EntityComponentManager &_ecm)
   {
     ignition::gazebo::Link link(linkEntity);
-    auto linVel = link.WorldLinearVelocity(_ecm).value();
+    auto linVel = link.WorldLinearVelocity(_ecm);
+    if (!linVel.has_value())
+    {
+      ignerr << "could not get velocity of " << link.Name(_ecm) <<std::endl;
+      return 0;
+    }
     auto pose = link.WorldPose(_ecm);
+    if (!pose.has_value())
+    {
+      ignerr << "could not get velocity of " << link.Name(_ecm) <<std::endl;
+      return 0;
+    }
 
-    auto localVel = pose.value().Rot().Inverse() * linVel;
+    auto localVel = pose.value().Rot().Inverse() * linVel.value();
 
     ignerr << linVel << ", " << localVel << std::endl;
     return 0;
@@ -236,7 +246,9 @@ void FinLiftDragPlugin::PreUpdate(
   const ignition::gazebo::UpdateInfo &_info,
   ignition::gazebo::EntityComponentManager &_ecm)
 {
-  
+  if (_info.paused)
+    return;
+  auto aoa = this->dataPtr->GetAngleOfAttack(_ecm);
 }
 }
 
