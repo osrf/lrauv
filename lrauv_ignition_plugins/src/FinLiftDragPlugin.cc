@@ -66,7 +66,16 @@ class FinLiftDragPrivateData
     }
 
     double leftVal, leftAng;
-    auto left = std::prev(right);
+    if (right == _spline.begin())
+    {
+      leftVal = _spline.rbegin()->second;
+      leftAng = _spline.rbegin()->first;
+    }
+    else {
+      auto left = std::prev(right);
+      leftVal = left->second;
+      leftAng = left->first;
+    }
   }
 
   public: float CalcDragCoeff(float _angle)
@@ -307,6 +316,12 @@ void FinLiftDragPlugin::PreUpdate(
 
   // Apply the drag force
   this->dataPtr->ApplyWorldForce(_ecm, directionVector * drag);
+
+  // Drag Equation
+  auto lift =
+    0.5 * this->dataPtr->CalcLiftCoeff(aoa) * vel * vel * this->dataPtr->finArea;
+
+  // Lift is 90 degrees to the 
 
 }
 }
