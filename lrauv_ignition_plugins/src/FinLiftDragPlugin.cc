@@ -71,12 +71,12 @@ class FinLiftDragPrivateData
 
   public: float CalcDragCoeff(float _angle)
   {
-
+    return 300;
   }
 
   public: float CalcLiftCoeff(float _angle)
   {
-
+    return 0.1;
   }
 
   /// \brief Create a spline using sdf parameters.
@@ -137,11 +137,6 @@ class FinLiftDragPrivateData
     ConfigureLink(_ecm, _sdf);
     this->fluidDensity = _sdf->Get<double>("fluid_density");
     this->finArea = _sdf->Get<double>("area");
-
-    for(auto v : splineCd)
-    {
-      ignerr << v.first << ", " << v.second << "\n";
-    }
   }
 
   private: void ConfigureLink(
@@ -164,7 +159,7 @@ class FinLiftDragPrivateData
       }
       else if (entities.size() > 1)
       {
-        ignwarn << "Multiple link entities with name[" << linkName << "] found. "
+        ignwarn << "Multiple link entities with name[" << linkName << "] found."
               << "Using the first one.\n";
       }
 
@@ -189,7 +184,8 @@ class FinLiftDragPrivateData
     }
   }
 
-  public: double GetAngleOfAttack(
+  /// \brief Returns a pair consisting of angle of attack and velocity.
+  public: std::pair<double, double> GetAngleOfAttackAndVelocity(
     ignition::gazebo::EntityComponentManager &_ecm)
   {
     ignition::gazebo::Link link(this->linkEntity);
@@ -198,34 +194,65 @@ class FinLiftDragPrivateData
     {
       ignerr << "could not get velocity of " <<
         link.Name(_ecm).value() << std::endl;
-      return 0;
+      return {0, 0};
     }
     auto pose = link.WorldPose(_ecm);
     if (!pose.has_value())
     {
       ignerr << "could not get velocity of " <<
         link.Name(_ecm).value() << std::endl;
-      return 0;
+      return {0, 0};
     }
 
     // Get velocity in local frame
     auto localVel = pose.value().Rot().Inverse() * linVel.value();
 
     // Project velocity into lift-drag plane
-    auto liftDragPlaneNormal = forward.Cross(upward);
+    auto liftDragPlaneNormal = this->forward.Cross(this->upward);
     auto normalProjection = liftDragPlaneNormal.Dot(localVel) /
       (liftDragPlaneNormal.Length() * liftDragPlaneNormal.Length());
     auto velInLDPlane = localVel - normalProjection;
 
     // Determine Angle of Attack
-    auto angleOfAttack = velInLDPlane.Dot(forward) /
-      (velInLDPlane.Length() * forward.Length());
-    return 0;
+    auto angleOfAttack = acos(velInLDPlane.Dot(this->forward) /
+      (velInLDPlane.Length() * this->forward.Length()));
+
+    // Determine the sign by testing against the upward vector
+    if (velInLDPlane.Dot(this->upward) < 0)
+      angleOfAttack *= -1;
+
+    auto velocity = velInLDPlane.Length();
+    return {angleOfAttack, velocity};
+  }
+
+  /// \brief Get world velocity
+  public: ignition::math::Vector3d WorldLinearVelocity(
+    ignition::gazebo::EntityComponentManager &_ecm)
+  {
+    ignition::gazebo::Link link(this->linkEntity);
+    auto linVel = link.WorldLinearVelocity(_ecm);
+    if (!linVel.has_value())
+    {
+      ignerr << "could not get velocity of " <<
+        link.Name(_ecm).value() << std::endl;
+      return {0, 0, 0};
+    }
+    return linVel.value();
+  }
+
+  public: void ApplyWorldForce(
+    ignition::gazebo::EntityComponentManager &_ecm,
+    const ignition::math::Vector3d &_force)
+  {
+    ignition::gazebo::Link link(this->linkEntity);
+    link.AddWorldWrench(_ecm, _force, {0,0,0});
+
+    ignerr << _force << "\n";
   }
 
   /// \brief Normally, this is taken as a direction parallel to the chord
   /// of the airfoil in zero angle of attack forward flight.
-  public: ignition::math::Vector3d forward = ignition::math::Vector3d::UnitX;
+  public: ignition::math::Vector3d forward = - ignition::math::Vector3d::UnitX;
 
   /// \brief A vector in the lift/drag plane, perpendicular to the forward
   /// vector. Inflow velocity orthogonal to forward and upward vectors
@@ -266,7 +293,21 @@ void FinLiftDragPlugin::PreUpdate(
 {
   if (_info.paused || !this->dataPtr->validConfig)
     return;
-  auto aoa = this->dataPtr->GetAngleOfAttack(_ecm);
+  auto [aoa, vel] = this->dataPtr->GetAngleOfAttackAndVelocity(_ecm);
+
+  // Drag Equation
+  auto drag =
+    0.5 * this->dataPtr->CalcDragCoeff(aoa) * vel * vel * this->dataPtr->finArea;
+
+  // Drag acts in the direction of motion
+  auto worldVel = this->dataPtr->WorldLinearVelocity(_ecm);
+
+  // Get the drag vector and add it.
+  auto directionVector = - worldVel.Normalized();
+
+  // Apply the drag force
+  this->dataPtr->ApplyWorldForce(_ecm, directionVector * drag);
+
 }
 }
 
