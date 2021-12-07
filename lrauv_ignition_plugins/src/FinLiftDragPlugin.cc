@@ -135,6 +135,8 @@ class FinLiftDragPrivateData
     this->model = ignition::gazebo::Model(_entity);
     this->splineCd = createSpline(_sdf, "drag_coeffs");
     ConfigureLink(_ecm, _sdf);
+    this->fluidDensity = _sdf->Get<double>("fluid_density");
+    this->finArea = _sdf->Get<double>("area");
 
     for(auto v : splineCd)
     {
@@ -206,9 +208,18 @@ class FinLiftDragPrivateData
       return 0;
     }
 
+    // Get velocity in local frame
     auto localVel = pose.value().Rot().Inverse() * linVel.value();
 
-    ignerr << linVel.value() << ", " << localVel << std::endl;
+    // Project velocity into lift-drag plane
+    auto liftDragPlaneNormal = forward.Cross(upward);
+    auto normalProjection = liftDragPlaneNormal.Dot(localVel) /
+      (liftDragPlaneNormal.Length() * liftDragPlaneNormal.Length());
+    auto velInLDPlane = localVel - normalProjection;
+
+    // Determine Angle of Attack
+    auto angleOfAttack = velInLDPlane.Dot(forward) /
+      (velInLDPlane.Length() * forward.Length());
     return 0;
   }
 
@@ -224,6 +235,10 @@ class FinLiftDragPrivateData
   public: ignition::gazebo::Entity linkEntity;
 
   public: ignition::gazebo::Model model;
+
+  public: double fluidDensity{1000};
+
+  public: double finArea{0.0042};
 
   public: bool validConfig {true};
 

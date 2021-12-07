@@ -150,6 +150,12 @@
         filename="FinLiftDragPlugin"
         name="tethys::FinLiftDragPlugin">
         <link_name>horizontal_fins</link_name>
+        <fluid_density>1000</fluid_density>
+        <area>0.0244</area>
+        <!-- Link's Z is perpendicular to the control surface -->
+        <upward>0 0 1</upward>
+        <!-- Link's X is pointing towards the back -->
+        <forward>-1 0 0</forward>
         <drag_coeffs>
           <spline_point>
             <angle>0</angle>
