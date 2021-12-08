@@ -93,6 +93,6 @@ message LRAUVState
   float soundSpeed_               = 28;
   float temperature_              = 29;  // Celsius
   float salinity_                 = 30;  // PSU
-  float density_                  = 31;
+  float density_                  = 31;  // Density of the surrounding water in Kg / m ^ 3
   repeated float values_          = 32;  // Size 4 (0: chlorophyll in ug / L, 1: pressure in Pa)
 }
