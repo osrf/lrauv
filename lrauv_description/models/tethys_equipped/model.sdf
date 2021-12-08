@@ -153,6 +153,7 @@
         <command_topic>tethys/command_topic</command_topic>
         <state_topic>tethys/state_topic</state_topic>
         <debug_printout>0</debug_printout>
+        <ocean_density>1000</ocean_density>
       </plugin>
       <plugin
         filename="HydrodynamicsPlugin"
