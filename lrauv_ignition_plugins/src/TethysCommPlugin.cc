@@ -582,7 +582,10 @@ void TethysCommPlugin::PostUpdate(
 
   // Water velocity
   // rateUVW
-  // TODO(anyone)
+  // TODO(arjo): include currents in water velocity?
+  auto localVel = modelPose.Rot().Inverse() * veloGround;
+  ROSToFSK(localVel);
+  ignition::msgs::Set(stateMsg.mutable_rateuvw_(), localVel);
 
   // Rate of robot roll, pitch, yaw
   // ratePQR
