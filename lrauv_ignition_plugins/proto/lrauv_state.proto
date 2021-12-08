@@ -134,7 +134,7 @@ message LRAUVState
   float salinity_                 = 30;  // Data collected from salinity sensor.
                                          // Unit: PSU
 
-  float density_                  = 31;  // Not populated
+  float density_                  = 31;  // Density of the surrounding water in kg / m ^ 3
 
   repeated float values_          = 32;  // Size 4
                                          // 0: Data collected from Chlorophyll
