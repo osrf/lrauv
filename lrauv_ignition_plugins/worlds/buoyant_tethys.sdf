@@ -101,12 +101,13 @@
         <scene>scene</scene>
         <ambient_light>0.4 0.4 0.4</ambient_light>
         <background_color>0.8 0.8 0.8</background_color>
-        <camera_pose>0 6 6 0 0.5 -1.57</camera_pose>
+        <!--camera_pose>0 6 6 0 0.5 -1.57</camera_pose-->
+        <camera_pose>0 0 800000 3.14 1.5 3.1</camera_pose>
         <camera_clip>
           <!-- ortho view needs low near clip -->
           <near>0.001</near>
-          <!-- See 300 km away -->
-          <far>300000</far>
+          <!-- See 3000 km away -->
+          <far>3000000</far>
         </camera_clip>
       </plugin>
 
@@ -275,13 +276,24 @@
         <ignition-gui>
           <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
-        <!-- 300 km x 300 km -->
-        <cell_count>6</cell_count>
-        <vertical_cell_count>0</vertical_cell_count>
-        <!-- 50 km -->
-        <cell_length>50000</cell_length>
-        <pose>0 100000 0  0 0 0.32</pose>
-        <color>0 1 0 1</color>
+        <insert>
+          <!-- 300 km x 300 km -->
+          <cell_count>6</cell_count>
+          <vertical_cell_count>0</vertical_cell_count>
+          <!-- 50 km -->
+          <cell_length>50000</cell_length>
+          <pose>0 100000 0  0 0 0.32</pose>
+          <color>0 1 0 1</color>
+        </insert>
+        <insert>
+          <!-- 0.1 km x 0.1 km -->
+          <cell_count>100</cell_count>
+          <vertical_cell_count>0</vertical_cell_count>
+          <!-- 1 m -->
+          <cell_length>1</cell_length>
+          <pose>0 0 0  0 0 0</pose>
+          <color>0.5 0.5 0.5 1</color>
+        </insert>
       </plugin>
     </gui>
 
