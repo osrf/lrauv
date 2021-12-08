@@ -924,10 +924,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       // Input values to barycentric interpolation
       std::vector<float> interpolationValues;
 
-      // For the correct sensor, interpolate using the 2 sets of 4 points on
-      // two z slices.
-      // Pass in the 8 points, which must be vertices of a rectangular prism.
-      // Pass in the data values at the 8 points.
+      // For the correct sensor, interpolate using nearby locations with data
       if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
       {
         igndbg << "Interpolating salinity" << std::endl;
