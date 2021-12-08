@@ -512,6 +512,7 @@ void ScienceSensorsSystemPrivate::ReadData(
             .PositionTransform({IGN_DTOR(latitude), IGN_DTOR(longitude), 0.0},
             ignition::math::SphericalCoordinates::SPHERICAL,
             ignition::math::SphericalCoordinates::LOCAL2);
+        // Flip sign of z, because positive depth is negative z.
         cart.Z() = -depth;
 
         // Performance trick. Scale down to see in view
@@ -527,7 +528,6 @@ void ScienceSensorsSystemPrivate::ReadData(
 
         // Gather spatial coordinates, 3 fields in the line, into point cloud
         // for indexing this time slice of data.
-        // Flip sign of z, because positive depth is negative z.
         this->timeSpaceCoords[lineTimeIdx]->push_back(
           pcl::PointXYZ(cart.X(), cart.Y(), cart.Z()));
 
