@@ -121,6 +121,37 @@ class tethys::ScienceSensorsSystemPrivate
     const std::vector<pcl::PointXYZ> &_xyzs,
     const std::vector<float> &_values);
 
+  /// \brief Barycentric interpolation in 3D, given 4 points on any arbitrary
+  /// tetrahedra.
+  /// \param[in] _p Position within the tetrahedra to interpolate for
+  /// \param[in] _xyzs XYZ coordinates of 4 vertices of a tetrahedra
+  /// \param[in] _values Data values at the 4 vertices
+  /// \return Interpolated value, or quiet NaN if inputs invalid.
+  public: float BarycentricInterpolate(
+    const Eigen::Vector3f &_p,
+    const std::vector<pcl::PointXYZ> &_xyzs,
+    const std::vector<float> &_values);
+
+  /// \brief Barycentric interpolation in 2D, given 3 points on any arbitrary
+  /// triangle.
+  /// \param[in] _p Position within the triangle to interpolate for
+  /// \param[in] _xyzs XYZ coordinates of 3 vertices of a triangle
+  /// \param[in] _values Data values at the 3 vertices
+  /// \return Interpolated value, or quiet NaN if inputs invalid.
+  public: float BarycentricInterpolate(
+    const Eigen::Vector2f &_p,
+    const std::vector<pcl::PointXYZ> &_xyzs,
+    const std::vector<float> &_values);
+
+  /// \brief Extract elements at indices _inds from _orig vector.
+  /// \param[in] _orig A vector of values to extract
+  /// \param[in] _inds Indices of elements to extract
+  /// \param[out] _new Extracted values
+  public: void ExtractElements(
+    const std::vector<float> &_orig,
+    const std::vector<int> &_inds,
+    std::vector<float> &_new);
+
   //////////////////////////////
   // Functions for communication
 
@@ -957,7 +988,7 @@ float ScienceSensorsSystemPrivate::TrilinearInterpolate(
     }
     else
     {
-      ignerr << "Suspect 8 input points not on prism. Vertex " << r << " ("
+      ignerr << "Vertex " << r << " ("
         << std::round(xyzsMat(r, 0) * 1000.0) / 1000.0 << ", "
         << std::round(xyzsMat(r, 1) * 1000.0) / 1000.0 << ", "
         << std::round(xyzsMat(r, 2) * 1000.0) / 1000.0
@@ -996,6 +1027,135 @@ float ScienceSensorsSystemPrivate::TrilinearInterpolate(
   float d = d0 * (1 - dz) + d1 * dz;
 
   return d;
+}
+
+
+/////////////////////////////////////////////////
+float ScienceSensorsSystemPrivate::BarycentricInterpolate(
+  const Eigen::Vector3f &_p,
+  const std::vector<pcl::PointXYZ> &_xyzs,
+  const std::vector<float> &_values)
+{
+  // Implemented from https://en.wikipedia.org/wiki/Barycentric_coordinate_system#Barycentric_coordinates_on_tetrahedra
+
+  igndbg << "_p: " << std::endl << _p << std::endl;
+
+  Eigen::Matrix3f T;
+  // Row 1: x1 - x4, x2 - x4, x3 - x4
+  T << _xyzs.at(0).x - _xyzs.at(3).x,
+       _xyzs.at(1).x - _xyzs.at(3).x,
+       _xyzs.at(2).x - _xyzs.at(3).x,
+  // Row 2: y1 - y4, y2 - y4, y3 - y4
+       _xyzs.at(0).y - _xyzs.at(3).y,
+       _xyzs.at(1).y - _xyzs.at(3).y,
+       _xyzs.at(2).y - _xyzs.at(3).y,
+  // Row 3: z1 - z4, z2 - z4, z3 - z4
+       _xyzs.at(0).z - _xyzs.at(3).z,
+       _xyzs.at(1).z - _xyzs.at(3).z,
+       _xyzs.at(2).z - _xyzs.at(3).z;
+  igndbg << "T: " << std::endl << T << std::endl;
+
+  // Check for special case when 3rd row of T is all zeros.
+  // Happens when all neighbors are on the same z slice
+  if ((T.row(2).array() < 1e-6).all())
+  {
+    igndbg << "4 points on same z slice. Using 2D barycentric interpolation."
+      << std::endl;
+    Eigen::Vector2f p2D;
+    p2D << _p(0), _p(1);
+    return this->BarycentricInterpolate(p2D, _xyzs, _values);
+  }
+
+  // r4 = (x4, y4, z4)
+  Eigen::Vector3f r4;
+  r4 << _xyzs.at(3).x, _xyzs.at(3).y, _xyzs.at(3).z;
+  igndbg << "r4: " << std::endl << r4 << std::endl;
+
+  // (lambda1, lambda2, lambda3)
+  Eigen::Vector3f lambda123 = T.inverse() * (_p - r4);
+
+  igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
+
+  // lambda4 = 1 - lambda1 - lambda2 - lambda3
+  float lambda4 = 1 - lambda123(0) - lambda123(1) - lambda123(2);
+
+  igndbg << "Barycentric 3D lambda 1 2 3 4: " << lambda123(0) << ", "
+    << lambda123(1) << ", "
+    << lambda123(2) << ", "
+    << lambda4 << std::endl;
+
+  // f(r) = lambda1 * f(r1) + lambda2 * f(r2) + lambda3 * f(r3)
+  float result =
+    lambda123(0) * _values[0] +
+    lambda123(1) * _values[1] +
+    lambda123(2) * _values[2] +
+    lambda4 * _values[3];
+
+  igndbg << "Barycentric 3D interpolation of values " << _values[0] << ", "
+    << _values[1] << ", " << _values[2] << ", " << _values[3]
+    << " resulted in " << result << std::endl;
+
+  return result;
+}
+
+/////////////////////////////////////////////////
+float ScienceSensorsSystemPrivate::BarycentricInterpolate(
+  const Eigen::Vector2f &_p,
+  const std::vector<pcl::PointXYZ> &_xyzs,
+  const std::vector<float> &_values)
+{
+  // 2D case, consider inputs a triangle and use 2 x 2 matrix for T
+  Eigen::Matrix2f T;
+  // Row 1: x1 - x3, x2 - x3
+  T << _xyzs.at(0).x - _xyzs.at(2).x,
+       _xyzs.at(1).x - _xyzs.at(2).x,
+  // Row 2: y1 - y3, y2 - y3
+       _xyzs.at(0).y - _xyzs.at(2).y,
+       _xyzs.at(1).y - _xyzs.at(2).y;
+  igndbg << "T: " << std::endl << T << std::endl;
+
+  // r3 = (x3, y3, z3)
+  Eigen::Vector2f r3;
+  r3 << _xyzs.at(2).x, _xyzs.at(2).y;
+  igndbg << "r3: " << std::endl << r3 << std::endl;
+
+  // (lambda1, lambda2)
+  Eigen::Vector2f lambda12 = T.inverse() * (_p - r3);
+
+  igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
+
+  // lambda3 = 1 - lambda1 - lambda2
+  float lambda3 = 1 - lambda12(0) - lambda12(1);
+
+  igndbg << "Barycentric 2D lambda 1 2 3: " << lambda12(0) << ", "
+    << lambda12(1) << ", "
+    << lambda3 << std::endl;
+
+  // f(r) = lambda1 * f(r1) + lambda2 * f(r2)
+  float result =
+    lambda12(0) * _values[0] +
+    lambda12(1) * _values[1] +
+    lambda3 * _values[2];
+
+  igndbg << "Barycentric 2D interpolation of values " << _values[0] << ", "
+    << _values[1] << ", " << _values[2]
+    << " resulted in " << result << std::endl;
+
+  return result;
+}
+
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::ExtractElements(
+  const std::vector<float> &_orig,
+  const std::vector<int> &_inds,
+  std::vector<float> &_new)
+{
+  _new.clear();
+
+  for (int i = 0; i < _inds.size(); ++i)
+  {
+    _new.push_back(_orig[_inds[i]]);
+  }
 }
 
 /////////////////////////////////////////////////
@@ -1173,6 +1333,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     {
       IGN_PROFILE("ScienceSensorsSystem::PostUpdate nearestKSearch");
 
+      /* Trilinear interpolation
       // kNN search (alternatives are voxel search and radius search. kNN
       // search is good for variable resolution when the distance to the next
       // neighbor is unknown).
@@ -1183,23 +1344,6 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         ignwarn << "No data found near sensor location " << sensorPosENU
           << std::endl;
         continue;
-      }
-      // Debug output
-      else
-      {
-        for (std::size_t i = 0; i < spatialIdx.size(); i++)
-        {
-          // Index the point cloud at the current time slice
-          pcl::PointXYZ nbrPt = this->dataPtr->timeSpaceCoords[
-            this->dataPtr->timeIdx]->at(spatialIdx[i]);
-
-          igndbg << "Neighbor at ("
-            << std::round(nbrPt.x * 1000) / 1000.0 << ", "
-            << std::round(nbrPt.y * 1000) / 1000.0 << ", "
-            << std::round(nbrPt.z * 1000) / 1000.0
-            << "), squared distance " << spatialSqrDist[i]
-            << " m" << std::endl;
-        }
       }
 
       // Find 2 sets of 4 nearest neighbors, each set on a different z slice,
@@ -1227,13 +1371,51 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       // Find 1D indices of the data values d000-d111!!! Manually keep track
       // of indices of the 4 points in the 2nd z slice, which are scrambled up
       // after the 1st z slice is removed from cloud!
+      */
 
-      // FIXME: 4 neighbors found are not on a rectangle! That voids assumption
-      // of trilinear interpolation. Cannot perform valid interpolation.
+      // kNN search (alternatives are voxel search and radius search. kNN
+      // search is good for variable resolution when the distance to the next
+      // neighbor is unknown).
+      // Find 4 nearest neighbors for barycentric interpolation
+      if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]
+        ->nearestKSearch(searchPoint, 4, spatialIdx, spatialSqrDist) <= 0)
+      {
+        ignwarn << "Not enough data found near sensor location " << sensorPosENU
+          << std::endl;
+        continue;
+      }
+      // Debug output
+      else
+      {
+        for (std::size_t i = 0; i < spatialIdx.size(); i++)
+        {
+          // Index the point cloud at the current time slice
+          pcl::PointXYZ nbrPt = this->dataPtr->timeSpaceCoords[
+            this->dataPtr->timeIdx]->at(spatialIdx[i]);
+
+          igndbg << "Neighbor at ("
+            << std::round(nbrPt.x * 1000) / 1000.0 << ", "
+            << std::round(nbrPt.y * 1000) / 1000.0 << ", "
+            << std::round(nbrPt.z * 1000) / 1000.0
+            << "), squared distance " << spatialSqrDist[i]
+            << " m" << std::endl;
+        }
+      }
+
+      // Get neighbor XYZs to pass to barycentric interpolation
+      std::vector<pcl::PointXYZ> interpolatorXYZs;
+      for (int i = 0; i < spatialIdx.size(); ++i)
+      {
+        interpolatorXYZs.push_back(this->dataPtr->timeSpaceCoords[
+          this->dataPtr->timeIdx]->at(spatialIdx[i]));
+      }
 
       // Convert to Eigen to pass to interpolation
       Eigen::Vector3f sensorPosENUEigen;
       sensorPosENUEigen << sensorPosENU.X(), sensorPosENU.Y(), sensorPosENU.Z();
+
+      // Input values to barycentric interpolation
+      std::vector<float> interpolationValues;
 
       // For the correct sensor, interpolate using the 2 sets of 4 points on
       // two z slices.
@@ -1241,17 +1423,21 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       // Pass in the data values at the 8 points.
       if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
       {
-        float sal = this->dataPtr->TrilinearInterpolate(
-          sensorPosENUEigen, interpolatorXYZs,
-          this->dataPtr->salinityArr[this->dataPtr->timeIdx]);
+        this->dataPtr->ExtractElements(
+          this->dataPtr->salinityArr[this->dataPtr->timeIdx], spatialIdx,
+          interpolationValues);
+        float sal = this->dataPtr->BarycentricInterpolate(
+          sensorPosENUEigen, interpolatorXYZs, interpolationValues);
         casted->SetData(sal);
       }
       else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
         sensor))
       {
-        float temp = this->dataPtr->TrilinearInterpolate(
-          sensorPosENUEigen, interpolatorXYZs,
-          this->dataPtr->temperatureArr[this->dataPtr->timeIdx]);
+        this->dataPtr->ExtractElements(
+          this->dataPtr->temperatureArr[this->dataPtr->timeIdx], spatialIdx,
+          interpolationValues);
+        float temp = this->dataPtr->BarycentricInterpolate(
+          sensorPosENUEigen, interpolatorXYZs, interpolationValues);
 
         ignition::math::Temperature tempC;
         tempC.SetCelsius(temp);
@@ -1260,20 +1446,30 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
         sensor))
       {
-        float chlor = this->dataPtr->TrilinearInterpolate(
-          sensorPosENUEigen, interpolatorXYZs,
-          this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx]);
+        this->dataPtr->ExtractElements(
+          this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx], spatialIdx,
+          interpolationValues);
+        float chlor = this->dataPtr->BarycentricInterpolate(
+          sensorPosENUEigen, interpolatorXYZs, interpolationValues);
         casted->SetData(chlor);
       }
       else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(
         sensor))
       {
-        float eCurr = this->dataPtr->TrilinearInterpolate(
-          sensorPosENUEigen, interpolatorXYZs,
-          this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx]);
-        float nCurr = this->dataPtr->TrilinearInterpolate(
-          sensorPosENUEigen, interpolatorXYZs,
-          this->dataPtr->northCurrentArr[this->dataPtr->timeIdx]);
+        this->dataPtr->ExtractElements(
+          this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx], spatialIdx,
+          interpolationValues);
+        float eCurr = this->dataPtr->BarycentricInterpolate(
+          sensorPosENUEigen, interpolatorXYZs, interpolationValues);
+
+        // Reset before reuse
+        interpolationValues.clear();
+
+        this->dataPtr->ExtractElements(
+          this->dataPtr->northCurrentArr[this->dataPtr->timeIdx], spatialIdx,
+          interpolationValues);
+        float nCurr = this->dataPtr->BarycentricInterpolate(
+          sensorPosENUEigen, interpolatorXYZs, interpolationValues);
 
         auto curr = ignition::math::Vector3d(eCurr, nCurr, 0.0);
         casted->SetData(curr);
