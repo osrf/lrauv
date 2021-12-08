@@ -53,13 +53,6 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Generate octree from spatial data, for searching
   public: void GenerateOctrees();
 
-  /// \brief Comparison function for std::set_difference().
-  /// Comparison between points is arbitrary. This function is only used for
-  /// set operations, not for literal sorting.
-  public: bool comparePclPoints(
-    const pcl::PointXYZ &a,
-    const pcl::PointXYZ &b);
-
   /// \brief Barycentric interpolation in 3D, given 4 points on any arbitrary
   /// tetrahedra.
   /// \param[in] _p Position within the tetrahedra to interpolate for
@@ -585,16 +578,6 @@ void ScienceSensorsSystemPrivate::GenerateOctrees()
 }
 
 /////////////////////////////////////////////////
-bool ScienceSensorsSystemPrivate::comparePclPoints(
-  const pcl::PointXYZ &a,
-  const pcl::PointXYZ &b)
-{
-  // Comparison between points is arbitrary. This function is only used for
-  // set operations, not for literal sorting.
-  return a.x < b.x && a.y < b.y && a.z < b.z;
-}
-
-/////////////////////////////////////////////////
 float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   const Eigen::Vector3f &_p,
   const std::vector<pcl::PointXYZ> &_xyzs,
@@ -602,7 +585,7 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
 {
   // Implemented from https://en.wikipedia.org/wiki/Barycentric_coordinate_system#Barycentric_coordinates_on_tetrahedra
 
-  igndbg << "_p: " << std::endl << _p << std::endl;
+  //igndbg << "_p: " << std::endl << _p << std::endl;
 
   Eigen::Matrix3f T;
   // Row 1: x1 - x4, x2 - x4, x3 - x4
@@ -617,7 +600,7 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
        _xyzs.at(0).z - _xyzs.at(3).z,
        _xyzs.at(1).z - _xyzs.at(3).z,
        _xyzs.at(2).z - _xyzs.at(3).z;
-  igndbg << "T: " << std::endl << T << std::endl;
+  //igndbg << "T: " << std::endl << T << std::endl;
 
   // Check for special case when 3rd row of T is all zeros.
   // Happens when all neighbors are on the same z slice
@@ -633,20 +616,20 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   // r4 = (x4, y4, z4)
   Eigen::Vector3f r4;
   r4 << _xyzs.at(3).x, _xyzs.at(3).y, _xyzs.at(3).z;
-  igndbg << "r4: " << std::endl << r4 << std::endl;
+  //igndbg << "r4: " << std::endl << r4 << std::endl;
 
   // (lambda1, lambda2, lambda3)
   Eigen::Vector3f lambda123 = T.inverse() * (_p - r4);
 
-  igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
+  //igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
 
   // lambda4 = 1 - lambda1 - lambda2 - lambda3
   float lambda4 = 1 - lambda123(0) - lambda123(1) - lambda123(2);
 
-  igndbg << "Barycentric 3D lambda 1 2 3 4: " << lambda123(0) << ", "
-    << lambda123(1) << ", "
-    << lambda123(2) << ", "
-    << lambda4 << std::endl;
+  //igndbg << "Barycentric 3D lambda 1 2 3 4: " << lambda123(0) << ", "
+  //  << lambda123(1) << ", "
+  //  << lambda123(2) << ", "
+  //  << lambda4 << std::endl;
 
   // f(r) = lambda1 * f(r1) + lambda2 * f(r2) + lambda3 * f(r3)
   float result =
@@ -676,24 +659,24 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   // Row 2: y1 - y3, y2 - y3
        _xyzs.at(0).y - _xyzs.at(2).y,
        _xyzs.at(1).y - _xyzs.at(2).y;
-  igndbg << "T: " << std::endl << T << std::endl;
+  //igndbg << "T: " << std::endl << T << std::endl;
 
   // r3 = (x3, y3, z3)
   Eigen::Vector2f r3;
   r3 << _xyzs.at(2).x, _xyzs.at(2).y;
-  igndbg << "r3: " << std::endl << r3 << std::endl;
+  //igndbg << "r3: " << std::endl << r3 << std::endl;
 
   // (lambda1, lambda2)
   Eigen::Vector2f lambda12 = T.inverse() * (_p - r3);
 
-  igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
+  //igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
 
   // lambda3 = 1 - lambda1 - lambda2
   float lambda3 = 1 - lambda12(0) - lambda12(1);
 
-  igndbg << "Barycentric 2D lambda 1 2 3: " << lambda12(0) << ", "
-    << lambda12(1) << ", "
-    << lambda3 << std::endl;
+  //igndbg << "Barycentric 2D lambda 1 2 3: " << lambda12(0) << ", "
+  //  << lambda12(1) << ", "
+  //  << lambda3 << std::endl;
 
   // f(r) = lambda1 * f(r1) + lambda2 * f(r2)
   float result =
@@ -947,6 +930,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       // Pass in the data values at the 8 points.
       if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
       {
+        igndbg << "Interpolating salinity" << std::endl;
         this->dataPtr->ExtractElements(
           this->dataPtr->salinityArr[this->dataPtr->timeIdx], spatialIdx,
           interpolationValues);
@@ -957,6 +941,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
         sensor))
       {
+        igndbg << "Interpolating temperature" << std::endl;
         this->dataPtr->ExtractElements(
           this->dataPtr->temperatureArr[this->dataPtr->timeIdx], spatialIdx,
           interpolationValues);
@@ -970,6 +955,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
         sensor))
       {
+        igndbg << "Interpolating chlorophyll" << std::endl;
         this->dataPtr->ExtractElements(
           this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx], spatialIdx,
           interpolationValues);
@@ -980,6 +966,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(
         sensor))
       {
+        igndbg << "Interpolating E and N currents" << std::endl;
         this->dataPtr->ExtractElements(
           this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx], spatialIdx,
           interpolationValues);
