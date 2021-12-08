@@ -202,6 +202,10 @@ void TethysCommPlugin::Configure(
   {
     this->debugPrintout = _sdf->Get<bool>("debug_printout");
   }
+  if (_sdf->HasElement("density"))
+  {
+    this->oceanDensity = _sdf->Get<double>("ocean_density");
+  }
 
   // Initialize transport
   if (!this->node.Subscribe(this->commandTopic,
@@ -595,6 +599,9 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.set_salinity_(this->latestSalinity);
   stateMsg.set_temperature_(this->latestTemperature.Celsius());
   stateMsg.add_values_(this->latestChlorophyll);
+
+  // Set Ocean Density
+  stateMsg.set_density_(this->oceanDensity);
 
   double pressure = 0.0;
   if (latlon)
