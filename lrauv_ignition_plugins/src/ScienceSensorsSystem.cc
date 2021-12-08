@@ -108,15 +108,18 @@ class tethys::ScienceSensorsSystemPrivate
     std::vector<pcl::PointXYZ> &_nbrs,
     int _k=4);
 
-  /// \brief Interpolate floating point data based on distance
-  /// \param[in] _arr Array of data from which to find elements to interpolate
-  /// \param[in] _inds Indices in _arr
-  /// \param[in] _sqrDists Distances of elements in _arr
+  /// \brief Trilinear interpolation, given 8 points on a cube, suitable for
+  /// data laid out in a rectangular grid. For this to give the desired result,
+  /// the 8 points must lie on a cube. Otherwise, use a different interpolation
+  /// method.
+  /// \param[in] _p Position to interpolate for
+  /// \param[in] _interpolators1 4 XYZ points on a z slice to interpolate among
+  /// \param[in] _interpolators2 4 XYZ points on a second z slice to interpolate
   /// \return Interpolated value, or quiet NaN if inputs invalid.
-  public: float InterpolateData(
-    std::vector<float> _arr,
-    std::vector<int> &_inds,
-    std::vector<float> &_sqrDists);
+  public: float TrilinearInterpolate(
+    const Eigen::Vector3f &_p,
+    const std::vector<pcl::PointXYZ> &_interpolators1,
+    const std::vector<pcl::PointXYZ> &_interpolators2);
 
   //////////////////////////////
   // Functions for communication
@@ -642,7 +645,7 @@ void ScienceSensorsSystemPrivate::FindInterpolators(
   }
   if (_inds.size() == 0 || _sqrDists.size() == 0)
   {
-    ignwarn << "FindInterpolators(): Invalid neighbors aray size ("
+    ignwarn << "FindInterpolators(): Invalid neighbors array size ("
             << _inds.size() << " and " << _sqrDists.size()
             << "). No neighbors to use for interpolation. Returning NaN."
             << std::endl;
@@ -818,46 +821,185 @@ void ScienceSensorsSystemPrivate::CreateAndSearchOctree(
 }
 
 /////////////////////////////////////////////////
-float ScienceSensorsSystemPrivate::InterpolateData(
-  std::vector<float> _arr,
-  std::vector<int> &_inds,
-  std::vector<float> &_sqrDists)
+float ScienceSensorsSystemPrivate::TrilinearInterpolate(
+  const Eigen::Vector3f &_p,
+  const std::vector<pcl::PointXYZ> &_interpolators1,
+  const std::vector<pcl::PointXYZ> &_interpolators2)
 {
-  IGN_PROFILE("ScienceSensorsSystemPrivate::InterpolateData");
+  IGN_PROFILE("ScienceSensorsSystemPrivate::TrilinearInterpolate");
 
-  // Sanity checks
-  if (_inds.size() == 0 || _sqrDists.size() == 0)
+  // Sanity check: Must have 8 points, 4 above, 4 below.
+  if (_interpolators1.size() != 4 || _interpolators2.size() != 4)
   {
-    ignwarn << "InterpolateData(): Invalid neighbors aray size ("
-            << _inds.size() << " and " << _sqrDists.size()
-            << "). No neighbors to use for interpolation. Returning NaN."
-            << std::endl;
-    return std::numeric_limits<float>::quiet_NaN();
-  }
-  if (_inds.size() != _sqrDists.size())
-  {
-    ignwarn << "InterpolateData(): Number of neighbors != number of distances."
-            << "Invalid input. Returning NaN." << std::endl;
+    ignerr << "Size of interpolators invalid (" << _interpolators1.size()
+      << " and " << _interpolators2.size() << "). "
+      << "Need 4 points above and 4 below. "
+      << "Cannot perform trilinear interpolation." << std::endl;
     return std::numeric_limits<float>::quiet_NaN();
   }
 
-  // Find closest neighbor
-  int nnIdx = _inds[0];
-  float minDist = _sqrDists[0];
-  for (int i = 0; i < _inds.size(); ++i)
+  // Create matrix for easier computations. Dimensions: nPts x 3
+  auto int1mat = Eigen::MatrixXf(4, 3);
+  auto int2mat = Eigen::MatrixXf(4, 3);
+  for (int r = 0; r < _interpolators1.size(); ++r)
   {
-    if (_sqrDists[i] < minDist)
+    // Fill matrix row with 4 points at top
+    int1mat(r, 0) = _interpolators1.at(r).x;
+    int1mat(r, 1) = _interpolators1.at(r).y;
+    int1mat(r, 2) = _interpolators1.at(r).z;
+
+    // Fill matrix row with 4 points at bottom
+    int2mat(r, 0) = _interpolators2.at(r).x;
+    int2mat(r, 1) = _interpolators2.at(r).y;
+    int2mat(r, 2) = _interpolators2.at(r).z;
+  }
+
+  // TODO: Oops, C is the actual value, not the XYZ. Need to pass in 8 actual
+  // points!!! Then redefine c000 and c111 here.
+
+  // Extract 2 diagonal vertices to represent the rectangular prism, assuming
+  // the points are corners of a prism (assumption checked after extracting).
+  // Corner of minimum x y z
+  auto c000 = Eigen::Vector3f(
+    std::min(int1mat.col(0).minCoeff(), int2mat.col(0).minCoeff()),
+    std::min(int1mat.col(1).minCoeff(), int2mat.col(1).minCoeff()),
+    std::min(int1mat.col(2).minCoeff(), int2mat.col(2).minCoeff()));
+  // Corner of maximum x y z
+  auto c111 = Eigen::Vector3f(
+    std::max(int1mat.col(0).maxCoeff(), int2mat.col(0).maxCoeff()),
+    std::max(int1mat.col(1).maxCoeff(), int2mat.col(1).maxCoeff()),
+    std::max(int1mat.col(2).maxCoeff(), int2mat.col(2).maxCoeff()));
+
+  // Consider equal if difference is less than tolerance
+  const double TOLERANCE = 1e-6;
+
+  // For error message
+  bool err = false;
+  float ref1 = 0.0f, ref2 = 0.0f, val = 0.0f;
+  std::string component {""};
+
+  // Sanity check: The 8 points must be corners of a rectangular prism.
+  // Each vertex, if really on the corner of a rectangular prism, must share
+  // at least one component of its xyz coordinates with c000, and the other
+  // components are shared with c111.
+  // The actual vertices are c000, c001, c010, c011, c100, c101, c110, c111.
+  // NOTE: This block can be simplified when have time.
+  for (int r = 0; r < int2mat.rows(); ++r)
+  {
+    // 4 points at top
+    // x equals neither min nor max x
+    if (fabs(int1mat(r, 0) - c000(0)) > TOLERANCE &&
+      (fabs(int1mat(r, 0) - c111(0)) > TOLERANCE))
     {
-      nnIdx = _inds[i];
-      minDist = _sqrDists[i];
+      err = true;
+      component = "A top x";
+      val = int1mat(r, 0);
+      ref1 = c000(0);
+      ref2 = c111(0);
+      break;
+    }
+    // y equals neither min nor max y
+    if (fabs(int1mat(r, 1) - c000(1)) > TOLERANCE &&
+      (fabs(int1mat(r, 1) - c111(1)) > TOLERANCE))
+    {
+      err = true;
+      component = "A top y";
+      val = int1mat(r, 1);
+      ref1 = c000(1);
+      ref2 = c111(1);
+      break;
+    }
+    // z equals neither min nor max z
+    if (fabs(int1mat(r, 2) - c000(2)) > TOLERANCE &&
+      (fabs(int1mat(r, 2) - c111(2)) > TOLERANCE))
+    {
+      err = true;
+      component = "A top z";
+      val = int1mat(r, 2);
+      ref1 = c000(2);
+      ref2 = c111(2);
+      break;
+    }
+
+    // 4 points at bottom
+    // x equals neither min nor max x
+    if (fabs(int2mat(r, 0) - c000(0)) > TOLERANCE &&
+      (fabs(int2mat(r, 0) - c111(0)) > TOLERANCE))
+    {
+      err = true;
+      component = "A bottom x";
+      val = int2mat(r, 0);
+      ref1 = c000(0);
+      ref2 = c111(0);
+      break;
+    }
+    // y equals neither min nor max y
+    if (fabs(int2mat(r, 1) - c000(1)) > TOLERANCE &&
+      (fabs(int2mat(r, 1) - c111(1)) > TOLERANCE))
+    {
+      err = true;
+      component = "A bottom y";
+      val = int2mat(r, 1);
+      ref1 = c000(1);
+      ref2 = c111(1);
+      break;
+    }
+    // z equals neither min nor max z
+    if (fabs(int2mat(r, 2) - c000(2)) > TOLERANCE &&
+      (fabs(int2mat(r, 2) - c111(2)) > TOLERANCE))
+    {
+      err = true;
+      component = "A bottom z";
+      val = int2mat(r, 2);
+      ref1 = c000(2);
+      ref2 = c111(2);
+      break;
     }
   }
+  if (err)
+  {
+    ignerr << "Suspect 8 points are not corners of a prism. "
+      << component << " " << val << " is equal to neither min prism corner "
+      << ref1 << " nor max prism corner " << ref2
+      << ". Aborting trilinear interpolation."<< std::endl;
+    return std::numeric_limits<float>::quiet_NaN();
+  }
 
-  // Dummy: Just return the closest element
-  return _arr[nnIdx];
+  // Trilinear interpolation using 8 corners of a rectangular prism
+  // Implements https://en.wikipedia.org/wiki/Trilinear_interpolation
 
+  // Ratio describing where the target point is within the cube
+  float dx = (_p(0) - c000(0)) / (c111(0) - c000(0));
+  float dy = (_p(1) - c000(1)) / (c111(1) - c000(1));
+  float dz = (_p(2) - c000(2)) / (c111(2) - c000(2));
 
-  // TODO trilinear interpolation using the 8 interpolators found
+  // Define the 6 other corners explicitly, for readability
+  // Example: c100 = (c111_x, c000_y, c000_z). Similar for others.
+  auto c001 = Eigen::Vector3f(c000(0), c000(1), c111(2));
+  auto c010 = Eigen::Vector3f(c000(0), c111(1), c000(2));
+  auto c011 = Eigen::Vector3f(c000(0), c111(1), c111(2));
+  auto c100 = Eigen::Vector3f(c111(0), c000(1), c000(2));
+  auto c101 = Eigen::Vector3f(c111(0), c000(1), c111(2));
+  auto c110 = Eigen::Vector3f(c111(0), c111(1), c000(2));
+
+  // By definition of trilinear interpolation, the order you interpolate among
+  // xyz does not matter. They will give the same result.
+  // Interpolate along x, to find where target point is wrt each pair of x's.
+  // For 8 points, there are 4 pairs of x's.
+  Eigen::Vector3f c00 = c000 * (1 - dx) + c100 * dx;
+  Eigen::Vector3f c01 = c001 * (1 - dx) + c101 * dx;
+  Eigen::Vector3f c10 = c010 * (1 - dx) + c110 * dx;
+  Eigen::Vector3f c11 = c011 * (1 - dx) * c111 * dx;
+
+  // Interpolate along y
+  // For 4 interpolated points on x above, there are 2 pairs of y's
+  Eigen::Vector3f c0 = c00 * (1 - dy) + c10 * dy;
+  Eigen::Vector3f c1 = c01 * (1 - dy) + c11 * dy;
+
+  // Interpolate along z
+  // For 2 interpolated points on y above, there is only 1 z.
+  // This arrives at the interpolated value at the target xyz position.
+  Eigen::Vector3f c = c0 * (1 - dz) + c1 * dz;
 }
 
 /////////////////////////////////////////////////
@@ -1080,17 +1222,26 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       }
 
       // TODO
-      // Pass 2 sets of 4 points to InterpolateData().
-      // Rewrite InterpolateData() to do trilinear interpolation.
+      // Pass 2 sets of 4 points to TrilinearInterpolate(), to sanity check
+      // they're vertices of a rectangular prism.
+      // Then pass c000-c111, 8 points, below, using 1D indices!!! Have to
+      // rewrite a bunch of stuff.
+
+      // Convert to Eigen to pass to interpolation
+      Eigen::Vector3f sensorCartEigen;
+      sensorCartEigen << sensorCart.X(), sensorCart.Y(), sensorCart.Z();
+
+      float interpolatedResult = this->dataPtr->TrilinearInterpolate(
+        sensorCartEigen, interpolatorsSlice1, interpolatorsSlice2);
 
       // For the correct sensor, grab closest neighbors and interpolate
-      // TODO InterpolateData() doesn't need to be called on every sensor
+      // TODO TrilinearInterpolate() doesn't need to be called on every sensor
       // separately. It can just be called once each loop, i.e. assume
       // a location has all types of measurements? These sensors are all on
       // the robot, it's not like they're in vastly different locations!!
       if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
       {
-        float sal = this->dataPtr->InterpolateData(
+        float sal = this->dataPtr->TrilinearInterpolate(
           this->dataPtr->salinityArr[this->dataPtr->timeIdx], spatialIdx,
           spatialSqrDist);
         casted->SetData(sal);
@@ -1098,7 +1249,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
         sensor))
       {
-        float temp = this->dataPtr->InterpolateData(
+        float temp = this->dataPtr->TrilinearInterpolate(
           this->dataPtr->temperatureArr[this->dataPtr->timeIdx], spatialIdx,
           spatialSqrDist);
 
@@ -1109,17 +1260,18 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
         sensor))
       {
-        float chlor = this->dataPtr->InterpolateData(
+        float chlor = this->dataPtr->TrilinearInterpolate(
           this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx], spatialIdx,
           spatialSqrDist);
         casted->SetData(chlor);
       }
-      else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(sensor))
+      else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(
+        sensor))
       {
-        float eCurr = this->dataPtr->InterpolateData(
+        float eCurr = this->dataPtr->TrilinearInterpolate(
           this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx], spatialIdx,
           spatialSqrDist);
-        float nCurr = this->dataPtr->InterpolateData(
+        float nCurr = this->dataPtr->TrilinearInterpolate(
           this->dataPtr->northCurrentArr[this->dataPtr->timeIdx], spatialIdx,
           spatialSqrDist);
 
