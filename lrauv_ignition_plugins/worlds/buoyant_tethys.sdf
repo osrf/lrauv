@@ -314,32 +314,23 @@
       <direction>-0.5 0.1 -0.9</direction>
     </light>
 
-    <!-- Uncomment if you need a ground plane -->
-    <!-- <model name="ground_plane">
+
+    <!-- This invisible plane helps with orbiting the camera, especially at large scales -->
+    <model name="horizontal_plane">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-            </plane>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <plane>
               <normal>0 0 1</normal>
-              <size>100 100</size>
+              <!-- 300 km x 300 km -->
+              <size>300000 300000</size>
             </plane>
           </geometry>
-          <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
-          </material>
+          <transparency>1.0</transparency>
         </visual>
       </link>
-    </model> -->
+    </model>
 
     <!-- Uncomment for particle effect
       Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
