@@ -101,11 +101,14 @@
         <scene>scene</scene>
         <ambient_light>0.4 0.4 0.4</ambient_light>
         <background_color>0.8 0.8 0.8</background_color>
+        <!-- looking at robot -->
         <!--camera_pose>0 6 6 0 0.5 -1.57</camera_pose-->
-        <camera_pose>0 0 800000 3.14 1.5 3.1</camera_pose>
+        <!-- looking at all science data for 2003080103_mb_l3_las.csv -->
+        <camera_pose>-50000 -30000 250000 0 1.1 1.58</camera_pose>
         <camera_clip>
           <!-- ortho view needs low near clip -->
-          <near>0.001</near>
+          <!-- but a very low near clip messes orbit's far clip ?! -->
+          <near>0.1</near>
           <!-- See 3000 km away -->
           <far>3000000</far>
         </camera_clip>
