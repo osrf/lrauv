@@ -1228,11 +1228,11 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       // rewrite a bunch of stuff.
 
       // Convert to Eigen to pass to interpolation
-      Eigen::Vector3f sensorCartEigen;
-      sensorCartEigen << sensorCart.X(), sensorCart.Y(), sensorCart.Z();
+      Eigen::Vector3f sensorPosENUEigen;
+      sensorPosENUEigen << sensorPosENU.X(), sensorPosENU.Y(), sensorPosENU.Z();
 
       float interpolatedResult = this->dataPtr->TrilinearInterpolate(
-        sensorCartEigen, interpolatorsSlice1, interpolatorsSlice2);
+        sensorPosENUEigen, interpolatorsSlice1, interpolatorsSlice2);
 
       // For the correct sensor, grab closest neighbors and interpolate
       // TODO TrilinearInterpolate() doesn't need to be called on every sensor
