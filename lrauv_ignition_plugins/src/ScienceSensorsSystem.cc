@@ -33,7 +33,6 @@
 #include <ignition/transport/Node.hh>
 
 #include <pcl/conversions.h>
-#include <pcl/filters/passthrough.h>
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/point_cloud.h>
 #include <pcl/octree/octree_search.h>
