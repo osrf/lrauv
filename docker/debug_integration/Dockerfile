@@ -70,6 +70,9 @@ COPY . src/lrauv
 # Build image
 RUN [ "/bin/bash" , "-c" , "colcon build --cmake-args='-DBUILD_TESTING=true'" ]
 
+RUN [ "/bin/bash" , "-c" , "sed -i '48s/1/0/' ~/lrauv_ws/src/lrauv-application/Config/sim/Sensor.cfg"]
+RUN [ "/bin/bash" , "-c" , "sed -i '49s/1/0/' ~/lrauv_ws/src/lrauv-application/Config/sim/Sensor.cfg"]
+
 # Run tests
 # RUN [ "/bin/bash" , "-c" , ". ~/lrauv_ws/install/setup.sh; colcon test --event-handlers console_direct+" ]
 # RUN [ "/bin/bash" , "-c" , ". ~/lrauv_ws/install/setup.sh; colcon test-result" ]"
