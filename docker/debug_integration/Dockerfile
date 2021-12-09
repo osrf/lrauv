@@ -19,7 +19,7 @@
 # Research Institute (MBARI) and the David and Lucile Packard Foundation
 #
 
-FROM mbari/lrauv-ignition-sim
+FROM mbari/lrauv-ignition-sim:garden
 
 USER root
 

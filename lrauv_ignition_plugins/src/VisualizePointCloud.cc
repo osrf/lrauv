@@ -172,7 +172,7 @@ void VisualizePointCloud::OnFloatVTopic(const QString &_floatVTopic)
 
   // Request service
   this->dataPtr->node.Request(this->dataPtr->floatVTopic,
-      &VisualizePointCloud::OnPointCloudService, this);
+      &VisualizePointCloud::OnFloatVService, this);
 
   // Create new subscription
   if (!this->dataPtr->node.Subscribe(this->dataPtr->floatVTopic,
@@ -231,13 +231,14 @@ void VisualizePointCloud::OnRefresh()
       }
     }
   }
-  if (this->dataPtr->pointCloudTopicList.size() > 0)
-  {
-    this->OnPointCloudTopic(this->dataPtr->pointCloudTopicList.at(0));
-  }
+  // Handle floats first, so by the time we get the point cloud it can be colored
   if (this->dataPtr->floatVTopicList.size() > 0)
   {
     this->OnFloatVTopic(this->dataPtr->floatVTopicList.at(0));
+  }
+  if (this->dataPtr->pointCloudTopicList.size() > 0)
+  {
+    this->OnPointCloudTopic(this->dataPtr->pointCloudTopicList.at(0));
   }
 
   this->PointCloudTopicListChanged();
@@ -366,7 +367,8 @@ void VisualizePointCloud::PublishMarkers()
         iterY != iterY.end() &&
         iterZ != iterZ.end(); ++iterX, ++iterY, ++iterZ, ++ptIdx)
   {
-    // Value from float vector, if available
+    // Value from float vector, if available. Otherwise publish all data as
+    // zeroes.
     float dataVal = 0.0;
     if (this->dataPtr->floatVMsg.data().size() > ptIdx)
     {
