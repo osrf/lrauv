@@ -263,6 +263,7 @@
           <title>Reference axis</title>
           <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
+        <fsk>tethys</fsk>
       </plugin>
     </gui>
 

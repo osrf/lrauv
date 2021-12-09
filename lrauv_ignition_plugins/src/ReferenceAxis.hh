@@ -33,7 +33,14 @@ namespace tethys
 {
   class ReferenceAxisPrivate;
 
-  /// \brief Visualize PointCloudPacked messages in the 3D scene.
+  /// \brief This plugin adds a few reference frames to the 3D scene:
+  ///
+  /// * ENU: floating op the user camera's top-left corner
+  /// * NED: floating op the user camera's top-right corner
+  /// * FSK: attached to all models specified in `<fsk>`
+  ///
+  /// For each frame, red-green-blue axes are spawned. When using Ogre 1, a
+  /// floating text with the frame name is also spawned.
   class ReferenceAxis : public ignition::gui::Plugin
   {
     Q_OBJECT

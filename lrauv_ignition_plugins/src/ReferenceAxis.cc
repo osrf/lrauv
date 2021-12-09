@@ -62,8 +62,8 @@ namespace tethys
     /// \brief NED visual
     public: ignition::rendering::VisualPtr nedVis{nullptr};
 
-    /// \brief FSK visual
-    public: ignition::rendering::VisualPtr fskVis{nullptr};
+    /// \brief FSK visuals. The key is the model name, the value is the visual.
+    public: std::map<std::string, ignition::rendering::VisualPtr> fskVisuals;
   };
 }
 
@@ -82,10 +82,21 @@ ReferenceAxis::~ReferenceAxis()
 }
 
 /////////////////////////////////////////////////
-void ReferenceAxis::LoadConfig(const tinyxml2::XMLElement *)
+void ReferenceAxis::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
 {
   if (this->title.empty())
     this->title = "Visualize point cloud";
+
+  // Configuration
+  if (_pluginElem)
+  {
+    for (auto fskElem = _pluginElem->FirstChildElement("fsk");
+         fskElem != nullptr && fskElem->GetText() != nullptr;
+         fskElem = fskElem->NextSiblingElement("fsk"))
+    {
+      this->dataPtr->fskVisuals[fskElem->GetText()] = nullptr;
+    }
+  }
 
   ignition::gui::App()->findChild<
     ignition::gui::MainWindow *>()->installEventFilter(this);
@@ -153,6 +164,7 @@ void ReferenceAxisPrivate::OnPreRender()
   }
 
   // Calculate current HFOV because the API is always giving the initial value.
+  // https://github.com/ignitionrobotics/ign-rendering/issues/500
   double hFOV = 2.0 * atan(tan(vFOV / 2.0) / aspectRatio);
 
   // TODO(chapulina) Let user choose distance from camera
@@ -238,20 +250,22 @@ void ReferenceAxisPrivate::OnPreRender()
   this->nedVis->SetLocalPosition(nedPos);
 
   // FSK
-  if (nullptr == this->fskVis)
+  for (auto &[modelName, fskVis] : this->fskVisuals)
   {
-    // TODO(chapulina) Support other names
-    auto vehicleVis = this->scene->VisualByName("tethys");
+    if (nullptr != fskVis)
+      continue;
+
+    auto vehicleVis = this->scene->VisualByName(modelName);
     if (nullptr == vehicleVis)
     {
       return;
     }
 
-    this->fskVis = this->scene->CreateAxisVisual();
-    vehicleVis->AddChild(this->fskVis);
+    fskVis = this->scene->CreateAxisVisual();
+    vehicleVis->AddChild(fskVis);
     // TODO(chapulina) This rotation won't be needed if we update the model
     // https://github.com/osrf/lrauv/issues/80
-    this->fskVis->SetLocalRotation(0, IGN_PI, 0);
+    fskVis->SetLocalRotation(0, IGN_PI, 0);
 
     // Ogre2 doesn't support text yet
     auto textGeom = this->scene->CreateText();
@@ -268,7 +282,7 @@ void ReferenceAxisPrivate::OnPreRender()
       textVis->AddGeometry(textGeom);
       textVis->SetLocalPosition(0.2, 0.2, 0.5);
 
-      this->fskVis->AddChild(textVis);
+      fskVis->AddChild(textVis);
     }
   }
 }

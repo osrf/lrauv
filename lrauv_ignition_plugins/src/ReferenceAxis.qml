@@ -28,7 +28,7 @@ import QtQuick.Layouts 1.3
 import "qrc:/qml"
 
 GridLayout {
-  columns: 6
+  columns: 1
   columnSpacing: 10
   Layout.minimumWidth: 350
   Layout.minimumHeight: 200
@@ -36,9 +36,14 @@ GridLayout {
   anchors.leftMargin: 10
   anchors.rightMargin: 10
 
+  Label {
+    Layout.columnSpan: 1
+    text: "No configuration options at the moment."
+  }
+
 
   Item {
-    Layout.columnSpan: 6
+    Layout.columnSpan: 1
     width: 10
     Layout.fillHeight: true
   }
