@@ -569,8 +569,20 @@ void TethysCommPlugin::PostUpdate(
   auto poseOffsetNED = modelPoseNED *
       this->initialModelPoseNED.value().Inverse();
   ignition::msgs::Set(stateMsg.mutable_pos_(), poseOffsetNED.Pos());
-  ignition::msgs::Set(stateMsg.mutable_rph_(), poseOffsetNED.Rot().Euler());
-  ignition::msgs::Set(stateMsg.mutable_posrph_(), poseOffsetNED.Rot().Euler());
+  // ignition::msgs::Set(stateMsg.mutable_rph_(), poseOffsetNED.Rot().Euler());
+  // ignition::msgs::Set(stateMsg.mutable_posrph_(), poseOffsetNED.Rot().Euler());
+
+  // TODO(chapulina) The controller fails with the orientation above. Example error:
+  //
+  // [VerticalControl](CRITICAL): Excessive depth excursion=10.573917 m, failToGoUpDepth_=17.503380 m, depthRate=0.211946 m/s, pitch =0.114867 deg.
+  //
+  // The difference between poseOffsetNED.Rot() and rph is that roll and pitch are swapped.
+  auto rph = modelPoseENU.Rot().Euler();
+  rph.Z(-rph.Z());
+  ignition::msgs::Set(stateMsg.mutable_rph_(), rph);
+  ignition::msgs::Set(stateMsg.mutable_posrph_(), rph);
+
+//ignerr << "NED: " << poseOffsetNED.Rot() << " -- ENU with flipped Z: " << " " << rph << std::endl;
 
   auto latlon = ignition::gazebo::sphericalCoordinates(this->modelLink, _ecm);
   if (latlon)
