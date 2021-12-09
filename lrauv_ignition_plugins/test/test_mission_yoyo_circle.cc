@@ -91,7 +91,7 @@ TEST_F(LrauvTestFixture, YoYoCircle)
     auto dist = (pose.Pos() - prevPose.Pos()).Length();
 
     auto linVel = dist / time100it;
-    EXPECT_LT(0.0, linVel);
+    EXPECT_LT(0.0, linVel) << i;
 
     EXPECT_NEAR(1.0, linVel, 1.0) << i;
 
