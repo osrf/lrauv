@@ -53,10 +53,25 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Publish the latest point cloud
   public: void PublishData();
 
-  /// \brief Service callback for a point cloud with the latest science data.
+  /// \brief Service callback for a point cloud with the latest position data.
   /// \param[in] _res Point cloud to return
   /// \return True
-  public: bool ScienceDataService(ignition::msgs::PointCloudPacked &_res);
+  public: bool PointCloudService(ignition::msgs::PointCloudPacked &_res);
+
+  /// \brief Service callback for a float vector with the latest temperature data.
+  /// \param[in] _res Float vector to return
+  /// \return True
+  public: bool TemperatureService(ignition::msgs::Float_V &_res);
+
+  /// \brief Service callback for a float vector with the latest chlorophyll data.
+  /// \param[in] _res Float vector to return
+  /// \return True
+  public: bool ChlorophyllService(ignition::msgs::Float_V &_res);
+
+  /// \brief Service callback for a float vector with the latest salinity data.
+  /// \param[in] _res Float vector to return
+  /// \return True
+  public: bool SalinityService(ignition::msgs::Float_V &_res);
 
   /// \brief Returns a point cloud message populated with the latest sensor data
   public: ignition::msgs::PointCloudPacked PointCloudMsg();
@@ -522,10 +537,13 @@ void ScienceSensorsSystemPrivate::GenerateOctrees()
 void ScienceSensorsSystemPrivate::PublishData()
 {
   IGN_PROFILE("ScienceSensorsSystemPrivate::PublishData");
-  this->cloudPub.Publish(this->PointCloudMsg());
   this->tempPub.Publish(this->tempMsg);
   this->chlorPub.Publish(this->chlorMsg);
   this->salPub.Publish(this->salMsg);
+
+  // Publish cloud last. The floatVs are optional, so if the GUI gets the cloud
+  // first it will display a monochrome cloud until it receives the floats
+  this->cloudPub.Publish(this->PointCloudMsg());
 }
 
 /////////////////////////////////////////////////
@@ -604,19 +622,31 @@ void ScienceSensorsSystem::Configure(
            << std::endl;
   }
 
+  // Advertise cloud as a service for requests on-demand, and a topic for updates
   this->dataPtr->cloudPub = this->dataPtr->node.Advertise<
       ignition::msgs::PointCloudPacked>(this->dataPtr->cloudTopic);
 
   this->dataPtr->node.Advertise(this->dataPtr->cloudTopic,
-      &ScienceSensorsSystemPrivate::ScienceDataService, this->dataPtr.get());
+      &ScienceSensorsSystemPrivate::PointCloudService, this->dataPtr.get());
 
-  // Advertise science data topics
+  // Advertise science data, also as service and topics
+  std::string temperatureTopic{"/temperature"};
   this->dataPtr->tempPub = this->dataPtr->node.Advertise<
-      ignition::msgs::Float_V>("/temperature");
+      ignition::msgs::Float_V>(temperatureTopic);
+  this->dataPtr->node.Advertise(temperatureTopic,
+      &ScienceSensorsSystemPrivate::TemperatureService, this->dataPtr.get());
+
+  std::string chlorophyllTopic{"/chloropyll"};
   this->dataPtr->chlorPub = this->dataPtr->node.Advertise<
-      ignition::msgs::Float_V>("/chlorophyll");
+      ignition::msgs::Float_V>(chlorophyllTopic);
+  this->dataPtr->node.Advertise(chlorophyllTopic,
+      &ScienceSensorsSystemPrivate::ChlorophyllService, this->dataPtr.get());
+
+  std::string salinityTopic{"/salinity"};
   this->dataPtr->salPub = this->dataPtr->node.Advertise<
-      ignition::msgs::Float_V>("/salinity");
+      ignition::msgs::Float_V>(salinityTopic);
+  this->dataPtr->node.Advertise(salinityTopic,
+      &ScienceSensorsSystemPrivate::SalinityService, this->dataPtr.get());
 }
 
 /////////////////////////////////////////////////
@@ -830,10 +860,34 @@ void ScienceSensorsSystem::RemoveSensorEntities(
 }
 
 //////////////////////////////////////////////////
-bool ScienceSensorsSystemPrivate::ScienceDataService(
+bool ScienceSensorsSystemPrivate::PointCloudService(
     ignition::msgs::PointCloudPacked &_res)
 {
   _res = this->PointCloudMsg();
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool ScienceSensorsSystemPrivate::TemperatureService(
+    ignition::msgs::Float_V &_res)
+{
+  _res = this->tempMsg;
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool ScienceSensorsSystemPrivate::ChlorophyllService(
+    ignition::msgs::Float_V &_res)
+{
+  _res = this->chlorMsg;
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool ScienceSensorsSystemPrivate::SalinityService(
+    ignition::msgs::Float_V &_res)
+{
+  _res = this->salMsg;
   return true;
 }
 
