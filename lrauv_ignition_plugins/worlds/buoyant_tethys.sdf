@@ -315,7 +315,8 @@
     </include-->
 
     <include>
-      <pose>0 0 0 0 0 0</pose>
+      <!-- The vehicle must start facing North (i.e. +Y on ENU) -->
+      <pose degrees="true">0 0 0  0 0 -90</pose>
       <uri>tethys_equipped</uri>
     </include>
 
