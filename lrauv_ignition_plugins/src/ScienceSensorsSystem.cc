@@ -162,6 +162,7 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Distance robot needs to move before another data interpolation
   /// (based on sensor location) takes place.
+  /// TODO: Compute resolution from data. See where this constant is used.
   public: const float INTERPOLATE_DIST_THRESH = 5.0;
 
   ///////////////////////////////
@@ -197,6 +198,9 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Resolution of spatial coordinates in meters in octree, for data
   /// search.
+  /// TODO Compute resolution from data. Take into account that data often have
+  /// variable resolution, so maybe take minimum distance between points in the
+  /// point cloud.
   public: float spatialRes = 0.1f;
 
   /// \brief Octree for data search based on spatial location of sensor. One
@@ -888,6 +892,9 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     // Quick fix: Don't need to interpolate EVERY PostUpdate(). That's overkill.
     // Only need to do it after robot has moved a distance from when we did
     // the previous interpolation
+    // TODO Replace with something relating to the closest data point.
+    // Potentially lastSensorPosENU as well as lastSensorPosDataProximity.
+    // Or use spatialRes computed on the data.
     if (sensorPosENU.Distance(this->dataPtr->lastSensorPosENU) <
       this->dataPtr->INTERPOLATE_DIST_THRESH)
     {
