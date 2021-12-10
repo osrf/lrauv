@@ -177,7 +177,7 @@ void VisualizePointCloud::OnFloatVTopic(const QString &_floatVTopic)
 
   // Request service
   this->dataPtr->node.Request(this->dataPtr->floatVTopic,
-      &VisualizePointCloud::OnPointCloudService, this);
+      &VisualizePointCloud::OnFloatVService, this);
 
   // Create new subscription
   if (!this->dataPtr->node.Subscribe(this->dataPtr->floatVTopic,
@@ -236,13 +236,14 @@ void VisualizePointCloud::OnRefresh()
       }
     }
   }
-  if (this->dataPtr->pointCloudTopicList.size() > 0)
-  {
-    this->OnPointCloudTopic(this->dataPtr->pointCloudTopicList.at(0));
-  }
+  // Handle floats first, so by the time we get the point cloud it can be colored
   if (this->dataPtr->floatVTopicList.size() > 0)
   {
     this->OnFloatVTopic(this->dataPtr->floatVTopicList.at(0));
+  }
+  if (this->dataPtr->pointCloudTopicList.size() > 0)
+  {
+    this->OnPointCloudTopic(this->dataPtr->pointCloudTopicList.at(0));
   }
 
   this->PointCloudTopicListChanged();
@@ -382,22 +383,26 @@ void VisualizePointCloud::PublishMarkers()
       continue;
     }
 
-    // Value from float vector
-    float dataVal = std::numeric_limits<float>::quiet_NaN();
+    // Value from float vector, if available. Otherwise publish all data as
+    // zeroes.
+    float dataVal = 0.0;
     if (this->dataPtr->floatVMsg.data().size() > ptIdx)
     {
       dataVal = this->dataPtr->floatVMsg.data(ptIdx);
     }
 
-    // Don't visualize NaN
-    if (std::isnan(dataVal))
-      continue;
-
     auto msg = markers.add_marker();
 
-    msg->set_ns(this->dataPtr->pointCloudTopic + "-" +
-        this->dataPtr->floatVTopic);
-    msg->set_id(nPtsViz + 1);
+    msg->set_ns(this->dataPtr->pointCloudTopic + this->dataPtr->floatVTopic);
+    msg->set_id(ptIdx + 1);
+
+    // Don't visualize NaN
+    if (std::isnan(dataVal))
+    {
+      msg->set_action(ignition::msgs::Marker::DELETE_MARKER);
+      continue;
+    }
+    msg->set_action(ignition::msgs::Marker::ADD_MODIFY);
 
     auto ratio = (dataVal - this->dataPtr->minFloatV) /
         (this->dataPtr->maxFloatV - this->dataPtr->minFloatV);
@@ -407,7 +412,6 @@ void VisualizePointCloud::PublishMarkers()
     ignition::msgs::Set(msg->mutable_material()->mutable_ambient(), color);
     ignition::msgs::Set(msg->mutable_material()->mutable_diffuse(), color);
     msg->mutable_material()->mutable_diffuse()->set_a(0.5);
-    msg->set_action(ignition::msgs::Marker::ADD_MODIFY);
 
     // TODO: Use POINTS or LINE_LIST, but need per-vertex color
     msg->set_type(ignition::msgs::Marker::BOX);
@@ -451,7 +455,7 @@ void VisualizePointCloud::PublishMarkers()
   }
 
   igndbg << "Received [" << nPts
-         << "] markers, visualizing [" << markers.marker().size() << "]"
+         << "] markers, visualizing [" << nPtsViz << "]"
          << std::endl;
 
   ignition::msgs::Boolean res;
@@ -468,14 +472,17 @@ void VisualizePointCloud::PublishMarkers()
 //////////////////////////////////////////////////
 void VisualizePointCloud::ClearMarkers()
 {
+  if (this->dataPtr->pointCloudTopic.empty())
+    return;
+
   std::lock_guard<std::recursive_mutex>(this->dataPtr->mutex);
   ignition::msgs::Marker msg;
-  msg.set_ns(this->dataPtr->pointCloudTopic + "-" + this->dataPtr->floatVTopic);
+  msg.set_ns(this->dataPtr->pointCloudTopic + this->dataPtr->floatVTopic);
   msg.set_id(0);
   msg.set_action(ignition::msgs::Marker::DELETE_ALL);
 
   igndbg << "Clearing markers on "
-    << this->dataPtr->pointCloudTopic + "-" + this->dataPtr->floatVTopic
+    << this->dataPtr->pointCloudTopic + this->dataPtr->floatVTopic
     << std::endl;
 
   this->dataPtr->node.Request("/marker", msg);
