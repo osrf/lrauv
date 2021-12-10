@@ -82,12 +82,12 @@ TEST_F(LrauvTestFixture, PitchMass)
   for(auto pose: this->tethysPoses)
   {
     // Pitch 20 degrees
-    ASSERT_LT(pose.Rot().Euler().Y(), IGN_DTOR(21));
-    ASSERT_GT(pose.Rot().Euler().Y(), IGN_DTOR(-1));
+    EXPECT_LT(pose.Rot().Euler().Y(), IGN_DTOR(25));
+    EXPECT_GT(pose.Rot().Euler().Y(), IGN_DTOR(-5));
 
     // No roll or yaw
-    ASSERT_NEAR(pose.Rot().Euler().X(), IGN_DTOR(0), 1e-3);
-    ASSERT_NEAR(pose.Rot().Euler().Z(), IGN_DTOR(0), 1e-3);
+    EXPECT_NEAR(pose.Rot().Euler().X(), IGN_DTOR(0), 1e-3);
+    EXPECT_NEAR(pose.Rot().Euler().Z(), IGN_DTOR(0), 1e-3);
 
     // Check position holds
     // TODO(arjo129): Tighten bounds after ignitionrobotics/ign-gazebo#1211 is

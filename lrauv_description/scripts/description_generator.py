@@ -33,7 +33,7 @@ import os.path as path
 # TODO(arjo): Implement inertia. Need to implement Inertial<T>::operator-(const Inertial<T>&) first
 total_mass = 147.5671 # Total mass of the vehicle
 buoyancy_z_offset = 0.007 # Buoyancy offset
-fluid_density = 1000 #fluid density
+fluid_density = 1025 #fluid density
 
 def read_pose(element):
     """ Read pose element."""
@@ -82,7 +82,7 @@ def calculate_center_of_mass(total_mass, template_path, output_path):
                         mass = links.find(".inertial/mass")
                         if mass is None:
                             raise Exception("Mass not found")
-                    
+
                         sz = float(mass.text) / (0.01 * 0.01 * fluid_density)
                         size.text = write_float_array([0.01, 0.01, sz])
                         skipped_masses.append(mass)
@@ -142,5 +142,5 @@ if __name__ == "__main__":
         print("Usage:")
         print("description_generator.py <infile> <outfile>")
         exit(-100)
-    
+
     calculate_center_of_mass(total_mass, sys.argv[1], sys.argv[2])
