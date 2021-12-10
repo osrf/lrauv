@@ -213,6 +213,14 @@ class LrauvTestFixture : public ::testing::Test
         // FIXME: LRAUV app hangs after quit, so force close it
         // See https://github.com/osrf/lrauv/issues/83
         std::string bufferStr{buffer};
+
+        std::string error{"ERROR"};
+        if (auto found = bufferStr.find(quit) != std::string::npos)
+        {
+          ignerr << "LRAUV Application reported error:" << std::endl
+            << buffer << "\n";
+        }
+
         std::string quit{">quit\n"};
         if (auto found = bufferStr.find(quit) != std::string::npos)
         {
