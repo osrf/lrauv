@@ -203,10 +203,10 @@ class LrauvTestFixture : public ::testing::Test
       return;
     }
 
-    char buffer[128];
+    char buffer[512];
     while (!feof(pipe))
     {
-      if (fgets(buffer, 128, pipe) != nullptr)
+      if (fgets(buffer, 512, pipe) != nullptr)
       {
         igndbg << "CMD OUTPUT: " << buffer << std::endl;
 
@@ -215,7 +215,7 @@ class LrauvTestFixture : public ::testing::Test
         std::string bufferStr{buffer};
 
         std::string error{"ERROR"};
-        if (auto found = bufferStr.find(quit) != std::string::npos)
+        if (auto found = bufferStr.find(error) != std::string::npos)
         {
           ignerr << "LRAUV Application reported error:" << std::endl
             << buffer << "\n";
