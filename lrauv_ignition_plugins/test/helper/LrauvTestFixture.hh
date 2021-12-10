@@ -25,6 +25,8 @@
 
 #include <gtest/gtest.h>
 
+#include <ignition/gazebo/Link.hh>
+#include <ignition/gazebo/Model.hh>
 #include <ignition/gazebo/TestFixture.hh>
 #include <ignition/gazebo/Util.hh>
 #include <ignition/gazebo/World.hh>
@@ -91,9 +93,9 @@ class LrauvTestFixture : public ::testing::Test
         EXPECT_NE(ignition::gazebo::kNullEntity, linkEntity);
 
         ignition::gazebo::Link link(linkEntity);
-        auto link = link.WorldLinearVelocity(_ecm);
-        EXPECT_TRUE(link.has_value());
-        tethysLinearVel.push_back(link.value());
+        auto linkVel = link.WorldLinearVelocity(_ecm);
+        EXPECT_TRUE(linkVel.has_value());
+        tethysLinearVel.push_back(linkVel.value());
 
         this->iterations++;
       });
@@ -213,10 +215,10 @@ class LrauvTestFixture : public ::testing::Test
       return;
     }
 
-    char buffer[128];
+    char buffer[256];
     while (!feof(pipe))
     {
-      if (fgets(buffer, 128, pipe) != nullptr)
+      if (fgets(buffer, 256, pipe) != nullptr)
       {
         igndbg << "CMD OUTPUT: " << buffer << std::endl;
 
