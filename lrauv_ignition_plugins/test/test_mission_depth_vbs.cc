@@ -85,26 +85,37 @@ TEST_F(LrauvTestFixture, DepthVBS)
   //       << std::endl;
   // }
 
+  ignition::math::Vector3d maxVel(0, 0, 0);
   for (int i = 1; i <= this->tethysPoses.size(); i ++)
   {
-    // Vehicle should descend
-    EXPECT_LE(tethysPoses[i-1].Pos().Z(), tethysPoses[i].Pos().Z());
-
     // Vehicle roll should be constant
     EXPECT_NEAR(tethysPoses[i].Rot().Euler().X(), 0, 1e-2);
-
-    // Vehicle should pitch backward slightly
-    EXPECT_GE(tethysPoses[i].Rot().Euler().Y(), 0);
 
     // Vehicle should not go vertical
     EXPECT_LT(tethysPoses[i].Rot().Euler().Y(), IGN_DTOR(40));
 
-    // Vehicle yaw should not change
-    EXPECT_NEAR(tethysPoses[i].Rot().Euler().X(), 0, 1e-2);
+    // Vehicle should not exceed 20m depth
+    EXPECT_GT(tethysPoses[i].Pos().Z(), -20);
 
-    // Vehicle should not translate in Y
-    EXPECT_NEAR(tethysPoses[i].Pos().X(), 0, 1e-2);
+    if (tethysLinearVel[i].Length() > maxVel.Length())
+    {
+      maxVel = tethysLinearVel[i];
+    }
   }
 
+  // Vehicle's final pose should be near the 10m mark
+  EXPECT_NEAR(tethysPoses.back().Pos().Z(), -10, 1e-2);
+
+  // Vehicle's final pose should be near the 10m mark
+  EXPECT_NEAR(tethysPoses.back().Pos().Z(), -10, 1e-2);
+
+  // Vehicle should have almost zero Z velocity at the end.
+  EXPECT_NEAR(tethysLinearVel.back().Z(), 0, 1e-1);
+
+  // Expect velocity to approach zero
+  EXPECT_LT(tethysLinearVel.back().Length(), maxVel.Length());
+
+  // Vehicle should pitch backward slightly
+  EXPECT_GE(tethysPoses.back().Rot().Euler().Y(), 0);
 }
 
