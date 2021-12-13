@@ -70,21 +70,6 @@ TEST_F(LrauvTestFixture, DepthVBS)
   int maxIterations{28000};
   ASSERT_LT(maxIterations, this->tethysPoses.size());
 
-  // Uncomment to get new expectations
-  // for (int i = 2000; i <= maxIterations; i += 2000)
-  // {
-  //   auto pose = this->tethysPoses[i];
-  //   std::cout << "this->CheckRange(" << i << ", {"
-  //       << std::setprecision(2) << std::fixed
-  //       << pose.Pos().X() << ", "
-  //       << pose.Pos().Y() << ", "
-  //       << pose.Pos().Z() << ", "
-  //       << pose.Rot().Roll() << ", "
-  //       << pose.Rot().Pitch() << ", "
-  //       << pose.Rot().Yaw() << "}, {12.0, 3.14});"
-  //       << std::endl;
-  // }
-
   ignition::math::Vector3d maxVel(0, 0, 0);
   for (int i = 1; i <= this->tethysPoses.size(); i ++)
   {
@@ -94,7 +79,13 @@ TEST_F(LrauvTestFixture, DepthVBS)
     // Vehicle should not go vertical
     EXPECT_LT(tethysPoses[i].Rot().Euler().Y(), IGN_DTOR(40));
 
+    // Vehicle should not go vertical
+    EXPECT_GT(tethysPoses[i].Rot().Euler().Y(), IGN_DTOR(-40));
+
     // Vehicle should not exceed 20m depth
+    // Note: Although the mission has a target depth of 10m, the vehicle has
+    // a tendency to overshoot first. Eventually the vehicle will reach steady
+    // state.
     EXPECT_GT(tethysPoses[i].Pos().Z(), -20);
 
     if (tethysLinearVel[i].Length() > maxVel.Length())
@@ -106,13 +97,12 @@ TEST_F(LrauvTestFixture, DepthVBS)
   // Vehicle's final pose should be near the 10m mark
   EXPECT_NEAR(tethysPoses.back().Pos().Z(), -10, 1e-2);
 
-  // Vehicle's final pose should be near the 10m mark
-  EXPECT_NEAR(tethysPoses.back().Pos().Z(), -10, 1e-2);
-
   // Vehicle should have almost zero Z velocity at the end.
   EXPECT_NEAR(tethysLinearVel.back().Z(), 0, 1e-1);
 
-  // Expect velocity to approach zero
+  // Expect velocity to approach zero. At the end of the test, the vehicle may
+  // not have actually reached zero as it may still be translating or yawing,
+  // but its velocity should be less than the maximum velocity/
   EXPECT_LT(tethysLinearVel.back().Length(), maxVel.Length());
 
   // Vehicle should pitch backward slightly
