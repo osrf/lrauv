@@ -28,9 +28,14 @@
 namespace tethys
 {
 
-class ControlPanel
+class ControlPanel : public ignition::gui::Plugin
 {
-}
+  public: ControlPanel();
+
+  public: ~ControlPanel();
+
+  public: void LoadConfig(const tinyxml2::XMLElement *_pluginElem) override;
+};
 
 }
 

@@ -152,7 +152,7 @@ add_lrauv_plugin(AcousticCommsPlugin
     lrauv_internal_comms
   PRIVATE_LINK_LIBS
     CommsSupport)
-
+add_lrauv_plugin(ControlPanelPlugin GUI)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(RangeBearingPlugin
   INCLUDE_COMMS

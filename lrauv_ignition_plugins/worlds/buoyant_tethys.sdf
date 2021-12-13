@@ -262,6 +262,8 @@
           <property key="x" type="double">800</property>
         </ignition-gui>
       </plugin>
+      <plugin filename="ControlPanelPlugin" name="Tethys Controls">
+      </plugin>
     </gui>
 
     <light type="directional" name="sun">

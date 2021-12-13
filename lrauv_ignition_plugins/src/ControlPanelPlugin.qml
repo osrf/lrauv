@@ -42,7 +42,7 @@ GridLayout {
 
     Label { text: "Rudder" }
     TextField { id: rudderValue }
-    Slider { 
+    Slider {
       id: rudderControl
       from: -0.26
       to: 0.26
@@ -50,7 +50,7 @@ GridLayout {
 
     Label { text: "Elevator"}
     TextField { id: elevatorValue }
-    Slider { 
+    Slider {
       id: elevatorControl
       orientation: Qt.Vertical
       from: -0.26
@@ -59,7 +59,7 @@ GridLayout {
 
     Label { text: "Mass Shifter" }
     TextField { id: pitchMassValue }
-    Slider { 
+    Slider {
       id: massControl
       from: -0.03
       to: 0.03
@@ -67,7 +67,7 @@ GridLayout {
 
     Label { text: "Thruster" }
     TextField { id: thrusterValue }
-    Slider { 
+    Slider {
       id: thrustControl
       from: -1
       to: 6.9
@@ -75,7 +75,7 @@ GridLayout {
 
     Label { text: "BuoyancyEngine" }
     TextField { id: buoyancyValue }
-    Slider { 
+    Slider {
       id: buoyancyControl
       from: 0
       to: 900
