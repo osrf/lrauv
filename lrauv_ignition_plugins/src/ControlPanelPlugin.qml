@@ -37,8 +37,14 @@ GridLayout {
         right: parent.right
     }
 
-    Label { text: "VehicleName" }
-    TextField { id: vehicleNameValue }
+    Label { text: "Vehicle Name" }
+    TextField {
+      id: vehicleNameValue
+      text: "tethys"
+      onEditingFinished: function () {
+        ControlPanel.SetVehicle(text);
+      }
+    }
 
     Label { text: "Rudder" }
     TextField { id: rudderValue }
@@ -73,7 +79,7 @@ GridLayout {
       to: 6.9
     }
 
-    Label { text: "BuoyancyEngine" }
+    Label { text: "Buoyancy Engine" }
     TextField { id: buoyancyValue }
     Slider {
       id: buoyancyControl
@@ -84,5 +90,6 @@ GridLayout {
     Button {
       id: dropWeightRelease
       text: "Release Drop Weight"
+      onClicked: ControlPanel.ReleaseDropWeight()
     }
 }

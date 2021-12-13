@@ -21,15 +21,25 @@
  */
 
 #include "ControlPanelPlugin.hh"
-
+#include <ignition/common/Console.hh>
 #include <ignition/plugin/Register.hh>
+
+#include <ignition/gui/Application.hh>
+#include <ignition/gui/Conversions.hh>
+#include <ignition/gui/GuiEvents.hh>
+#include <ignition/gui/MainWindow.hh>
 
 namespace tethys
 {
 
-ControlPanel::ControlPanel()
+ControlPanel::ControlPanel() : ignition::gui::Plugin()
 {
+  ignition::gui::App()->Engine()->rootContext()->setContextProperty(
+    "ControlPanel", this);
 
+  lastCommand.set_buoyancyaction_(0.0005);
+  lastCommand.set_dropweightstate_(1);
+  this->SetVehicle("tethys");
 }
 
 ControlPanel::~ControlPanel()
@@ -39,7 +49,25 @@ ControlPanel::~ControlPanel()
 
 void ControlPanel::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
 {
+  if (this->title.empty())
+    this->title = "Tethys Control Panel";
 
+  ignition::gui::App()->findChild<
+    ignition::gui::MainWindow *>()->installEventFilter(this);
+}
+
+void ControlPanel::ReleaseDropWeight()
+{
+  igndbg << "release dropweight\n";
+  lastCommand.set_dropweightstate_(1);
+}
+
+void ControlPanel::SetVehicle(QString name)
+{
+  igndbg << "Setting name as " << name.toStdString() <<"\n";
+  this->pub = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(
+    "/" + vehicleName + "/command_topic"
+  );
 }
 }
 

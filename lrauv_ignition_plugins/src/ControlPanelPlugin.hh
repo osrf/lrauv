@@ -25,16 +25,34 @@
 
 #include <ignition/gui/Plugin.hh>
 
+#include <ignition/transport/Node.hh>
+
+#include "lrauv_command.pb.h"
+
 namespace tethys
 {
 
 class ControlPanel : public ignition::gui::Plugin
 {
+  Q_OBJECT
+
   public: ControlPanel();
 
   public: ~ControlPanel();
 
   public: void LoadConfig(const tinyxml2::XMLElement *_pluginElem) override;
+
+  public: Q_INVOKABLE void ReleaseDropWeight();
+
+  public: Q_INVOKABLE void SetVehicle(QString name);
+
+  private: ignition::transport::Node node;
+
+  private: ignition::transport::Node::Publisher pub;
+
+  private: lrauv_ignition_plugins::msgs::LRAUVCommand lastCommand;
+
+  private: std::string vehicleName;
 };
 
 }
