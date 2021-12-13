@@ -107,5 +107,6 @@ TEST_F(LrauvTestFixture, DepthVBS)
 
   // Vehicle should pitch backward slightly
   EXPECT_GE(tethysPoses.back().Rot().Euler().Y(), 0);
+  EXPECT_LE(tethysPoses.back().Rot().Euler().Y(), IGN_DTOR(25));
 }
 
