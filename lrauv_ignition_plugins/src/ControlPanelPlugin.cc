@@ -59,7 +59,8 @@ void ControlPanel::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
 void ControlPanel::ReleaseDropWeight()
 {
   igndbg << "release dropweight\n";
-  lastCommand.set_dropweightstate_(1);
+  lastCommand.set_dropweightstate_(0);
+  this->pub.Publish(lastCommand);
 }
 
 void ControlPanel::SetVehicle(QString name)
