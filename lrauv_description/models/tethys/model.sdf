@@ -273,11 +273,20 @@
       <!-- TODO: Determine location of buoyancy engine -->
       <pose>0.4 0 0 0 0 0</pose>
 
+      <!-- TODO: Remove inertial and collision
+
+         This link was originally given inertia because Gazebo would segfault
+         with links without inertia. To counter this mass, a volume (collision)
+         was added, which adds buoyancy.
+
+         Gazebo doesn't have this limitation anymore, so both the inertia and
+         collision could be removed. However, it looks like the link's weight
+         and buoyancy aren't cancelling each other out precisely at the moment
+         (why?), so removing them makes the vehicle unstable.
+
+      -->
       <inertial>
         <pose>0 0 0 0 0 0</pose>
-        <!-- Ignition requires a mass assigned to the link otherwise weird
-        and wonderful segfaults may happen. So we create a neutral buoyancy link
-        and then use the plugin to emulate the weight-->
         <mass>0.3</mass>
         <inertia>
           <ixx>0.000143971303</ixx>
@@ -335,7 +344,7 @@
     </joint>
 
     <joint name="propeller_joint" type="revolute">
-      <pose>0 0 0 0 0 0</pose>
+      <pose degrees="true">0 0 0   0 180 0</pose>
       <parent>base_link</parent>
       <child>propeller</child>
       <axis>

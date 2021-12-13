@@ -32,6 +32,7 @@
 #include <ignition/transport/Node.hh>
 
 #include "lrauv_command.pb.h"
+#include "lrauv_state.pb.h"
 
 #include "TestConstants.hh"
 
@@ -62,6 +63,9 @@ class LrauvTestFixture : public ::testing::Test
       this->node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(
       commandTopic);
 
+    auto stateTopic = "/tethys/state_topic";
+    this->node.Subscribe(stateTopic, &LrauvTestFixture::OnState, this);
+
     // Setup fixture
     this->fixture = std::make_unique<ignition::gazebo::TestFixture>(
         ignition::common::joinPaths(
@@ -71,6 +75,8 @@ class LrauvTestFixture : public ::testing::Test
       [&](const ignition::gazebo::UpdateInfo &_info,
       const ignition::gazebo::EntityComponentManager &_ecm)
       {
+        this->dt = _info.dt;
+
         auto worldEntity = ignition::gazebo::worldEntity(_ecm);
         ignition::gazebo::World world(worldEntity);
 
@@ -102,6 +108,13 @@ class LrauvTestFixture : public ::testing::Test
       std::this_thread::sleep_for(100ms);
     }
     EXPECT_LT(sleep, maxSleep);
+  }
+
+  /// Callback function for state from TethysComm
+  /// \param[in] _msg State message
+  private: void OnState(const lrauv_ignition_plugins::msgs::LRAUVState &_msg)
+  {
+    this->stateMsgs.push_back(_msg);
   }
 
   /// \brief Check that a pose is within a given range.
@@ -190,16 +203,24 @@ class LrauvTestFixture : public ::testing::Test
       return;
     }
 
-    char buffer[128];
+    char buffer[512];
     while (!feof(pipe))
     {
-      if (fgets(buffer, 128, pipe) != nullptr)
+      if (fgets(buffer, 512, pipe) != nullptr)
       {
         igndbg << "CMD OUTPUT: " << buffer << std::endl;
 
         // FIXME: LRAUV app hangs after quit, so force close it
         // See https://github.com/osrf/lrauv/issues/83
         std::string bufferStr{buffer};
+
+        std::string error{"ERROR"};
+        if (auto found = bufferStr.find(error) != std::string::npos)
+        {
+          ignerr << "LRAUV Application reported error:" << std::endl
+            << buffer << "\n";
+        }
+
         std::string quit{">quit\n"};
         if (auto found = bufferStr.find(quit) != std::string::npos)
         {
@@ -233,8 +254,14 @@ class LrauvTestFixture : public ::testing::Test
   /// \brief How many times has OnPostUpdate been run
   public: unsigned int iterations{0u};
 
+  /// \brief Latest simulation time step.
+  public: std::chrono::steady_clock::duration dt{0};
+
   /// \brief All tethys world poses in order
   public: std::vector<ignition::math::Pose3d> tethysPoses;
+
+  /// \brief All state messages in order
+  public: std::vector<lrauv_ignition_plugins::msgs::LRAUVState> stateMsgs;
 
   /// \brief Test fixture
   public: std::unique_ptr<ignition::gazebo::TestFixture> fixture{nullptr};

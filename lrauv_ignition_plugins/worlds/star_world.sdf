@@ -64,144 +64,138 @@
       <direction>-0.5 0.1 -0.9</direction>
     </light>
 
-    <!-- Uncomment if you need a ground plane -->
-    <!-- <model name="ground_plane">
-      <static>true</static>
-      <link name="link">
-        <collision name="collision">
-          <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-            </plane>
-          </geometry>
-        </collision>
-        <visual name="visual">
-          <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <size>100 100</size>
-            </plane>
-          </geometry>
-          <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
-          </material>
-        </visual>
-      </link>
-    </model> -->
 
-    <!-- Particle effect
-      Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
-      to ParticleEmitter in Ignition G.
-      See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
     <include>
-      <pose>-5 0 0 0 0 0</pose>
-      <uri>turbidity_generator</uri>
+      <pose>-5 0 1 0 0 0</pose>
+      <uri>tethys_equipped</uri>
+      <name>tethys</name>
     </include>
 
     <include>
-      <pose>0 0 1 0 0 1.57</pose>
+      <pose>-4.3301 -2.5 1 0 0 0.524</pose>
       <uri>tethys_equipped</uri>
-    </include>
-
-    <include>
-      <pose>5 0 1 0 0 1.57</pose>
-      <uri>tethys_equipped</uri>
-      <name>triton</name>
-
+      <name>tethys2</name>
       <experimental:params>
         <sensor element_id="base_link::salinity_sensor" action="modify">
-          <topic>/model/triton/salinity</topic>
+          <topic>/model/tethys2/salinity</topic>
         </sensor>
         <sensor element_id="base_link::temperature_sensor" action="modify">
-          <topic>/model/triton/temperature</topic>
+          <topic>/model/tethys2/temperature</topic>
         </sensor>
         <sensor element_id="base_link::chlorophyll_sensor" action="modify">
-          <topic>/model/triton/chlorophyll</topic>
+          <topic>/model/tethys2/chlorophyll</topic>
         </sensor>
         <sensor element_id="base_link::current_sensor" action="modify">
-          <topic>/model/triton/current</topic>
+          <topic>/model/tethys2/current</topic>
         </sensor>
         <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
-          <namespace>triton</namespace>
+          <namespace>tethys2</namespace>
         </plugin>
         <plugin element_id="tethys::TethysCommPlugin" action="modify">
-          <namespace>triton</namespace>
-          <command_topic>triton/command_topic</command_topic>
-          <state_topic>triton/state_topic</state_topic>
+          <namespace>tethys2</namespace>
+          <command_topic>tethys2/command_topic</command_topic>
+          <state_topic>tethys2/state_topic</state_topic>
         </plugin>
         <plugin element_id="ignition::gazebo::v6::systems::BuoyancyEnginePlugin" action="modify">
-          <namespace>triton</namespace>
+          <namespace>tethys2</namespace>
         </plugin>
         <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
-          <topic>/model/triton/drop_weight</topic>
-        </plugin>
-        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
-          <address>2</address>
-        </plugin>
-        <plugin element_id="tethys::RangeBearingPlugin" action="modify">
-          <address>2</address>
-          <namespace>triton</namespace>
-        </plugin>
-      </experimental:params>
-
-    </include>
-
-    <include>
-      <pose>-5 0 1 0 0 1.57</pose>
-      <uri>tethys_equipped</uri>
-      <name>daphne</name>
-
-      <experimental:params>
-        <sensor element_id="base_link::salinity_sensor" action="modify">
-          <topic>/model/daphne/salinity</topic>
-        </sensor>
-        <sensor element_id="base_link::temperature_sensor" action="modify">
-          <topic>/model/daphne/temperature</topic>
-        </sensor>
-        <sensor element_id="base_link::chlorophyll_sensor" action="modify">
-          <topic>/model/daphne/chlorophyll</topic>
-        </sensor>
-        <sensor element_id="base_link::current_sensor" action="modify">
-          <topic>/model/daphne/current</topic>
-        </sensor>
-        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
-          <namespace>daphne</namespace>
-        </plugin>
-        <plugin element_id="tethys::TethysCommPlugin" action="modify">
-          <namespace>daphne</namespace>
-          <command_topic>daphne/command_topic</command_topic>
-          <state_topic>daphne/state_topic</state_topic>
-        </plugin>
-        <plugin element_id="ignition::gazebo::v6::systems::BuoyancyEnginePlugin" action="modify">
-          <namespace>daphne</namespace>
-        </plugin>
-        <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
-          <topic>/model/daphne/drop_weight</topic>
+          <topic>/model/tethys2/drop_weight</topic>
         </plugin>
         <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
           <address>3</address>
         </plugin>
         <plugin element_id="tethys::RangeBearingPlugin" action="modify">
           <address>3</address>
-          <namespace>daphne</namespace>
+          <namespace>tethys2</namespace>
+        </plugin>
+      </experimental:params>
+    </include>
+
+    <include>
+      <pose>-2.5 -4.3301 1 0 0 1.0472</pose>
+      <uri>tethys_equipped</uri>
+      <name>tethys3</name>
+      <experimental:params>
+        <sensor element_id="base_link::salinity_sensor" action="modify">
+          <topic>/model/tethys3/salinity</topic>
+        </sensor>
+        <sensor element_id="base_link::temperature_sensor" action="modify">
+          <topic>/model/tethys3/temperature</topic>
+        </sensor>
+        <sensor element_id="base_link::chlorophyll_sensor" action="modify">
+          <topic>/model/tethys3/chlorophyll</topic>
+        </sensor>
+        <sensor element_id="base_link::current_sensor" action="modify">
+          <topic>/model/tethys3/current</topic>
+        </sensor>
+        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
+          <namespace>tethys3</namespace>
+        </plugin>
+        <plugin element_id="tethys::TethysCommPlugin" action="modify">
+          <namespace>tethys3</namespace>
+          <command_topic>tethys3/command_topic</command_topic>
+          <state_topic>tethys3/state_topic</state_topic>
+        </plugin>
+        <plugin element_id="ignition::gazebo::v6::systems::BuoyancyEnginePlugin" action="modify">
+          <namespace>tethys3</namespace>
+        </plugin>
+        <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
+          <topic>/model/tethys3/drop_weight</topic>
+        </plugin>
+        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
+          <address>4</address>
+        </plugin>
+        <plugin element_id="tethys::RangeBearingPlugin" action="modify">
+          <address>4</address>
+          <namespace>tethys3</namespace>
+        </plugin>
+      </experimental:params>
+    </include>
+
+    <include>
+      <pose>0 -5 1 0 0 1.57</pose>
+      <uri>tethys_equipped</uri>
+      <name>tethys4</name>
+      <experimental:params>
+        <sensor element_id="base_link::salinity_sensor" action="modify">
+          <topic>/model/tethys4/salinity</topic>
+        </sensor>
+        <sensor element_id="base_link::temperature_sensor" action="modify">
+          <topic>/model/tethys4/temperature</topic>
+        </sensor>
+        <sensor element_id="base_link::chlorophyll_sensor" action="modify">
+          <topic>/model/tethys4/chlorophyll</topic>
+        </sensor>
+        <sensor element_id="base_link::current_sensor" action="modify">
+          <topic>/model/tethys4/current</topic>
+        </sensor>
+        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
+          <namespace>tethys4</namespace>
+        </plugin>
+        <plugin element_id="tethys::TethysCommPlugin" action="modify">
+          <namespace>tethys4</namespace>
+          <command_topic>tethys4/command_topic</command_topic>
+          <state_topic>tethys4/state_topic</state_topic>
+        </plugin>
+        <plugin element_id="ignition::gazebo::v6::systems::BuoyancyEnginePlugin" action="modify">
+          <namespace>tethys4</namespace>
+        </plugin>
+        <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
+          <topic>/model/tethys4/drop_weight</topic>
+        </plugin>
+        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
+          <address>5</address>
+        </plugin>
+        <plugin element_id="tethys::RangeBearingPlugin" action="modify">
+          <address>5</address>
+          <namespace>tethys4</namespace>
         </plugin>
       </experimental:params>
 
     </include>
 
-    <!-- Swimming race lane signs -->
-    <include>
-      <pose>0 0 -1 0 0 3.1415926</pose>
-      <uri>ABCSign_5m</uri>
-      <name>start_line</name>
-    </include>
-    <include>
-      <pose>0 -25 -1 0 0 3.1415926</pose>
-      <uri>ABCSign_5m</uri>
-      <name>finish_line</name>
-    </include>
 
+ 
   </world>
 </sdf>

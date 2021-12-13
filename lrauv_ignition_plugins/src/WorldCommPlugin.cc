@@ -40,6 +40,7 @@
 
 using namespace tethys;
 
+/////////////////////////////////////////////////
 void WorldCommPlugin::Configure(
   const ignition::gazebo::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
@@ -106,13 +107,15 @@ void WorldCommPlugin::Configure(
     + "/set_spherical_coordinates";
 }
 
+/////////////////////////////////////////////////
 void WorldCommPlugin::ServiceResponse(const ignition::msgs::Boolean &_rep,
-    const bool _result)
+  const bool _result)
 {
   if (!_result || !_rep.data())
     ignerr << "Error requesting some service." << std::endl;
 }
 
+/////////////////////////////////////////////////
 void WorldCommPlugin::SpawnCallback(
   const lrauv_ignition_plugins::msgs::LRAUVInit &_msg)
 {
@@ -174,6 +177,7 @@ void WorldCommPlugin::SpawnCallback(
   }
 }
 
+/////////////////////////////////////////////////
 std::string WorldCommPlugin::TethysSdfString(const std::string &_id)
 {
   const std::string sdfStr = R"(
@@ -204,7 +208,7 @@ std::string WorldCommPlugin::TethysSdfString(const std::string &_id)
           <topic>/model/)" + _id + R"(/current</topic>
         </sensor>
 
-        <plugin element_id="tethys::Thruster" action="modify">
+        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
           <namespace>)" + _id + R"(</namespace>
         </plugin>
 

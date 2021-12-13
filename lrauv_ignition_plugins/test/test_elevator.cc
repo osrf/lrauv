@@ -15,11 +15,6 @@
  *
  */
 
-/*
- * Development of this module has been funded by the Monterey Bay Aquarium
- * Research Institute (MBARI) and the David and Lucile Packard Foundation
- */
-
 #include <chrono>
 #include <gtest/gtest.h>
 
@@ -29,13 +24,14 @@
 #include <fstream>
 
 //////////////////////////////////////////////////
-TEST_F(LrauvTestFixture, Rudder)
+TEST_F(LrauvTestFixture, Elevator)
 {
   this->fixture->Server()->Run(true, 100, false);
   EXPECT_EQ(100, this->iterations);
   EXPECT_EQ(100, this->tethysPoses.size());
   EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().X(), 1e-6);
   EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Y(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Z(), 2e-2);
 
   // Propel vehicle
   lrauv_ignition_plugins::msgs::LRAUVCommand cmdMsg;
@@ -43,26 +39,39 @@ TEST_F(LrauvTestFixture, Rudder)
   // Move forward
   cmdMsg.set_propomegaaction_(30);
 
-  // Rotate rudder clockwise when looking from the top, which causes the
-  // vehicle to move in a counter-clockwise arch
-  cmdMsg.set_rudderangleaction_(0.8);
+  // Rotate elevator counter-clockwise when looking from starboard, which
+  // causes the vehicle to pitch down
+  // Using an angle lower than the stall angle 0.17
+  cmdMsg.set_elevatorangleaction_(0.15);
 
   // Neutral buoyancy
   cmdMsg.set_buoyancyaction_(0.0005);
+  cmdMsg.set_dropweightstate_(true);
 
   // Run server until the command is processed and the model reaches a certain
-  // point laterally
-  double targetY{-1.5};
+  // point vertically
+  double targetZ{-1.5};
   this->PublishCommandWhile(cmdMsg, [&]()
   {
-    return this->tethysPoses.back().Pos().Y() > targetY;
+    return this->tethysPoses.back().Pos().Z() > targetZ;
   });
 
-  EXPECT_LT(100, this->iterations);
-  EXPECT_LT(100, this->tethysPoses.size());
+  EXPECT_LT(1500, this->iterations);
+  EXPECT_LT(1500, this->tethysPoses.size());
 
-  // Vehicle makes a clockwise arch looking from the top
-  EXPECT_GT(targetY, this->tethysPoses.back().Pos().Y());
-  EXPECT_GT(-1.0, this->tethysPoses.back().Pos().X());
+  // Vehicle goes down
+  EXPECT_GT(targetZ, this->tethysPoses.back().Pos().Z());
+
+  for (int i = 0; i < this->tethysPoses.size(); ++i)
+  {
+    auto pose = this->tethysPoses[i];
+
+    // FIXME(chapulina) It goes up a little bit in the beginning, is this
+    // expected?
+    if (i < 1500)
+      EXPECT_GT(0.2, pose.Pos().Z()) << i << " -- " << pose.Pos().Z();
+    else
+      EXPECT_GT(0.0, pose.Pos().Z()) << i << " -- " << pose.Pos().Z();
+  }
 }
 

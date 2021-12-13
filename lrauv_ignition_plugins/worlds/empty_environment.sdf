@@ -54,12 +54,13 @@
       name="tethys::TimeAnalysisPlugin">
     </plugin-->
 
-    <plugin
+    <!-- Dynamic vehicle spawn not supported by science sensors yet - need to
+      shift all science data positions to new lat/long of world origin. -->
+    <!--plugin
       filename="ScienceSensorsSystem"
       name="tethys::ScienceSensorsSystem">
-      <!--data_path>2003080103_mb_l3_las.csv</data_path-->
-      <data_path>dummy.csv</data_path>
-    </plugin>
+      <data_path>2003080103_mb_l3_las.csv</data_path>
+    </plugin-->
 
     <!-- Interface with LRAUV Main Vehicle Application for the world -->
     <plugin

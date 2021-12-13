@@ -15,21 +15,16 @@
  *
  */
 
-/*
- * Development of this module has been funded by the Monterey Bay Aquarium
- * Research Institute (MBARI) and the David and Lucile Packard Foundation
- */
-
 /**
- * Control the VBS (Variable Buoyancy System).
+ * Control the elevator joint position.
  *
- * The neutral volume keeps the vehicle neutrally buoyant, higher volumes
- * apply an upwards force, lower ones don't apply enough force to counter gravity.
+ * Positive angles rotate the horizontal fins counter-clockwise when looking
+ * from starboard, which makes the vehicle go down when propelled forward.
+ * Negative commands do the opposite.
  *
  * Usage:
- *   $ LRAUV_example_buoyancy <vehicle_name> <volume_cubic_meter>
+ *   $ LRAUV_example_elevator <vehicle_name> <angle_radians>
  */
-
 #include <chrono>
 #include <thread>
 
@@ -45,10 +40,10 @@ int main(int _argc, char **_argv)
     vehicleName = _argv[1];
   }
 
-  double volume{0.0004};
+  double angle{0.17};
   if (_argc > 2)
   {
-    volume = atof(_argv[2]);
+    angle = atof(_argv[2]);
   }
 
   ignition::transport::Node node;
@@ -63,12 +58,13 @@ int main(int _argc, char **_argv)
   }
 
   lrauv_ignition_plugins::msgs::LRAUVCommand cmdMsg;
-  cmdMsg.set_buoyancyaction_(volume);
+  cmdMsg.set_elevatorangleaction_(angle);
 
-  // Don't release drop-weight
+  // Keep it stable
+  cmdMsg.set_buoyancyaction_(0.0005);
   cmdMsg.set_dropweightstate_(1);
 
   commandPub.Publish(cmdMsg);
 
-  std::cout << "Changing VBS volume to [" << volume << "] rad" << std::endl;
+  std::cout << "Moving elevator to [" << angle << "] rad" << std::endl;
 }

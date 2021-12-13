@@ -20,11 +20,16 @@
  * Research Institute (MBARI) and the David and Lucile Packard Foundation
  */
 
+#include <mutex>
+
 #include <ignition/msgs/pointcloud_packed.pb.h>
 
-#include <ignition/plugin/Register.hh>
+#include <ignition/common/Profiler.hh>
 #include <ignition/common/SystemPaths.hh>
+#include <ignition/gazebo/World.hh>
+#include <ignition/math/SphericalCoordinates.hh>
 #include <ignition/msgs/Utility.hh>
+#include <ignition/plugin/Register.hh>
 #include <ignition/transport/Node.hh>
 
 #include <pcl/conversions.h>
@@ -39,7 +44,8 @@ using namespace tethys;
 class tethys::ScienceSensorsSystemPrivate
 {
   /// \brief Reads csv file and populate various data fields
-  public: void ReadData();
+  /// \param[in] _ecm Immutable reference to the ECM
+  public: void ReadData(const ignition::gazebo::EntityComponentManager &_ecm);
 
   /// \brief Generate octree from spatial data, for searching
   public: void GenerateOctrees();
@@ -47,8 +53,25 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Publish the latest point cloud
   public: void PublishData();
 
-  /// \brief Service that provides the latest science data
-  public: bool ScienceDataService(ignition::msgs::PointCloudPacked &_res);
+  /// \brief Service callback for a point cloud with the latest position data.
+  /// \param[in] _res Point cloud to return
+  /// \return True
+  public: bool PointCloudService(ignition::msgs::PointCloudPacked &_res);
+
+  /// \brief Service callback for a float vector with the latest temperature data.
+  /// \param[in] _res Float vector to return
+  /// \return True
+  public: bool TemperatureService(ignition::msgs::Float_V &_res);
+
+  /// \brief Service callback for a float vector with the latest chlorophyll data.
+  /// \param[in] _res Float vector to return
+  /// \return True
+  public: bool ChlorophyllService(ignition::msgs::Float_V &_res);
+
+  /// \brief Service callback for a float vector with the latest salinity data.
+  /// \param[in] _res Float vector to return
+  /// \return True
+  public: bool SalinityService(ignition::msgs::Float_V &_res);
 
   /// \brief Returns a point cloud message populated with the latest sensor data
   public: ignition::msgs::PointCloudPacked PointCloudMsg();
@@ -97,14 +120,14 @@ class tethys::ScienceSensorsSystemPrivate
   /// environment variables.
   public: std::string dataPath {"2003080103_mb_l3_las.csv"};
 
-  /// \brief Indicates whether data has been loaded
-  public: bool initialized = false;
+  /// \brief Mutex for writing to world origin association to lat/long
+  public: std::mutex mtx;
 
   /// \brief Whether using more than one time slices of data
-  public: bool multipleTimeSlices = false;
+  public: bool multipleTimeSlices {false};
 
   /// \brief Index of the latest time slice
-  public: int timeIdx = 0;
+  public: int timeIdx {0};
 
   /// \brief Timestamps to index slices of data
   public: std::vector<float> timestamps;
@@ -113,6 +136,7 @@ class tethys::ScienceSensorsSystemPrivate
   /// Vector size: number of time slices. Indices correspond to those of
   /// this->timestamps.
   /// Point cloud: spatial coordinates to index science data by location
+  /// in the ENU world frame.
   public: std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> timeSpaceCoords;
 
   /// \brief Science data.
@@ -139,14 +163,65 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Octree for data search based on spatial location of sensor. One
   /// octree per point cloud in timeSpaceCoords.
+  /// Location stored in ENU world coordinates.
   public: std::vector<pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>>
-            spatialOctrees;
+    spatialOctrees;
+
+  /// \brief Set to true after the spherical coordinates have been initialized.
+  /// This may happen at startup if the SDF file has them hardcoded, or at
+  /// runtime when the first vehicle is spawned. Assume the coordinates are
+  /// only shifted once.
+  public: bool sphericalCoordinatesInitialized{false};
+
+  /// \brief World object to access world properties.
+  public: ignition::gazebo::World world;
 
   /// \brief Node for communication
   public: ignition::transport::Node node;
 
-  /// \brief Publisher for point cloud data
+  /// \brief Publisher for point clouds representing positions for science data
   public: ignition::transport::Node::Publisher cloudPub;
+
+  /// \brief Name used for both the point cloud topic and service
+  public: std::string cloudTopic {"/science_data"};
+
+  /// \brief Publisher for temperature
+  public: ignition::transport::Node::Publisher tempPub;
+
+  /// \brief Publisher for chlorophyll
+  public: ignition::transport::Node::Publisher chlorPub;
+
+  /// \brief Publisher for salinity
+  public: ignition::transport::Node::Publisher salPub;
+
+  /// \brief Temperature message
+  public: ignition::msgs::Float_V tempMsg;
+
+  /// \brief Chlorophyll message
+  public: ignition::msgs::Float_V chlorMsg;
+
+  /// \brief Salinity message
+  public: ignition::msgs::Float_V salMsg;
+
+  /// \brief Publish a few more times for visualization plugin to get them
+  public: int repeatPubTimes = 1;
+
+  // TODO This is a workaround pending upstream Ignition orbit tool improvements
+  // \brief Scale down in order to see in view
+  // For 2003080103_mb_l3_las_1x1km.csv
+  //public: const float MINIATURE_SCALE = 0.01;
+  // For 2003080103_mb_l3_las.csv
+  public: const float MINIATURE_SCALE = 0.0001;
+  // For simple_test.csv
+  //public: const float MINIATURE_SCALE = 1.0;
+
+  // TODO This is a workaround pending upstream Marker performance improvements.
+  // \brief Performance trick. Skip depths below this z, so have memory to
+  // visualize higher layers at higher resolution.
+  // This is only for visualization, so that MAX_PTS_VIS can calculate close
+  // to the actual number of points visualized.
+  // Sensors shouldn't use this.
+  public: const float SKIP_Z_BELOW = -20;
 };
 
 /////////////////////////////////////////////////
@@ -215,8 +290,22 @@ ScienceSensorsSystem::ScienceSensorsSystem()
 }
 
 /////////////////////////////////////////////////
-void ScienceSensorsSystemPrivate::ReadData()
+void ScienceSensorsSystemPrivate::ReadData(
+    const ignition::gazebo::EntityComponentManager &_ecm)
 {
+  IGN_PROFILE("ScienceSensorsSystemPrivate::ReadData");
+
+  if (!this->sphericalCoordinatesInitialized)
+  {
+    ignerr << "Trying to read data before spherical coordinates were "
+           << "initialized." << std::endl;
+    return;
+  }
+
+  // Lock modifications to world origin spherical association until finish
+  // reading and transforming data
+  std::lock_guard<std::mutex> lock(mtx);
+
   std::fstream fs;
   fs.open(this->dataPath, std::ios::in);
 
@@ -371,10 +460,34 @@ void ScienceSensorsSystemPrivate::ReadData()
       // Check validity of spatial coordinates
       if (!std::isnan(latitude) && !std::isnan(longitude) && !std::isnan(depth))
       {
+        // Performance trick. Skip points below a certain depth
+        if (-depth < this->SKIP_Z_BELOW)
+        {
+          continue;
+        }
+
+        // Convert lat / lon / elevation to Cartesian ENU
+        auto cart = this->world.SphericalCoordinates(_ecm).value()
+            .PositionTransform({IGN_DTOR(latitude), IGN_DTOR(longitude), 0.0},
+            ignition::math::SphericalCoordinates::SPHERICAL,
+            ignition::math::SphericalCoordinates::LOCAL2);
+        cart.Z() = -depth;
+
+        // Performance trick. Scale down to see in view
+        cart *= this->MINIATURE_SCALE;
+        // Revert Z to the unscaled depth
+        cart.Z() = -depth;
+
+        // Performance trick. Skip points beyond some distance from origin
+        if (abs(cart.X()) > 1000 || abs(cart.Y()) > 1000)
+        {
+          continue;
+        }
+
         // Gather spatial coordinates, 3 fields in the line, into point cloud
         // for indexing this time slice of data.
         this->timeSpaceCoords[lineTimeIdx]->push_back(
-          pcl::PointXYZ(latitude, longitude, depth));
+          pcl::PointXYZ(cart.X(), cart.Y(), cart.Z()));
 
         // Populate science data
         this->temperatureArr[lineTimeIdx].push_back(temp);
@@ -403,8 +516,6 @@ void ScienceSensorsSystemPrivate::ReadData()
            << this->timeSpaceCoords[i]->size()
            << " spatial coordinates." << std::endl;
   }
-
-  this->initialized = true;
 }
 
 /////////////////////////////////////////////////
@@ -425,6 +536,13 @@ void ScienceSensorsSystemPrivate::GenerateOctrees()
 /////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::PublishData()
 {
+  IGN_PROFILE("ScienceSensorsSystemPrivate::PublishData");
+  this->tempPub.Publish(this->tempMsg);
+  this->chlorPub.Publish(this->chlorMsg);
+  this->salPub.Publish(this->salMsg);
+
+  // Publish cloud last. The floatVs are optional, so if the GUI gets the cloud
+  // first it will display a monochrome cloud until it receives the floats
   this->cloudPub.Publish(this->PointCloudMsg());
 }
 
@@ -434,6 +552,8 @@ float ScienceSensorsSystemPrivate::InterpolateData(
   std::vector<int> &_inds,
   std::vector<float> &_dists)
 {
+  IGN_PROFILE("ScienceSensorsSystemPrivate::InterpolateData");
+
   // Sanity checks
   if (_inds.size() == 0 || _dists.size() == 0)
   {
@@ -480,6 +600,8 @@ void ScienceSensorsSystem::Configure(
   ignition::gazebo::EntityComponentManager &_ecm,
   ignition::gazebo::EventManager &_eventMgr)
 {
+  this->dataPtr->world = ignition::gazebo::World(_entity);
+
   if (_sdf->HasElement("data_path"))
   {
     this->dataPtr->dataPath = _sdf->Get<std::string>("data_path");
@@ -500,15 +622,31 @@ void ScienceSensorsSystem::Configure(
            << std::endl;
   }
 
+  // Advertise cloud as a service for requests on-demand, and a topic for updates
   this->dataPtr->cloudPub = this->dataPtr->node.Advertise<
-      ignition::msgs::PointCloudPacked>("/science_data");
+      ignition::msgs::PointCloudPacked>(this->dataPtr->cloudTopic);
 
-  this->dataPtr->node.Advertise("/science_data",
-      &ScienceSensorsSystemPrivate::ScienceDataService, this->dataPtr.get());
+  this->dataPtr->node.Advertise(this->dataPtr->cloudTopic,
+      &ScienceSensorsSystemPrivate::PointCloudService, this->dataPtr.get());
 
-  this->dataPtr->ReadData();
-  this->dataPtr->GenerateOctrees();
-  this->dataPtr->PublishData();
+  // Advertise science data, also as service and topics
+  std::string temperatureTopic{"/temperature"};
+  this->dataPtr->tempPub = this->dataPtr->node.Advertise<
+      ignition::msgs::Float_V>(temperatureTopic);
+  this->dataPtr->node.Advertise(temperatureTopic,
+      &ScienceSensorsSystemPrivate::TemperatureService, this->dataPtr.get());
+
+  std::string chlorophyllTopic{"/chloropyll"};
+  this->dataPtr->chlorPub = this->dataPtr->node.Advertise<
+      ignition::msgs::Float_V>(chlorophyllTopic);
+  this->dataPtr->node.Advertise(chlorophyllTopic,
+      &ScienceSensorsSystemPrivate::ChlorophyllService, this->dataPtr.get());
+
+  std::string salinityTopic{"/salinity"};
+  this->dataPtr->salPub = this->dataPtr->node.Advertise<
+      ignition::msgs::Float_V>(salinityTopic);
+  this->dataPtr->node.Advertise(salinityTopic,
+      &ScienceSensorsSystemPrivate::SalinityService, this->dataPtr.get());
 }
 
 /////////////////////////////////////////////////
@@ -534,62 +672,95 @@ void ScienceSensorsSystem::PreUpdate(
 void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   const ignition::gazebo::EntityComponentManager &_ecm)
 {
-  // Only update and publish if data has been loaded and simulation is not
-  // paused.
-  if (this->dataPtr->initialized && !_info.paused)
+  IGN_PROFILE_THREAD_NAME("ScienceSensorsSystem PostUpdate");
+  IGN_PROFILE("ScienceSensorsSystem::PostUpdate");
+
+  this->RemoveSensorEntities(_ecm);
+
+  if (_info.paused)
+    return;
+
+  // Delay reading data and generating octrees until spherical coordinates are
+  // received.
+  if (!this->dataPtr->sphericalCoordinatesInitialized)
   {
-    double simTimeSeconds = std::chrono::duration_cast<std::chrono::seconds>(
-      _info.simTime).count();
-
-    // Update time index
-    if (this->dataPtr->multipleTimeSlices)
+    if (this->dataPtr->world.SphericalCoordinates(_ecm))
     {
-      // Only update if sim time exceeds the elapsed timestamp in data
-      if (!this->dataPtr->timestamps.empty() &&
-        simTimeSeconds >= this->dataPtr->timestamps[this->dataPtr->timeIdx])
-      {
-        // Increment for next point in time
-        this->dataPtr->timeIdx++;
-        this->dataPtr->PublishData();
-      }
+      this->dataPtr->sphericalCoordinatesInitialized = true;
+
+      this->dataPtr->ReadData(_ecm);
+      this->dataPtr->GenerateOctrees();
     }
-
-    // For each sensor, get its pose, search in the octree for the closest
-    // neighbors, and interpolate to get approximate data at this sensor pose.
-    for (auto &[entity, sensor] : this->entitySensorMap)
+    else
     {
-      // Sensor pose in lat/lon, used to search for data by spatial coordinates
-      auto sensorLatLon = ignition::gazebo::sphericalCoordinates(entity, _ecm);
-      if (!sensorLatLon)
-      {
-        static std::unordered_set<ignition::gazebo::Entity> warnedEntities;
-        if (warnedEntities.find(entity) != warnedEntities.end())
-        {
-          ignwarn << "Failed to get spherical coordinates for sensor entity ["
-                  << entity << "]" << std::endl;
-          warnedEntities.insert(entity);
-        }
-        continue;
-      }
-      pcl::PointXYZ searchPoint(
-          sensorLatLon.value().X(),
-          sensorLatLon.value().Y(),
-          sensorLatLon.value().Z());
+      // TODO(chapulina) Throttle if it becomes spammy
+      ignwarn << "Science sensor data won't be published because spherical "
+              << "coordinates are unknown." << std::endl;
+      return;
+    }
+  }
 
-      // kNN search (alternatives are voxel search and radius search. kNN
-      // search is good for variable resolution when the distance to the next
-      // neighbor is unknown).
-      int k = 8;
 
-      // Indices and distances of neighboring points in the search results
-      std::vector<int> spatialIdx;
-      std::vector<float> spatialSqrDist;
+  double simTimeSeconds = std::chrono::duration_cast<std::chrono::seconds>(
+    _info.simTime).count();
 
-      // Search in octree to find spatial index of science data
+  // Update time index
+  if (this->dataPtr->multipleTimeSlices)
+  {
+    // Only update if sim time exceeds the elapsed timestamp in data
+    if (!this->dataPtr->timestamps.empty() &&
+      simTimeSeconds >= this->dataPtr->timestamps[this->dataPtr->timeIdx])
+    {
+      // Increment for next point in time
+      this->dataPtr->timeIdx++;
+
+      // Publish science data at the next timestamp
+      this->dataPtr->PublishData();
+    }
+  }
+
+  // Publish every n iters so that VisualizePointCloud plugin gets it.
+  // Otherwise the initial publication in Configure() is not enough.
+  if (this->dataPtr->repeatPubTimes % 10000 == 0)
+  {
+    this->dataPtr->PublishData();
+    // Reset
+    this->dataPtr->repeatPubTimes = 1;
+  }
+  else
+  {
+    this->dataPtr->repeatPubTimes++;
+  }
+
+  // For each sensor, get its pose, search in the octree for the closest
+  // neighbors, and interpolate to get approximate data at this sensor pose.
+  for (auto &[entity, sensor] : this->entitySensorMap)
+  {
+    // Sensor pose in ENU, used to search for data by spatial coordinates
+    auto sensorPosENU = ignition::gazebo::worldPose(entity, _ecm).Pos();
+    pcl::PointXYZ searchPoint(
+        sensorPosENU.X(),
+        sensorPosENU.Y(),
+        sensorPosENU.Z());
+
+    // kNN search (alternatives are voxel search and radius search. kNN
+    // search is good for variable resolution when the distance to the next
+    // neighbor is unknown).
+    int k = 8;
+
+    // Indices and distances of neighboring points in the search results
+    std::vector<int> spatialIdx;
+    std::vector<float> spatialSqrDist;
+
+    // Search in octree to find spatial index of science data
+    if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].getLeafCount()
+      > 0)
+    {
+      IGN_PROFILE("ScienceSensorsSystem::PostUpdate nearestKSearch");
       if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx].nearestKSearch(
         searchPoint, k, spatialIdx, spatialSqrDist) <= 0)
       {
-        ignwarn << "No data found near sensor location " << sensorLatLon.value()
+        ignwarn << "No data found near sensor location " << sensorPosENU
                 << std::endl;
         continue;
       }
@@ -657,17 +828,17 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       {
         ignerr << "Unsupported sensor type, failed to set data" << std::endl;
       }
-      sensor->Update(_info.simTime, false);
     }
+    sensor->Update(_info.simTime, false);
   }
-
-  this->RemoveSensorEntities(_ecm);
 }
 
 //////////////////////////////////////////////////
 void ScienceSensorsSystem::RemoveSensorEntities(
     const ignition::gazebo::EntityComponentManager &_ecm)
 {
+  IGN_PROFILE("ScienceSensorsSystem::RemoveSensorEntities");
+
   _ecm.EachRemoved<ignition::gazebo::components::CustomSensor>(
     [&](const ignition::gazebo::Entity &_entity,
         const ignition::gazebo::components::CustomSensor *)->bool
@@ -689,7 +860,7 @@ void ScienceSensorsSystem::RemoveSensorEntities(
 }
 
 //////////////////////////////////////////////////
-bool ScienceSensorsSystemPrivate::ScienceDataService(
+bool ScienceSensorsSystemPrivate::PointCloudService(
     ignition::msgs::PointCloudPacked &_res)
 {
   _res = this->PointCloudMsg();
@@ -697,8 +868,34 @@ bool ScienceSensorsSystemPrivate::ScienceDataService(
 }
 
 //////////////////////////////////////////////////
+bool ScienceSensorsSystemPrivate::TemperatureService(
+    ignition::msgs::Float_V &_res)
+{
+  _res = this->tempMsg;
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool ScienceSensorsSystemPrivate::ChlorophyllService(
+    ignition::msgs::Float_V &_res)
+{
+  _res = this->chlorMsg;
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool ScienceSensorsSystemPrivate::SalinityService(
+    ignition::msgs::Float_V &_res)
+{
+  _res = this->salMsg;
+  return true;
+}
+
+//////////////////////////////////////////////////
 ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
 {
+  IGN_PROFILE("ScienceSensorsSystemPrivate::PointCloudMsg");
+
   ignition::msgs::PointCloudPacked msg;
 
   if (this->timeIdx < 0 || this->timeIdx >= this->timestamps.size())
@@ -710,11 +907,13 @@ ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
 
   ignition::msgs::InitPointCloudPacked(msg, "world", true,
     {
-      {"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32}
-      // {"salinity", ignition::msgs::PointCloudPacked::Field::FLOAT32}
-      // TODO(louise) Add more fields
-      // https://github.com/osrf/lrauv/issues/85
+      {"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32},
     });
+
+  // TODO optimization for visualization:
+  // Use PCL methods to chop off points beyond some distance from sensor
+  // pose. Don't need to visualize beyond that. Might want to put that on a
+  // different topic specifically for visualization.
 
   msg.mutable_header()->mutable_stamp()->set_sec(this->timestamps[this->timeIdx]);
 
@@ -728,9 +927,16 @@ ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
   msg.set_row_step(pclPC2.row_step);
   msg.set_is_dense(pclPC2.is_dense);
 
-  // FIXME: Include more than position data
   msg.mutable_data()->resize(pclPC2.data.size());
   memcpy(msg.mutable_data()->data(), pclPC2.data.data(), pclPC2.data.size());
+
+  // Populate float arrays for actual science data
+  *this->tempMsg.mutable_data() = {temperatureArr[this->timeIdx].begin(),
+    temperatureArr[this->timeIdx].end()};
+  *this->chlorMsg.mutable_data() = {chlorophyllArr[this->timeIdx].begin(),
+    chlorophyllArr[this->timeIdx].end()};
+  *this->salMsg.mutable_data() = {salinityArr[this->timeIdx].begin(),
+    salinityArr[this->timeIdx].end()};
 
   return msg;
 }
