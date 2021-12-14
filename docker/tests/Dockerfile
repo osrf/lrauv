@@ -19,7 +19,7 @@
 # Research Institute (MBARI) and the David and Lucile Packard Foundation
 #
 
-FROM mbari/lrauv-ignition-sim
+FROM mbari/lrauv-ignition-sim:fortress
 
 USER root
 
@@ -45,7 +45,7 @@ RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable
 
 # Install the latest Ignition binaries
 RUN apt-get -qq update && apt-get -q -y install \
-  ignition-fortress
+  ignition-fortress python3-numpy
 
 # Install PCL
 RUN apt-get update \
