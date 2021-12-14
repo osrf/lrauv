@@ -103,7 +103,7 @@ TEST_F(LrauvTestFixture, YoYoCircle)
     // Depth is above 20m, and below 2m after initial descent, with some
     // tolerance
     EXPECT_LT(-22.5, pose.Pos().Z()) << i;
-    if (i > 2000)
+    if (i > 4000)
     {
       EXPECT_GT(0.3, pose.Pos().Z()) << i;
     }
