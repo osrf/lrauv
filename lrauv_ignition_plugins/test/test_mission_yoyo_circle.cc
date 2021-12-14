@@ -95,7 +95,7 @@ TEST_F(LrauvTestFixture, YoYoCircle)
     if (i > 2000)
     {
       // Check that the vehicle actually is moving.
-      EXPECT_LT(0.0, linVel);
+      EXPECT_LT(0.0, linVel) << i;
     }
 
     EXPECT_NEAR(1.0, linVel, 1.0) << i;
