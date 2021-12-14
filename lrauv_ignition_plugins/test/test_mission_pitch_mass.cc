@@ -91,9 +91,9 @@ TEST_F(LrauvTestFixture, PitchMass)
     EXPECT_NEAR(pose.Rot().Euler().Z(), IGN_DTOR(0), 1e-3);
 
     // Check position holds
-    EXPECT_NEAR(pose.Pos().X(), IGN_DTOR(0), 1e-2);
-    EXPECT_NEAR(pose.Pos().Y(), IGN_DTOR(0), 1e-2);
-    EXPECT_NEAR(pose.Pos().Z(), IGN_DTOR(0), 1e-2);
+    EXPECT_NEAR(pose.Pos().X(), IGN_DTOR(0), 2e-1);
+    EXPECT_NEAR(pose.Pos().Y(), IGN_DTOR(0), 2e-1);
+    EXPECT_NEAR(pose.Pos().Z(), IGN_DTOR(0), 2e-1);
 
     // Used later for oscillation check.
     if (firstPitch = false)
