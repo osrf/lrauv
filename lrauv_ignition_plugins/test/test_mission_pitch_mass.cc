@@ -81,7 +81,8 @@ TEST_F(LrauvTestFixture, PitchMass)
   // Vehicle should have a max pitch of 20 degrees
   for(auto pose: this->tethysPoses)
   {
-    // Pitch 20 degrees
+    // Max Pitch 20 degrees. Allow 5 degrees error for oscillations.
+    // Min Pitch -5 degrees. Again allow 5 degrees error for oscillation.
     EXPECT_LT(pose.Rot().Euler().Y(), IGN_DTOR(25));
     EXPECT_GT(pose.Rot().Euler().Y(), IGN_DTOR(-5));
 
@@ -90,11 +91,9 @@ TEST_F(LrauvTestFixture, PitchMass)
     EXPECT_NEAR(pose.Rot().Euler().Z(), IGN_DTOR(0), 1e-3);
 
     // Check position holds
-    // TODO(arjo129): Tighten bounds after ignitionrobotics/ign-gazebo#1211 is
-    // merged.
-    EXPECT_NEAR(pose.Pos().X(), IGN_DTOR(0), 1);
-    EXPECT_NEAR(pose.Pos().Y(), IGN_DTOR(0), 1);
-    EXPECT_NEAR(pose.Pos().Z(), IGN_DTOR(0), 1);
+    EXPECT_NEAR(pose.Pos().X(), IGN_DTOR(0), 1e-2);
+    EXPECT_NEAR(pose.Pos().Y(), IGN_DTOR(0), 1e-2);
+    EXPECT_NEAR(pose.Pos().Z(), IGN_DTOR(0), 1e-2);
 
     // Used later for oscillation check.
     if (firstPitch = false)
