@@ -43,7 +43,7 @@
           <density>1</density>
         </density_change>
       </graded_buoyancy>-->
-      <uniform_fluid_density>1000</uniform_fluid_density>
+      <uniform_fluid_density>1025</uniform_fluid_density>
     </plugin>
 
     <include>
