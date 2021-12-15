@@ -85,7 +85,7 @@ TEST_F(LrauvTestFixture, PitchMass)
       // \TODO(chapulina) X and Y are meant to stay close to zero, but the
       // vehicle goes forward (-X, +Z) slowly. That's caused by the pitch
       // oscillation.
-      {4.5, 0.01, 1.6},
+      {4.7, 0.01, 1.8},
       // Roll and yaw are kept pretty stable close to zero with low tolerances
       // \TODO(chapulina) The pitch has a lot of oscillation, so we need the
       // high tolerance
