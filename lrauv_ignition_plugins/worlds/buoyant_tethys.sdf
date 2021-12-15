@@ -239,9 +239,7 @@
       <plugin filename="Plot3D" name="Plot 3D">
         <ignition-gui>
           <title>Plot Tethys 3D path</title>
-          <property type="string" key="state">floating_collapsed</property>
-          <property key="x" type="double">0</property>
-          <property key="y" type="double">0</property>
+          <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
         <entity_name>tethys</entity_name>
         <color>0 0 1</color>
@@ -251,18 +249,21 @@
       <plugin filename="ComponentInspector" name="Component Inspector">
         <ignition-gui>
           <title>Inspector</title>
-          <property type="string" key="state">floating_collapsed</property>
-          <property type="double" key="x">400</property>
+          <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
       </plugin>
       <plugin filename="VisualizePointCloud" name="Visualize science data">
         <ignition-gui>
           <title>Visualize science data</title>
-          <property type="string" key="state">floating_collapsed</property>
+          <property type="string" key="state">docked_collapsed</property>
           <property key="x" type="double">800</property>
         </ignition-gui>
       </plugin>
       <plugin filename="ControlPanelPlugin" name="Tethys Controls">
+        <ignition-gui>
+          <title>Tethys controls</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
       </plugin>
     </gui>
 

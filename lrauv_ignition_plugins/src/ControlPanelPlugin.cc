@@ -37,7 +37,8 @@ ControlPanel::ControlPanel() : ignition::gui::Plugin()
   ignition::gui::App()->Engine()->rootContext()->setContextProperty(
     "ControlPanel", this);
 
-  lastCommand.set_buoyancyaction_(0.0005);
+  // Start neutral - these values should match the defaults on the QML
+  lastCommand.set_buoyancyaction_(500.0 / (100 * 100 * 100));
   lastCommand.set_dropweightstate_(1);
   this->SetVehicle("tethys");
 }
@@ -66,9 +67,8 @@ void ControlPanel::ReleaseDropWeight()
 void ControlPanel::SetVehicle(QString _name)
 {
   igndbg << "Setting name as " << _name.toStdString() <<"\n";
-  vehicleName = _name.toStdString();
   this->pub = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(
-    "/" + vehicleName + "/command_topic"
+    "/" + _name.toStdString() + "/command_topic"
   );
 }
 

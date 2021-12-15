@@ -50,27 +50,27 @@ class ControlPanel : public ignition::gui::Plugin
   public: Q_INVOKABLE void ReleaseDropWeight();
 
   /// \brief Sets the vehicle name that you want to control
-  /// \param[in] _name - The name of the vehicle in question.
+  /// \param[in] _name The name of the vehicle in question.
   public: Q_INVOKABLE void SetVehicle(QString _name);
 
   /// \brief Sets the rudder rotation
-  /// \param[in] _rudderAngle - The rudder angle set point
+  /// \param[in] _rudderAngle The rudder angle set point, in radians
   public: Q_INVOKABLE void SetRudder(qreal _rudderAngle);
 
   /// \brief Sets the elevator rotation
-  /// \param[in] _elevatorAngle - The elevator angle set point
+  /// \param[in] _elevatorAngle The elevator angle set point, in radians
   public: Q_INVOKABLE void SetElevator(qreal _elevatorAngle);
 
   /// \brief Sets the mass shifter position
-  /// \param[in] _pitchmassPosition - The mass shifter position
+  /// \param[in] _pitchmassPosition The mass shifter position, in meters
   public: Q_INVOKABLE void SetPitchMass(qreal _pitchmassPosition);
 
   /// \brief Sets the thruster thrust
-  /// \param[in] _rudderAngle - The thruster set point
+  /// \param[in] _rudderAngle The thruster angular velocity, in rad/s
   public: Q_INVOKABLE void SetThruster(qreal _thrust);
 
   /// \brief Sets the buoyancy engine
-  /// \param[in] _volume- The thruster set point
+  /// \param[in] _volume The buoyancy engine's volume, in cubic meters
   public: Q_INVOKABLE void SetBuoyancyEngine(qreal _volume);
 
   /// \brief Transport node
@@ -81,9 +81,6 @@ class ControlPanel : public ignition::gui::Plugin
 
   /// \brief LRAUVCommand for the last state
   private: lrauv_ignition_plugins::msgs::LRAUVCommand lastCommand;
-
-  /// \brief The vehicle name to subscribe to.
-  private: std::string vehicleName;
 };
 
 }

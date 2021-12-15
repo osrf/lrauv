@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Open Source Robotics Foundation
+ * Copyright (C) 2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,149 +25,290 @@ import QtQuick 2.9
 import QtQuick.Controls 2.1
 import QtQuick.Controls.Material 2.1
 import QtQuick.Layouts 1.3
+import ignition.gui 1.0
 
 GridLayout {
-    id: mainLayout
-    columns: 1
-    rowSpacing: 5
-    columnSpacing: 5
-    anchors {
-        top: parent.top;
-        left: parent.left
-        right: parent.right
-    }
+  id: mainLayout
+  columns: 5
+  rowSpacing: 2
+  columnSpacing: 2
+  anchors.fill: parent
+  anchors.leftMargin: 10
+  anchors.rightMargin: 10
+  Layout.minimumWidth: 400
+  Layout.minimumHeight: 300
 
-    Label { text: "Vehicle Name" }
-    TextField {
-      id: vehicleNameValue
-      text: "tethys"
-      onEditingFinished: function () {
-        ControlPanel.SetVehicle(text);
-      }
+  Label {
+    text: "Vehicle name"
+    Layout.columnSpan: 1
+  }
+  TextField {
+    id: vehicleNameValue
+    Layout.columnSpan: 4
+    Layout.fillWidth: true
+    text: "tethys"
+    onEditingFinished: function () {
+      ControlPanel.SetVehicle(text);
     }
+  }
 
-    /// RUDDER Controls
-    Label { text: "Rudder" }
-    TextField {
-      id: rudderValue
-      text: "0"
-      onEditingFinished: function () {
-        rudderControl.value = parseFloat(text);
-        ControlPanel.SetRudder(parseFloat(text));
-      }
-      validator: DoubleValidator {
-        bottom: -0.26
-        top: 0.26
-      }
+  // Rudder
+  property double rudderValue: 0
+  property double rudderMin: -0.26
+  property double rudderMax: 0.26
+  Label {
+    text: "Rudder (rad)"
+    Layout.columnSpan: 1
+  }
+  IgnSpinBox {
+    id: rudderSpin
+    Layout.columnSpan: 1
+    value: rudderValue
+    minimumValue: rudderMin
+    maximumValue: rudderMax
+    decimals: 2
+    stepSize: 0.01
+    onEditingFinished: function () {
+      rudderValue = value;
+      ControlPanel.SetRudder(value);
     }
-    Slider {
-      id: rudderControl
-      from: -0.26
-      value: 0
-      to: 0.26
-      onMoved: function() {
-        rudderValue.text = Math.round(value * 100) / 100;
-        ControlPanel.SetRudder(value);
-      }
+  }
+  Label {
+    text: rudderMin
+    Layout.columnSpan: 1
+    font.pixelSize: 9
+    Layout.alignment: Qt.AlignRight
+  }
+  Slider {
+    id: rudderControl
+    Layout.columnSpan: 1
+    Layout.fillWidth: true
+    from: rudderMin
+    to: rudderMax
+    value: rudderValue
+    onMoved: function() {
+      rudderValue = Math.round(value * 100) / 100;
+      ControlPanel.SetRudder(value);
     }
+  }
+  Label {
+    text: rudderMax
+    Layout.columnSpan: 1
+    font.pixelSize: 9
+  }
 
-    /// ELEV Controls
-    Label { text: "Elevator"}
-    TextField { id: elevatorValue
-      text: "0"
-      onEditingFinished: function () {
-        elevatorControl.value = parseFloat(text);
-        ControlPanel.SetElevator(parseFloat(text));
-      }
-      validator: DoubleValidator {
-        bottom: -0.26
-        top: 0.26
-      }
+  // Elevator
+  property double elevatorValue: 0
+  property double elevatorMin: -0.26
+  property double elevatorMax: 0.26
+  Label {
+    text: "Elevator (rad)"
+    Layout.columnSpan: 1
+  }
+  IgnSpinBox {
+    id: elevatorSpin
+    Layout.columnSpan: 1
+    value: elevatorValue
+    minimumValue: elevatorMin
+    maximumValue: elevatorMax
+    decimals: 2
+    stepSize: 0.01
+    onEditingFinished: function () {
+      elevatorControl.value = value;
+      ControlPanel.SetElevator(value);
     }
-    Slider {
-      id: elevatorControl
-      orientation: Qt.Vertical
-      from: -0.26
-      to: 0.26
-      onMoved: function() {
-        elevatorValue.text = Math.round(value * 100) / 100;
-        ControlPanel.SetElevator(value);
-      }
+  }
+  Label {
+    text: elevatorMin
+    Layout.columnSpan: 1
+    font.pixelSize: 9
+    Layout.alignment: Qt.AlignRight
+  }
+  Slider {
+    id: elevatorControl
+    Layout.columnSpan: 1
+    Layout.fillWidth: true
+    from: elevatorMin
+    to: elevatorMax
+    value: elevatorValue
+    onMoved: function() {
+      elevatorValue = Math.round(value * 100) / 100;
+      ControlPanel.SetElevator(elevatorValue);
     }
+  }
+  Label {
+    text: elevatorMax
+    Layout.columnSpan: 1
+    font.pixelSize: 9
+  }
 
-    /// Mass Controls
-    Label { text: "Mass Shifter" }
-    TextField { id: massValue
-      text: "0"
-      onEditingFinished: function () {
-        massControl.value = parseFloat(text);
-        ControlPanel.SetPitchMass(parseFloat(text));
-      }
-      validator: DoubleValidator {
-        bottom: -0.03
-        top: 0.03
-      }
+  // Mass
+  property double massValue: 0
+  property double massMin: -0.03
+  property double massMax: 0.03
+  Label {
+    text: "Mass shifter (m)"
+    Layout.columnSpan: 1
+  }
+  IgnSpinBox {
+    id: massSpin
+    Layout.columnSpan: 1
+    value: massValue
+    minimumValue: massMin
+    maximumValue: massMax
+    decimals: 3
+    stepSize: 0.001
+    onEditingFinished: function () {
+      massValue = value;
+      ControlPanel.SetMass(value);
     }
-    Slider {
-      id: massControl
-      from: -0.03
-      to: 0.03
-      onMoved: function() {
-        massValue.text = Math.round(value * 100) / 100;
-        ControlPanel.SetPitchMass(value);
-      }
+  }
+  Label {
+    text: massMin
+    Layout.columnSpan: 1
+    font.pixelSize: 9
+    Layout.alignment: Qt.AlignRight
+  }
+  Slider {
+    id: massControl
+    Layout.columnSpan: 1
+    Layout.fillWidth: true
+    from: massMin
+    to: massMax
+    value: massValue
+    onMoved: function() {
+      massValue = Math.round(value * 100) / 100;
+      ControlPanel.SetPitchMass(value);
     }
+  }
+  Label {
+    text: massMax
+    Layout.columnSpan: 1
+    font.pixelSize: 9
+  }
 
-    /// Thruster Control
-    Label { text: "Thruster" }
-    TextField { id: thrusterValue
-      text: "0"
-      onEditingFinished: function () {
-        thrustControl.value = parseFloat(text);
-        ControlPanel.SetThruster(parseFloat(text));
-      }
-      validator: DoubleValidator {
-        bottom: -1
-        top: 31.4152698
-      }
+  // Thruster Control
+  property double thrusterValue: 0
+  property double thrusterMin: -30
+  property double thrusterMax: 30
+  Label {
+    text: "Thruster (rad/s)"
+    Layout.columnSpan: 1
+  }
+  IgnSpinBox {
+    id: thrusterSpin
+    Layout.columnSpan: 1
+    value: thrusterValue
+    minimumValue: thrusterMin
+    maximumValue: thrusterMax
+    decimals: 1
+    stepSize: 1.0
+    onEditingFinished: function () {
+      thrusterValue = value;
+      ControlPanel.SetThruster(value);
     }
-    Slider {
-      id: thrustControl
-      from: -1
-      to: 31.4152698
-      onMoved: function() {
-        thrusterValue.text = Math.round(value * 100) / 100;
-        ControlPanel.SetThruster(value);
-      }
+  }
+  Label {
+    text: thrusterMin
+    Layout.columnSpan: 1
+    font.pixelSize: 9
+    Layout.alignment: Qt.AlignRight
+  }
+  Slider {
+    id: thrustControl
+    Layout.columnSpan: 1
+    Layout.fillWidth: true
+    from: thrusterMin
+    to: thrusterMax
+    value: thrusterValue
+    onMoved: function() {
+      thrusterValue = Math.round(value * 100) / 100;
+      ControlPanel.SetThruster(value);
     }
+  }
+  Label {
+    text: thrusterMax
+    Layout.columnSpan: 1
+    font.pixelSize: 9
+  }
 
-    /// Buoyancy Control
-    Label { text: "Buoyancy Engine" }
-    TextField { id: buoyancyValue
-      text: "500"
-      onEditingFinished: function () {
-        buoyancyControl.value = parseFloat(text);
-        ControlPanel.SetBuoyancyEngine(parseFloat(text) / (100 * 100 * 100));
-      }
-      validator: DoubleValidator {
-        bottom: 0
-        top: 900
-      }
+  // Buoyancy engine
+  property double buoyancyValue: 500
+  property double buoyancyMin: 0
+  property double buoyancyMax: 900
+  Label {
+    text: "Buoyancy engine (cc)"
+    Layout.columnSpan: 1
+  }
+  IgnSpinBox {
+    id: buoyancySpin
+    Layout.columnSpan: 1
+    value: buoyancyValue
+    minimumValue: buoyancyMin
+    maximumValue: buoyancyMax
+    decimals: 0
+    stepSize: 0.01
+    onEditingFinished: function () {
+      buoyancyValue = value;
+      var valueCubicMeters = value / (100 * 100 * 100);
+      ControlPanel.SetBuoyancy(valueCubicMeters);
     }
-    Slider {
-      id: buoyancyControl
-      from: 0
-      to: 900
-      value: 500
-      onMoved: function() {
-        buoyancyValue.text = Math.round(value);
-        ControlPanel.SetBuoyancyEngine(value/ (100 * 100 * 100));
-      }
+  }
+  Label {
+    text: buoyancyMin
+    Layout.columnSpan: 1
+    font.pixelSize: 9
+    Layout.alignment: Qt.AlignRight
+  }
+  Slider {
+    id: buoyancyControl
+    Layout.columnSpan: 1
+    Layout.fillWidth: true
+    from: buoyancyMin
+    to: buoyancyMax
+    value: buoyancyValue
+    onMoved: function() {
+      buoyancyValue = Math.round(value);
+      var valueCubicMeters = value / (100 * 100 * 100);
+      ControlPanel.SetBuoyancyEngine(valueCubicMeters);
     }
+  }
+  Label {
+    text: buoyancyMax
+    Layout.columnSpan: 1
+    font.pixelSize: 9
+  }
 
-    Button {
-      id: dropWeightRelease
-      text: "Release Drop Weight"
-      onClicked: ControlPanel.ReleaseDropWeight()
+  // Drop weight
+  Label {
+    text: "Drop weight"
+    Layout.columnSpan: 1
+  }
+  Label {
+    text: "Detached"
+    Layout.columnSpan: 1
+    font.pixelSize: 9
+    Layout.alignment: Qt.AlignRight
+  }
+  Switch {
+    id: dropWeightRelease
+    Layout.columnSpan: 1
+    Layout.fillWidth: true
+    checked: true
+    onToggled: {
+      ControlPanel.ReleaseDropWeight();
+      checkable = false;
     }
+  }
+  Label {
+    text: "Attached"
+    Layout.columnSpan: 2
+    font.pixelSize: 9
+  }
+
+  Item {
+    Layout.columnSpan: 3
+    width: 10
+    Layout.fillHeight: true
+  }
 }
