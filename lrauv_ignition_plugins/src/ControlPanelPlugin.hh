@@ -44,7 +44,9 @@ class ControlPanel : public ignition::gui::Plugin
 
   public: Q_INVOKABLE void ReleaseDropWeight();
 
-  public: Q_INVOKABLE void SetVehicle(QString name);
+  public: Q_INVOKABLE void SetVehicle(QString _name);
+
+  public: Q_INVOKABLE void SetRudder(qreal _rudderAngle);
 
   private: ignition::transport::Node node;
 

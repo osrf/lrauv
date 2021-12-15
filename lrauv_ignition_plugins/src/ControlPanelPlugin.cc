@@ -63,12 +63,20 @@ void ControlPanel::ReleaseDropWeight()
   this->pub.Publish(lastCommand);
 }
 
-void ControlPanel::SetVehicle(QString name)
+void ControlPanel::SetVehicle(QString _name)
 {
-  igndbg << "Setting name as " << name.toStdString() <<"\n";
+  igndbg << "Setting name as " << _name.toStdString() <<"\n";
+  vehicleName = _name.toStdString();
   this->pub = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(
     "/" + vehicleName + "/command_topic"
   );
+}
+
+void ControlPanel::SetRudder(qreal _angle)
+{
+  igndbg << "Setting rudder angle to " << _angle << "\n";
+  lastCommand.set_rudderangleaction_(_angle);
+  this->pub.Publish(lastCommand);
 }
 }
 

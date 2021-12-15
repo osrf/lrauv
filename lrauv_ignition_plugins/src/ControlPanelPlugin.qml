@@ -47,11 +47,27 @@ GridLayout {
     }
 
     Label { text: "Rudder" }
-    TextField { id: rudderValue }
+    TextField {
+      id: rudderValue
+      text: "0"
+      onEditingFinished: function () {
+        rudderControl.value = parseFloat(text);
+        ControlPanel.SetRudder(parseFloat(text));
+      }
+      validator: DoubleValidator {
+        bottom: -0.26
+        top: 0.26
+      }
+    }
     Slider {
       id: rudderControl
       from: -0.26
+      value: 0
       to: 0.26
+      onMoved: function() {
+        rudderValue.text = Math.round(value * 100) / 100;
+        ControlPanel.SetRudder(value);
+      }
     }
 
     Label { text: "Elevator"}
