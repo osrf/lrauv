@@ -52,6 +52,8 @@ class ControlPanel : public ignition::gui::Plugin
 
   public: Q_INVOKABLE void SetPitchMass(qreal _pitchmassAngle);
 
+  public: Q_INVOKABLE void SetThruster(qreal _pitchmassAngle);
+
   private: ignition::transport::Node node;
 
   private: ignition::transport::Node::Publisher pub;

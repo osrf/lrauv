@@ -95,7 +95,7 @@ GridLayout {
       }
     }
 
-    /// MASS Controls
+    /// Mass Controls
     Label { text: "Mass Shifter" }
     TextField { id: massValue
       text: "0"
@@ -118,22 +118,27 @@ GridLayout {
       }
     }
 
+    /// Thruster Control
     Label { text: "Thruster" }
     TextField { id: thrusterValue
       text: "0"
       onEditingFinished: function () {
         thrustControl.value = parseFloat(text);
-        //ControlPanel.SetRudder(parseFloat(text));
+        ControlPanel.SetThruster(parseFloat(text));
       }
       validator: DoubleValidator {
-        bottom: -0.26
-        top: 0.26
+        bottom: -1
+        top: 31.4152698
       }
     }
     Slider {
       id: thrustControl
       from: -1
-      to: 6.9
+      to: 31.4152698
+      onMoved: function() {
+        thrusterValue.text = Math.round(value * 100) / 100;
+        ControlPanel.SetThruster(value);
+      }
     }
 
     Label { text: "Buoyancy Engine" }

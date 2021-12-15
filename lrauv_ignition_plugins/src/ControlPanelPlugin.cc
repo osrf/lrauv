@@ -92,6 +92,14 @@ void ControlPanel::SetPitchMass(qreal _angle)
   lastCommand.set_masspositionaction_(_angle);
   this->pub.Publish(lastCommand);
 }
+
+
+void ControlPanel::SetThruster(qreal _angle)
+{
+  igndbg << "Setting thruster angular velocity to " << _angle << "\n";
+  lastCommand.set_propomegaaction_(_angle);
+  this->pub.Publish(lastCommand);
+}
 }
 
 // Register this plugin
