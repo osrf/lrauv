@@ -657,7 +657,7 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   bool rowIsZero [3] = {false, false, false};
   for (int r = 0; r < T.rows(); ++r)
   {
-    if ((T.row(r).array() < 1e-6).all())
+    if ((T.row(r).array().abs() < 1e-6).all())
     {
       zeroRowCount++;
       rowIsZero[r] = true;
