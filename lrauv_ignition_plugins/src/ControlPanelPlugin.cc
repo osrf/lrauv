@@ -86,18 +86,25 @@ void ControlPanel::SetElevator(qreal _angle)
   this->pub.Publish(lastCommand);
 }
 
-void ControlPanel::SetPitchMass(qreal _angle)
+void ControlPanel::SetPitchMass(qreal _massPosition)
 {
-  igndbg << "Setting mass position angle to " << _angle << "\n";
-  lastCommand.set_masspositionaction_(_angle);
+  igndbg << "Setting mass position angle to " << _massPosition << "\n";
+  lastCommand.set_masspositionaction_(_massPosition);
   this->pub.Publish(lastCommand);
 }
 
 
-void ControlPanel::SetThruster(qreal _angle)
+void ControlPanel::SetThruster(qreal _thrust)
 {
-  igndbg << "Setting thruster angular velocity to " << _angle << "\n";
-  lastCommand.set_propomegaaction_(_angle);
+  igndbg << "Setting thruster angular velocity to " << _thrust << "\n";
+  lastCommand.set_propomegaaction_(_thrust);
+  this->pub.Publish(lastCommand);
+}
+
+void ControlPanel::SetBuoyancyEngine(qreal _volume)
+{
+  igndbg << "Setting buoyancy engine to " << _volume << "\n";
+  lastCommand.set_buoyancyaction_(_volume);
   this->pub.Publish(lastCommand);
 }
 }

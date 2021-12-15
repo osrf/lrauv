@@ -141,22 +141,28 @@ GridLayout {
       }
     }
 
+    /// Buoyancy Control
     Label { text: "Buoyancy Engine" }
     TextField { id: buoyancyValue
-      text: "0"
+      text: "500"
       onEditingFinished: function () {
         buoyancyControl.value = parseFloat(text);
-        //ControlPanel.SetRudder(parseFloat(text));
+        ControlPanel.SetBuoyancyEngine(parseFloat(text) / (100 * 100 * 100));
       }
       validator: DoubleValidator {
-        bottom: -0.26
-        top: 0.26
+        bottom: 0
+        top: 900
       }
     }
     Slider {
       id: buoyancyControl
       from: 0
       to: 900
+      value: 500
+      onMoved: function() {
+        buoyancyValue.text = Math.round(value);
+        ControlPanel.SetBuoyancyEngine(value/ (100 * 100 * 100));
+      }
     }
 
     Button {
