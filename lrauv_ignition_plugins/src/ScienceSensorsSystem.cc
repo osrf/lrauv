@@ -71,18 +71,21 @@ class tethys::ScienceSensorsSystemPrivate
     const Eigen::MatrixXf &_xyzs,
     const std::vector<float> &_values);
 
-  /// \brief Barycentric interpolation in 2D, given 3 points on any arbitrary
-  /// triangle.
+  /// \brief Barycentric interpolation in 2D, given 4 points on a plane. Finds
+  /// 3 points on a triangle within which the query point lies, then
+  /// interpolates using them.
   /// \param[in] _p Position within the triangle to interpolate for
   /// \param[in] _xys n x 2. XY coordinates of 3 vertices of a triangle
   /// \param[in] _values Data values at the 3 vertices
   /// \return Interpolated value, or quiet NaN if inputs invalid.
   public: float BarycentricInterpolate(
     const Eigen::Vector2f &_p,
-    const Eigen::MatrixXf &_xys,
+    const Eigen::Matrix<float, 4, 2> &_xys,
     const std::vector<float> &_values);
 
-  /// \brief 1D linear interpolation
+  /// \brief 1D linear interpolation, given 4 points on a line. Finds 2 points
+  /// on a segment within which the query point lies, then interpolates using
+  /// them.
   /// \param[in] _p Position to interpolate for
   /// \param[in] _xs Positions to interpolate from
   /// \param[in] _values Data values at the positions to interpolate from
@@ -638,15 +641,15 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   igndbg << "_p: " << std::endl << _p << std::endl;
 
   Eigen::Matrix3f T;
-  // Row 1: x1 - x4, x2 - x4, x3 - x4
+  // Row 1 is x-coords: x1 - x4, x2 - x4, x3 - x4
   T << _xyzs(0, 0) - _xyzs(3, 0),
        _xyzs(1, 0) - _xyzs(3, 0),
        _xyzs(2, 0) - _xyzs(3, 0),
-  // Row 2: y1 - y4, y2 - y4, y3 - y4
+  // Row 2 is y-coords: y1 - y4, y2 - y4, y3 - y4
        _xyzs(0, 1) - _xyzs(3, 1),
        _xyzs(1, 1) - _xyzs(3, 1),
        _xyzs(2, 1) - _xyzs(3, 1),
-  // Row 3: z1 - z4, z2 - z4, z3 - z4
+  // Row 3 is z-coords: z1 - z4, z2 - z4, z3 - z4
        _xyzs(0, 2) - _xyzs(3, 2),
        _xyzs(1, 2) - _xyzs(3, 2),
        _xyzs(2, 2) - _xyzs(3, 2);
@@ -672,7 +675,7 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
 
     // Eliminate the constant axis
     Eigen::Vector2f p2D;
-    Eigen::MatrixXf xyzs2D(_xyzs.rows(), 2);
+    Eigen::Matrix<float, 4, 2> xyzs2D;
     int nextCol = 0;
     for (int r = 0; r < T.rows(); ++r)
     {
@@ -749,39 +752,66 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
 /////////////////////////////////////////////////
 float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   const Eigen::Vector2f &_p,
-  const Eigen::MatrixXf &_xys,
+  const Eigen::Matrix<float, 4, 2> &_xys,
   const std::vector<float> &_values)
 {
+  igndbg << "_p: " << std::endl << _p << std::endl;
+  igndbg << "_xys: " << std::endl << _xys << std::endl;
+
   // 2D case, consider inputs a triangle and use 2 x 2 matrix for T
-  Eigen::Matrix2f T;
-  // Row 1: x1 - x3, x2 - x3
-  T << _xys(0, 0) - _xys(2, 0),
-       _xys(1, 0) - _xys(2, 0),
-  // Row 2: y1 - y3, y2 - y3
-       _xys(0, 1) - _xys(2, 1),
-       _xys(1, 1) - _xys(2, 1);
-  //igndbg << "T: " << std::endl << T << std::endl;
+  Eigen::Matrix2f T(2, 2);
+  Eigen::Vector2f lastVert;
+  Eigen::Vector2f lambda12;
+  float lambda3;
 
-  // r3 = (x3, y3)
-  Eigen::Vector2f r3;
-  r3 << _xys(2, 0), _xys(2, 1);
-  //igndbg << "r3: " << std::endl << r3 << std::endl;
+  // Eliminate the correct point, so that we have a triangle that the query
+  // point lies within.
+  for (int r = 0; r < _xys.rows(); ++r)
+  {
+    Eigen::Matrix<float, 3, 2> xys3;
+    int nextRow = 0;
+    // Populate temp matrix with all points except current point (row)
+    for (int r2 = 0; r2 < xys3.rows(); ++r2)
+    {
+      if (r2 == r)
+      {
+        continue;
+      }
+      xys3.row(nextRow++) = _xys.row(r2);
+    }
+    igndbg << "xys3: " << std::endl << xys3 << std::endl;
 
-  // (lambda1, lambda2)
-  Eigen::Vector2f lambda12 = T.inverse() * (_p - r3);
+    // Row 1: x1 - x3, x2 - x3
+    T << xys3(0, 0) - xys3(2, 0),
+         xys3(1, 0) - xys3(2, 0),
+    // Row 2: y1 - y3, y2 - y3
+         xys3(0, 1) - xys3(2, 1),
+         xys3(1, 1) - xys3(2, 1);
+    igndbg << "T: " << std::endl << T << std::endl;
 
-  //igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
+    // lastVert = (x3, y3)
+    lastVert << xys3(2, 0), xys3(2, 1);
+    //igndbg << "lastVert: " << std::endl << lastVert << std::endl;
 
-  // lambda3 = 1 - lambda1 - lambda2
-  float lambda3 = 1 - lambda12(0) - lambda12(1);
+    // (lambda1, lambda2)
+    lambda12 = T.inverse() * (_p - lastVert);
 
-  // TODO: Check which triangle the query point lies within, eliminate the 4th
-  // point. At least one of the lambdas is negative if point lies outside
-  // triangle.
+    igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
 
-  //igndbg << "Barycentric 2D lambda 1 2 3: " << lambda12(0) << ", "
-  //  << lambda12(1) << ", "
-  //  << lambda3 << std::endl;
+    // lambda3 = 1 - lambda1 - lambda2
+    lambda3 = 1 - lambda12(0) - lambda12(1);
+
+    igndbg << "Barycentric 2D lambda 1 2 3: " << lambda12(0) << ", "
+      << lambda12(1) << ", "
+      << lambda3 << std::endl;
+
+    // If all lambdas >= 0, then we found a triangle that the query point
+    // lies within. (A lambda would be negative if point is outside triangle)
+    if ((lambda12.array() >= 0).all() && lambda3 >= 0)
+    {
+      break;
+    }
+  }
 
   // f(r) = lambda1 * f(r1) + lambda2 * f(r2)
   float result =
@@ -802,6 +832,9 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   const Eigen::VectorXf &_xs,
   const std::vector<float> &_values)
 {
+  igndbg << "_p: " << std::endl << _p << std::endl;
+  igndbg << "_xs: " << std::endl << _xs << std::endl;
+
   // If _p lies on one side of all points in _xs, then cannot interpolate.
   if ((_xs.array() - _p < 0).all() ||
       (_xs.array() - _p > 0).all())
