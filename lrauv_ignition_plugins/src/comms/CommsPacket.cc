@@ -85,7 +85,7 @@ std::string CommsPacket::Data() const
 }
 
 //////////////////////////////////////////////////
-lrauv_ignition_plugins::msgs::LRAUVAcousticMessage 
+lrauv_ignition_plugins::msgs::LRAUVAcousticMessage
   CommsPacket::ToExternalMsg() const
 {
   lrauv_ignition_plugins::msgs::LRAUVAcousticMessage msg;
@@ -93,7 +93,7 @@ lrauv_ignition_plugins::msgs::LRAUVAcousticMessage
   msg.set_from(this->dataPtr->from);
   msg.set_to(this->dataPtr->to);
 
-  using MsgType 
+  using MsgType
     = lrauv_ignition_plugins::msgs::LRAUVAcousticMessage::MessageType;
 
   if (this->Type() == CommsPacket::MsgType::RANGE_REQUEST)
@@ -128,7 +128,7 @@ lrauv_ignition_plugins::msgs::LRAUVInternalComms
   msg.set_allocated_position(vector);
 
   ignition::msgs::Time* time = new ignition::msgs::Time;
-  auto sec = 
+  auto sec =
     std::chrono::duration_cast<std::chrono::seconds>(
       this->dataPtr->timeOfTx.time_since_epoch()
     );
@@ -142,7 +142,7 @@ lrauv_ignition_plugins::msgs::LRAUVInternalComms
 
   msg.set_allocated_header(header);
 
-  using MsgType 
+  using MsgType
     = lrauv_ignition_plugins::msgs::LRAUVInternalComms::MessageType;
 
   if (this->Type() == CommsPacket::MsgType::RANGE_REQUEST)
@@ -175,22 +175,22 @@ CommsPacket CommsPacket::make(
   packet.dataPtr->position = position;
   packet.dataPtr->timeOfTx = timeOfTx;
 
-  using MsgType 
+  using MsgType
     = lrauv_ignition_plugins::msgs::LRAUVAcousticMessage::MessageType;
 
-  if (datapayload.type() 
+  if (datapayload.type()
     == MsgType::LRAUVAcousticMessage_MessageType_RangeRequest)
   {
     packet.dataPtr->type = CommsPacket::MsgType::RANGE_REQUEST;
   }
 
-  if (datapayload.type() 
+  if (datapayload.type()
     == MsgType::LRAUVAcousticMessage_MessageType_RangeResponse)
   {
     packet.dataPtr->type = CommsPacket::MsgType::RANGE_RESPONSE;
   }
 
-  if (datapayload.type() 
+  if (datapayload.type()
     == MsgType::LRAUVAcousticMessage_MessageType_Other)
   {
     packet.dataPtr->type = CommsPacket::MsgType::DATA;
@@ -207,7 +207,7 @@ CommsPacket CommsPacket::make(
   packet.dataPtr->to = datapayload.to();
   packet.dataPtr->from = datapayload.from();
   packet.dataPtr->data = datapayload.data();
-  
+
   ignition::math::Vector3d position;
   position.X(datapayload.position().x());
   position.Y(datapayload.position().y());
@@ -219,22 +219,22 @@ CommsPacket CommsPacket::make(
   std::chrono::steady_clock::time_point timeOfTx(dur);
   packet.dataPtr->timeOfTx = timeOfTx;
 
-  using MsgType 
+  using MsgType
     = lrauv_ignition_plugins::msgs::LRAUVInternalComms::MessageType;
 
-  if (datapayload.type() 
+  if (datapayload.type()
     == MsgType::LRAUVInternalComms_MessageType_RangeRequest)
   {
     packet.dataPtr->type = CommsPacket::MsgType::RANGE_REQUEST;
   }
 
-  if (datapayload.type() 
+  if (datapayload.type()
     == MsgType::LRAUVInternalComms_MessageType_RangeResponse)
   {
     packet.dataPtr->type = CommsPacket::MsgType::RANGE_RESPONSE;
   }
 
-  if (datapayload.type() 
+  if (datapayload.type()
     == MsgType::LRAUVInternalComms_MessageType_Other)
   {
     packet.dataPtr->type = CommsPacket::MsgType::DATA;
