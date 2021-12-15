@@ -60,21 +60,34 @@ message LRAUVState
   ignition.msgs.Header header     = 1;
 
   int32 errorPad_                 = 2;  // Not populated.
+
   int32 utmZone_                  = 3;  // Not populated.
+
   int32 northernHemi_             = 4;  // Not populated.
+
   float propOmega_                = 5;  // Current angular velocity of the
                                         // propeller. Unit: rad / s. Positive
                                         // values rotate the propeller
                                         // clockwise when looking from the back,
                                         // and propel the vehicle forward.
+
   float propThrust_               = 6;  // Not populated
+
   float propTorque_               = 7;  // Not populated
+
   float rudderAngle_              = 8;  // Angle that the rudder joint is
                                         // currently at. Unit: radians.
                                         // Higher values have the vertical fins
                                         // rotated more clockwise when looking
                                         // from the top (i.e. to starboard)
-  float elevatorAngle_            = 9;
+
+  float elevatorAngle_            = 9;  // Angle that the elevator joint is
+                                        // currently at. Unit: radians.
+                                        // Higher values have the horizontal fins
+                                        // rotated more counter-clockwise when
+                                        // looking from starboard, which tilts the
+                                        // nose downward when moving forward.
+
   float massPosition_             = 10;  // Position of the battery's joint.
                                          // Unit: meters. Positive values have
                                          // the battery forward, tilting the
@@ -93,21 +106,22 @@ message LRAUVState
   float speed_                    = 14;  // Magnitude of vehicle's linear velocity
                                          // in the world frame. It's always positive.
                                          // Unit: m/s
+
   double latitudeDeg_             = 15;  // Latitude in degrees
+
   double longitudeDeg_            = 16;  // Longitude in degrees
+
   float netBuoy_                  = 17;  // Net buoyancy forces applied to the
                                          // vehicle. Unit: Newtons. Currently
                                          // not populated.
 
   ignition.msgs.Vector3d force_   = 18;  // forceX_, forceY_, forceZ_ in SimResultStruct
 
-  ignition.msgs.Vector3d pos_     = 19;  // Vehicle's offset position in "world frame"
-                                         // (see above) with respect to its initial
-                                         // position. Unit: meters
+  ignition.msgs.Vector3d pos_     = 19;  // Vehicle's position in "world frame"
+                                         // (see above) Unit: meters
 
-  ignition.msgs.Vector3d posRPH_  = 20;  // Vehicle's offset orientation in "world frame"
-                                         // (see above) with respect to its initial
-                                         // orientation. Unit: rad
+  ignition.msgs.Vector3d posRPH_  = 20;  // Vehicle's orientation in "world frame"
+                                         // (see above) Unit: rad
 
   ignition.msgs.Vector3d posDot_  = 21;  // Vehicle's instantaneous linear velocity in
                                          // "world frame" (see above). Units: m / s
@@ -125,7 +139,9 @@ message LRAUVState
                                          // from current sensor. Unit: m/s.
 
   float vertCurrent_              = 26;  // Not populated.
+
   float magneticVariation_        = 27;  // Not populated.
+
   float soundSpeed_               = 28;  // Not populated.
 
   float temperature_              = 29;  // Data collected from temperature sensor.

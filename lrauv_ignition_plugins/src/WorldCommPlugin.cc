@@ -47,6 +47,7 @@ void WorldCommPlugin::Configure(
   ignition::gazebo::EntityComponentManager &_ecm,
   ignition::gazebo::EventManager &_eventMgr)
 {
+ignerr << "A" << std::endl;
   // Parse SDF parameters
   if (_sdf->HasElement("spawn_topic"))
   {
@@ -162,11 +163,26 @@ void WorldCommPlugin::SpawnCallback(
   // Create vehicle
   ignition::msgs::EntityFactory factoryReq;
   factoryReq.set_sdf(this->TethysSdfString(_msg.id_().data()));
+
   auto coords = factoryReq.mutable_spherical_coordinates();
   coords->set_surface_model(ignition::msgs::SphericalCoordinates::EARTH_WGS84);
   coords->set_latitude_deg(lat);
   coords->set_longitude_deg(lon);
   coords->set_elevation(ele);
+
+  // RPH command is in NED
+  // X == R: about N
+  // Y == P: about E
+  // Z == H: about D
+
+  // Gazebo takes ENU
+  // X == R: about E
+  // Y == P: about N
+  // Z == Y: about U
+
+  auto rotENU = ignition::math::Quaterniond::EulerToQuaternion(
+      _msg.initpitch_(), _msg.initroll_(), -_msg.initheading_());
+  ignition::msgs::Set(factoryReq.mutable_pose()->mutable_orientation(), rotENU);
 
   // TODO(chapulina) Check what's up with all the errors
   if (!this->node.Request(this->createService, factoryReq,
@@ -184,6 +200,14 @@ std::string WorldCommPlugin::TethysSdfString(const std::string &_id)
   <sdf version="1.9">
   <model name=")" + _id + R"(">
     <include merge="true">
+
+      <!--
+          Without any extra pose offset, the model is facing West.
+          For the controller, zero orientation means the robot is facing North.
+          So we need to rotate it.
+          Note that this pose is expressed in ENU.
+      -->
+      <pose degrees="true">0 0 0  0 0 -90</pose>
 
       <!-- rename included model to avoid frame collisions -->
       <name>tethys_equipped</name>

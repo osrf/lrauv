@@ -557,21 +557,18 @@ void TethysCommPlugin::PostUpdate(
 
   // Gazebo is using ENU, controller expects NED
   auto modelPoseENU = ignition::gazebo::worldPose(this->modelLink, _ecm);
-  auto modelPoseNED = ENU_TO_NED * modelPoseENU;
-  if (!this->initialModelPoseNED)
-  {
-    this->initialModelPoseNED = modelPoseNED;
-  }
+  auto modelPoseNEDRot = ENU_TO_NED * modelPoseENU;
+  ignition::math::Pose3d modelPoseNED{
+      modelPoseENU.Y(), modelPoseENU.X(), -modelPoseENU.Z(),
+      modelPoseENU.Pitch(), modelPoseENU.Roll(), -modelPoseENU.Yaw()};
 
   stateMsg.set_depth_(-modelPoseENU.Pos().Z());
 
-  // w.r.t. initial pose in NED
-  // The orientation assumes that the vehicle starts facing North
-  auto poseOffsetNED = modelPoseNED *
-      this->initialModelPoseNED.value().Inverse();
-  ignition::msgs::Set(stateMsg.mutable_pos_(), poseOffsetNED.Pos());
-  ignition::msgs::Set(stateMsg.mutable_rph_(), poseOffsetNED.Rot().Euler());
-  ignition::msgs::Set(stateMsg.mutable_posrph_(), poseOffsetNED.Rot().Euler());
+ignerr << modelPoseNEDRot << " --- " << modelPoseNED << std::endl;
+
+  ignition::msgs::Set(stateMsg.mutable_pos_(), modelPoseNED.Pos());
+  ignition::msgs::Set(stateMsg.mutable_rph_(), modelPoseNED.Rot().Euler());
+  ignition::msgs::Set(stateMsg.mutable_posrph_(), modelPoseNED.Rot().Euler());
 
   auto latlon = ignition::gazebo::sphericalCoordinates(this->modelLink, _ecm);
   if (latlon)

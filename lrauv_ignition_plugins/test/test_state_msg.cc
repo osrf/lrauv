@@ -58,13 +58,15 @@ TEST_F(LrauvTestFixture, Command)
   // Position
   // TODO(chapulina) Reduce tolerances, vehicle shouldn't be sinking and pitching
   EXPECT_NEAR(0.0, latest.depth_(), 0.02);
-  EXPECT_NEAR(0.0, latest.latitudedeg_(), 1e-6);
-  EXPECT_NEAR(0.0, latest.longitudedeg_(), 1e-6);
+  EXPECT_NEAR(35.5999984741211, latest.latitudedeg_(), 1e-6);
+  EXPECT_NEAR(-121.779998779297, latest.longitudedeg_(), 1e-6);
 
   // NED world frame
   EXPECT_NEAR(0.0, latest.pos_().x(), 1e-6);
   EXPECT_NEAR(0.0, latest.pos_().y(), 1e-6);
   EXPECT_NEAR(0.0, latest.pos_().z(), 0.015);
+
+  // Vehicle starts facing West
   EXPECT_NEAR(0.0, latest.posrph_().x(), 0.007);
   EXPECT_NEAR(0.0, latest.posrph_().y(), 1e-2);
   EXPECT_NEAR(0.0, latest.posrph_().z(), 1e-6);
@@ -109,6 +111,9 @@ TEST_F(LrauvTestFixture, Command)
   // ENU: -X
   // NED: -Y
   // FSK: +X
+  // Longitude: decrease
+  // Latitude: decrease slightly, because we're in the Northern hemisphere
+  // (see more context in https://github.com/ignitionrobotics/ign-math/pull/235#discussion_r705825065)
   latest = this->stateMsgs.back();
   commonChecks(latest);
 
@@ -118,8 +123,8 @@ TEST_F(LrauvTestFixture, Command)
 
   // Position
   EXPECT_NEAR(0.0, latest.depth_(), 0.03);
-  EXPECT_NEAR(0.0, latest.latitudedeg_(), 1e-6);
-  EXPECT_NEAR(0.0, latest.longitudedeg_(), 1e-3);
+  EXPECT_GT(35.5999984741211, latest.latitudedeg_());
+  EXPECT_GT(-121.779998779297, latest.longitudedeg_());
 
   // NED world frame: vehicle is going West with no rotation
   EXPECT_NEAR(0.0, latest.pos_().x(), 1e-3);
@@ -169,6 +174,8 @@ TEST_F(LrauvTestFixture, Command)
   // ENU: -X, +Y and -yaw
   // NED: -Y, +X and +yaw
   // FSK: +X, +Y and +yaw
+  // Longitude: decrease
+  // Latitude: decrease
   latest = this->stateMsgs.back();
   commonChecks(latest);
 
@@ -178,8 +185,8 @@ TEST_F(LrauvTestFixture, Command)
 
   // Position
   EXPECT_NEAR(0.0, latest.depth_(), 0.041);
-  EXPECT_NEAR(0.0, latest.latitudedeg_(), 1e-4);
-  EXPECT_NEAR(0.0, latest.longitudedeg_(), 1e-3);
+  EXPECT_LT(35.5999984741211, latest.latitudedeg_());
+  EXPECT_GT(-121.779998779297, latest.longitudedeg_());
 
   // NED world frame: vehicle is going North West with positive yaw
   EXPECT_LT(1.4, latest.pos_().x());

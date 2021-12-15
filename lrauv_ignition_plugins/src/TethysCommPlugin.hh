@@ -195,11 +195,6 @@ namespace tethys
     private: std::chrono::steady_clock::duration prevPubPrintTime =
       std::chrono::steady_clock::duration::zero();
 
-    /// \brief Initial model pose expressed in North-East-Down.
-    /// The first vehicle in simulation usually has zero pose expressed in ENU,
-    /// so the initial NED pose is non-zero.
-    private: std::optional<ignition::math::Pose3d> initialModelPoseNED;
-
     /// Transport node for message passing
     private: ignition::transport::Node node;
 

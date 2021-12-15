@@ -113,6 +113,7 @@ TEST(SpawnTest, Spawn)
     spawnMsg.mutable_id_()->set_data("vehicle1");
     spawnMsg.set_initlat_(lat1.Degree());
     spawnMsg.set_initlon_(lon1.Degree());
+    spawnMsg.set_initheading_(lat1.Degree());
 
     spawnPub.Publish(spawnMsg);
   }
