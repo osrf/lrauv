@@ -104,6 +104,15 @@ class tethys::ScienceSensorsSystemPrivate
     const std::vector<int> &_inds,
     std::vector<float> &_new);
 
+  /// \brief Sort vector in-place, keeping track of indices
+  /// \param[in] _v Vector to sort
+  /// \param[out] _v Sorted vector
+  /// \param[out] _idx Indices of original vector in sorted vector
+  public: template<typename T>
+  void SortIndices(
+      const std::vector<T> &_v,
+      std::vector<size_t> &_idx);
+
   //////////////////////////////
   // Functions for communication
 
@@ -835,6 +844,24 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   igndbg << "_p: " << std::endl << _p << std::endl;
   igndbg << "_xs: " << std::endl << _xs << std::endl;
 
+  // If _p is equal to one of the points, just take the value of that point.
+  // This is to catch floating point errors if _p lies on one side of all
+  // points in _xs, but really equal to one of the endpoints.
+  if (((_xs.array() - _p).abs() < 1e-6).any())
+  {
+    for (int i = 0; i < _xs.size(); ++i)
+    {
+      if (abs(_xs(i) - _p) < 1e-6)
+      {
+        igndbg << "_p lies on a neighbor. "
+          << "1D linear interpolation of values " << _values[0] << ", "
+          << _values[1] << ", " << _values[2] << ", " << _values[3]
+          << " resulted in " << _values[i] << std::endl;
+        return _values[i];
+      }
+    }
+  }
+
   // If _p lies on one side of all points in _xs, then cannot interpolate.
   if ((_xs.array() - _p < 0).all() ||
       (_xs.array() - _p > 0).all())
@@ -844,17 +871,46 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
     return std::numeric_limits<float>::quiet_NaN();
   }
 
-  // Get the two farthest positions in _xs that _p lies between.
-  Eigen::VectorXf::Index gtPIdx, ltPIdx;
-  float gtPDist = (_xs.array() - _p).maxCoeff(&gtPIdx);
-  float ltPDist = (_p - _xs.array()).maxCoeff(&ltPIdx);
+  // Sort points
+  std::vector<float> xsSorted;
+  std::vector<size_t> xsSortedInds;
+  for (int i = 0; i < _xs.size(); ++i)
+  {
+    xsSorted.push_back(_xs(i));
+  }
+  SortIndices(xsSorted, xsSortedInds);
+
+  int ltPSortedIdx, gtPSortedIdx;
+  float ltPDist, gtPDist;
+
+  // Get the two closest positions in _xs that _p lies between.
+  for (int i = 0; i < xsSorted.size() - 1; ++i)
+  {
+    // Two consecutive elements in the sorted vector, that the query point lies
+    // between, are the closest points to each side of the query point.
+    if (xsSorted[i] <= _p && _p <= xsSorted[i+1])
+    {
+      ltPSortedIdx = i;
+      gtPSortedIdx = i + 1;
+
+      ltPDist = _p - xsSorted[i];
+      gtPDist = xsSorted[i+1] - _p;
+
+      break;
+    }
+  }
 
   // Normalize the distances to ratios between 0 and 1, to use as weights
-  gtPDist /= (gtPDist + ltPDist);
-  ltPDist /= (gtPDist + ltPDist);
+  float ltPWeight = ltPDist / (gtPDist + ltPDist);
+  float gtPWeight = gtPDist / (gtPDist + ltPDist);
 
-  float result = gtPDist * _values[gtPIdx] + ltPDist * _values[ltPIdx];
+  // Retrieve indices of sorted elements in original array
+  int ltPIdx = xsSortedInds[ltPSortedIdx];
+  int gtPIdx = xsSortedInds[gtPSortedIdx];
+  float result = ltPWeight * _values[ltPIdx] + gtPWeight * _values[gtPIdx];
 
+  igndbg << "ltPWeight: " << ltPWeight << ", gtPWeight: " << gtPWeight
+    << std::endl;
   igndbg << "1D linear interpolation of values " << _values[0] << ", "
     << _values[1] << ", " << _values[2] << ", " << _values[3]
     << " resulted in " << result << std::endl;
@@ -874,6 +930,25 @@ void ScienceSensorsSystemPrivate::ExtractElements(
   {
     _new.push_back(_orig[_inds[i]]);
   }
+}
+
+/////////////////////////////////////////////////
+template<typename T>
+void ScienceSensorsSystemPrivate::SortIndices(
+  const std::vector<T> &_v,
+  std::vector<size_t> &_idx)
+{
+  // From https://stackoverflow.com/questions/1577475/c-sorting-and-keeping-track-of-indexes
+
+  // Initialize original index locations
+  _idx.resize(_v.size());
+  std::iota(_idx.begin(), _idx.end(), 0);
+
+  // Sort indexes based on comparing values in v using std::stable_sort instead
+  // of std::sort to avoid unnecessary index re-orderings when v contains
+  // elements of equal values 
+  std::stable_sort(_idx.begin(), _idx.end(),
+    [&_v](size_t _i1, size_t _i2) {return _v[_i1] < _v[_i2];});
 }
 
 /////////////////////////////////////////////////
