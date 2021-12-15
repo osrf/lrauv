@@ -78,6 +78,20 @@ void ControlPanel::SetRudder(qreal _angle)
   lastCommand.set_rudderangleaction_(_angle);
   this->pub.Publish(lastCommand);
 }
+
+void ControlPanel::SetElevator(qreal _angle)
+{
+  igndbg << "Setting elevator angle to " << _angle << "\n";
+  lastCommand.set_elevatorangleaction_(_angle);
+  this->pub.Publish(lastCommand);
+}
+
+void ControlPanel::SetPitchMass(qreal _angle)
+{
+  igndbg << "Setting mass position angle to " << _angle << "\n";
+  lastCommand.set_masspositionaction_(_angle);
+  this->pub.Publish(lastCommand);
+}
 }
 
 // Register this plugin

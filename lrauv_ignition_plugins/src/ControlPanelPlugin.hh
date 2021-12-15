@@ -48,6 +48,10 @@ class ControlPanel : public ignition::gui::Plugin
 
   public: Q_INVOKABLE void SetRudder(qreal _rudderAngle);
 
+  public: Q_INVOKABLE void SetElevator(qreal _elevatorAngle);
+
+  public: Q_INVOKABLE void SetPitchMass(qreal _pitchmassAngle);
+
   private: ignition::transport::Node node;
 
   private: ignition::transport::Node::Publisher pub;

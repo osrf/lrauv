@@ -46,6 +46,7 @@ GridLayout {
       }
     }
 
+    /// RUDDER Controls
     Label { text: "Rudder" }
     TextField {
       id: rudderValue
@@ -70,25 +71,65 @@ GridLayout {
       }
     }
 
+    /// ELEV Controls
     Label { text: "Elevator"}
-    TextField { id: elevatorValue }
+    TextField { id: elevatorValue
+      text: "0"
+      onEditingFinished: function () {
+        elevatorControl.value = parseFloat(text);
+        ControlPanel.SetElevator(parseFloat(text));
+      }
+      validator: DoubleValidator {
+        bottom: -0.26
+        top: 0.26
+      }
+    }
     Slider {
       id: elevatorControl
       orientation: Qt.Vertical
       from: -0.26
       to: 0.26
+      onMoved: function() {
+        elevatorValue.text = Math.round(value * 100) / 100;
+        ControlPanel.SetElevator(value);
+      }
     }
 
+    /// MASS Controls
     Label { text: "Mass Shifter" }
-    TextField { id: pitchMassValue }
+    TextField { id: massValue
+      text: "0"
+      onEditingFinished: function () {
+        massControl.value = parseFloat(text);
+        ControlPanel.SetPitchMass(parseFloat(text));
+      }
+      validator: DoubleValidator {
+        bottom: -0.03
+        top: 0.03
+      }
+    }
     Slider {
       id: massControl
       from: -0.03
       to: 0.03
+      onMoved: function() {
+        massValue.text = Math.round(value * 100) / 100;
+        ControlPanel.SetPitchMass(value);
+      }
     }
 
     Label { text: "Thruster" }
-    TextField { id: thrusterValue }
+    TextField { id: thrusterValue
+      text: "0"
+      onEditingFinished: function () {
+        thrustControl.value = parseFloat(text);
+        //ControlPanel.SetRudder(parseFloat(text));
+      }
+      validator: DoubleValidator {
+        bottom: -0.26
+        top: 0.26
+      }
+    }
     Slider {
       id: thrustControl
       from: -1
@@ -96,7 +137,17 @@ GridLayout {
     }
 
     Label { text: "Buoyancy Engine" }
-    TextField { id: buoyancyValue }
+    TextField { id: buoyancyValue
+      text: "0"
+      onEditingFinished: function () {
+        buoyancyControl.value = parseFloat(text);
+        //ControlPanel.SetRudder(parseFloat(text));
+      }
+      validator: DoubleValidator {
+        bottom: -0.26
+        top: 0.26
+      }
+    }
     Slider {
       id: buoyancyControl
       from: 0
