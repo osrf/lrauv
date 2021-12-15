@@ -90,8 +90,13 @@ TEST_F(LrauvTestFixture, YoYoCircle)
     // Speed is about 1 m / s
     auto dist = (pose.Pos() - prevPose.Pos()).Length();
 
+    // Check velocity is positive
     auto linVel = dist / time100it;
-    EXPECT_LT(0.0, linVel);
+    if (i > 2000)
+    {
+      // Check that the vehicle actually is moving.
+      EXPECT_LT(0.0, linVel) << i;
+    }
 
     EXPECT_NEAR(1.0, linVel, 1.0) << i;
 
