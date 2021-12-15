@@ -32,36 +32,57 @@
 namespace tethys
 {
 
+/// \brief Control Panel for controlling the tethys using the GUI.
 class ControlPanel : public ignition::gui::Plugin
 {
   Q_OBJECT
 
+  /// \brief Constructor
   public: ControlPanel();
 
+  /// \brief Destructor
   public: ~ControlPanel();
 
+  /// \brief Documentation inherited
   public: void LoadConfig(const tinyxml2::XMLElement *_pluginElem) override;
 
+  /// \brief Releases the drop weight
   public: Q_INVOKABLE void ReleaseDropWeight();
 
+  /// \brief Sets the vehicle name that you want to control
+  /// \param[in] _name - The name of the vehicle in question.
   public: Q_INVOKABLE void SetVehicle(QString _name);
 
+  /// \brief Sets the rudder rotation
+  /// \param[in] _rudderAngle - The rudder angle set point
   public: Q_INVOKABLE void SetRudder(qreal _rudderAngle);
 
+  /// \brief Sets the elevator rotation
+  /// \param[in] _elevatorAngle - The elevator angle set point
   public: Q_INVOKABLE void SetElevator(qreal _elevatorAngle);
 
-  public: Q_INVOKABLE void SetPitchMass(qreal _pitchmassAngle);
+  /// \brief Sets the mass shifter position
+  /// \param[in] _pitchmassPosition - The mass shifter position
+  public: Q_INVOKABLE void SetPitchMass(qreal _pitchmassPosition);
 
+  /// \brief Sets the thruster thrust
+  /// \param[in] _rudderAngle - The thruster set point
   public: Q_INVOKABLE void SetThruster(qreal _thrust);
 
+  /// \brief Sets the buoyancy engine
+  /// \param[in] _volume- The thruster set point
   public: Q_INVOKABLE void SetBuoyancyEngine(qreal _volume);
 
+  /// \brief Transport node
   private: ignition::transport::Node node;
 
+  /// \brief Transport publisher
   private: ignition::transport::Node::Publisher pub;
 
+  /// \brief LRAUVCommand for the last state
   private: lrauv_ignition_plugins::msgs::LRAUVCommand lastCommand;
 
+  /// \brief The vehicle name to subscribe to.
   private: std::string vehicleName;
 };
 
