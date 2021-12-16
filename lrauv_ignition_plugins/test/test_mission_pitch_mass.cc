@@ -74,40 +74,23 @@ TEST_F(LrauvTestFixture, PitchMass)
   ignmsg << "Logged [" << this->tethysPoses.size() << "] poses" << std::endl;
 
   int maxIterations{28000};
-  ASSERT_LT(maxIterations, this->tethysPoses.size());
+  EXPECT_LT(maxIterations, this->tethysPoses.size());
 
-  // * Y, roll and yaw are kept pretty stable close to zero with low tolerances
-  // * The pitch target is 20 deg, but there's a lot of oscillation, so we need
-  //   the high tolerance
-  // * X and Y are meant to stay close to zero, but the vehicle goes forward
-  //   (-X, +Z) slowly. That could be caused by the pitch oscillation?
-  this->CheckRange(2000,  {-0.01, 0.00, -0.06, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(4000,  {-0.17, 0.00, -0.01, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(6000,  {-0.51, 0.00,  0.12, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(8000,  {-0.87, 0.00,  0.22, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(10000, {-1.21, 0.00,  0.34, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(12000, {-1.55, 0.00,  0.50, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(14000, {-1.90, 0.00,  0.63, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(16000, {-2.25, 0.00,  0.73, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(18000, {-2.60, 0.00,  0.86, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(20000, {-2.93, 0.00,  1.02, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(22000, {-3.29, 0.00,  1.13, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(24000, {-3.64, 0.00,  1.24, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(26000, {-3.97, 0.00,  1.39, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
-  this->CheckRange(28000, {-4.32, 0.00,  1.53, 0.00, IGN_DTOR(20), 0.00},
-      {0.1, 0.01, 0.1}, {IGN_DTOR(2), IGN_DTOR(18), IGN_DTOR(2)});
+  // Give it some iterations to reach steady state
+  for (auto i = 2000u; i < this->tethysPoses.size(); i = i + 1000)
+  {
+    this->CheckRange(i,
+      // Target pose has no translation, roll or yaw, and 20 deg pitch
+      {0.0, 0.0, 0.0, 0.0, IGN_DTOR(20), 0},
+      // Y is kept pretty stable close to zero with low tolerances
+      // \TODO(chapulina) X and Y are meant to stay close to zero, but the
+      // vehicle goes forward (-X, +Z) slowly. That's caused by the pitch
+      // oscillation.
+      {4.7, 0.01, 1.8},
+      // Roll and yaw are kept pretty stable close to zero with low tolerances
+      // \TODO(chapulina) The pitch has a lot of oscillation, so we need the
+      // high tolerance
+      {IGN_DTOR(2), IGN_DTOR(21), IGN_DTOR(2)});
+  }
 }
 
