@@ -256,7 +256,6 @@
         <ignition-gui>
           <title>Visualize science data</title>
           <property type="string" key="state">docked_collapsed</property>
-          <property key="x" type="double">800</property>
         </ignition-gui>
       </plugin>
       <plugin filename="ControlPanelPlugin" name="Tethys Controls">
@@ -264,6 +263,13 @@
           <title>Tethys controls</title>
           <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
+      </plugin>
+      <plugin filename="ReferenceAxis" name="Reference axis">
+        <ignition-gui>
+          <title>Reference axis</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+        <fsk>tethys</fsk>
       </plugin>
     </gui>
 
