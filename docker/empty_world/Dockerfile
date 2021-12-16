@@ -96,7 +96,7 @@ RUN cd ${IGN_WS} \
  #&& colcon build --merge-install --cmake-args -DBUILD_TESTING=OFF
 
 RUN mkdir -p /home/colcon_ws/src
-COPY . /home/colcon_ws/src
+COPY --chown=$USERNAME . /home/colcon_ws/src
 
 # build the workspace
 WORKDIR /home/colcon_ws

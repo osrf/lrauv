@@ -192,7 +192,7 @@ class LrauvTestFixture : public ::testing::Test
       return;
     }
 
-    int res = system("sudo /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/unserialize_for_plotting.sh");
+    int res = system("/home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/unserialize_for_plotting.sh");
 
     if (res != 0)
     {
@@ -211,7 +211,7 @@ class LrauvTestFixture : public ::testing::Test
     }
 
     cmd =
-      std::string("sudo python3 /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/plot_missions.py ") + _target + " tmp";
+      std::string("python3 /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/plot_missions.py ") + _target + " tmp";
     system(cmd.c_str());
 
     cmd = std::string("sudo cp -r /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/") +

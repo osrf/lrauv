@@ -65,7 +65,7 @@ WORKDIR ../..
 RUN rm -rf build log install src/lrauv
 
 # Use current version of the code: Change to local branch if needed.
-COPY . src/lrauv
+COPY --chown=$USERNAME . src/lrauv
 
 # Build image
 RUN [ "/bin/bash" , "-c" , "colcon build --cmake-args='-DBUILD_TESTING=true'" ]

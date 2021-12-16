@@ -56,7 +56,7 @@ RUN apt-get update \
 RUN rm -rf /var/lib/apt/lists/* \
   && apt-get -qq clean
 
-USER developer
+USER $USERNAME
 
 # We're in /home/developer/lrauv_ws/src/lrauv-application, go back to ~/lrauv_ws
 WORKDIR ../..
@@ -65,7 +65,7 @@ WORKDIR ../..
 RUN rm -rf build log install src/lrauv
 
 # Use current version of the code
-COPY . src/lrauv
+COPY --chown=$USERNAME . src/lrauv
 
 # Use G++9 instead.
 ARG CC=gcc-9
