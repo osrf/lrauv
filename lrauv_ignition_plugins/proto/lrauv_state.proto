@@ -59,102 +59,111 @@ message LRAUVState
   /// Stamped with simulation time.
   ignition.msgs.Header header     = 1;
 
-  int32 errorPad_                 = 2;  // Not populated.
+  /// \brief Not populated
+  int32 errorPad_                 = 2;
 
-  int32 utmZone_                  = 3;  // Not populated.
+  /// \brief Not populated
+  int32 utmZone_                  = 3;
 
-  int32 northernHemi_             = 4;  // Not populated.
+  /// \brief Not populated
+  int32 northernHemi_             = 4;
 
-  float propOmega_                = 5;  // Current angular velocity of the
-                                        // propeller. Unit: rad / s. Positive
-                                        // values rotate the propeller
-                                        // clockwise when looking from the back,
-                                        // and propel the vehicle forward.
+  /// \brief Current angular velocity of the propeller. Unit: rad / s. Positive
+  /// values rotate the propeller clockwise when looking from the back,
+  /// and propel the vehicle forward.
+  float propOmega_                = 5;
 
-  float propThrust_               = 6;  // Not populated
+  /// \brief Not populated
+  float propThrust_               = 6;
 
-  float propTorque_               = 7;  // Not populated
+  /// \brief Not populated
+  float propTorque_               = 7;
 
-  float rudderAngle_              = 8;  // Angle that the rudder joint is
-                                        // currently at. Unit: radians.
-                                        // Higher values have the vertical fins
-                                        // rotated more clockwise when looking
-                                        // from the top (i.e. to starboard)
+  /// \brief Angle that the rudder joint is currently at. Unit: radians.
+  /// Higher values have the vertical fins rotated more clockwise when looking
+  /// from the top (i.e. to starboard)
+  float rudderAngle_              = 8;
 
-  float elevatorAngle_            = 9;  // Angle that the elevator joint is
-                                        // currently at. Unit: radians.
-                                        // Higher values have the horizontal fins
-                                        // rotated more counter-clockwise when
-                                        // looking from starboard, which tilts the
-                                        // nose downward when moving forward.
+  /// \brief Angle that the elevator joint is currently at. Unit: radians.
+  /// Higher values have the horizontal fins rotated more counter-clockwise when
+  /// looking from starboard, which tilts the nose downward when moving forward.
+  float elevatorAngle_            = 9;
 
-  float massPosition_             = 10;  // Position of the battery's joint.
-                                         // Unit: meters. Positive values have
-                                         // the battery forward, tilting the
-                                         // nose downward.
-  float buoyancyPosition_         = 11;  // Volume of the VBS. Unit: cubic
-                                         // meters. Volumes higher than the
-                                         // neutral volume push the vehicle
-                                         // upwards.
-  float depth_                    = 12;  // Vertical position of the vehicle
-                                         // with respect to sea level. Higher
-                                         // values are deeper, negative values
-                                         // are above water. Unit: meters.
+  /// \brief Position of the battery's joint. Unit: meters. Positive values have
+  /// the battery forward, tilting the nose downward.
+  float massPosition_             = 10;
 
-  ignition.msgs.Vector3d rph_     = 13;  // Duplicate of posRPH_
+  /// \brief Volume of the VBS. Unit: cubic meters. Volumes higher than the
+  /// neutral volume push the vehicle upwards.
+  float buoyancyPosition_         = 11;
 
-  float speed_                    = 14;  // Magnitude of vehicle's linear velocity
-                                         // in the world frame. It's always positive.
-                                         // Unit: m/s
+  /// \brief Vertical position of the vehicle with respect to sea level. Higher
+  /// values are deeper, negative values are above water. Unit: meters.
+  float depth_                    = 12;
 
-  double latitudeDeg_             = 15;  // Latitude in degrees
+  /// \brief Duplicate of posRPH_
+  ignition.msgs.Vector3d rph_     = 13;
 
-  double longitudeDeg_            = 16;  // Longitude in degrees
+  /// \brief Magnitude of vehicle's linear velocity in the world frame.
+  /// It's always positive. Unit: m/s
+  float speed_                    = 14;
 
-  float netBuoy_                  = 17;  // Net buoyancy forces applied to the
-                                         // vehicle. Unit: Newtons. Currently
-                                         // not populated.
+  /// \brief Latitude in degrees
+  double latitudeDeg_             = 15;
 
-  ignition.msgs.Vector3d force_   = 18;  // forceX_, forceY_, forceZ_ in SimResultStruct
+  /// \brief Longitude in degrees
+  double longitudeDeg_            = 16;
 
-  ignition.msgs.Vector3d pos_     = 19;  // Vehicle's position in "world frame"
-                                         // (see above) Unit: meters
+  /// \brief Net buoyancy forces applied to the vehicle. Unit: Newtons. Currently not populated.
+  float netBuoy_                  = 17;
 
-  ignition.msgs.Vector3d posRPH_  = 20;  // Vehicle's orientation in "world frame"
-                                         // (see above) Unit: rad
+  /// \brief Not populated
+  ignition.msgs.Vector3d force_   = 18;
 
-  ignition.msgs.Vector3d posDot_  = 21;  // Vehicle's instantaneous linear velocity in
-                                         // "world frame" (see above). Units: m / s
+  /// \brief Vehicle's position in "world frame" (see above) Unit: meters
+  ignition.msgs.Vector3d pos_     = 19;
 
-  ignition.msgs.Vector3d rateUVW_ = 22;  // Vehicle's instantaneous linear velocity in
-                                         // "vehicle frame" (see above). Units: m / s
+  /// \brief Vehicle's orientation in "world frame" (see above) Unit: rad
+  ignition.msgs.Vector3d posRPH_  = 20;
 
-  ignition.msgs.Vector3d ratePQR_ = 23;  // Vehicle's instantaneous angular velocity in
-                                         // "vehicle frame" (see above). Units: rad / s
+  /// \brief Vehicle's instantaneous linear velocity in "vehicle frame" 
+  /// (see above). Units: m / s
+  ignition.msgs.Vector3d posDot_  = 21;
 
-  float northCurrent_             = 24;  // Northward sea water velocity collected
-                                         // from current sensor. Unit: m/s.
+  /// \brief Vehicle's instantaneous linear velocity in "vehicle frame" (see above).
+  /// Units: rad / s
+  ignition.msgs.Vector3d rateUVW_ = 22;
 
-  float eastCurrent_              = 25;  // Eastward sea water velocity collected
-                                         // from current sensor. Unit: m/s.
+  /// \brief Vehicle's instantaneous angular velocity in "vehicle frame" (see above).
+  /// Units: rad / s
+  ignition.msgs.Vector3d ratePQR_ = 23;
 
-  float vertCurrent_              = 26;  // Not populated.
+  /// \brief Northward sea water velocity collected from current sensor. Unit: m/s.
+  float northCurrent_             = 24;
 
-  float magneticVariation_        = 27;  // Not populated.
+  /// \brief Eastward sea water velocity collected from current sensor. Unit: m/s.
+  float eastCurrent_              = 25;
 
-  float soundSpeed_               = 28;  // Not populated.
+  /// \brief Not populated
+  float vertCurrent_              = 26;
 
-  float temperature_              = 29;  // Data collected from temperature sensor.
-                                         // Unit: Celsius
+  /// \brief Not populated
+  float magneticVariation_        = 27;
 
-  float salinity_                 = 30;  // Data collected from salinity sensor.
-                                         // Unit: PSU
+  /// \brief Not populated
+  float soundSpeed_               = 28;
 
-  float density_                  = 31;  // Density of the surrounding water in kg / m ^ 3
+  /// \brief Data collected from temperature sensor. Unit: Celsius
+  float temperature_              = 29;
 
-  repeated float values_          = 32;  // Size 4
-                                         // 0: Data collected from Chlorophyll
-                                         //    sensor. Unit: ug / L
-                                         // 1: Pressure calculated from current
-                                         //    depth and latitude. Unit: Pa
+  /// \brief Data collected from salinity sensor. Unit: PSU
+  float salinity_                 = 30;
+
+  /// \brief Density of the surrounding water in kg / m ^ 3
+  float density_                  = 31;
+
+  /// \brief Size 4
+  // 0: Data collected from Chlorophyll sensor. Unit: ug / L
+  // 1: Pressure calculated from current depth and latitude. Unit: Pa
+  repeated float values_          = 32;
 }

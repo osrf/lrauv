@@ -41,8 +41,6 @@ message LRAUVInit
   /// \brief Unique ID identifying vehicle
   ignition.msgs.StringMsg id_     = 2;
 
-  // Initial Position Vector
-
   /// \brief Initial latitude in degrees.
   double initLat_                 = 3;
 

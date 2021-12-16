@@ -145,7 +145,7 @@ TEST(SpawnTest, Spawn)
   // and pitch are currently unstable, see
   // https://github.com/osrf/lrauv/issues/49
   double tightTol{1e-5};
-  double depthTol{1e-2};
+  double depthTol{0.1};
   double pitchTol{1e-2};
 
   // Check that vehicles were spawned
