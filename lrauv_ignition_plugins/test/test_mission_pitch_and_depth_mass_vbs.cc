@@ -50,6 +50,7 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
   {
     LrauvTestFixture::ExecLRAUV(
         "/Missions/RegressionTests/IgnitionTests/testPitchAndDepthMassVBS.xml",
+        "testPitchAndDepthMassVBS",
         lrauvRunning);
   });
 
