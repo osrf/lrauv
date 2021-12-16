@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+<!--
+  Development of this module has been funded by the Monterey Bay Aquarium
+  Research Institute (MBARI) and the David and Lucile Packard Foundation
+-->
+<sdf version="1.9">
+  <model name="tethys_fsk">
+    <include merge="true">
+      <uri>tethys_fsk</uri>
+
+      <!-- Sensors -->
+      <experimental:params>
+        <sensor
+          element_id="base_link"
+          action="add"
+          name="salinity_sensor"
+          type="custom"
+          ignition:type="salinity">
+          <always_on>1</always_on>
+          <update_rate>2</update_rate>
+          <topic>/model/tethys_fsk/salinity</topic>
+          <ignition:salinity>
+            <noise type="gaussian">
+              <mean>0.00001</mean>
+              <stddev>0.00001</stddev>
+            </noise>
+          </ignition:salinity>
+        </sensor>
+        <sensor
+          element_id="base_link"
+          action="add"
+          name="temperature_sensor"
+          type="custom"
+          ignition:type="temperature">
+          <always_on>1</always_on>
+          <update_rate>2</update_rate>
+          <topic>/model/tethys_fsk/temperature</topic>
+          <ignition:temperature>
+            <noise type="gaussian">
+              <mean>0.00001</mean>
+              <stddev>0.00001</stddev>
+            </noise>
+          </ignition:temperature>
+        </sensor>
+        <sensor
+          element_id="base_link"
+          action="add"
+          name="chlorophyll_sensor"
+          type="custom"
+          ignition:type="chlorophyll">
+          <always_on>1</always_on>
+          <update_rate>2</update_rate>
+          <topic>/model/tethys_fsk/chlorophyll</topic>
+          <ignition:chlorophyll>
+            <noise type="gaussian">
+              <mean>0.00001</mean>
+              <stddev>0.00001</stddev>
+            </noise>
+          </ignition:chlorophyll>
+        </sensor>
+        <sensor
+          element_id="base_link"
+          action="add"
+          name="current_sensor"
+          type="custom"
+          ignition:type="current">
+          <always_on>1</always_on>
+          <update_rate>2</update_rate>
+          <topic>/model/tethys_fsk/current</topic>
+          <ignition:current>
+            <noise type="gaussian">
+              <mean>0.00001</mean>
+              <stddev>0.00001</stddev>
+            </noise>
+          </ignition:current>
+        </sensor>
+      </experimental:params>
+      <!-- Joint controllers -->
+      <plugin
+        filename="ignition-gazebo-joint-position-controller-system"
+        name="ignition::gazebo::systems::JointPositionController">
+        <joint_name>horizontal_fins_joint</joint_name>
+        <p_gain>0.1</p_gain>
+      </plugin>
+      <plugin
+        filename="ignition-gazebo-joint-position-controller-system"
+        name="ignition::gazebo::systems::JointPositionController">
+        <joint_name>vertical_fins_joint</joint_name>
+        <p_gain>0.1</p_gain>
+      </plugin>
+      <plugin
+        filename="ignition-gazebo-thruster-system"
+        name="ignition::gazebo::systems::Thruster">
+        <namespace>tethys_fsk</namespace>
+        <joint_name>propeller_joint</joint_name>
+        <!-- Be sure to update TethysComm when updating these numbers -->
+        <thrust_coefficient>0.004422</thrust_coefficient>
+        <fluid_density>1000</fluid_density>
+        <propeller_diameter>0.2</propeller_diameter>
+        <velocity_control>true</velocity_control>
+      </plugin>
+      <plugin
+        filename="ignition-gazebo-joint-position-controller-system"
+        name="ignition::gazebo::systems::JointPositionController">
+        <joint_name>battery_joint</joint_name>
+        <use_velocity_commands>true</use_velocity_commands>
+        <cmd_max>0.0007</cmd_max>
+      </plugin>
+      <!-- Lift and drag -->
+      <!-- Vertical fin -->
+      <plugin
+        filename="ignition-gazebo-lift-drag-system"
+        name="ignition::gazebo::systems::LiftDrag">
+        <air_density>1000</air_density>
+        <cla>4.13</cla>
+        <cla_stall>-1.1</cla_stall>
+        <cda>0.2</cda>
+        <cda_stall>0.03</cda_stall>
+        <alpha_stall>0.17</alpha_stall>
+        <a0>0</a0>
+        <area>0.0244</area>
+        <!-- Link's Y is perpendicular to the control surface -->
+        <upward>0 1 0</upward>
+        <!-- Link's X is pointing towards the front -->
+        <forward>1 0 0</forward>
+        <link_name>vertical_fins</link_name>
+        <cp>0 0 0</cp>
+      </plugin>
+      <!-- Horizontal fin -->
+      <plugin
+        filename="ignition-gazebo-lift-drag-system"
+        name="ignition::gazebo::systems::LiftDrag">
+        <air_density>1000</air_density>
+        <cla>4.13</cla>
+        <cla_stall>-1.1</cla_stall>
+        <cda>0.2</cda>
+        <cda_stall>0.03</cda_stall>
+        <alpha_stall>0.17</alpha_stall>
+        <a0>0</a0>
+        <area>0.0244</area>
+        <!-- Link's Z is perpendicular to the control surface -->
+        <upward>0 0 -1</upward>
+        <!-- Link's X is pointing towards the front -->
+        <forward>1 0 0</forward>
+        <link_name>horizontal_fins</link_name>
+        <cp>0 0 0</cp>
+      </plugin>
+      <!-- Interface with LRAUV Main Vehicle Application for each vehicle -->
+      <plugin
+        filename="TethysCommPlugin"
+        name="tethys::TethysCommPlugin">
+        <namespace>tethys_fsk</namespace>
+        <command_topic>tethys_fsk/command_topic</command_topic>
+        <state_topic>tethys_fsk/state_topic</state_topic>
+        <debug_printout>0</debug_printout>
+        <ocean_density>1000</ocean_density>
+      </plugin>
+      <plugin
+        filename="HydrodynamicsPlugin"
+        name="tethys::HydrodynamicsPlugin">
+        <link_name>base_link</link_name>
+        <enable_coriolis>false</enable_coriolis>
+        <xDotU>4.876161</xDotU>
+        <yDotV>-126.324739</yDotV>
+        <zDotW>126.324739</zDotW>
+        <kDotP>0</kDotP>
+        <mDotQ>-33.46</mDotQ>
+        <nDotR>33.46</nDotR>
+        <xUU>6.2282</xUU>
+        <xU>0</xU>
+        <yVV>-601.27</yVV>
+        <yV>0</yV>
+        <zWW>601.27</zWW>
+        <zW>0</zW>
+        <kPP>0.1916</kPP>
+        <kP>0</kP>
+        <mQQ>-632.698957</mQQ>
+        <mQ>0</mQ>
+        <nRR>632.698957</nRR>
+        <nR>0</nR>
+      </plugin>
+      <plugin
+        filename="ignition-gazebo-buoyancy-engine-system"
+        name="ignition::gazebo::v6::systems::BuoyancyEnginePlugin">
+        <link_name>buoyancy_engine</link_name>
+        <namespace>tethys_fsk</namespace>
+        <fluid_density>1000</fluid_density>
+        <!-- 80 cc == 0.00008 m^3 -->
+        <min_volume>0.000080</min_volume>
+        <!-- 500 cc == 0.0005 m^3 -->
+        <neutral_volume>0.0005</neutral_volume>
+        <default_volume>0.0005</default_volume>
+        <!-- 955 cc == 0.000955 m^3 -->
+        <max_volume>0.000955</max_volume>
+        <!-- m^3/s -->
+        <max_inflation_rate>0.000003</max_inflation_rate>
+      </plugin>
+      <plugin
+        filename="ignition-gazebo-detachable-joint-system"
+        name="ignition::gazebo::systems::DetachableJoint">
+        <parent_link>base_link</parent_link>
+        <child_model>__model__</child_model>
+        <child_link>drop_weight</child_link>
+        <topic>/model/tethys_fsk/drop_weight</topic>
+      </plugin>
+
+      <plugin
+        filename="AcousticCommsPlugin"
+        name="tethys::AcousticCommsPlugin">
+        <address>1</address>
+        <model_plugin_file>simpleacousticmodel</model_plugin_file>
+        <model_name>tethys::SimpleAcousticModel</model_name>
+        <link_name>base_link</link_name>
+        <max_range>2500</max_range>
+        <speed_of_sound>1500</speed_of_sound>
+      </plugin>
+
+      <plugin
+        filename="RangeBearingPlugin"
+        name="tethys::RangeBearingPlugin">
+        <address>1</address>
+        <processing_delay>0.3</processing_delay>
+        <speed_of_sound>1500</speed_of_sound>
+        <link_name>base_link</link_name>
+        <namespace>tethys_fsk</namespace>
+      </plugin>
+
+    </include>
+  </model>
+</sdf>

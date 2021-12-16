@@ -67,6 +67,7 @@ void ControlPanel::ReleaseDropWeight()
 void ControlPanel::SetVehicle(QString _name)
 {
   igndbg << "Setting name as " << _name.toStdString() <<"\n";
+  this->pub = ignition::transport::Node::Publisher();
   this->pub = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(
     "/" + _name.toStdString() + "/command_topic"
   );

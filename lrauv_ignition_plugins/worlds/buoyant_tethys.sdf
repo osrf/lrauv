@@ -269,7 +269,7 @@
           <title>Reference axis</title>
           <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
-        <fsk>tethys</fsk>
+        <!--fsk>tethys</fsk-->
       </plugin>
     </gui>
 
@@ -332,7 +332,7 @@
     <include>
       <!-- align with NED (face North) -->
       <pose degrees="true">0 0 0   180 0 90</pose>
-      <uri>tethys_fsk</uri>
+      <uri>tethys_fsk_equipped</uri>
     </include>
 
   </world>
