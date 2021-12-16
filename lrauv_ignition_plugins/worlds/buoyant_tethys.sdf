@@ -99,7 +99,7 @@
         <scene>scene</scene>
         <ambient_light>0.4 0.4 0.4</ambient_light>
         <background_color>0.8 0.8 0.8</background_color>
-        <camera_pose>0 6 6 0 0.5 -1.57</camera_pose>
+        <camera_pose>4.5 0 4  0 0.45 3.14</camera_pose>
       </plugin>
 
       <!-- Plugins that add functionality to the scene -->
@@ -318,8 +318,15 @@
     </include-->
 
     <include>
-      <pose>0 0 0 0 0 0</pose>
+      <!-- align with NED (face North) -->
+      <pose degrees="true">-1 0 0   0 0 -90</pose>
       <uri>tethys_equipped</uri>
+    </include>
+
+    <include>
+      <!-- align with NED (face North) -->
+      <pose degrees="true">0 0 0   180 0 90</pose>
+      <uri>tethys_fsk</uri>
     </include>
 
   </world>

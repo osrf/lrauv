@@ -564,7 +564,7 @@ void TethysCommPlugin::PostUpdate(
 
   stateMsg.set_depth_(-modelPoseENU.Pos().Z());
 
-ignerr << modelPoseNEDRot << " --- " << modelPoseNED << std::endl;
+//ignerr << modelPoseNEDRot << " --- " << modelPoseNED << std::endl;
 
   ignition::msgs::Set(stateMsg.mutable_pos_(), modelPoseNED.Pos());
   ignition::msgs::Set(stateMsg.mutable_rph_(), modelPoseNED.Rot().Euler());

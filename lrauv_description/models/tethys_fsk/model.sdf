@@ -1,0 +1,185 @@
+<?xml version="1.0"?>
+<!--
+  Development of this module has been funded by the Monterey Bay Aquarium
+  Research Institute (MBARI) and the David and Lucile Packard Foundation
+-->
+<sdf version="1.6">
+  <!--
+    Oriented according to FSK:
+    * X: forward
+    * Y: starboard (right)
+    * Z: keel (down)
+  -->
+  <model name="tethys_fsk">
+    <!-- Body -->
+    <link name="base_link">
+
+      <visual name="visual">
+        <pose degrees="true">0 0 0  180 0 180</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/tethys.dae</uri>
+            <submesh>
+              <name>Body</name>
+              <center>false</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+          <pbr>
+            <metal>
+              <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
+              <normal_map>materials/textures/Tethys_Normal.png</normal_map>
+              <metalness_map>materials/textures/Tethys_Metalness.png</metalness_map>
+              <roughness_map>materials/textures/Tethys_Roughness.png</roughness_map>
+            </metal>
+          </pbr>
+          <script>
+            <uri>materials/scripts/</uri>
+            <uri>materials/textures/</uri>
+            <name>tethys/Tethys_Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Horizontal fins -->
+    <link name="horizontal_fins">
+      <pose>-1.05 0 0 0 0 0</pose>
+
+      <visual name= "visual">
+        <pose degrees="true">1.05 0 0  180 0 180</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/tethys.dae</uri>
+            <submesh>
+              <name>Fins_Horizontal</name>
+              <center>false</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <diffuse>1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0</specular>
+          <pbr>
+            <metal>
+              <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
+              <normal_map>materials/textures/Tethys_Normal.png</normal_map>
+              <metalness_map>materials/textures/Tethys_Metalness.png</metalness_map>
+              <roughness_map>materials/textures/Tethys_Roughness.png</roughness_map>
+            </metal>
+          </pbr>
+          <script>
+            <uri>materials/scripts/</uri>
+            <uri>materials/textures/</uri>
+            <name>tethys/Tethys_Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Vertical fins -->
+    <link name="vertical_fins">
+      <pose>-1.05 0 0 0 0 0</pose>
+
+      <visual name= "visual">
+        <pose degrees="true">1.05 0 0  180 0 180</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/tethys.dae</uri>
+            <submesh>
+              <name>Fins_vertical</name>
+              <center>false</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <diffuse>1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0</specular>
+          <pbr>
+            <metal>
+              <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
+              <normal_map>materials/textures/Tethys_Normal.png</normal_map>
+              <metalness_map>materials/textures/Tethys_Metalness.png</metalness_map>
+              <roughness_map>materials/textures/Tethys_Roughness.png</roughness_map>
+            </metal>
+          </pbr>
+          <script>
+            <uri>materials/scripts/</uri>
+            <uri>materials/textures/</uri>
+            <name>tethys/Tethys_Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Propeller -->
+    <link name="propeller">
+      <pose>-1.43162 0 0 0 0 0</pose>
+
+      <visual name= "visual">
+        <pose degrees="true">1.43162 0 0  180 0 180</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/tethys.dae</uri>
+            <submesh>
+              <name>Prop</name>
+              <center>false</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <diffuse>1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0</specular>
+          <pbr>
+            <metal>
+              <albedo_map>materials/textures/Tethys_Albedo.png</albedo_map>
+              <normal_map>materials/textures/Tethys_Normal.png</normal_map>
+              <metalness_map>materials/textures/Tethys_Metalness.png</metalness_map>
+              <roughness_map>materials/textures/Tethys_Roughness.png</roughness_map>
+            </metal>
+          </pbr>
+          <script>
+            <uri>materials/scripts/</uri>
+            <uri>materials/textures/</uri>
+            <name>tethys/Tethys_Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Battery -->
+    <!-- No separate collision for battery, because it is inside the vehicle.
+         Additional collision requires buoyancy volume recalculation. -->
+    <link name="battery">
+      <!-- TODO: On hold till mesh center adjusted to aft dome, then it will be 0.563, 0, 0.024. -->
+      <pose>0 0 0 0 0 0</pose>
+
+      <visual name= "visual">
+        <geometry>
+          <box>
+            <!-- z is guesstimated from schematics. Visual doesn't matter. -->
+            <size>0.6489446 0.24638 0.17415</size>
+          </box>
+        </geometry>
+        <material>
+          <diffuse>0.0 0.0 1.0 1.0</diffuse>
+          <specular>0.0 0.0 1.0 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <link name="buoyancy_engine">
+      <!-- TODO: Determine location of buoyancy engine -->
+      <pose>-0.4 0 0 0 0 0</pose>
+    </link>
+
+    <!-- Drop weight -->
+    <link name="drop_weight">
+      <pose>0 0 0 0 0 0</pose>
+    </link>
+
+  </model>
+</sdf>
