@@ -110,4 +110,4 @@ SHELL ["/bin/bash", "-c"]
 # start ignition
 ENTRYPOINT [ "/bin/bash" , "-c" , \
   "source /home/colcon_ws/install/setup.bash \
-  && ign launch lrauv_world.ign" ]
+  && ign gazebo buoyant_tethys.sdf" ]
