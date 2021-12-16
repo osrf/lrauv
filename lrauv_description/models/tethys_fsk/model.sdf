@@ -13,6 +13,39 @@
   <model name="tethys_fsk">
     <!-- Body -->
     <link name="base_link">
+      <inertial>
+        <!-- to offset battery CoM before getting real parameters for vehicle without battery -->
+        <!--pose>0 0.0236 0 0 0 0</pose-->
+        <!-- 146.5671 subtracted by battery mass -->
+        <mass>114.8364</mass>
+        <!-- TODO: Get inertial matrix of base link WITHOUT battery -->
+        <inertia>
+          <!--ixx>3.000000</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>41.980233</iyy>
+          <iyz>0</iyz>
+          <izz>41.980233</izz-->
+
+          <!-- Guesstimated (decreased by 1/5) to account for battery -->
+          <ixx>2.4</ixx>
+          <ixy>0</ixy>
+          <ixz>0.0004</ixz>
+          <iyy>33.5841864</iyy>
+          <iyz>0</iyz>
+          <izz>33.5841864</izz>
+
+        </inertia>
+      </inertial>
+
+      <collision name="main_body_buoyancy">
+        <pose>0 0 -0.007 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>2 0.3 0.245945166667</size>
+          </box>
+        </geometry>
+      </collision>
 
       <visual name="visual">
         <pose degrees="true">0 0 0  180 0 180</pose>
@@ -48,6 +81,26 @@
     <!-- Horizontal fins -->
     <link name="horizontal_fins">
       <pose>-1.05 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 1.57 0 0.5</pose>
+        <mass>0.2</mass>
+        <inertia>
+          <ixx>0.0007924568755</ixx>
+          <ixy>-0.0000000002674</ixy>
+          <ixz>0.0003978158176</ixz>
+          <iyy>0.0010546736475</iyy>
+          <iyz>-0.0000000006729</iyz>
+          <izz>0.0002633558262</izz>
+        </inertia>
+      </inertial>
+
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.02</size>
+          </box>
+        </geometry>
+      </collision>
 
       <visual name= "visual">
         <pose degrees="true">1.05 0 0  180 0 180</pose>
@@ -83,6 +136,25 @@
     <!-- Vertical fins -->
     <link name="vertical_fins">
       <pose>-1.05 0 0 0 0 0</pose>
+      <inertial>
+        <mass>0.2</mass>
+        <inertia>
+          <ixx>0.0007924568755</ixx>
+          <ixy>-0.0000000002674</ixy>
+          <ixz>0.0003978158176</ixz>
+          <iyy>0.0010546736475</iyy>
+          <iyz>-0.0000000006729</iyz>
+          <izz>0.0002633558262</izz>
+        </inertia>
+      </inertial>
+
+      <collision name="collision">
+         <geometry>
+          <box>
+            <size>0.1 0.1 0.02</size>
+          </box>
+        </geometry>
+      </collision>
 
       <visual name= "visual">
         <pose degrees="true">1.05 0 0  180 0 180</pose>
@@ -118,6 +190,26 @@
     <!-- Propeller -->
     <link name="propeller">
       <pose>-1.43162 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 -1.570796 0 0</pose>
+        <mass>0.09</mass>
+        <inertia>
+          <ixx>0.000143971303</ixx>
+          <ixy>0.000000000008</ixy>
+          <ixz>-0.000000000224</ixz>
+          <iyy>0.000140915448</iyy>
+          <iyz>0.000025236433</iyz>
+          <izz>0.000033571862</izz>
+        </inertia>
+      </inertial>
+
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.03 0.1 0.03</size>
+          </box>
+        </geometry>
+      </collision>
 
       <visual name= "visual">
         <pose degrees="true">1.43162 0 0  180 0 180</pose>
@@ -156,6 +248,19 @@
     <link name="battery">
       <!-- TODO: On hold till mesh center adjusted to aft dome, then it will be 0.563, 0, 0.024. -->
       <pose>0 0 0 0 0 0</pose>
+      <inertial>
+        <!-- Non-zero y creates roll. Not fun to tune without actual base link inertia minus battery-->
+        <!--pose>0 -0.0236 0 0 0 0</pose-->
+        <mass>31.7307</mass>
+        <inertia>
+          <ixx>0.2327</ixx>
+          <ixy>0</ixy>
+          <ixz>-0.0004</ixz>
+          <iyy>1.0930</iyy>
+          <iyz>0</iyz>
+          <izz>1.0344</izz>
+        </inertia>
+      </inertial>
 
       <visual name= "visual">
         <geometry>
@@ -174,11 +279,120 @@
     <link name="buoyancy_engine">
       <!-- TODO: Determine location of buoyancy engine -->
       <pose>-0.4 0 0 0 0 0</pose>
+
+      <!-- TODO: Remove inertial and collision
+
+         This link was originally given inertia because Gazebo would segfault
+         with links without inertia. To counter this mass, a volume (collision)
+         was added, which adds buoyancy.
+
+         Gazebo doesn't have this limitation anymore, so both the inertia and
+         collision could be removed. However, it looks like the link's weight
+         and buoyancy aren't cancelling each other out precisely at the moment
+         (why?), so removing them makes the vehicle unstable.
+
+      -->
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.3</mass>
+        <inertia>
+          <ixx>0.000143971303</ixx>
+          <ixy>0.000000000008</ixy>
+          <ixz>-0.000000000224</ixz>
+          <iyy>0.000140915448</iyy>
+          <iyz>0.000025236433</iyz>
+          <izz>0.000033571862</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.03 0.1 0.1</size>
+          </box>
+        </geometry>
+      </collision>
     </link>
+
+    <!-- Joints -->
+    <joint name="buoyancy_engine_joint" type="fixed">
+      <pose>0 0 0 0 0 0</pose>
+      <parent>base_link</parent>
+      <child>buoyancy_engine</child>
+      <namespace>tethys</namespace>
+    </joint>
+    <joint name="horizontal_fins_joint" type="revolute">
+      <pose>0 0 0 0 0 0</pose>
+      <parent>base_link</parent>
+      <child>horizontal_fins</child>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-0.261799</lower>
+          <upper>0.261799</upper>
+          <effort>-1</effort>
+          <velocity>-1</velocity>
+        </limit>
+      </axis>
+    </joint>
+
+    <joint name="vertical_fins_joint" type="revolute">
+      <parent>base_link</parent>
+      <child>vertical_fins</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-0.261799</lower>
+          <upper>0.261799</upper>
+          <effort>-1</effort>
+          <velocity>-1</velocity>
+        </limit>
+      </axis>
+    </joint>
+
+    <joint name="propeller_joint" type="revolute">
+      <parent>base_link</parent>
+      <child>propeller</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-1e+12</lower>
+          <upper>1e+12</upper>
+          <effort>1e6</effort>
+          <velocity>-1</velocity>
+        </limit>
+      </axis>
+    </joint>
+
+    <!-- positive joint values move mass forward -->
+    <joint name="battery_joint" type="prismatic">
+      <parent>base_link</parent>
+      <child>battery</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-0.03</lower>
+          <upper>0.03</upper>
+          <effort>1e6</effort>
+          <velocity>0.0007</velocity>
+        </limit>
+      </axis>
+    </joint>
 
     <!-- Drop weight -->
     <link name="drop_weight">
       <pose>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>1</mass>
+        <inertia>
+          <ixx>0.000143971303</ixx>
+          <ixy>0.000000000008</ixy>
+          <ixz>-0.000000000224</ixz>
+          <iyy>0.000140915448</iyy>
+          <iyz>0.000025236433</iyz>
+          <izz>0.000033571862</izz>
+        </inertia>
+      </inertial>
     </link>
 
   </model>
