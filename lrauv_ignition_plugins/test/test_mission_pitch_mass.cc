@@ -58,22 +58,21 @@ TEST_F(LrauvTestFixture, PitchMass)
         lrauvRunning);
   });
 
+  int maxIterations{28000};
   int maxSleep{100};
   int sleep{0};
-  for (; sleep < maxSleep && lrauvRunning; ++sleep)
+  for (; sleep < maxSleep && lrauvRunning && this->iterations < maxIterations; ++sleep)
   {
     igndbg << "Ran [" << this->iterations << "] iterations." << std::endl;
     std::this_thread::sleep_for(1s);
   }
   EXPECT_LT(sleep, maxSleep);
-  EXPECT_FALSE(lrauvRunning);
+  EXPECT_LT(maxIterations, this->tethysPoses.size());
 
+  LrauvTestFixture::KillLRAUV();
   lrauvThread.join();
 
   ignmsg << "Logged [" << this->tethysPoses.size() << "] poses" << std::endl;
-
-  int maxIterations{28000};
-  EXPECT_LT(maxIterations, this->tethysPoses.size());
 
   // Give it some iterations to reach steady state
   for (auto i = 2000u; i < this->tethysPoses.size(); i = i + 1000)

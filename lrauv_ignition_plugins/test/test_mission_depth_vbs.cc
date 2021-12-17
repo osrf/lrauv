@@ -53,22 +53,21 @@ TEST_F(LrauvTestFixture, DepthVBS)
         lrauvRunning);
   });
 
+  int maxIterations{28000};
   int maxSleep{100};
   int sleep{0};
-  for (; sleep < maxSleep && lrauvRunning; ++sleep)
+  for (; sleep < maxSleep && lrauvRunning && this->iterations < maxIterations; ++sleep)
   {
     igndbg << "Ran [" << this->iterations << "] iterations." << std::endl;
     std::this_thread::sleep_for(1s);
   }
   EXPECT_LT(sleep, maxSleep);
-  EXPECT_FALSE(lrauvRunning);
+  ASSERT_LT(maxIterations, this->tethysPoses.size());
 
+  LrauvTestFixture::KillLRAUV();
   lrauvThread.join();
 
   ignmsg << "Logged [" << this->tethysPoses.size() << "] poses" << std::endl;
-
-  int maxIterations{28000};
-  ASSERT_LT(maxIterations, this->tethysPoses.size());
 
   // Uncomment to get new expectations
   // for (int i = 2000; i <= maxIterations; i += 2000)
