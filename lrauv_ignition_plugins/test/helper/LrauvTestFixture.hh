@@ -215,14 +215,15 @@ class LrauvTestFixture : public ::testing::Test
         std::string bufferStr{buffer};
 
         std::string error{"ERROR"};
-        if (auto found = bufferStr.find(error) != std::string::npos)
+        std::string critical{"CRITICAL"};
+        if (bufferStr.find(error) != std::string::npos ||
+            bufferStr.find(critical) != std::string::npos)
         {
-          ignerr << "LRAUV Application reported error:" << std::endl
-            << buffer << "\n";
+          ignerr << buffer << "\n";
         }
 
         std::string quit{">quit\n"};
-        if (auto found = bufferStr.find(quit) != std::string::npos)
+        if (bufferStr.find(quit) != std::string::npos)
         {
           ignmsg << "Quitting application" << std::endl;
           break;
