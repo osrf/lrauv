@@ -222,7 +222,7 @@ class LrauvTestFixture : public ::testing::Test
           ignerr << buffer << "\n";
         }
 
-        std::string quit{">quit\n"};
+        std::string quit{"Stop Mission called by Supervisor::terminate\n"};
         if (bufferStr.find(quit) != std::string::npos)
         {
           ignmsg << "Quitting application" << std::endl;
