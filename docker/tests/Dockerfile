@@ -56,7 +56,7 @@ RUN apt-get update \
 RUN rm -rf /var/lib/apt/lists/* \
   && apt-get -qq clean
 
-USER $USERNAME
+USER developer
 
 # We're in /home/developer/lrauv_ws/src/lrauv-application, go back to ~/lrauv_ws
 WORKDIR ../..
@@ -65,7 +65,7 @@ WORKDIR ../..
 RUN rm -rf build log install src/lrauv
 
 # Use current version of the code
-COPY --chown=$USERNAME . src/lrauv
+COPY --chown=developer . src/lrauv
 
 # Use G++9 instead.
 ARG CC=gcc-9
@@ -75,6 +75,7 @@ ARG CXX=g++-9
 RUN [ "/bin/bash" , "-c" , "colcon build --cmake-args='-DBUILD_TESTING=true'" ]
 
 # Run tests
-ENTRYPOINT [ "/bin/bash" , "-c" , \
-  "export STORE_LOGS=true; . ~/lrauv_ws/install/setup.sh; \
-  colcon test --event-handlers console_direct+; colcon test-result;"]
+#ENTRYPOINT [ "/bin/bash" , "-c" , \
+#  "export STORE_LOGS=true; . ~/lrauv_ws/install/setup.sh; \
+#  colcon test --event-handlers console_direct+; colcon test-result;"]
+ENTRYPOINT ["/bin/bash"]

@@ -203,7 +203,7 @@ class LrauvTestFixture : public ::testing::Test
 
     // WARNING: THIS CAN LEAD TO ARBITRARY CODE EXECUTION
     auto targetfile = _target + ".csv";
-    auto cmd = std::string("sudo cp /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/tmp/tmp.csv /results/") + targetfile;
+    auto cmd = std::string("cp /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/tmp/tmp.csv /home/developer/results/") + targetfile;
     res = system(cmd.c_str());
     if (res != 0)
     {
@@ -214,8 +214,9 @@ class LrauvTestFixture : public ::testing::Test
       std::string("python3 /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/plot_missions.py ") + _target + " tmp";
     system(cmd.c_str());
 
-    cmd = std::string("sudo cp -r /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/") +
-      _target+ " /results/";
+    cmd = std::string(
+      "cp -r /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/") +
+      " /home/developer/results/" + _target;
     system(cmd.c_str());
   }
 
