@@ -24,7 +24,7 @@ add_custom_command(
 
 add_custom_target(generate_model ALL
   DEPENDS modelsdf
-) 
+)
 
 install(DIRECTORY
   models
@@ -40,8 +40,8 @@ install(FILES
 # Tests
 if(BUILD_TESTING)
 
-  find_package(ignition-gazebo6 REQUIRED)
-  set(IGN_GAZEBO_VER ${ignition-gazebo6_VERSION_MAJOR})
+  find_package(ignition-gazebo7 REQUIRED)
+  set(IGN_GAZEBO_VER ${ignition-gazebo7_VERSION_MAJOR})
 
   # Fetch and configure GTest
   include(FetchContent)
@@ -59,7 +59,7 @@ if(BUILD_TESTING)
   set("PROJECT_BINARY_PATH" ${CMAKE_CURRENT_BINARY_DIR})
   set("PROJECT_SOURCE_PATH" ${CMAKE_CURRENT_SOURCE_DIR})
   configure_file(test/helper/TestConstants.hh.in TestConstants.hh @ONLY)
-  
+
   include(GoogleTest)
 
   add_executable(test_hydrostatic_stability test/test_hydrostatic_stability.cc)
