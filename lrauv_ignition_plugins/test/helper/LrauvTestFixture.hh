@@ -204,33 +204,44 @@ class LrauvTestFixture : public ::testing::Test
     }
 
     char buffer[512];
-    while (!feof(pipe))
+    while (fgets(buffer, 512, pipe) != nullptr)
     {
-      if (fgets(buffer, 512, pipe) != nullptr)
+      igndbg << "CMD OUTPUT: " << buffer << std::endl;
+
+      // FIXME: LRAUV app hangs after quit, so force close it
+      // See https://github.com/osrf/lrauv/issues/83
+      std::string bufferStr{buffer};
+
+      std::string error{"ERROR"};
+      std::string critical{"CRITICAL"};
+      if (bufferStr.find(error) != std::string::npos ||
+          bufferStr.find(critical) != std::string::npos)
       {
-        igndbg << "CMD OUTPUT: " << buffer << std::endl;
+        ignerr << buffer << "\n";
+      }
 
-        // FIXME: LRAUV app hangs after quit, so force close it
-        // See https://github.com/osrf/lrauv/issues/83
-        std::string bufferStr{buffer};
-
-        std::string error{"ERROR"};
-        std::string critical{"CRITICAL"};
-        if (bufferStr.find(error) != std::string::npos ||
-            bufferStr.find(critical) != std::string::npos)
-        {
-          ignerr << buffer << "\n";
-        }
-
-        std::string quit{"Stop Mission called by Supervisor::terminate\n"};
-        if (bufferStr.find(quit) != std::string::npos)
-        {
-          ignmsg << "Quitting application" << std::endl;
-          break;
-        }
+      std::string quit{"Stop Mission called by Supervisor::terminate\n"};
+      if (bufferStr.find(quit) != std::string::npos)
+      {
+        ignmsg << "Quitting application" << std::endl;
+        break;
       }
     }
 
+    KillLRAUV();
+
+    pclose(pipe);
+
+    ignmsg << "Completed command [" << cmd << "]" << std::endl;
+
+    _running = false;
+  }
+
+  /// \brief Kill all LRAUV processes.
+  /// \return True if some process was killed.
+  public: static bool KillLRAUV()
+  {
+    bool killed{false};
     for (auto process : {"sh.*bin/LRAUV", "bin/LRAUV"})
     {
       auto pid = GetPID(process);
@@ -243,13 +254,9 @@ class LrauvTestFixture : public ::testing::Test
 
       ignmsg << "Killing process [" << process << "] with pid [" << pid << "]" << std::endl;
       kill(pid, 9);
+      killed = true;
     }
-
-    pclose(pipe);
-
-    ignmsg << "Completed command [" << cmd << "]" << std::endl;
-
-    _running = false;
+    return killed;
   }
 
   /// \brief How many times has OnPostUpdate been run
