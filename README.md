@@ -39,7 +39,7 @@ docker/join.sh mbari_lrauv
 ## To build
 
 To run the code in this repository natively without Docker, make sure you have
-[Ignition Fortress](https://ignitionrobotics.org/docs/fortress) and
+[Ignition Garden](https://ignitionrobotics.org/docs/garden) and
 [colcon](https://colcon.readthedocs.io/en/released/), on Ubuntu Focal or higher.
 
 Install dependencies
