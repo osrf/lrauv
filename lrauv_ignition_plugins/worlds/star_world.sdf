@@ -96,7 +96,7 @@
           <command_topic>tethys2/command_topic</command_topic>
           <state_topic>tethys2/state_topic</state_topic>
         </plugin>
-        <plugin element_id="ignition::gazebo::v6::systems::BuoyancyEnginePlugin" action="modify">
+        <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
           <namespace>tethys2</namespace>
         </plugin>
         <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
@@ -137,7 +137,7 @@
           <command_topic>tethys3/command_topic</command_topic>
           <state_topic>tethys3/state_topic</state_topic>
         </plugin>
-        <plugin element_id="ignition::gazebo::v6::systems::BuoyancyEnginePlugin" action="modify">
+        <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
           <namespace>tethys3</namespace>
         </plugin>
         <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
@@ -178,7 +178,7 @@
           <command_topic>tethys4/command_topic</command_topic>
           <state_topic>tethys4/state_topic</state_topic>
         </plugin>
-        <plugin element_id="ignition::gazebo::v6::systems::BuoyancyEnginePlugin" action="modify">
+        <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
           <namespace>tethys4</namespace>
         </plugin>
         <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
@@ -196,6 +196,6 @@
     </include>
 
 
- 
+
   </world>
 </sdf>

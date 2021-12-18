@@ -193,8 +193,6 @@ namespace tethys
     /// sanity check
     private: std::chrono::steady_clock::duration prevPubPrintTime =
       std::chrono::steady_clock::duration::zero();
-    private: std::chrono::steady_clock::duration prevSubPrintTime =
-      std::chrono::steady_clock::duration::zero();
 
     /// Transport node for message passing
     private: ignition::transport::Node node;

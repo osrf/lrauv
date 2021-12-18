@@ -58,16 +58,20 @@ TEST_F(LrauvTestFixture, PitchMass)
         lrauvRunning);
   });
 
+  // Run enough iterations (chosen empirically) to reach steady state, then kill
+  // the controller
+  int targetIterations{28000};
   int maxSleep{100};
   int sleep{0};
-  for (; sleep < maxSleep && lrauvRunning; ++sleep)
+  for (; sleep < maxSleep && lrauvRunning && this->iterations < targetIterations; ++sleep)
   {
     igndbg << "Ran [" << this->iterations << "] iterations." << std::endl;
     std::this_thread::sleep_for(1s);
   }
   EXPECT_LT(sleep, maxSleep);
-  EXPECT_FALSE(lrauvRunning);
+  EXPECT_LT(targetIterations, this->tethysPoses.size());
 
+  LrauvTestFixture::KillLRAUV();
   lrauvThread.join();
 
   ignmsg << "Logged [" << this->tethysPoses.size() << "] poses" << std::endl;
