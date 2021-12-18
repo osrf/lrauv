@@ -131,7 +131,7 @@
           <command_topic>triton/command_topic</command_topic>
           <state_topic>triton/state_topic</state_topic>
         </plugin>
-        <plugin element_id="ignition::gazebo::v6::systems::BuoyancyEnginePlugin" action="modify">
+        <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
           <namespace>triton</namespace>
         </plugin>
         <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
@@ -174,7 +174,7 @@
           <command_topic>daphne/command_topic</command_topic>
           <state_topic>daphne/state_topic</state_topic>
         </plugin>
-        <plugin element_id="ignition::gazebo::v6::systems::BuoyancyEnginePlugin" action="modify">
+        <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
           <namespace>daphne</namespace>
         </plugin>
         <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">

@@ -394,15 +394,10 @@ void TethysCommPlugin::SetupEntities(
 void TethysCommPlugin::CommandCallback(
   const lrauv_ignition_plugins::msgs::LRAUVCommand &_msg)
 {
-  // Lazy timestamp conversion just for printing
-  //if (std::chrono::seconds(int(floor(_msg.time_()))) - this->prevSubPrintTime
-  //    > std::chrono::milliseconds(1000))
   if (this->debugPrintout)
   {
     igndbg << "[" << this->ns << "] Received command: " << std::endl
       << _msg.DebugString() << std::endl;
-
-    this->prevSubPrintTime = std::chrono::seconds(int(floor(_msg.time_())));
   }
 
   // Rudder
@@ -586,7 +581,11 @@ void TethysCommPlugin::PostUpdate(
 
   // Water velocity
   // rateUVW
-  // TODO(anyone)
+  // TODO(arjo): include currents in water velocity?
+  auto localVel = modelPose.Rot().Inverse() * veloGround;
+  //TODO(louise) check for translation/position effects
+  ROSToFSK(localVel);
+  ignition::msgs::Set(stateMsg.mutable_rateuvw_(), localVel);
 
   // Rate of robot roll, pitch, yaw
   // ratePQR
@@ -613,7 +612,8 @@ void TethysCommPlugin::PostUpdate(
 
   stateMsg.set_eastcurrent_(this->latestCurrent.X());
   stateMsg.set_northcurrent_(this->latestCurrent.Y());
-  stateMsg.set_vertcurrent_(this->latestCurrent.Z());
+  // Not populating vertCurrent because we're not getting it from the science
+  // data
 
   this->statePub.Publish(stateMsg);
 
