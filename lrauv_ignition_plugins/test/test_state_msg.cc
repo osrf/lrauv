@@ -28,13 +28,20 @@
 #include "lrauv_state.pb.h"
 
 //////////////////////////////////////////////////
-TEST_F(LrauvTestFixture, Command)
+TEST_F(LrauvTestFixture, State)
 {
   // TODO(chapulina) Test other fields, see
   // https://github.com/osrf/lrauv/pull/81
 
   // Initial state
   this->fixture->Server()->Run(true, 100, false);
+  int maxSleep{100};
+  int sleep{0};
+  for (; sleep < maxSleep && this->stateMsgs.size() < 100; ++sleep)
+  {
+    std::this_thread::sleep_for(100ms);
+  }
+  EXPECT_LT(sleep, maxSleep);
   EXPECT_EQ(100, this->stateMsgs.size());
 
   auto latest = this->stateMsgs.back();

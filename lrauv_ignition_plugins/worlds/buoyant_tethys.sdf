@@ -305,6 +305,13 @@
           <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
       </plugin>
+      <plugin filename="ReferenceAxis" name="Reference axis">
+        <ignition-gui>
+          <title>Reference axis</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+        <fsk>tethys</fsk>
+      </plugin>
     </gui>
 
     <light type="directional" name="sun">
