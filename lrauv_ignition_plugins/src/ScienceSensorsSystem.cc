@@ -194,6 +194,10 @@ class tethys::ScienceSensorsSystemPrivate
   /// TODO: Compute resolution from data. See where this constant is used.
   public: const float INTERPOLATE_DIST_THRESH = 5.0;
 
+  /// \brief Debug printouts for interpolation. Will keep around at least until
+  /// interpolation is stable.
+  public: const bool DEBUG_INTERPOLATE = false;
+
   ///////////////////////////////
   // Variables for coordinate system
 
@@ -647,7 +651,8 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
 {
   // Implemented from https://en.wikipedia.org/wiki/Barycentric_coordinate_system#Barycentric_coordinates_on_tetrahedra
 
-  igndbg << "_p: " << std::endl << _p << std::endl;
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "_p: " << std::endl << _p << std::endl;
 
   Eigen::Matrix3f T;
   // Row 1 is x-coords: x1 - x4, x2 - x4, x3 - x4
@@ -662,9 +667,9 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
        _xyzs(0, 2) - _xyzs(3, 2),
        _xyzs(1, 2) - _xyzs(3, 2),
        _xyzs(2, 2) - _xyzs(3, 2);
-  igndbg << "T: " << std::endl << T << std::endl;
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "T: " << std::endl << T << std::endl;
 
-  // If exactly 1 row of T is all zeros, then the points are in a 2D plane.
   int zeroRowCount = 0;
   bool rowIsZero [3] = {false, false, false};
   for (int r = 0; r < T.rows(); ++r)
@@ -676,6 +681,7 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
     }
   }
 
+  // If exactly 1 row of T is all zeros, then the points are in a 2D plane.
   // 2D. Interpolate on a plane. Otherwise T inverse will result in nans.
   if (zeroRowCount == 1)
   {
@@ -729,20 +735,23 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   // r4 = (x4, y4, z4)
   Eigen::Vector3f r4;
   r4 << _xyzs(3, 0), _xyzs(3, 1), _xyzs(3, 2);
-  igndbg << "r4: " << std::endl << r4 << std::endl;
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "r4: " << std::endl << r4 << std::endl;
 
   // (lambda1, lambda2, lambda3)
   Eigen::Vector3f lambda123 = T.inverse() * (_p - r4);
 
-  igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
 
   // lambda4 = 1 - lambda1 - lambda2 - lambda3
   float lambda4 = 1 - lambda123(0) - lambda123(1) - lambda123(2);
 
-  igndbg << "Barycentric 3D lambda 1 2 3 4: " << lambda123(0) << ", "
-    << lambda123(1) << ", "
-    << lambda123(2) << ", "
-    << lambda4 << std::endl;
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "Barycentric 3D lambda 1 2 3 4: " << lambda123(0) << ", "
+      << lambda123(1) << ", "
+      << lambda123(2) << ", "
+      << lambda4 << std::endl;
 
   // f(r) = lambda1 * f(r1) + lambda2 * f(r2) + lambda3 * f(r3)
   float result =
@@ -764,8 +773,11 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   const Eigen::Matrix<float, 4, 2> &_xys,
   const std::vector<float> &_values)
 {
-  igndbg << "_p: " << std::endl << _p << std::endl;
-  igndbg << "_xys: " << std::endl << _xys << std::endl;
+  if (this->DEBUG_INTERPOLATE)
+  {
+    igndbg << "_p: " << std::endl << _p << std::endl;
+    igndbg << "_xys: " << std::endl << _xys << std::endl;
+  }
 
   // 2D case, consider inputs a triangle and use 2 x 2 matrix for T
   Eigen::Matrix2f T(2, 2);
@@ -788,7 +800,8 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
       }
       xys3.row(nextRow++) = _xys.row(r2);
     }
-    igndbg << "xys3: " << std::endl << xys3 << std::endl;
+    if (this->DEBUG_INTERPOLATE)
+      igndbg << "xys3: " << std::endl << xys3 << std::endl;
 
     // Row 1: x1 - x3, x2 - x3
     T << xys3(0, 0) - xys3(2, 0),
@@ -796,23 +809,27 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
     // Row 2: y1 - y3, y2 - y3
          xys3(0, 1) - xys3(2, 1),
          xys3(1, 1) - xys3(2, 1);
-    igndbg << "T: " << std::endl << T << std::endl;
+    if (this->DEBUG_INTERPOLATE)
+      igndbg << "T: " << std::endl << T << std::endl;
 
     // lastVert = (x3, y3)
     lastVert << xys3(2, 0), xys3(2, 1);
-    //igndbg << "lastVert: " << std::endl << lastVert << std::endl;
+    if (this->DEBUG_INTERPOLATE)
+      igndbg << "lastVert: " << std::endl << lastVert << std::endl;
 
     // (lambda1, lambda2)
     lambda12 = T.inverse() * (_p - lastVert);
 
-    igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
+    if (this->DEBUG_INTERPOLATE)
+      igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
 
     // lambda3 = 1 - lambda1 - lambda2
     lambda3 = 1 - lambda12(0) - lambda12(1);
 
-    igndbg << "Barycentric 2D lambda 1 2 3: " << lambda12(0) << ", "
-      << lambda12(1) << ", "
-      << lambda3 << std::endl;
+    if (this->DEBUG_INTERPOLATE)
+      igndbg << "Barycentric 2D lambda 1 2 3: " << lambda12(0) << ", "
+        << lambda12(1) << ", "
+        << lambda3 << std::endl;
 
     // If all lambdas >= 0, then we found a triangle that the query point
     // lies within. (A lambda would be negative if point is outside triangle)
@@ -841,8 +858,11 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   const Eigen::VectorXf &_xs,
   const std::vector<float> &_values)
 {
-  igndbg << "_p: " << std::endl << _p << std::endl;
-  igndbg << "_xs: " << std::endl << _xs << std::endl;
+  if (this->DEBUG_INTERPOLATE)
+  {
+    igndbg << "_p: " << std::endl << _p << std::endl;
+    igndbg << "_xs: " << std::endl << _xs << std::endl;
+  }
 
   // If _p is equal to one of the points, just take the value of that point.
   // This is to catch floating point errors if _p lies on one side of all
@@ -909,8 +929,10 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   int gtPIdx = xsSortedInds[gtPSortedIdx];
   float result = ltPWeight * _values[ltPIdx] + gtPWeight * _values[gtPIdx];
 
-  igndbg << "ltPWeight: " << ltPWeight << ", gtPWeight: " << gtPWeight
-    << std::endl;
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "ltPWeight: " << ltPWeight << ", gtPWeight: " << gtPWeight
+      << std::endl;
+
   igndbg << "1D linear interpolation of values " << _values[0] << ", "
     << _values[1] << ", " << _values[2] << ", " << _values[3]
     << " resulted in " << result << std::endl;
@@ -1140,10 +1162,13 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       break;
     }
 
-    igndbg << "Searching around sensor Cartesian location "
-      << std::round(searchPoint.x * 1000.0) / 1000.0 << ", "
-      << std::round(searchPoint.y * 1000.0) / 1000.0 << ", "
-      << std::round(searchPoint.z * 1000.0) / 1000.0 << std::endl;
+    if (this->dataPtr->DEBUG_INTERPOLATE)
+    {
+      igndbg << "Searching around sensor Cartesian location "
+        << std::round(searchPoint.x * 1000.0) / 1000.0 << ", "
+        << std::round(searchPoint.y * 1000.0) / 1000.0 << ", "
+        << std::round(searchPoint.z * 1000.0) / 1000.0 << std::endl;
+    }
 
     // If there are any nodes in the octree, search in octree to find spatial
     // index of science data
@@ -1164,7 +1189,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         continue;
       }
       // Debug output
-      else
+      else if (this->dataPtr->DEBUG_INTERPOLATE)
       {
         for (std::size_t i = 0; i < spatialIdx.size(); i++)
         {
@@ -1217,7 +1242,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       // For the correct sensor, interpolate using nearby locations with data
       if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
       {
-        igndbg << "Interpolating salinity" << std::endl;
+        if (this->dataPtr->DEBUG_INTERPOLATE)
+          igndbg << "Interpolating salinity" << std::endl;
         this->dataPtr->ExtractElements(
           this->dataPtr->salinityArr[this->dataPtr->timeIdx], spatialIdx,
           interpolationValues);
@@ -1228,7 +1254,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
         sensor))
       {
-        igndbg << "Interpolating temperature" << std::endl;
+        if (this->dataPtr->DEBUG_INTERPOLATE)
+          igndbg << "Interpolating temperature" << std::endl;
         this->dataPtr->ExtractElements(
           this->dataPtr->temperatureArr[this->dataPtr->timeIdx], spatialIdx,
           interpolationValues);
@@ -1242,7 +1269,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
         sensor))
       {
-        igndbg << "Interpolating chlorophyll" << std::endl;
+        if (this->dataPtr->DEBUG_INTERPOLATE)
+          igndbg << "Interpolating chlorophyll" << std::endl;
         this->dataPtr->ExtractElements(
           this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx], spatialIdx,
           interpolationValues);
@@ -1253,7 +1281,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(
         sensor))
       {
-        igndbg << "Interpolating E and N currents" << std::endl;
+        if (this->dataPtr->DEBUG_INTERPOLATE)
+          igndbg << "Interpolating E and N currents" << std::endl;
         this->dataPtr->ExtractElements(
           this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx], spatialIdx,
           interpolationValues);
