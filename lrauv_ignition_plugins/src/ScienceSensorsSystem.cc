@@ -685,8 +685,9 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   // 2D. Interpolate on a plane. Otherwise T inverse will result in nans.
   if (zeroRowCount == 1)
   {
-    igndbg << "4 points are on a plane. Using 2D barycentric interpolation "
-      "for a triangle." << std::endl;
+    if (this->DEBUG_INTERPOLATE)
+      igndbg << "4 points are on a plane. Using 2D barycentric interpolation "
+        "for a triangle." << std::endl;
 
     // Eliminate the constant axis
     Eigen::Vector2f p2D;
@@ -709,7 +710,8 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   // 1D. Interpolate on a line. Otherwise T inverse will result in nans.
   else if (zeroRowCount == 2)
   {
-    igndbg << "4 points are on a line. Using 1D interpolation." << std::endl;
+    if (this->DEBUG_INTERPOLATE)
+      igndbg << "4 points are on a line. Using 1D interpolation." << std::endl;
 
     float p1D;
     Eigen::VectorXf xyzs1D(_xyzs.rows());
@@ -727,8 +729,9 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   // T is entirely zero. Then all points are at the same point. Take any value.
   else if (zeroRowCount == 3)
   {
-    igndbg << "4 points are at the exact same point. Arbitrarily selecting one "
-      "of their values as interpolation result." << std::endl;
+    if (this->DEBUG_INTERPOLATE)
+      igndbg << "4 points are at the exact same point. Arbitrarily selecting "
+        "one of their values as interpolation result." << std::endl;
     return _values[0];
   }
 
@@ -760,9 +763,10 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
     lambda123(2) * _values[2] +
     lambda4 * _values[3];
 
-  igndbg << "Barycentric 3D interpolation of values " << _values[0] << ", "
-    << _values[1] << ", " << _values[2] << ", " << _values[3]
-    << " resulted in " << result << std::endl;
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "Barycentric 3D interpolation of values " << _values[0] << ", "
+      << _values[1] << ", " << _values[2] << ", " << _values[3]
+      << " resulted in " << result << std::endl;
 
   return result;
 }
@@ -845,9 +849,10 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
     lambda12(1) * _values[1] +
     lambda3 * _values[2];
 
-  igndbg << "Barycentric 2D interpolation of values " << _values[0] << ", "
-    << _values[1] << ", " << _values[2]
-    << " resulted in " << result << std::endl;
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "Barycentric 2D interpolation of values " << _values[0] << ", "
+      << _values[1] << ", " << _values[2]
+      << " resulted in " << result << std::endl;
 
   return result;
 }
@@ -873,10 +878,11 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
     {
       if (abs(_xs(i) - _p) < 1e-6)
       {
-        igndbg << "_p lies on a neighbor. "
-          << "1D linear interpolation of values " << _values[0] << ", "
-          << _values[1] << ", " << _values[2] << ", " << _values[3]
-          << " resulted in " << _values[i] << std::endl;
+        if (this->DEBUG_INTERPOLATE)
+          igndbg << "_p lies on a neighbor. "
+            << "1D linear interpolation of values " << _values[0] << ", "
+            << _values[1] << ", " << _values[2] << ", " << _values[3]
+            << " resulted in " << _values[i] << std::endl;
         return _values[i];
       }
     }
@@ -930,12 +936,13 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   float result = ltPWeight * _values[ltPIdx] + gtPWeight * _values[gtPIdx];
 
   if (this->DEBUG_INTERPOLATE)
+  {
     igndbg << "ltPWeight: " << ltPWeight << ", gtPWeight: " << gtPWeight
       << std::endl;
-
-  igndbg << "1D linear interpolation of values " << _values[0] << ", "
-    << _values[1] << ", " << _values[2] << ", " << _values[3]
-    << " resulted in " << result << std::endl;
+    igndbg << "1D linear interpolation of values " << _values[0] << ", "
+      << _values[1] << ", " << _values[2] << ", " << _values[3]
+      << " resulted in " << result << std::endl;
+  }
 
   return result;
 }
