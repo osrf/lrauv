@@ -242,7 +242,7 @@ std::string WorldCommPlugin::TethysSdfString(const std::string &_id)
           <state_topic>)" + _id + R"(/state_topic</state_topic>
         </plugin>
 
-        <plugin element_id="ignition::gazebo::v6::systems::BuoyancyEnginePlugin" action="modify">
+        <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
           <namespace>)" + _id + R"(</namespace>
         </plugin>
 

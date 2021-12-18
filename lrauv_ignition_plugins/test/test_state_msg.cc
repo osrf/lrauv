@@ -42,10 +42,17 @@ void commonChecks(const lrauv_ignition_plugins::msgs::LRAUVState &_msg)
 }
 
 //////////////////////////////////////////////////
-TEST_F(LrauvTestFixture, Command)
+TEST_F(LrauvTestFixture, State)
 {
   // Initial state
   this->fixture->Server()->Run(true, 100, false);
+  int maxSleep{100};
+  int sleep{0};
+  for (; sleep < maxSleep && this->stateMsgs.size() < 100; ++sleep)
+  {
+    std::this_thread::sleep_for(100ms);
+  }
+  EXPECT_LT(sleep, maxSleep);
   EXPECT_EQ(100, this->stateMsgs.size());
 
   auto latest = this->stateMsgs.back();
