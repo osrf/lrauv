@@ -55,7 +55,7 @@ TEST_F(LrauvTestFixture, DepthVBS)
 
   // Run enough iterations (chosen empirically) to reach steady state, then kill
   // the controller
-  int targetIterations{28000};
+  int targetIterations{50000};
   int maxSleep{100};
   int sleep{0};
   for (; sleep < maxSleep && lrauvRunning && this->iterations < targetIterations; ++sleep)
@@ -99,7 +99,7 @@ TEST_F(LrauvTestFixture, DepthVBS)
   }
 
   // Vehicle's final pose should be near the 10m mark
-  EXPECT_NEAR(tethysPoses.back().Pos().Z(), -10, 1e-2);
+  EXPECT_NEAR(tethysPoses.back().Pos().Z(), -10, 1e-1);
 
   // Vehicle should have almost zero Z velocity at the end.
   EXPECT_NEAR(tethysLinearVel.back().Z(), 0, 1e-1);
