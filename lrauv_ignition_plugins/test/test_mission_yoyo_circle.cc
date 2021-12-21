@@ -106,7 +106,7 @@ TEST_F(LrauvTestFixture, YoYoCircle)
     EXPECT_LT(-22.7, pose.Pos().Z()) << i;
     if (i > 4000)
     {
-      EXPECT_GT(0.4, pose.Pos().Z()) << i;
+      EXPECT_GT(0.5, pose.Pos().Z()) << i;
     }
 
 
@@ -117,11 +117,20 @@ TEST_F(LrauvTestFixture, YoYoCircle)
     // Trajectory projected onto the horizontal plane is roughly a circle
     ignition::math::Vector2d planarPos{pose.Pos().X(), pose.Pos().Y()};
 
-    //ignition::math::Vector2d center{-4.0, -23.0};
-    //planarPos -= center;
+    if (i > 6000)
+    {
+      // Once the vehicle achieves its full velocity the vehicle should have a
+      // nominal yaw rate of around 0.37-0.38rad/s. This means that the vehicle
+      // should keep spinning in a circle.
+      EXPECT_NEAR(tethysAngularVel[i].Z(), 0.037, 2e-2)
+        << i << " yaw rate: " << tethysAngularVel[i].Z();
 
-    //double meanRadius{20.0};
-    //EXPECT_NEAR(20.0, planarPos.Length(), 4.0) << i << ", " << planarPos;
+      // At the same time the roll rate should be near zero
+      EXPECT_NEAR(tethysAngularVel[i].Y(), 0, 1e-1) << i;
+
+      // And the linear velocity should be near 1m/s
+      EXPECT_NEAR(tethysLinearVel[i].Length(), 1.0, 2e-1) << i;
+    }
   }
 }
 
