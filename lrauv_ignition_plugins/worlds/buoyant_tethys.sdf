@@ -11,6 +11,8 @@
       <!-- For default gray ambient -->
       <!--background>0.8 0.8 0.8</background-->
       <background>0.0 0.7 0.8</background>
+
+      <grid>false</grid>
     </scene>
 
     <physics name="1ms" type="dart">
@@ -257,6 +259,20 @@
           <title>Visualize science data</title>
           <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
+      </plugin>
+      <plugin filename="GridConfig" name="Grid config">
+        <ignition-gui>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+        <insert>
+          <!-- 0.1 km x 0.1 km -->
+          <cell_count>100</cell_count>
+          <vertical_cell_count>0</vertical_cell_count>
+          <!-- 1 m -->
+          <cell_length>1</cell_length>
+          <pose>0 0 0  0 0 0</pose>
+          <color>0.5 0.5 0.5 1</color>
+        </insert>
       </plugin>
       <plugin filename="ControlPanelPlugin" name="Tethys Controls">
         <ignition-gui>
