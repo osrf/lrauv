@@ -89,7 +89,7 @@ TEST_F(LrauvTestFixture, DepthVBS)
     // Vehicle should not exceed 20m depth
     // Note: Although the mission has a target depth of 10m, the vehicle has
     // a tendency to overshoot first. Eventually the vehicle will reach steady
-    // state.
+    // state, however at this point we are just checking for excess overshoot.
     EXPECT_GT(tethysPoses[i].Pos().Z(), -20);
 
     if (tethysLinearVel[i].Length() > maxVel.Length())
@@ -106,7 +106,7 @@ TEST_F(LrauvTestFixture, DepthVBS)
 
   // Expect velocity to approach zero. At the end of the test, the vehicle may
   // not have actually reached zero as it may still be translating or yawing,
-  // but its velocity should be less than the maximum velocity/
+  // but its velocity should be less than the maximum velocity.
   EXPECT_LT(tethysLinearVel.back().Length(), maxVel.Length());
 
   // Vehicle should pitch backward slightly
