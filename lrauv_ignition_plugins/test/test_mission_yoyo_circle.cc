@@ -109,13 +109,9 @@ TEST_F(LrauvTestFixture, YoYoCircle)
       EXPECT_GT(0.5, pose.Pos().Z()) << i;
     }
 
-
     // Pitch is between -20 and 20 deg
     EXPECT_LT(IGN_DTOR(-20), pose.Rot().Pitch()) << i;
     EXPECT_GT(IGN_DTOR(20), pose.Rot().Pitch()) << i;
-
-    // Trajectory projected onto the horizontal plane is roughly a circle
-    ignition::math::Vector2d planarPos{pose.Pos().X(), pose.Pos().Y()};
 
     if (i > 6000)
     {
