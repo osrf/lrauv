@@ -355,6 +355,9 @@ void VisualizePointCloud::PublishMarkers()
   marker.set_type(ignition::msgs::Marker::POINTS);
   marker.set_visibility(ignition::msgs::Marker::GUI);
 
+  ignition::msgs::Set(marker.mutable_scale(),
+    ignition::math::Vector3d::One * this->dataPtr->pointSize);
+
   PointCloudPackedIterator<float> iterX(this->dataPtr->pointCloudMsg, "x");
   PointCloudPackedIterator<float> iterY(this->dataPtr->pointCloudMsg, "y");
   PointCloudPackedIterator<float> iterZ(this->dataPtr->pointCloudMsg, "z");
@@ -363,6 +366,7 @@ void VisualizePointCloud::PublishMarkers()
   int ptIdx{0};
   auto minC = this->dataPtr->minColor;
   auto maxC = this->dataPtr->maxColor;
+  auto floatRange = this->dataPtr->maxFloatV - this->dataPtr->minFloatV;
   for (;iterX != iterX.end() &&
         iterY != iterY.end() &&
         iterZ != iterZ.end(); ++iterX, ++iterY, ++iterZ, ++ptIdx)
@@ -379,19 +383,15 @@ void VisualizePointCloud::PublishMarkers()
     if (std::isnan(dataVal))
       continue;
 
-    auto ratio = (dataVal - this->dataPtr->minFloatV) /
-        (this->dataPtr->maxFloatV - this->dataPtr->minFloatV);
+    auto ratio = floatRange > 0 ?
+        (dataVal - this->dataPtr->minFloatV) / floatRange : 0.5f;
     ignition:: math::Color color{
       minC.R() + (maxC.R() - minC.R()) * ratio,
       minC.G() + (maxC.G() - minC.G()) * ratio,
       minC.B() + (maxC.B() - minC.B()) * ratio
     };
 
-    ignition::msgs::Set(marker.mutable_material()->mutable_diffuse(), color);
     ignition::msgs::Set(marker.add_materials()->mutable_diffuse(), color);
-
-    ignition::msgs::Set(marker.mutable_scale(),
-      ignition::math::Vector3d::One * this->dataPtr->pointSize);
 
     ignition::msgs::Set(marker.add_point(), ignition::math::Vector3d(
       *iterX,
