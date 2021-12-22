@@ -65,7 +65,7 @@ TEST(Stability, FlatWorld)
     if (first)
     {
       prev_pose = pose;
-      first = true;
+      first = false;
       continue;
     }
     EXPECT_EQ(prev_pose, pose);
