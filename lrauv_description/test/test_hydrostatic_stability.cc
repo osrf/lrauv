@@ -113,7 +113,7 @@ TEST(Stability, TiltedWorld)
     if (first)
     {
       prev_pose = pose;
-      first = true;
+      first = false;
       continue;
     }
     EXPECT_NEAR(prev_pose.Pos().X(), pose.Pos().X(), 1e-2);
