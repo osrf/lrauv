@@ -869,7 +869,8 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   }
   SortIndices(xsSorted, xsSortedInds);
 
-  int ltPSortedIdx, gtPSortedIdx;
+  int ltPSortedIdx{-1};
+  int gtPSortedIdx{-1};
   float ltPDist, gtPDist;
 
   // Get the two closest positions in _xs that _p lies between.
@@ -888,6 +889,15 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
       break;
     }
   }
+  if (ltPSortedIdx < 0 || ltPSortedIdx >= xsSortedInds.size() ||
+      gtPSortedIdx < 0 || gtPSortedIdx >= xsSortedInds.size())
+  {
+    ignwarn << "Failed to find consecutive elements in sorted vector. Indices ["
+            << ltPSortedIdx << "] / [" << gtPSortedIdx
+            << "] for vector sized [" << xsSortedInds.size()
+            << "]. Cannot interpolate." << std::endl;
+    return std::numeric_limits<float>::quiet_NaN();
+  }
 
   // Normalize the distances to ratios between 0 and 1, to use as weights
   float ltPWeight = ltPDist / (gtPDist + ltPDist);
@@ -896,6 +906,12 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   // Retrieve indices of sorted elements in original array
   int ltPIdx = xsSortedInds[ltPSortedIdx];
   int gtPIdx = xsSortedInds[gtPSortedIdx];
+
+  if (ltPIdx >= _values.size() || gtPIdx >= _values.size())
+  {
+    ignwarn << "Bad indices. Cannot interpolate." << std::endl;
+    return std::numeric_limits<float>::quiet_NaN();
+  }
   float result = ltPWeight * _values[ltPIdx] + gtPWeight * _values[gtPIdx];
 
   if (this->DEBUG_INTERPOLATE)
@@ -938,7 +954,7 @@ void ScienceSensorsSystemPrivate::SortIndices(
 
   // Sort indexes based on comparing values in v using std::stable_sort instead
   // of std::sort to avoid unnecessary index re-orderings when v contains
-  // elements of equal values 
+  // elements of equal values
   std::stable_sort(_idx.begin(), _idx.end(),
     [&_v](size_t _i1, size_t _i2) {return _v[_i1] < _v[_i2];});
 }
