@@ -296,18 +296,6 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Publish a few more times for visualization plugin to get them
   public: int repeatPubTimes = 1;
 
-  //////////////////////////////
-  // Constants for visualization
-
-  // TODO This is a workaround pending upstream Ignition orbit tool improvements
-  // \brief Scale down in order to see in view
-  // For 2003080103_mb_l3_las_1x1km.csv
-  //public: const float MINIATURE_SCALE = 0.01;
-  // For 2003080103_mb_l3_las.csv
-  public: const float MINIATURE_SCALE = 0.0001;
-  // For simple_test.csv
-  //public: const float MINIATURE_SCALE = 1.0;
-
   // TODO This is a workaround pending upstream Marker performance improvements.
   // \brief Performance trick. Skip depths below this z, so have memory to
   // visualize higher layers at higher resolution.
@@ -565,11 +553,6 @@ void ScienceSensorsSystemPrivate::ReadData(
             ignition::math::SphericalCoordinates::SPHERICAL,
             ignition::math::SphericalCoordinates::LOCAL2);
         // Flip sign of z, because positive depth is negative z.
-        cart.Z() = -depth;
-
-        // Performance trick. Scale down to see in view
-        cart *= this->MINIATURE_SCALE;
-        // Revert Z to the unscaled depth
         cart.Z() = -depth;
 
         // Performance trick. Skip points beyond some distance from origin
@@ -906,7 +889,8 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   }
   SortIndices(xsSorted, xsSortedInds);
 
-  int ltPSortedIdx, gtPSortedIdx;
+  int ltPSortedIdx{-1};
+  int gtPSortedIdx{-1};
   float ltPDist, gtPDist;
 
   // Get the two closest positions in _xs that _p lies between.
@@ -925,6 +909,15 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
       break;
     }
   }
+  if (ltPSortedIdx < 0 || ltPSortedIdx >= xsSortedInds.size() ||
+      gtPSortedIdx < 0 || gtPSortedIdx >= xsSortedInds.size())
+  {
+    ignwarn << "Failed to find consecutive elements in sorted vector. Indices ["
+            << ltPSortedIdx << "] / [" << gtPSortedIdx
+            << "] for vector sized [" << xsSortedInds.size()
+            << "]. Cannot interpolate." << std::endl;
+    return std::numeric_limits<float>::quiet_NaN();
+  }
 
   // Normalize the distances to ratios between 0 and 1, to use as weights
   float ltPWeight = ltPDist / (gtPDist + ltPDist);
@@ -933,6 +926,12 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   // Retrieve indices of sorted elements in original array
   int ltPIdx = xsSortedInds[ltPSortedIdx];
   int gtPIdx = xsSortedInds[gtPSortedIdx];
+
+  if (ltPIdx >= _values.size() || gtPIdx >= _values.size())
+  {
+    ignwarn << "Bad indices. Cannot interpolate." << std::endl;
+    return std::numeric_limits<float>::quiet_NaN();
+  }
   float result = ltPWeight * _values[ltPIdx] + gtPWeight * _values[gtPIdx];
 
   if (this->DEBUG_INTERPOLATE)
@@ -975,7 +974,7 @@ void ScienceSensorsSystemPrivate::SortIndices(
 
   // Sort indexes based on comparing values in v using std::stable_sort instead
   // of std::sort to avoid unnecessary index re-orderings when v contains
-  // elements of equal values 
+  // elements of equal values
   std::stable_sort(_idx.begin(), _idx.end(),
     [&_v](size_t _i1, size_t _i2) {return _v[_i1] < _v[_i2];});
 }
@@ -1395,11 +1394,6 @@ ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
     {
       {"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32},
     });
-
-  // TODO optimization for visualization:
-  // Use PCL methods to chop off points beyond some distance from sensor
-  // pose. Don't need to visualize beyond that. Might want to put that on a
-  // different topic specifically for visualization.
 
   msg.mutable_header()->mutable_stamp()->set_sec(this->timestamps[this->timeIdx]);
 
