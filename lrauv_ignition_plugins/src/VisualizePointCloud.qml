@@ -35,6 +35,10 @@ ColumnLayout {
   anchors.leftMargin: 10
   anchors.rightMargin: 10
 
+  function isUniform() {
+    return VisualizePointCloud.minFloatV >= VisualizePointCloud.maxFloatV
+  }
+
   RowLayout {
     spacing: 10
     Layout.fillWidth: true
@@ -110,7 +114,7 @@ ColumnLayout {
       }
       ToolTip.visible: hovered
       ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-      ToolTip.text: qsTr("Ignition transport topics publishing FloatV messages")
+      ToolTip.text: qsTr("Ignition transport topics publishing FloatV messages, used to color each point on the cloud")
     }
 
     Label {
@@ -136,14 +140,15 @@ ColumnLayout {
 
     Label {
       Layout.columnSpan: 1
-      text: "Min"
+      text: isUniform() ? "Color" : "Min"
     }
 
     Label {
       Layout.columnSpan: 1
       Layout.maximumWidth: 50
-      text: VisualizePointCloud.minFloatV.toFixed(2)
+      text: VisualizePointCloud.minFloatV.toFixed(4)
       elide: Text.ElideRight
+      visible: !isUniform()
     }
 
     Button {
@@ -178,6 +183,7 @@ ColumnLayout {
     Button {
       Layout.columnSpan: 1
       id: maxColorButton
+      visible: !isUniform()
       ToolTip.visible: hovered
       ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
       ToolTip.text: qsTr("Color for maximum value")
@@ -207,13 +213,15 @@ ColumnLayout {
     Label {
       Layout.columnSpan: 1
       Layout.maximumWidth: 50
-      text: VisualizePointCloud.maxFloatV.toFixed(2)
+      text: VisualizePointCloud.maxFloatV.toFixed(4)
       elide: Text.ElideRight
+      visible: !isUniform()
     }
 
     Label {
       Layout.columnSpan: 1
       text: "Max"
+      visible: !isUniform()
     }
   }
 

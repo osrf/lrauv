@@ -384,7 +384,7 @@ void VisualizePointCloud::PublishMarkers()
       continue;
 
     auto ratio = floatRange > 0 ?
-        (dataVal - this->dataPtr->minFloatV) / floatRange : 0.5f;
+        (dataVal - this->dataPtr->minFloatV) / floatRange : 0.0f;
     ignition:: math::Color color{
       minC.R() + (maxC.R() - minC.R()) * ratio,
       minC.G() + (maxC.G() - minC.G()) * ratio,
