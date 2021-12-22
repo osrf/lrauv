@@ -25,6 +25,8 @@
 
 #include <gtest/gtest.h>
 
+#include <ignition/gazebo/Link.hh>
+#include <ignition/gazebo/Model.hh>
 #include <ignition/gazebo/TestFixture.hh>
 #include <ignition/gazebo/Util.hh>
 #include <ignition/gazebo/World.hh>
@@ -85,6 +87,16 @@ class LrauvTestFixture : public ::testing::Test
 
         this->tethysPoses.push_back(
             ignition::gazebo::worldPose(modelEntity, _ecm));
+
+        ignition::gazebo::Model model(modelEntity);
+        auto linkEntity = model.LinkByName(_ecm, "base_link");
+        EXPECT_NE(ignition::gazebo::kNullEntity, linkEntity);
+
+        ignition::gazebo::Link link(linkEntity);
+        auto linkVel = link.WorldLinearVelocity(_ecm);
+        EXPECT_TRUE(linkVel.has_value());
+        tethysLinearVel.push_back(linkVel.value());
+
         this->iterations++;
       });
     fixture->Finalize();
@@ -267,6 +279,9 @@ class LrauvTestFixture : public ::testing::Test
 
   /// \brief All tethys world poses in order
   public: std::vector<ignition::math::Pose3d> tethysPoses;
+
+  /// \brief All tethys linear velocities in order
+  public: std::vector<ignition::math::Vector3d> tethysLinearVel;
 
   /// \brief All state messages in order
   public: std::vector<lrauv_ignition_plugins::msgs::LRAUVState> stateMsgs;
