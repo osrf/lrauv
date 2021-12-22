@@ -11,6 +11,8 @@
       <!-- For default gray ambient -->
       <!--background>0.8 0.8 0.8</background-->
       <background>0.0 0.7 0.8</background>
+
+      <grid>false</grid>
     </scene>
 
     <physics name="1ms" type="dart">
@@ -63,16 +65,16 @@
       <world_frame_orientation>ENU</world_frame_orientation>
 
       <!-- For 2003080103_mb_l3_las.csv -->
-      <latitude_deg>35.5999984741211</latitude_deg>
-      <longitude_deg>-121.779998779297</longitude_deg>
+      <!--latitude_deg>35.5999984741211</latitude_deg>
+      <longitude_deg>-121.779998779297</longitude_deg-->
 
       <!-- For 2003080103_mb_l3_las_1x1km.csv -->
       <!--latitude_deg>36.8024781413352</latitude_deg>
       <longitude_deg>-121.829647676843</longitude_deg-->
 
-      <!-- For simple_test.csv -->
-      <!--latitude_deg>0</latitude_deg>
-      <longitude_deg>0</longitude_deg-->
+      <!-- For simple_test.csv and interpolation_test.csv -->
+      <latitude_deg>0</latitude_deg>
+      <longitude_deg>0</longitude_deg>
 
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
@@ -80,9 +82,10 @@
     <plugin
       filename="ScienceSensorsSystem"
       name="tethys::ScienceSensorsSystem">
-      <data_path>2003080103_mb_l3_las.csv</data_path>
+      <!--data_path>2003080103_mb_l3_las.csv</data_path-->
       <!--data_path>2003080103_mb_l3_las_1x1km.csv</data_path-->
       <!--data_path>simple_test.csv</data_path-->
+      <data_path>interpolation_test.csv</data_path>
     </plugin>
 
     <gui fullscreen="0">
@@ -162,6 +165,7 @@
           <property key="state" type="string">floating</property>
           <property key="showTitleBar" type="bool">false</property>
         </ignition-gui>
+        <warn_on_action_failure>false</warn_on_action_failure>
       </plugin>
       <plugin filename="SelectEntities" name="Select Entities">
         <ignition-gui>
@@ -238,9 +242,7 @@
       <plugin filename="Plot3D" name="Plot 3D">
         <ignition-gui>
           <title>Plot Tethys 3D path</title>
-          <property type="string" key="state">floating_collapsed</property>
-          <property key="x" type="double">0</property>
-          <property key="y" type="double">0</property>
+          <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
         <entity_name>tethys</entity_name>
         <color>0 0 1</color>
@@ -250,16 +252,41 @@
       <plugin filename="ComponentInspector" name="Component Inspector">
         <ignition-gui>
           <title>Inspector</title>
-          <property type="string" key="state">floating_collapsed</property>
-          <property type="double" key="x">400</property>
+          <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
       </plugin>
       <plugin filename="VisualizePointCloud" name="Visualize science data">
         <ignition-gui>
           <title>Visualize science data</title>
-          <property type="string" key="state">floating_collapsed</property>
-          <property key="x" type="double">800</property>
+          <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
+      </plugin>
+      <plugin filename="GridConfig" name="Grid config">
+        <ignition-gui>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+        <insert>
+          <!-- 0.1 km x 0.1 km -->
+          <cell_count>100</cell_count>
+          <vertical_cell_count>0</vertical_cell_count>
+          <!-- 1 m -->
+          <cell_length>1</cell_length>
+          <pose>0 0 0  0 0 0</pose>
+          <color>0.5 0.5 0.5 1</color>
+        </insert>
+      </plugin>
+      <plugin filename="ControlPanelPlugin" name="Tethys Controls">
+        <ignition-gui>
+          <title>Tethys controls</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="ReferenceAxis" name="Reference axis">
+        <ignition-gui>
+          <title>Reference axis</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+        <fsk>tethys</fsk>
       </plugin>
     </gui>
 
@@ -314,7 +341,7 @@
     </include-->
 
     <include>
-      <pose>0 0 0 0 0 0</pose>
+      <pose>2 -5 0 0 0 0</pose>
       <uri>tethys_equipped</uri>
     </include>
 

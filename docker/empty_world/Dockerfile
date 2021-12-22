@@ -73,12 +73,13 @@ RUN apt-get -qq update && apt-get -q -y install \
 ENV IGN_WS /home/ign_ws
 RUN mkdir -p ${IGN_WS}/src \
  && cd ${IGN_WS}/src \
- && wget https://raw.githubusercontent.com/ignition-tooling/gazebodistro/master/collection-fortress.yaml \
- && vcs import < collection-fortress.yaml
+ && wget https://raw.githubusercontent.com/ignition-tooling/gazebodistro/master/collection-garden.yaml \
+ && vcs import < collection-garden.yaml
 
 # Install Ignition dependencies
 # This parses Ignition source tree to find package dependencies
 RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list' \
+ && /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-nightly.list' \
  && /bin/sh -c 'wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add -' \
  && apt-get update \
  && apt-get install -y \

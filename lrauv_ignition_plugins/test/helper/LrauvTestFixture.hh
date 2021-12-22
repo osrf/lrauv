@@ -25,6 +25,8 @@
 
 #include <gtest/gtest.h>
 
+#include <ignition/gazebo/Link.hh>
+#include <ignition/gazebo/Model.hh>
 #include <ignition/gazebo/TestFixture.hh>
 #include <ignition/gazebo/Util.hh>
 #include <ignition/gazebo/World.hh>
@@ -85,6 +87,16 @@ class LrauvTestFixture : public ::testing::Test
 
         this->tethysPoses.push_back(
             ignition::gazebo::worldPose(modelEntity, _ecm));
+
+        ignition::gazebo::Model model(modelEntity);
+        auto linkEntity = model.LinkByName(_ecm, "base_link");
+        EXPECT_NE(ignition::gazebo::kNullEntity, linkEntity);
+
+        ignition::gazebo::Link link(linkEntity);
+        auto linkVel = link.WorldLinearVelocity(_ecm);
+        EXPECT_TRUE(linkVel.has_value());
+        tethysLinearVel.push_back(linkVel.value());
+
         this->iterations++;
       });
     fixture->Finalize();
@@ -203,25 +215,45 @@ class LrauvTestFixture : public ::testing::Test
       return;
     }
 
-    char buffer[128];
-    while (!feof(pipe))
+    char buffer[512];
+    while (fgets(buffer, 512, pipe) != nullptr)
     {
-      if (fgets(buffer, 128, pipe) != nullptr)
-      {
-        igndbg << "CMD OUTPUT: " << buffer << std::endl;
+      igndbg << "CMD OUTPUT: " << buffer << std::endl;
 
-        // FIXME: LRAUV app hangs after quit, so force close it
-        // See https://github.com/osrf/lrauv/issues/83
-        std::string bufferStr{buffer};
-        std::string quit{">quit\n"};
-        if (auto found = bufferStr.find(quit) != std::string::npos)
-        {
-          ignmsg << "Quitting application" << std::endl;
-          break;
-        }
+      // FIXME: LRAUV app hangs after quit, so force close it
+      // See https://github.com/osrf/lrauv/issues/83
+      std::string bufferStr{buffer};
+
+      std::string error{"ERROR"};
+      std::string critical{"CRITICAL"};
+      if (bufferStr.find(error) != std::string::npos ||
+          bufferStr.find(critical) != std::string::npos)
+      {
+        ignerr << buffer << "\n";
+      }
+
+      std::string quit{"Stop Mission called by Supervisor::terminate\n"};
+      if (bufferStr.find(quit) != std::string::npos)
+      {
+        ignmsg << "Quitting application" << std::endl;
+        break;
       }
     }
 
+    KillLRAUV();
+
+    pclose(pipe);
+
+    ignmsg << "Completed command [" << cmd << "]" << std::endl;
+
+    _running = false;
+  }
+
+  /// \brief Kill all LRAUV processes.
+  /// \return True if some process was killed.
+  public: static bool KillLRAUV()
+  {
+    bool killed{false};
     for (auto process : {"sh.*bin/LRAUV", "bin/LRAUV"})
     {
       auto pid = GetPID(process);
@@ -234,13 +266,9 @@ class LrauvTestFixture : public ::testing::Test
 
       ignmsg << "Killing process [" << process << "] with pid [" << pid << "]" << std::endl;
       kill(pid, 9);
+      killed = true;
     }
-
-    pclose(pipe);
-
-    ignmsg << "Completed command [" << cmd << "]" << std::endl;
-
-    _running = false;
+    return killed;
   }
 
   /// \brief How many times has OnPostUpdate been run
@@ -251,6 +279,9 @@ class LrauvTestFixture : public ::testing::Test
 
   /// \brief All tethys world poses in order
   public: std::vector<ignition::math::Pose3d> tethysPoses;
+
+  /// \brief All tethys linear velocities in order
+  public: std::vector<ignition::math::Vector3d> tethysLinearVel;
 
   /// \brief All state messages in order
   public: std::vector<lrauv_ignition_plugins::msgs::LRAUVState> stateMsgs;
