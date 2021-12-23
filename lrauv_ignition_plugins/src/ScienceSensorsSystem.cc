@@ -894,15 +894,6 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
       break;
     }
   }
-  if (ltPSortedIdx < 0 || ltPSortedIdx >= xsSortedInds.size() ||
-      gtPSortedIdx < 0 || gtPSortedIdx >= xsSortedInds.size())
-  {
-    ignwarn << "Failed to find consecutive elements in sorted vector. Indices ["
-            << ltPSortedIdx << "] / [" << gtPSortedIdx
-            << "] for vector sized [" << xsSortedInds.size()
-            << "]. Cannot interpolate." << std::endl;
-    return std::numeric_limits<float>::quiet_NaN();
-  }
 
   // Sanity check
   if (ltPSortedIdx < 0 || ltPSortedIdx >= xsSortedInds.size() ||
