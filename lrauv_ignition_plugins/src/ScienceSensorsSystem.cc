@@ -218,8 +218,9 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Two 2D barycentric interpolations in z slices, then a linaer
   /// interpolation in 3D.
   /// \param[in] _p Position within the tetrahedra to interpolate for
-  /// \param[in] _xyzs n x 3. XYZ coordinates of 4 vertices of a tetrahedra
-  /// \param[in] _values Data values at the 4 vertices
+  /// \param[in] _xyzs n x 8. XYZ coordinates of 2 sets of 4 vertices, each
+  /// set on a different z slice. [0]-[3] is first slice, [4]-[7] is 2nd slice.
+  /// \param[in] _values Data values at the vertices
   /// \return Interpolated value, or quiet NaN if inputs invalid.
   public: float BaryLinearInterpolate(
     const Eigen::Vector3f &_p,
@@ -309,7 +310,7 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Debug printouts for interpolation. Will keep around at least until
   /// interpolation is stable.
-  public: const bool DEBUG_INTERPOLATE = false;
+  public: const bool DEBUG_INTERPOLATE = true;
 
   ///////////////////////////////
   // Variables for coordinate system
@@ -1456,6 +1457,8 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
       << std::endl;
     return std::numeric_limits<float>::quiet_NaN();
   }
+
+  // Linear interpolation
   float result = ltPWeight * _values[ltPIdx] + gtPWeight * _values[gtPIdx];
 
   if (this->DEBUG_INTERPOLATE)
@@ -1509,8 +1512,52 @@ float ScienceSensorsSystemPrivate::BaryLinearInterpolate(
   const Eigen::MatrixXf &_xyzs,
   const std::vector<float> &_values)
 {
-  // TODO implement
-  return 0.0;
+  // Drop z dimension, since we are assuming triangles are on z slices
+  Eigen::Vector2f p2d;
+  p2d << _p(0), _p(1);
+
+  // Because 2D BarycentricInterpolation() expects matrix of size <4, 2>
+  // Could change function signature, but that function eliminates 1 point to
+  // go from 4 points to 3 points in the degenerate case from tetrahedra to
+  // triangle, so not easy to change API.
+  if (_xyzs.rows() != 8 || _values.size() != 8)
+  {
+    ignerr << "BaryLinearInterpolate(): Unexpected number of neighbors ("
+      << _xyzs.rows() << " and " << _values.size() << "). "
+      << "Aborting interpolation." << std::endl;
+    return std::numeric_limits<float>::quiet_NaN();
+  }
+
+  // Interpolate among the 4 points in each z slice
+  // Assume [0]-[3] is first slice, [4]-[7] is 2nd slice.
+  // 4 x 2. Drop z dimension
+  Eigen::Matrix<float, 4, 2> xysSlice1 = _xyzs.block(0, 0, 4, 2);
+  Eigen::Matrix<float, 4, 2> xysSlice2 = _xyzs.block(4, 0, 4, 2);
+  float valueSlice1 = this->BarycentricInterpolate(p2d, xysSlice1, _values);
+  float valueSlice2 = this->BarycentricInterpolate(p2d, xysSlice2, _values);
+
+  // Assume [0]-[3] is first slice, [4]-[7] is 2nd slice.
+  float z1 = _xyzs(0, 2);
+  float z2 = _xyzs(4, 2);
+  float z = _p(2);
+
+  // Linear interpolation
+  float dz1 = fabs(z1 - z);
+  float dz2 = fabs(z2 - z);
+  float dz1Weight = dz1 / (dz1 + dz2);
+  float dz2Weight = dz2 / (dz1 + dz2);
+  float result = dz1Weight * valueSlice1 + dz2Weight * valueSlice2;
+
+  if (this->DEBUG_INTERPOLATE)
+  {
+    igndbg << "Hybrid bary-linear interpolation of " << _values.size()
+      << " values:" << std::endl;
+    for (int i = 0; i < _values.size(); ++i)
+      igndbg << _values[i] << std::endl;
+    igndbg << "resulted in " << result << std::endl;
+  }
+
+  return result;
 }
 
 /////////////////////////////////////////////////
@@ -1683,7 +1730,9 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   int nbrsPerZSlice = 4;
   if (this->dataPtr->INTERPOLATION_METHOD == this->dataPtr->BARYLINEAR)
   {
-    nbrsPerZSlice = 3;
+    // Use 4 for barylinear for now, because 2D BarycentricInterpolate() takes
+    // matrix size <4, 2>. Not easy to change, need to write new function TODO
+    nbrsPerZSlice = 4;
   }
 
   // Indices and distances of neighboring points to sensor position
@@ -1774,11 +1823,13 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         this->dataPtr->FindTrilinearInterpolators(searchPoint, spatialIdx,
           spatialSqrDist, interpolatorsSlice1, interpolatorsSlice2,
           nbrsPerZSlice);
+        // FIXME: This is 1 but should be 4 in BARYLINEAR case
+        igndbg << "spatialIdx: " << spatialIdx.size() << std::endl;
         if (interpolatorsSlice1.size() < nbrsPerZSlice ||
           interpolatorsSlice2.size() < nbrsPerZSlice)
         {
-          ignwarn << "Could not find trilinear interpolators near sensor location "
-            << sensorPosENU << std::endl;
+          ignwarn << "Could not find trilinear interpolators near sensor "
+            << "location " << sensorPosENU << std::endl;
           continue;
         }
 
