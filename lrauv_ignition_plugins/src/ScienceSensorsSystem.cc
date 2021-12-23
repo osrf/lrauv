@@ -104,9 +104,9 @@ class tethys::ScienceSensorsSystemPrivate
     const std::vector<int> &_inds,
     std::vector<float> &_new);
 
-  /// \brief Sort vector in-place, keeping track of indices
+  /// \brief Sort vector, store indices to original vector after sorting.
+  /// Original vector unchanged.
   /// \param[in] _v Vector to sort
-  /// \param[out] _v Sorted vector
   /// \param[out] _idx Indices of original vector in sorted vector
   public: template<typename T>
   void SortIndices(
@@ -860,7 +860,7 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
     return std::numeric_limits<float>::quiet_NaN();
   }
 
-  // Sort points
+  // Sort points and store the indices
   std::vector<float> xsSorted;
   std::vector<size_t> xsSortedInds;
   for (int i = 0; i < _xs.size(); ++i)
@@ -868,6 +868,11 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
     xsSorted.push_back(_xs(i));
   }
   SortIndices(xsSorted, xsSortedInds);
+  // Access sorted indices to get the new sorted array
+  for (int i = 0; i < xsSortedInds.size(); ++i)
+  {
+    xsSorted[i] = _xs(xsSortedInds[i]);
+  }
 
   int ltPSortedIdx{-1};
   int gtPSortedIdx{-1};
@@ -899,6 +904,25 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
     return std::numeric_limits<float>::quiet_NaN();
   }
 
+  // Sanity check
+  if (ltPSortedIdx < 0 || ltPSortedIdx >= xsSortedInds.size() ||
+      gtPSortedIdx < 0 || gtPSortedIdx >= xsSortedInds.size())
+  {
+    ignwarn << "1D linear interpolation: cannot find pair of consecutive "
+      << "neighbors that query point lies between. Cannot interpolate. "
+      << "(This should not happen!)"
+      << std::endl;
+    if (this->DEBUG_INTERPOLATE)
+    {
+      igndbg << "Neighbors: " << std::endl << _xs << std::endl;
+      igndbg << "Sorted neighbors: " << std::endl;
+      for (int i = 0; i < xsSorted.size(); ++i)
+        igndbg << xsSorted[i] << std::endl;
+      igndbg << "Query point: " << std::endl << _p << std::endl;
+    }
+    return std::numeric_limits<float>::quiet_NaN();
+  }
+
   // Normalize the distances to ratios between 0 and 1, to use as weights
   float ltPWeight = ltPDist / (gtPDist + ltPDist);
   float gtPWeight = gtPDist / (gtPDist + ltPDist);
@@ -907,9 +931,13 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   int ltPIdx = xsSortedInds[ltPSortedIdx];
   int gtPIdx = xsSortedInds[gtPSortedIdx];
 
+  // Sanity check
   if (ltPIdx >= _values.size() || gtPIdx >= _values.size())
   {
-    ignwarn << "Bad indices. Cannot interpolate." << std::endl;
+    ignwarn << "1D linear interpolation: mapping from sorted index to "
+      << "original index resulted in invalid index. Cannot interpolate. "
+      << "(This should not happen!)"
+      << std::endl;
     return std::numeric_limits<float>::quiet_NaN();
   }
   float result = ltPWeight * _values[ltPIdx] + gtPWeight * _values[gtPIdx];
