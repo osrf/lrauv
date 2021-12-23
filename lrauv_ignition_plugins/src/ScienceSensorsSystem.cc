@@ -44,6 +44,13 @@ using namespace tethys;
 
 class tethys::ScienceSensorsSystemPrivate
 {
+  public: enum interpolation
+  {
+    TRILINEAR,
+    BARYCENTRIC,
+    BARYLINEAR
+  };
+
   //////////////////////////////////
   // Functions for data manipulation
 
@@ -67,7 +74,7 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief True to use trilinear interpolation, false to use barycentric
   /// interpolation
-  public: bool useTrilinear = true;
+  public: int INTERPOLATION_METHOD = BARYLINEAR;
 
   /// \brief Convert a vector of PCL points to an Eigen::Matrix.
   /// \param[in] _vec Source vector
@@ -94,12 +101,15 @@ class tethys::ScienceSensorsSystemPrivate
   /// \param[out] _interpolators1 XYZ points on a z slice to interpolate among
   /// \param[out] _interpolators2 XYZ points on a second z slice to interpolate
   /// among
+  /// \param[in] _k Number of nearest neighbors. Default to 4, for trilinear
+  /// interpolation between two z slices of 4 points per slice.
   public: void FindTrilinearInterpolators(
     pcl::PointXYZ &_pt,
     std::vector<int> &_inds,
     std::vector<float> &_sqrDists,
     std::vector<pcl::PointXYZ> &_interpolators1,
-    std::vector<pcl::PointXYZ> &_interpolators2);
+    std::vector<pcl::PointXYZ> &_interpolators2,
+    int _k=4);
 
   /// \brief Create a z slice from a point cloud. Slice contains points sharing
   /// the same given z value.
@@ -200,6 +210,21 @@ class tethys::ScienceSensorsSystemPrivate
   void SortIndices(
       const std::vector<T> &_v,
       std::vector<size_t> &_idx);
+
+  //////////////////////////////////
+  // Hybrid interpolation. 2D triangle barycentric interpolation on 2 z slices,
+  // then linear interpolation.
+
+  /// \brief Two 2D barycentric interpolations in z slices, then a linaer
+  /// interpolation in 3D.
+  /// \param[in] _p Position within the tetrahedra to interpolate for
+  /// \param[in] _xyzs n x 3. XYZ coordinates of 4 vertices of a tetrahedra
+  /// \param[in] _values Data values at the 4 vertices
+  /// \return Interpolated value, or quiet NaN if inputs invalid.
+  public: float BaryLinearInterpolate(
+    const Eigen::Vector3f &_p,
+    const Eigen::MatrixXf &_xyzs,
+    const std::vector<float> &_values);
 
   //////////////////////////////
   // Functions for communication
@@ -686,13 +711,23 @@ float ScienceSensorsSystemPrivate::InterpolateData(
   const Eigen::MatrixXf &_xyzs,
   const std::vector<float> &_values)
 {
-  if (this->useTrilinear)
+  if (this->INTERPOLATION_METHOD == TRILINEAR)
   {
     return this->TrilinearInterpolate(_p, _xyzs, _values);
   }
-  else
+  else if (this->INTERPOLATION_METHOD == BARYCENTRIC)
   {
     return this->BarycentricInterpolate(_p, _xyzs, _values);
+  }
+  else if (this->INTERPOLATION_METHOD == BARYLINEAR)
+  {
+    return this->BaryLinearInterpolate(_p, _xyzs, _values);
+  }
+  else
+  {
+    ignerr << "INTERPOLATION_METHOD value invalid. "
+      << "Choose a valid interpolation method." << std::endl;
+    return std::numeric_limits<float>::quiet_NaN();
   }
 }
 
@@ -726,7 +761,8 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   std::vector<int> &_inds,
   std::vector<float> &_sqrDists,
   std::vector<pcl::PointXYZ> &_interpolators1,
-  std::vector<pcl::PointXYZ> &_interpolators2)
+  std::vector<pcl::PointXYZ> &_interpolators2,
+  int _k)
 {
   // Sanity checks
   // Vector not populated
@@ -789,8 +825,8 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
       << "idx " << nnIdx << ", dist " << sqrt(minDist)
       << ", z slice " << zSlice1.points.size() << " points" << std::endl;
   this->CreateAndSearchOctree(_pt, zSlice1,
-    interpolatorInds1, interpolatorSqrDists1, _interpolators1);
-  if (interpolatorInds1.size() < 4 || interpolatorSqrDists1.size() < 4)
+    interpolatorInds1, interpolatorSqrDists1, _interpolators1, _k);
+  if (interpolatorInds1.size() < _k || interpolatorSqrDists1.size() < _k)
   {
     ignwarn << "Could not find enough neighbors in 1st slice z = " << nnZ
       << " for trilinear interpolation." << std::endl;
@@ -849,8 +885,8 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
       << "idx " << nnIdx2 << ", dist " << sqrt(minDist2)
       << ", z slice " << zSlice2.points.size() << " points" << std::endl;
   this->CreateAndSearchOctree(_pt, zSlice2,
-    interpolatorInds2, interpolatorSqrDists2, _interpolators2);
-  if (interpolatorInds2.size() < 4 || interpolatorSqrDists2.size() < 4)
+    interpolatorInds2, interpolatorSqrDists2, _interpolators2, _k);
+  if (interpolatorInds2.size() < _k || interpolatorSqrDists2.size() < _k)
   {
     ignwarn << "Could not find enough neighbors in 2nd slice z = " << nnZ2
       << " for trilinear interpolation." << std::endl;
@@ -1468,6 +1504,16 @@ void ScienceSensorsSystemPrivate::SortIndices(
 }
 
 /////////////////////////////////////////////////
+float ScienceSensorsSystemPrivate::BaryLinearInterpolate(
+  const Eigen::Vector3f &_p,
+  const Eigen::MatrixXf &_xyzs,
+  const std::vector<float> &_values)
+{
+  // TODO implement
+  return 0.0;
+}
+
+/////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::PublishData()
 {
   IGN_PROFILE("ScienceSensorsSystemPrivate::PublishData");
@@ -1627,9 +1673,17 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   // Barycentric interpolation searches 4 neighbors directly
   int initK = 4;
   // Trilinear interpolation starts by searching for 1 neighbor
-  if (this->dataPtr->useTrilinear)
+  if (this->dataPtr->INTERPOLATION_METHOD == this->dataPtr->TRILINEAR ||
+    this->dataPtr->INTERPOLATION_METHOD == this->dataPtr->BARYLINEAR)
   {
     initK = 1;
+  }
+
+  // 4 for trilinear, 3 for barylinear
+  int nbrsPerZSlice = 4;
+  if (this->dataPtr->INTERPOLATION_METHOD == this->dataPtr->BARYLINEAR)
+  {
+    nbrsPerZSlice = 3;
   }
 
   // Indices and distances of neighboring points to sensor position
@@ -1711,14 +1765,17 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
 
       // TODO: refactor so that this if-stmt is replaced with one call. Use the
       // Boolean in that new function.
-      if (this->dataPtr->useTrilinear)
+      if (this->dataPtr->INTERPOLATION_METHOD == this->dataPtr->TRILINEAR ||
+        this->dataPtr->INTERPOLATION_METHOD == this->dataPtr->BARYLINEAR)
       {
         // Find 2 sets of 4 nearest neighbors, each set on a different z slice,
         // to use as inputs for trilinear interpolation
         std::vector<pcl::PointXYZ> interpolatorsSlice1, interpolatorsSlice2;
         this->dataPtr->FindTrilinearInterpolators(searchPoint, spatialIdx,
-          spatialSqrDist, interpolatorsSlice1, interpolatorsSlice2);
-        if (interpolatorsSlice1.size() < 4 || interpolatorsSlice2.size() < 4)
+          spatialSqrDist, interpolatorsSlice1, interpolatorsSlice2,
+          nbrsPerZSlice);
+        if (interpolatorsSlice1.size() < nbrsPerZSlice ||
+          interpolatorsSlice2.size() < nbrsPerZSlice)
         {
           ignwarn << "Could not find trilinear interpolators near sensor location "
             << sensorPosENU << std::endl;
@@ -1742,7 +1799,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         // FIXME: 4 neighbors found are not on a rectangle! That voids assumption
         // of trilinear interpolation. Cannot perform valid interpolation.
       }
-      else
+      else if (this->dataPtr->INTERPOLATION_METHOD ==
+        this->dataPtr->BARYCENTRIC)
       {
         // Get neighbor XYZs to pass to interpolation
         for (int i = 0; i < spatialIdx.size(); ++i)
@@ -1750,6 +1808,12 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
           interpolatorXYZs.push_back(this->dataPtr->timeSpaceCoords[
             this->dataPtr->timeIdx]->at(spatialIdx[i]));
         }
+      }
+      else
+      {
+        ignerr << "INTERPOLATION_METHOD value invalid. "
+          << "Choose a valid interpolation method." << std::endl;
+        break;
       }
 
       // Update last update position to the current position
