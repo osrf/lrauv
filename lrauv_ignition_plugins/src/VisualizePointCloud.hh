@@ -35,6 +35,10 @@ namespace tethys
   class VisualizePointCloudPrivate;
 
   /// \brief Visualize PointCloudPacked messages in the 3D scene.
+  /// By default, the whole cloud is displayed using a single color. Users
+  /// can optionally choose a topic publishing FloatV messages which will be
+  /// used to color all points with a color gradient according to their values.
+  /// NaN values on the FloatV message aren't displayed.
   class VisualizePointCloud : public ignition::gui::Plugin
   {
     Q_OBJECT
@@ -85,6 +89,14 @@ namespace tethys
       READ MaxFloatV
       WRITE SetMaxFloatV
       NOTIFY MaxFloatVChanged
+    )
+
+    /// \brief Point size
+    Q_PROPERTY(
+      float pointSize
+      READ PointSize
+      WRITE SetPointSize
+      NOTIFY PointSizeChanged
     )
 
     /// \brief Constructor
@@ -191,6 +203,17 @@ namespace tethys
 
     /// \brief Notify that maximum value has changed
     signals: void MaxFloatVChanged();
+
+    /// \brief Get the point size
+    /// \return Maximum value
+    public: Q_INVOKABLE float PointSize() const;
+
+    /// \brief Set the point size
+    /// \param[ax] _pointSize Maximum value.
+    public: Q_INVOKABLE void SetPointSize(float _pointSize);
+
+    /// \brief Notify that point size has changed
+    signals: void PointSizeChanged();
 
     /// \brief Set whether to show the point cloud.
     /// \param[in] _show Boolean value for displaying the points.
