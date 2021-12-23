@@ -192,9 +192,9 @@ class tethys::ScienceSensorsSystemPrivate
     const std::vector<int> &_inds,
     std::vector<float> &_new);
 
-  /// \brief Sort vector in-place, keeping track of indices
+  /// \brief Sort vector, store indices to original vector after sorting.
+  /// Original vector unchanged.
   /// \param[in] _v Vector to sort
-  /// \param[out] _v Sorted vector
   /// \param[out] _idx Indices of original vector in sorted vector
   public: template<typename T>
   void SortIndices(
@@ -383,26 +383,6 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Publish a few more times for visualization plugin to get them
   public: int repeatPubTimes = 1;
-
-  //////////////////////////////
-  // Constants for visualization
-
-  // TODO This is a workaround pending upstream Ignition orbit tool improvements
-  // \brief Scale down in order to see in view
-  // For 2003080103_mb_l3_las_1x1km.csv
-  //public: const float MINIATURE_SCALE = 0.01;
-  // For 2003080103_mb_l3_las.csv
-  //public: const float MINIATURE_SCALE = 0.0001;
-  // For simple_test.csv
-  public: const float MINIATURE_SCALE = 1.0;
-
-  // TODO This is a workaround pending upstream Marker performance improvements.
-  // \brief Performance trick. Skip depths below this z, so have memory to
-  // visualize higher layers at higher resolution.
-  // This is only for visualization, so that MAX_PTS_VIS can calculate close
-  // to the actual number of points visualized.
-  // Sensors shouldn't use this.
-  public: const float SKIP_Z_BELOW = -20;
 };
 
 /////////////////////////////////////////////////
@@ -641,12 +621,6 @@ void ScienceSensorsSystemPrivate::ReadData(
       // Check validity of spatial coordinates
       if (!std::isnan(latitude) && !std::isnan(longitude) && !std::isnan(depth))
       {
-        // Performance trick. Skip points below a certain depth
-        if (-depth < this->SKIP_Z_BELOW)
-        {
-          continue;
-        }
-
         // Convert lat / lon / elevation to Cartesian ENU
         auto cart = this->world.SphericalCoordinates(_ecm).value()
             .PositionTransform({IGN_DTOR(latitude), IGN_DTOR(longitude), 0.0},
@@ -655,20 +629,8 @@ void ScienceSensorsSystemPrivate::ReadData(
         // Flip sign of z, because positive depth is negative z.
         cart.Z() = -depth;
 
-        // Performance trick. Scale down to see in view
-        cart *= this->MINIATURE_SCALE;
-        // Revert Z to the unscaled depth
-        cart.Z() = -depth;
-
-        // Performance trick. Skip points beyond some distance from origin
-        if (abs(cart.X()) > 1000 || abs(cart.Y()) > 1000)
-        {
-          continue;
-        }
-
         // Gather spatial coordinates, 3 fields in the line, into point cloud
         // for indexing this time slice of data.
-        // Flip sign of z, because positive depth is negative z.
         this->timeSpaceCoords[lineTimeIdx]->push_back(
           pcl::PointXYZ(cart.X(), cart.Y(), cart.Z()));
 
@@ -983,7 +945,7 @@ float ScienceSensorsSystemPrivate::TrilinearInterpolate(
   IGN_PROFILE("ScienceSensorsSystemPrivate::TrilinearInterpolate");
 
   // Sanity check: Must have 8 points, 4 above, 4 below.
-  if (_xyzs.size() != 8)
+  if (_xyzs.rows() != 8)
   {
     ignerr << "Size of interpolators invalid (" << _xyzs.size() << "). "
       << "Need 8 points in a rectangular prism. "
@@ -1387,7 +1349,7 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
     return std::numeric_limits<float>::quiet_NaN();
   }
 
-  // Sort points
+  // Sort points and store the indices
   std::vector<float> xsSorted;
   std::vector<size_t> xsSortedInds;
   for (int i = 0; i < _xs.size(); ++i)
@@ -1395,8 +1357,14 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
     xsSorted.push_back(_xs(i));
   }
   SortIndices(xsSorted, xsSortedInds);
+  // Access sorted indices to get the new sorted array
+  for (int i = 0; i < xsSortedInds.size(); ++i)
+  {
+    xsSorted[i] = _xs(xsSortedInds[i]);
+  }
 
-  int ltPSortedIdx, gtPSortedIdx;
+  int ltPSortedIdx{-1};
+  int gtPSortedIdx{-1};
   float ltPDist, gtPDist;
 
   // Get the two closest positions in _xs that _p lies between.
@@ -1416,6 +1384,25 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
     }
   }
 
+  // Sanity check
+  if (ltPSortedIdx < 0 || ltPSortedIdx >= xsSortedInds.size() ||
+      gtPSortedIdx < 0 || gtPSortedIdx >= xsSortedInds.size())
+  {
+    ignwarn << "1D linear interpolation: cannot find pair of consecutive "
+      << "neighbors that query point lies between. Cannot interpolate. "
+      << "(This should not happen!)"
+      << std::endl;
+    if (this->DEBUG_INTERPOLATE)
+    {
+      igndbg << "Neighbors: " << std::endl << _xs << std::endl;
+      igndbg << "Sorted neighbors: " << std::endl;
+      for (int i = 0; i < xsSorted.size(); ++i)
+        igndbg << xsSorted[i] << std::endl;
+      igndbg << "Query point: " << std::endl << _p << std::endl;
+    }
+    return std::numeric_limits<float>::quiet_NaN();
+  }
+
   // Normalize the distances to ratios between 0 and 1, to use as weights
   float ltPWeight = ltPDist / (gtPDist + ltPDist);
   float gtPWeight = gtPDist / (gtPDist + ltPDist);
@@ -1423,6 +1410,16 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   // Retrieve indices of sorted elements in original array
   int ltPIdx = xsSortedInds[ltPSortedIdx];
   int gtPIdx = xsSortedInds[gtPSortedIdx];
+
+  // Sanity check
+  if (ltPIdx >= _values.size() || gtPIdx >= _values.size())
+  {
+    ignwarn << "1D linear interpolation: mapping from sorted index to "
+      << "original index resulted in invalid index. Cannot interpolate. "
+      << "(This should not happen!)"
+      << std::endl;
+    return std::numeric_limits<float>::quiet_NaN();
+  }
   float result = ltPWeight * _values[ltPIdx] + gtPWeight * _values[gtPIdx];
 
   if (this->DEBUG_INTERPOLATE)
@@ -1465,7 +1462,7 @@ void ScienceSensorsSystemPrivate::SortIndices(
 
   // Sort indexes based on comparing values in v using std::stable_sort instead
   // of std::sort to avoid unnecessary index re-orderings when v contains
-  // elements of equal values 
+  // elements of equal values
   std::stable_sort(_idx.begin(), _idx.end(),
     [&_v](size_t _i1, size_t _i2) {return _v[_i1] < _v[_i2];});
 }
@@ -1727,7 +1724,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
             << sensorPosENU << std::endl;
           continue;
         }
- 
+
         // Concatenate the 2 sets of 4 points into a vector of 8 points
         interpolatorXYZs.reserve(interpolatorsSlice1.size() +
           interpolatorsSlice2.size());
@@ -1735,13 +1732,13 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
           interpolatorsSlice1.begin(), interpolatorsSlice1.end());
         interpolatorXYZs.insert(interpolatorXYZs.end(),
           interpolatorsSlice2.begin(), interpolatorsSlice2.end());
- 
+
         // FIXME in FindTrilinearInterpolators():
         // When call TrilinearInterpolate():
         // Find 1D indices of the data values d000-d111!!! Manually keep track
         // of indices of the 4 points in the 2nd z slice (interpolatorsSlice2),
         // which are scrambled up after the 1st z slice is removed from cloud!
- 
+
         // FIXME: 4 neighbors found are not on a rectangle! That voids assumption
         // of trilinear interpolation. Cannot perform valid interpolation.
       }
@@ -1777,7 +1774,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   {
     if (reinterpolate)
     {
-      // Input values to barycentric interpolation
+      // Input values to interpolation
       std::vector<float> interpolationValues;
 
       // For the correct sensor, interpolate using nearby locations with data
@@ -1929,11 +1926,6 @@ ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
     {
       {"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32},
     });
-
-  // TODO optimization for visualization:
-  // Use PCL methods to chop off points beyond some distance from sensor
-  // pose. Don't need to visualize beyond that. Might want to put that on a
-  // different topic specifically for visualization.
 
   msg.mutable_header()->mutable_stamp()->set_sec(this->timestamps[this->timeIdx]);
 
