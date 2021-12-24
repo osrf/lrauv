@@ -47,8 +47,7 @@ class tethys::ScienceSensorsSystemPrivate
   public: enum interpolation
   {
     TRILINEAR,
-    BARYCENTRIC,
-    BARYLINEAR
+    BARYCENTRIC
   };
 
   //////////////////////////////////
@@ -74,7 +73,7 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief True to use trilinear interpolation, false to use barycentric
   /// interpolation
-  public: int INTERPOLATION_METHOD = BARYLINEAR;
+  public: int INTERPOLATION_METHOD = TRILINEAR;
 
   /// \brief Convert a vector of PCL points to an Eigen::Matrix.
   /// \param[in] _vec Source vector
@@ -96,7 +95,8 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Find XYZ locations of points in the two closest z slices to
   /// interpolate among.
   /// \param[in] _pt Location in space to interpolate for
-  /// \param[in] _inds Indices of nearest neighbors to _pt
+  /// \param[in] _inds Indices of nearest neighbors to _pt, used to look for
+  /// first z slice.
   /// \param[in] _sqrDists Distances of nearest neighbors to _pt
   /// \param[out] _interpolatorInds2 Indices of points in fist z slice
   /// \param[out] _interpolators1 XYZ points on a z slice to interpolate among
@@ -726,10 +726,6 @@ float ScienceSensorsSystemPrivate::InterpolateData(
   {
     return this->BarycentricInterpolate(_p, _xyzs, _values);
   }
-  else if (this->INTERPOLATION_METHOD == BARYLINEAR)
-  {
-    return this->BaryLinearInterpolate(_p, _xyzs, _values);
-  }
   else
   {
     ignerr << "INTERPOLATION_METHOD value invalid. "
@@ -840,8 +836,6 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
       << " for trilinear interpolation." << std::endl;
     return;
   }
-  // TODO enforce that the 4 NNs in _interpolators1 are in a rectangle.
-  // Otherwise does not satisfy trilinear interpolation requirements.
 
   // Step 2: exclude z slice of 1st NN from further searches.
 
@@ -904,8 +898,6 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
       << " for trilinear interpolation." << std::endl;
     return;
   }
-  // TODO enforce that the 4 NNs in _interpolators2 are in a rectangle.
-  // Otherwise does not satisfy trilinear interpolation requirements.
 
   // Map back to the indices in the original point cloud for returning
   _interpolatorInds2.clear();
@@ -1109,16 +1101,25 @@ float ScienceSensorsSystemPrivate::TrilinearInterpolate(
     }
     else
     {
-      ignerr << "Suspect 8 input points not on prism. Vertex " << r << " ("
+      // Enforce that the 4 NNs in _interpolators1 are in a rectangle.
+      // Otherwise does not satisfy trilinear interpolation requirements.
+      ignwarn << "Trilinear interpolation: "
+        << "Suspect 8 input points not on prism. Vertex " << r << " ("
         << std::round(_xyzs(r, 0) * 1000.0) / 1000.0 << ", "
         << std::round(_xyzs(r, 1) * 1000.0) / 1000.0 << ", "
         << std::round(_xyzs(r, 2) * 1000.0) / 1000.0
         << ") not within tolerance (" << TOLERANCE
         << ") of any of 8 vertices of rectangular prism. "
-        << "Aborting trilinear interpolation." << std::endl;
-      return std::numeric_limits<float>::quiet_NaN();
+        << "Using hybrid bary-linear interpolation instead." << std::endl;
+      return this->BaryLinearInterpolate(_p, _xyzs,_values);
     }
   }
+
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "Trilinear interpolation, starting with 8 points: "
+      << d000 << ", " << d001 << ", " << d010 << ", " << d011 << ", "
+      << d100 << ", " << d101 << ", " << d110 << ", " << d111
+      << std::endl;
 
   // Trilinear interpolation using 8 corners of a rectangular prism
   // Implements https://en.wikipedia.org/wiki/Trilinear_interpolation
@@ -1137,15 +1138,26 @@ float ScienceSensorsSystemPrivate::TrilinearInterpolate(
   float d10 = d010 * (1 - dx) + d110 * dx;
   float d11 = d011 * (1 - dx) * d111 * dx;
 
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "Trilinear interpolation, 4 intermediate results from 8 points: "
+      << d00 << ", " << d01 << ", " << d10 << ", " << d11 << std::endl;
+
   // Interpolate along y
   // For 4 interpolated points on x above, there are 2 pairs of y's
   float d0 = d00 * (1 - dy) + d10 * dy;
   float d1 = d01 * (1 - dy) + d11 * dy;
 
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "Trilinear interpolation, 2 intermediate results from 4 points: "
+      << d0 << ", " << d1 << std::endl;
+
   // Interpolate along z
   // For 2 interpolated points on y above, there is only 1 z.
   // This arrives at the interpolated value at the target xyz position.
   float d = d0 * (1 - dz) + d1 * dz;
+
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "Trilinear interpolation result: " << d << std::endl;
 
   return d;
 }
@@ -1546,25 +1558,39 @@ float ScienceSensorsSystemPrivate::BaryLinearInterpolate(
     return std::numeric_limits<float>::quiet_NaN();
   }
 
-  // Interpolate among the 4 points in each z slice
+  // Step 1
+  // Interpolate among the 4 points in each z slice, to get 2 resulting points,
+  // at (x, y, z1) and (x, y, z2), where (x, y, z) is the query point, and z1
+  // and z2 are the z's of the slices.
   // Assume [0]-[3] is first slice, [4]-[7] is 2nd slice.
   // 4 x 2. Drop z dimension
   Eigen::Matrix<float, 4, 2> xysSlice1 = _xyzs.block(0, 0, 4, 2);
   Eigen::Matrix<float, 4, 2> xysSlice2 = _xyzs.block(4, 0, 4, 2);
   float valueSlice1 = this->BarycentricInterpolate(p2d, xysSlice1, _values);
   float valueSlice2 = this->BarycentricInterpolate(p2d, xysSlice2, _values);
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "Hybrid bary-linear interpolation, "
+      << "2 barycentric interpolations on 2 z slices resulted in: "
+      << valueSlice1 << " and " << valueSlice2 << std::endl;
 
   // Assume [0]-[3] is first slice, [4]-[7] is 2nd slice.
   float z1 = _xyzs(0, 2);
   float z2 = _xyzs(4, 2);
   float z = _p(2);
 
-  // Linear interpolation
+  // Step 2
+  // Linear interpolation between the 2 intermediate points, (x, y, z1) and
+  // (x, y, z2). Interpolate linearly along z to get value at query point
+  // (x, y, z).
   float dz1 = fabs(z1 - z);
   float dz2 = fabs(z2 - z);
   float dz1Weight = dz1 / (dz1 + dz2);
   float dz2Weight = dz2 / (dz1 + dz2);
   float result = dz1Weight * valueSlice1 + dz2Weight * valueSlice2;
+  if (this->DEBUG_INTERPOLATE)
+    igndbg << "Hybrid bary-linear interpolation, "
+      << "linear interpolation of 2 points on two z slices: " << result
+      << std::endl;
 
   if (this->DEBUG_INTERPOLATE)
   {
@@ -1737,21 +1763,15 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
 
   // Barycentric interpolation searches 4 neighbors directly
   int initK = 4;
-  // Trilinear interpolation starts by searching for 1 neighbor
-  if (this->dataPtr->INTERPOLATION_METHOD == this->dataPtr->TRILINEAR ||
-    this->dataPtr->INTERPOLATION_METHOD == this->dataPtr->BARYLINEAR)
+  // Trilinear interpolation starts by searching for 1 neighbor. Only its z is
+  // used, to find the nearest z slice.
+  if (this->dataPtr->INTERPOLATION_METHOD == this->dataPtr->TRILINEAR)
   {
     initK = 1;
   }
 
-  // 4 for trilinear, 3 for barylinear
+  // Number of points per z slice, for trilinear interpolation
   int nbrsPerZSlice = 4;
-  if (this->dataPtr->INTERPOLATION_METHOD == this->dataPtr->BARYLINEAR)
-  {
-    // Use 4 for barylinear for now, because 2D BarycentricInterpolate() takes
-    // matrix size <4, 2>. Not easy to change, need to write new function TODO
-    nbrsPerZSlice = 4;
-  }
 
   // Indices and distances of neighboring points to sensor position
   std::vector<int> spatialInds;
@@ -1834,10 +1854,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       }
       reinterpolate = true;
 
-      // TODO: refactor so that this if-stmt is replaced with one call. Use the
-      // Boolean in that new function.
-      if (this->dataPtr->INTERPOLATION_METHOD == this->dataPtr->TRILINEAR ||
-        this->dataPtr->INTERPOLATION_METHOD == this->dataPtr->BARYLINEAR)
+      if (this->dataPtr->INTERPOLATION_METHOD == this->dataPtr->TRILINEAR)
       {
         // Find 2 sets of 4 nearest neighbors, each set on a different z slice,
         // to use as inputs for trilinear interpolation

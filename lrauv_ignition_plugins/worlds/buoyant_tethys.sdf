@@ -357,7 +357,7 @@
     </include-->
 
     <include>
-      <pose>2 -5 0 0 0 0</pose>
+      <pose>4 -5 0 0 0 0</pose>
       <uri>tethys_equipped</uri>
     </include>
 
