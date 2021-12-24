@@ -1147,7 +1147,7 @@ float ScienceSensorsSystemPrivate::TrilinearInterpolate(
     }
     else
     {
-      // Enforce that the 4 NNs in _interpolators1 are in a rectangle.
+      // Enforce that the points are vertices of a rectangular prism.
       // Otherwise does not satisfy trilinear interpolation requirements.
       ignwarn << "Trilinear interpolation: "
         << "Suspect 8 input points not on prism. Vertex " << r << " ("
@@ -1592,10 +1592,6 @@ float ScienceSensorsSystemPrivate::BaryLinearInterpolate(
   Eigen::Vector2f p2d;
   p2d << _p(0), _p(1);
 
-  // Because 2D BarycentricInterpolation() expects matrix of size <4, 2>
-  // Could change function signature, but that function eliminates 1 point to
-  // go from 4 points to 3 points in the degenerate case from tetrahedra to
-  // triangle, so not easy to change API.
   if (_xyzs.rows() != 8 || _values.size() != 8)
   {
     ignerr << "BaryLinearInterpolate(): Unexpected number of neighbors ("
@@ -1821,7 +1817,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
 
   // Indices and distances of neighboring points to sensor position
   std::vector<int> spatialInds;
-  std::vector<float> spatialSqrDist;
+  std::vector<float> spatialSqrDists;
 
   // Positions of neighbors to use in interpolation, and their indices in
   // original point cloud
@@ -1875,7 +1871,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       // neighbor is unknown).
       // Search for nearest neighbors
       if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]
-        ->nearestKSearch(searchPoint, initK, spatialInds, spatialSqrDist) <= 0)
+        ->nearestKSearch(searchPoint, initK, spatialInds, spatialSqrDists) <= 0)
       {
         ignwarn << "Not enough data found near sensor location " << sensorPosENU
           << std::endl;
@@ -1894,7 +1890,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
             << std::round(nbrPt.x * 1000) / 1000.0 << ", "
             << std::round(nbrPt.y * 1000) / 1000.0 << ", "
             << std::round(nbrPt.z * 1000) / 1000.0
-            << "), squared distance " << spatialSqrDist[i]
+            << "), squared distance " << spatialSqrDists[i]
             << " m" << std::endl;
         }
       }
@@ -1907,11 +1903,9 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         std::vector<pcl::PointXYZ> interpolatorsSlice1, interpolatorsSlice2;
         std::vector<int> interpolatorInds1, interpolatorInds2;
         this->dataPtr->FindTrilinearInterpolators(searchPoint, spatialInds,
-          spatialSqrDist, interpolatorInds1, interpolatorsSlice1,
+          spatialSqrDists, interpolatorInds1, interpolatorsSlice1,
           interpolatorInds2, interpolatorsSlice2, nbrsPerZSlice);
 
-        igndbg << "interpolatorInds1.size(): "
-          << interpolatorInds1.size() << std::endl;
         if (interpolatorsSlice1.size() < nbrsPerZSlice ||
           interpolatorsSlice2.size() < nbrsPerZSlice)
         {
