@@ -98,7 +98,9 @@ class tethys::ScienceSensorsSystemPrivate
   /// \param[in] _pt Location in space to interpolate for
   /// \param[in] _inds Indices of nearest neighbors to _pt
   /// \param[in] _sqrDists Distances of nearest neighbors to _pt
+  /// \param[out] _interpolatorInds2 Indices of points in fist z slice
   /// \param[out] _interpolators1 XYZ points on a z slice to interpolate among
+  /// \param[out] _interpolatorInds1 Indices of points in second z slice
   /// \param[out] _interpolators2 XYZ points on a second z slice to interpolate
   /// among
   /// \param[in] _k Number of nearest neighbors. Default to 4, for trilinear
@@ -107,7 +109,9 @@ class tethys::ScienceSensorsSystemPrivate
     pcl::PointXYZ &_pt,
     std::vector<int> &_inds,
     std::vector<float> &_sqrDists,
+    std::vector<int> &_interpolatorInds1,
     std::vector<pcl::PointXYZ> &_interpolators1,
+    std::vector<int> &_interpolatorInds2,
     std::vector<pcl::PointXYZ> &_interpolators2,
     int _k=4);
 
@@ -761,7 +765,9 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   pcl::PointXYZ &_pt,
   std::vector<int> &_inds,
   std::vector<float> &_sqrDists,
+  std::vector<int> &_interpolatorInds1,
   std::vector<pcl::PointXYZ> &_interpolators1,
+  std::vector<int> &_interpolatorInds2,
   std::vector<pcl::PointXYZ> &_interpolators2,
   int _k)
 {
@@ -796,9 +802,8 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   // Indices of points in the z slices
   std::vector<int> zSliceInds1, zSliceInds2;
 
-  // Indices and distances of neighboring points in the search results
+  // Distances of neighboring points in the search results
   // 4 above, 4 below
-  std::vector<int> interpolatorInds1, interpolatorInds2;
   std::vector<float> interpolatorSqrDists1, interpolatorSqrDists2;
 
   // Step 1: 1st NN, in its z slice, search for 4 NNs
@@ -826,8 +831,8 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
       << "idx " << nnIdx << ", dist " << sqrt(minDist)
       << ", z slice " << zSlice1.points.size() << " points" << std::endl;
   this->CreateAndSearchOctree(_pt, zSlice1,
-    interpolatorInds1, interpolatorSqrDists1, _interpolators1, _k);
-  if (interpolatorInds1.size() < _k || interpolatorSqrDists1.size() < _k)
+    _interpolatorInds1, interpolatorSqrDists1, _interpolators1, _k);
+  if (_interpolatorInds1.size() < _k || interpolatorSqrDists1.size() < _k)
   {
     ignwarn << "Could not find enough neighbors in 1st slice z = " << nnZ
       << " for trilinear interpolation." << std::endl;
@@ -886,8 +891,8 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
       << "idx " << nnIdx2 << ", dist " << sqrt(minDist2)
       << ", z slice " << zSlice2.points.size() << " points" << std::endl;
   this->CreateAndSearchOctree(_pt, zSlice2,
-    interpolatorInds2, interpolatorSqrDists2, _interpolators2, _k);
-  if (interpolatorInds2.size() < _k || interpolatorSqrDists2.size() < _k)
+    _interpolatorInds2, interpolatorSqrDists2, _interpolators2, _k);
+  if (_interpolatorInds2.size() < _k || interpolatorSqrDists2.size() < _k)
   {
     ignwarn << "Could not find enough neighbors in 2nd slice z = " << nnZ2
       << " for trilinear interpolation." << std::endl;
@@ -1736,11 +1741,13 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   }
 
   // Indices and distances of neighboring points to sensor position
-  std::vector<int> spatialIdx;
+  std::vector<int> spatialInds;
   std::vector<float> spatialSqrDist;
 
-  // Positions of neighbors to use in interpolation
+  // Positions of neighbors to use in interpolation, and their indices in
+  // original point cloud
   std::vector<pcl::PointXYZ> interpolatorXYZs;
+  std::vector<int> interpolatorInds;
 
   // Get a sensor's position, search in the octree for the closest neighbors.
   // Only need to done for one sensor. All sensors are on the robot, doesn't
@@ -1775,6 +1782,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         << std::round(searchPoint.z * 1000.0) / 1000.0 << std::endl;
     }
 
+    // TODO: After mabelzhang/interpolate_sci_raw_mat branch is merged, use
+    // the opposite condition and break out of loop.
     // If there are any nodes in the octree, search in octree to find spatial
     // index of science data
     if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]->getLeafCount()
@@ -1787,7 +1796,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       // neighbor is unknown).
       // Search for nearest neighbors
       if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]
-        ->nearestKSearch(searchPoint, initK, spatialIdx, spatialSqrDist) <= 0)
+        ->nearestKSearch(searchPoint, initK, spatialInds, spatialSqrDist) <= 0)
       {
         ignwarn << "Not enough data found near sensor location " << sensorPosENU
           << std::endl;
@@ -1796,11 +1805,11 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       // Debug output
       else if (this->dataPtr->DEBUG_INTERPOLATE)
       {
-        for (std::size_t i = 0; i < spatialIdx.size(); i++)
+        for (std::size_t i = 0; i < spatialInds.size(); i++)
         {
           // Index the point cloud at the current time slice
           pcl::PointXYZ nbrPt = this->dataPtr->timeSpaceCoords[
-            this->dataPtr->timeIdx]->at(spatialIdx[i]);
+            this->dataPtr->timeIdx]->at(spatialInds[i]);
 
           igndbg << "Neighbor at ("
             << std::round(nbrPt.x * 1000) / 1000.0 << ", "
@@ -1820,11 +1829,13 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         // Find 2 sets of 4 nearest neighbors, each set on a different z slice,
         // to use as inputs for trilinear interpolation
         std::vector<pcl::PointXYZ> interpolatorsSlice1, interpolatorsSlice2;
-        this->dataPtr->FindTrilinearInterpolators(searchPoint, spatialIdx,
-          spatialSqrDist, interpolatorsSlice1, interpolatorsSlice2,
-          nbrsPerZSlice);
-        // FIXME: This is 1 but should be 4 in BARYLINEAR case
-        igndbg << "spatialIdx: " << spatialIdx.size() << std::endl;
+        std::vector<int> interpolatorInds1, interpolatorInds2;
+        this->dataPtr->FindTrilinearInterpolators(searchPoint, spatialInds,
+          spatialSqrDist, interpolatorInds1, interpolatorsSlice1,
+          interpolatorInds2, interpolatorsSlice2, nbrsPerZSlice);
+
+        igndbg << "interpolatorInds1.size(): "
+          << interpolatorInds1.size() << std::endl;
         if (interpolatorsSlice1.size() < nbrsPerZSlice ||
           interpolatorsSlice2.size() < nbrsPerZSlice)
         {
@@ -1841,23 +1852,34 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         interpolatorXYZs.insert(interpolatorXYZs.end(),
           interpolatorsSlice2.begin(), interpolatorsSlice2.end());
 
+        // Prepare neighbor data to pass to interpolation
+        for (int i = 0; i < interpolatorInds1.size(); ++i)
+        {
+          interpolatorInds.push_back(interpolatorInds1[i]);
+        }
+        for (int i = 0; i < interpolatorInds2.size(); ++i)
+        {
+          interpolatorInds.push_back(interpolatorInds2[i]);
+        }
+
         // FIXME in FindTrilinearInterpolators():
         // When call TrilinearInterpolate():
         // Find 1D indices of the data values d000-d111!!! Manually keep track
         // of indices of the 4 points in the 2nd z slice (interpolatorsSlice2),
         // which are scrambled up after the 1st z slice is removed from cloud!
 
-        // FIXME: 4 neighbors found are not on a rectangle! That voids assumption
+        // FIXME: 4 neighbors are not on a rectangle! That voids assumption
         // of trilinear interpolation. Cannot perform valid interpolation.
       }
       else if (this->dataPtr->INTERPOLATION_METHOD ==
         this->dataPtr->BARYCENTRIC)
       {
-        // Get neighbor XYZs to pass to interpolation
-        for (int i = 0; i < spatialIdx.size(); ++i)
+        // Prepare neighbor data to pass to interpolation
+        for (int i = 0; i < spatialInds.size(); ++i)
         {
+          interpolatorInds.push_back(spatialInds[i]);
           interpolatorXYZs.push_back(this->dataPtr->timeSpaceCoords[
-            this->dataPtr->timeIdx]->at(spatialIdx[i]));
+            this->dataPtr->timeIdx]->at(spatialInds[i]));
         }
       }
       else
@@ -1898,8 +1920,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         if (this->dataPtr->DEBUG_INTERPOLATE)
           igndbg << "Interpolating salinity" << std::endl;
         this->dataPtr->ExtractElements(
-          this->dataPtr->salinityArr[this->dataPtr->timeIdx], spatialIdx,
-          interpolationValues);
+          this->dataPtr->salinityArr[this->dataPtr->timeIdx],
+          interpolatorInds, interpolationValues);
         float sal = this->dataPtr->InterpolateData(
           sensorPosENUEigen, interpolatorXYZsMat, interpolationValues);
         casted->SetData(sal);
@@ -1910,8 +1932,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         if (this->dataPtr->DEBUG_INTERPOLATE)
           igndbg << "Interpolating temperature" << std::endl;
         this->dataPtr->ExtractElements(
-          this->dataPtr->temperatureArr[this->dataPtr->timeIdx], spatialIdx,
-          interpolationValues);
+          this->dataPtr->temperatureArr[this->dataPtr->timeIdx],
+          interpolatorInds, interpolationValues);
         float temp = this->dataPtr->InterpolateData(
           sensorPosENUEigen, interpolatorXYZsMat, interpolationValues);
 
@@ -1925,8 +1947,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         if (this->dataPtr->DEBUG_INTERPOLATE)
           igndbg << "Interpolating chlorophyll" << std::endl;
         this->dataPtr->ExtractElements(
-          this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx], spatialIdx,
-          interpolationValues);
+          this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx],
+          interpolatorInds, interpolationValues);
         float chlor = this->dataPtr->InterpolateData(
           sensorPosENUEigen, interpolatorXYZsMat, interpolationValues);
         casted->SetData(chlor);
@@ -1937,8 +1959,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         if (this->dataPtr->DEBUG_INTERPOLATE)
           igndbg << "Interpolating E and N currents" << std::endl;
         this->dataPtr->ExtractElements(
-          this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx], spatialIdx,
-          interpolationValues);
+          this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx],
+          interpolatorInds, interpolationValues);
         float eCurr = this->dataPtr->InterpolateData(
           sensorPosENUEigen, interpolatorXYZsMat, interpolationValues);
 
@@ -1946,8 +1968,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         interpolationValues.clear();
 
         this->dataPtr->ExtractElements(
-          this->dataPtr->northCurrentArr[this->dataPtr->timeIdx], spatialIdx,
-          interpolationValues);
+          this->dataPtr->northCurrentArr[this->dataPtr->timeIdx],
+          interpolatorInds, interpolationValues);
         float nCurr = this->dataPtr->InterpolateData(
           sensorPosENUEigen, interpolatorXYZsMat, interpolationValues);
 
