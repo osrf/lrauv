@@ -357,6 +357,7 @@
     </include-->
 
     <include>
+      <!-- Just for testing interpolation. TODO revert before merge PR -->
       <pose>4 -5 0 0 0 0</pose>
       <uri>tethys_equipped</uri>
     </include>
