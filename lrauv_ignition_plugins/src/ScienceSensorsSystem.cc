@@ -818,23 +818,41 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
     igndbg << this->timeSpaceCoords[this->timeIdx]->size()
       << " points in full cloud" << std::endl;
 
-  // Search in z slice for 4 nearest neighbors in this slice
+  // Create a sub-cloud containing just the z slice
   this->CreateDepthSlice(nnZ, *(this->timeSpaceCoords[this->timeIdx]), zSlice1,
     zSliceInds1);
   if (this->DEBUG_INTERPOLATE)
+  {
     igndbg << "1st nn ("
       << this->timeSpaceCoords[this->timeIdx]->at(nnIdx).x << ", "
       << this->timeSpaceCoords[this->timeIdx]->at(nnIdx).y << ", "
       << this->timeSpaceCoords[this->timeIdx]->at(nnIdx).z << "), "
       << "idx " << nnIdx << ", dist " << sqrt(minDist)
       << ", z slice " << zSlice1.points.size() << " points" << std::endl;
+
+    igndbg << "FindTrilinearInterpolators(): 1st z slice has indices: "
+      << std::endl;
+    for (int i = 0; i < zSliceInds1.size(); ++i)
+      igndbg << zSliceInds1[i] << " " << std::endl;
+  }
+
+  // Search in z slice for 4 nearest neighbors in this slice
+  std::vector<int> interpolatorInds1NewCloud;
   this->CreateAndSearchOctree(_pt, zSlice1,
-    _interpolatorInds1, interpolatorSqrDists1, _interpolators1, _k);
-  if (_interpolatorInds1.size() < _k || interpolatorSqrDists1.size() < _k)
+    interpolatorInds1NewCloud, interpolatorSqrDists1, _interpolators1, _k);
+  if (interpolatorInds1NewCloud.size() < _k ||
+    interpolatorSqrDists1.size() < _k)
   {
     ignwarn << "Could not find enough neighbors in 1st slice z = " << nnZ
       << " for trilinear interpolation." << std::endl;
     return;
+  }
+
+  // Map back to the indices in the original point cloud for returning
+  _interpolatorInds1.clear();
+  for (int i = 0; i < interpolatorInds1NewCloud.size(); ++i)
+  {
+    _interpolatorInds1.push_back(zSliceInds1[interpolatorInds1NewCloud[i]]);
   }
 
   // Step 2: exclude z slice of 1st NN from further searches.
@@ -844,15 +862,22 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   // second set of interpolator indices to map back to the original cloud.
   std::vector<int> newToOldInds;
 
-  // Create a cloud without points in the z slice of the 1st NN, so that the
+  // Create a sub-cloud without points in the z slice of the 1st NN, so that the
   // 2nd NN will be found in another z slice.
   // Set invert flag to get all but the depth slice.
   pcl::PointCloud<pcl::PointXYZ> cloudExceptZSlice1;
   this->CreateDepthSlice(nnZ, *(this->timeSpaceCoords[this->timeIdx]),
     cloudExceptZSlice1, newToOldInds, true);
   if (this->DEBUG_INTERPOLATE)
+  {
     igndbg << "Excluding 1st nn z slice. Remaining cloud has "
       << cloudExceptZSlice1.points.size() << " points" << std::endl;
+
+    igndbg << "FindTrilinearInterpolators(): cloud except 1st z slice has "
+      << "indices:" << std::endl;
+    for (int i = 0; i < newToOldInds.size(); ++i)
+      igndbg << newToOldInds[i] << " " << std::endl;
+  }
 
   // Step 3: Look for 2nd NN everywhere except z slice of 1st NN.
   // In this 2nd z-slice, search for 4 NNs
@@ -879,15 +904,24 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
 
   // Step 4: Look for 4 NNs in the z slice of 2nd NN
 
-  // Search in z slice of 1st NN for 4 nearest neighbors in this slice
+  // Create a sub-sub-cloud containing just the z slice
   this->CreateDepthSlice(nnZ2, cloudExceptZSlice1, zSlice2, zSliceInds2);
   if (this->DEBUG_INTERPOLATE)
+  {
     igndbg << "2nd nn ("
       << this->timeSpaceCoords[this->timeIdx]->at(nnIdx2).x << ", "
       << this->timeSpaceCoords[this->timeIdx]->at(nnIdx2).y << ", "
       << this->timeSpaceCoords[this->timeIdx]->at(nnIdx2).z << "), "
       << "idx " << nnIdx2 << ", dist " << sqrt(minDist2)
       << ", z slice " << zSlice2.points.size() << " points" << std::endl;
+
+    igndbg << "FindTrilinearInterpolators(): 2nd z slice has indices: "
+      << std::endl;
+    for (int i = 0; i < zSliceInds2.size(); ++i)
+      igndbg << newToOldInds[zSliceInds2[i]] << " " << std::endl;
+  }
+
+  // Search in z slice of 1st NN for 4 nearest neighbors in this slice
   std::vector<int> interpolatorInds2NewCloud;
   this->CreateAndSearchOctree(_pt, zSlice2,
     interpolatorInds2NewCloud, interpolatorSqrDists2, _interpolators2, _k);
@@ -903,7 +937,23 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   _interpolatorInds2.clear();
   for (int i = 0; i < interpolatorInds2NewCloud.size(); ++i)
   {
-    _interpolatorInds2.push_back(newToOldInds[interpolatorInds2NewCloud[i]]);
+    _interpolatorInds2.push_back(
+      newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]]);
+    igndbg << "interpolatorInds2NewCloud[i]: "
+      << interpolatorInds2NewCloud[i] << std::endl;
+    igndbg << "zSliceInds2[interpolatorInds2NewCloud[i]]: "
+      << zSliceInds2[interpolatorInds2NewCloud[i]] << std::endl;
+    igndbg << "newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]]: "
+      << newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]] << std::endl;
+  }
+
+  if (this->DEBUG_INTERPOLATE)
+  {
+    igndbg << "FindTrilinearInterpolators(): result indices:" << std::endl;
+    for (int i = 0; i < _interpolatorInds1.size(); ++i)
+      igndbg << _interpolatorInds1[i] << " " << std::endl;
+    for (int i = 0; i < _interpolatorInds2.size(); ++i)
+      igndbg << _interpolatorInds2[i] << " " << std::endl;
   }
 }
 
@@ -924,10 +974,6 @@ void ScienceSensorsSystemPrivate::CreateDepthSlice(
   passThruFilter.setFilterFieldName("z");
   passThruFilter.setFilterLimits(_depth - 1e-6, _depth + 1e-6);
   passThruFilter.filter(_zSlice);
-
-  // Get indices of points kept. Default method returns removed indices, so
-  // invert the filter to get indices of points kept.
-  passThruFilter.setNegative(!_invert);
   passThruFilter.filter(_zSliceInds);
 }
 
