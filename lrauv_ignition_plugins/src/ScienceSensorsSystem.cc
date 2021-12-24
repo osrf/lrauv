@@ -120,7 +120,7 @@ class tethys::ScienceSensorsSystemPrivate
   /// \param[in] _depth Target z value
   /// \param[in] _cloud Cloud from which to create the z slice
   /// \param[out] _zSlice Points in the new point cloud slice at _depth
-  /// \param[out] _zSliceInds Indices of points in _zSlices in the original
+  /// \param[out] _zSliceInds Indices of points in _zSlice in the original
   /// point cloud _points
   /// \param[in] _invert Invert the filter. Keep everything except the z slice.
   public: void CreateDepthSlice(
@@ -150,6 +150,8 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Trilinear interpolation for a point inside a prism, given 8
   /// verticies of the prism. Suitable for data laid out in a rectangular grid.
   /// Otherwise, use a different interpolation method, e.g. barycentric.
+  /// If the points must be on different z slices, try the hybrid
+  /// BaryLinearInterpolate().
   /// \param[in] _p Position to interpolate for
   /// \param[in] _xyzs XYZ coordinates of 8 vertices of a prism
   /// \param[in] _values Data values at the 8 vertices
@@ -219,8 +221,8 @@ class tethys::ScienceSensorsSystemPrivate
   // Hybrid interpolation. 2D triangle barycentric interpolation on 2 z slices,
   // then linear interpolation.
 
-  /// \brief Two 2D barycentric interpolations in z slices, then a linaer
-  /// interpolation in 3D.
+  /// \brief Two 2D barycentric interpolations on two z slices, then a linaer
+  /// interpolation between the two intermediate results.
   /// \param[in] _p Position within the tetrahedra to interpolate for
   /// \param[in] _xyzs n x 8. XYZ coordinates of 2 sets of 4 vertices, each
   /// set on a different z slice. [0]-[3] is first slice, [4]-[7] is 2nd slice.
@@ -843,15 +845,17 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
 
   // Step 2: exclude z slice of 1st NN from further searches.
 
-  // Remove all points in the z slice of the 1st NN, so that the 2nd NN will be
-  // found in another z slice.
+  // Maps from indices in the new point cloud with 1st z slice removed, to
+  // indices in the original point cloud. This is needed for returning
+  // second set of interpolator indices to map back to the original cloud.
+  std::vector<int> newToOldInds;
+
+  // Create a cloud without points in the z slice of the 1st NN, so that the
+  // 2nd NN will be found in another z slice.
   // Set invert flag to get all but the depth slice.
-  // FIXME: Keep a map that maps from indices in the new point cloud with 1st z
-  // slice removed, back to the original point cloud
   pcl::PointCloud<pcl::PointXYZ> cloudExceptZSlice1;
-  std::vector<int> indsExceptZSlice1;
   this->CreateDepthSlice(nnZ, *(this->timeSpaceCoords[this->timeIdx]),
-    cloudExceptZSlice1, indsExceptZSlice1, true);
+    cloudExceptZSlice1, newToOldInds, true);
   if (this->DEBUG_INTERPOLATE)
     igndbg << "Excluding 1st nn z slice. Remaining cloud has "
       << cloudExceptZSlice1.points.size() << " points" << std::endl;
@@ -890,9 +894,11 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
       << this->timeSpaceCoords[this->timeIdx]->at(nnIdx2).z << "), "
       << "idx " << nnIdx2 << ", dist " << sqrt(minDist2)
       << ", z slice " << zSlice2.points.size() << " points" << std::endl;
+  std::vector<int> interpolatorInds2NewCloud;
   this->CreateAndSearchOctree(_pt, zSlice2,
-    _interpolatorInds2, interpolatorSqrDists2, _interpolators2, _k);
-  if (_interpolatorInds2.size() < _k || interpolatorSqrDists2.size() < _k)
+    interpolatorInds2NewCloud, interpolatorSqrDists2, _interpolators2, _k);
+  if (interpolatorInds2NewCloud.size() < _k ||
+    interpolatorSqrDists2.size() < _k)
   {
     ignwarn << "Could not find enough neighbors in 2nd slice z = " << nnZ2
       << " for trilinear interpolation." << std::endl;
@@ -900,6 +906,13 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   }
   // TODO enforce that the 4 NNs in _interpolators2 are in a rectangle.
   // Otherwise does not satisfy trilinear interpolation requirements.
+
+  // Map back to the indices in the original point cloud for returning
+  _interpolatorInds2.clear();
+  for (int i = 0; i < interpolatorInds2NewCloud.size(); ++i)
+  {
+    _interpolatorInds2.push_back(newToOldInds[interpolatorInds2NewCloud[i]]);
+  }
 }
 
 /////////////////////////////////////////////////
@@ -1861,15 +1874,6 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         {
           interpolatorInds.push_back(interpolatorInds2[i]);
         }
-
-        // FIXME in FindTrilinearInterpolators():
-        // When call TrilinearInterpolate():
-        // Find 1D indices of the data values d000-d111!!! Manually keep track
-        // of indices of the 4 points in the 2nd z slice (interpolatorsSlice2),
-        // which are scrambled up after the 1st z slice is removed from cloud!
-
-        // FIXME: 4 neighbors are not on a rectangle! That voids assumption
-        // of trilinear interpolation. Cannot perform valid interpolation.
       }
       else if (this->dataPtr->INTERPOLATION_METHOD ==
         this->dataPtr->BARYCENTRIC)
