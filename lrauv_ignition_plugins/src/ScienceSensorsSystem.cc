@@ -1136,7 +1136,7 @@ float ScienceSensorsSystemPrivate::TrilinearInterpolate(
   float d00 = d000 * (1 - dx) + d100 * dx;
   float d01 = d001 * (1 - dx) + d101 * dx;
   float d10 = d010 * (1 - dx) + d110 * dx;
-  float d11 = d011 * (1 - dx) * d111 * dx;
+  float d11 = d011 * (1 - dx) + d111 * dx;
 
   if (this->DEBUG_INTERPOLATE)
     igndbg << "Trilinear interpolation, 4 intermediate results from 8 points: "
