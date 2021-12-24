@@ -85,7 +85,7 @@
       <!--data_path>2003080103_mb_l3_las.csv</data_path-->
       <!--data_path>2003080103_mb_l3_las_1x1km.csv</data_path-->
       <!--data_path>simple_test.csv</data_path-->
-      <data_path>interpolation_prism.csv</data_path>
+      <data_path>interpolation_test.csv</data_path>
     </plugin>
 
     <gui fullscreen="0">
@@ -358,7 +358,7 @@
 
     <include>
       <!-- Just for testing interpolation. TODO revert before merge PR -->
-      <pose>4 -5 0 0 0 0</pose>
+      <pose>0 0 0 0 0 0</pose>
       <uri>tethys_equipped</uri>
     </include>
 

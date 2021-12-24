@@ -316,7 +316,7 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Debug printouts for interpolation. Will keep around at least until
   /// interpolation is stable.
-  public: const bool DEBUG_INTERPOLATE = true;
+  public: const bool DEBUG_INTERPOLATE = false;
 
   ///////////////////////////////
   // Variables for coordinate system
@@ -830,10 +830,10 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
       << "idx " << nnIdx << ", dist " << sqrt(minDist)
       << ", z slice " << zSlice1.points.size() << " points" << std::endl;
 
-    igndbg << "FindTrilinearInterpolators(): 1st z slice has indices: "
-      << std::endl;
-    for (int i = 0; i < zSliceInds1.size(); ++i)
-      igndbg << zSliceInds1[i] << " " << std::endl;
+    //igndbg << "FindTrilinearInterpolators(): 1st z slice has indices: "
+    //  << std::endl;
+    //for (int i = 0; i < zSliceInds1.size(); ++i)
+    //  igndbg << zSliceInds1[i] << " " << std::endl;
   }
 
   // Search in z slice for 4 nearest neighbors in this slice
@@ -873,10 +873,10 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
     igndbg << "Excluding 1st nn z slice. Remaining cloud has "
       << cloudExceptZSlice1.points.size() << " points" << std::endl;
 
-    igndbg << "FindTrilinearInterpolators(): cloud except 1st z slice has "
-      << "indices:" << std::endl;
-    for (int i = 0; i < newToOldInds.size(); ++i)
-      igndbg << newToOldInds[i] << " " << std::endl;
+    //igndbg << "FindTrilinearInterpolators(): cloud except 1st z slice has "
+    //  << "indices:" << std::endl;
+    //for (int i = 0; i < newToOldInds.size(); ++i)
+    //  igndbg << newToOldInds[i] << " " << std::endl;
   }
 
   // Step 3: Look for 2nd NN everywhere except z slice of 1st NN.
@@ -915,10 +915,10 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
       << "idx " << nnIdx2 << ", dist " << sqrt(minDist2)
       << ", z slice " << zSlice2.points.size() << " points" << std::endl;
 
-    igndbg << "FindTrilinearInterpolators(): 2nd z slice has indices: "
-      << std::endl;
-    for (int i = 0; i < zSliceInds2.size(); ++i)
-      igndbg << newToOldInds[zSliceInds2[i]] << " " << std::endl;
+    //igndbg << "FindTrilinearInterpolators(): 2nd z slice has indices: "
+    //  << std::endl;
+    //for (int i = 0; i < zSliceInds2.size(); ++i)
+    //  igndbg << newToOldInds[zSliceInds2[i]] << " " << std::endl;
   }
 
   // Search in z slice of 1st NN for 4 nearest neighbors in this slice
@@ -939,22 +939,22 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   {
     _interpolatorInds2.push_back(
       newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]]);
-    igndbg << "interpolatorInds2NewCloud[i]: "
-      << interpolatorInds2NewCloud[i] << std::endl;
-    igndbg << "zSliceInds2[interpolatorInds2NewCloud[i]]: "
-      << zSliceInds2[interpolatorInds2NewCloud[i]] << std::endl;
-    igndbg << "newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]]: "
-      << newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]] << std::endl;
+    //igndbg << "interpolatorInds2NewCloud[i]: "
+    //  << interpolatorInds2NewCloud[i] << std::endl;
+    //igndbg << "zSliceInds2[interpolatorInds2NewCloud[i]]: "
+    //  << zSliceInds2[interpolatorInds2NewCloud[i]] << std::endl;
+    //igndbg << "newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]]: "
+    //  << newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]] << std::endl;
   }
 
-  if (this->DEBUG_INTERPOLATE)
-  {
-    igndbg << "FindTrilinearInterpolators(): result indices:" << std::endl;
-    for (int i = 0; i < _interpolatorInds1.size(); ++i)
-      igndbg << _interpolatorInds1[i] << " " << std::endl;
-    for (int i = 0; i < _interpolatorInds2.size(); ++i)
-      igndbg << _interpolatorInds2[i] << " " << std::endl;
-  }
+  //if (this->DEBUG_INTERPOLATE)
+  //{
+  //  igndbg << "FindTrilinearInterpolators(): result indices:" << std::endl;
+  //  for (int i = 0; i < _interpolatorInds1.size(); ++i)
+  //    igndbg << _interpolatorInds1[i] << " " << std::endl;
+  //  for (int i = 0; i < _interpolatorInds2.size(); ++i)
+  //    igndbg << _interpolatorInds2[i] << " " << std::endl;
+  //}
 }
 
 /////////////////////////////////////////////////
