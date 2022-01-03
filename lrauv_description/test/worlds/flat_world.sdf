@@ -4,7 +4,7 @@
   Research Institute (MBARI) and the David and Lucile Packard Foundation
 -->
 <sdf version="1.6">
-  <world name="buoyant_tethys">
+  <world name="flat_world">
     <gravity>0 0 -9.8</gravity>
     <scene>
       <!-- For turquoise ambient to match particle effect -->
