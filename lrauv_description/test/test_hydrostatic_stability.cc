@@ -30,8 +30,11 @@
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/Quaternion.hh>
 
-TEST(Stability, FlatWorld)
+TEST(Stability, NeutralBuoyancy)
 {
+  /// This test checks that the vehicle is neutrally buoyant.
+  /// It starts the vehicle out in a non-moving fluid and expects zero
+  /// motion.
   auto fixture = std::make_unique<ignition::gazebo::TestFixture>(
     ignition::common::joinPaths(
     std::string(PROJECT_SOURCE_PATH), "test", "worlds", "flat_world.sdf"));
@@ -75,8 +78,14 @@ TEST(Stability, FlatWorld)
   EXPECT_EQ(prev_pose.Rot(), ignition::math::Quaterniond(1,0,0,0));
 }
 
-TEST(Stability, TiltedWorld)
+TEST(Stability, RestoringMoment)
 {
+  /// This test checks that the vehicle has a restoring moment. We do this by
+  /// starting the vehicle of in a world without hydrodynamic damping in a
+  /// tilted position. Since the vehicle is tilted, restoring moments should
+  /// kick in causing the vehicle to oscillate. In an actual setting we would
+  /// also have hydrodynamics which would damp the oscillations and bring the
+  /// boat to an equilibrium.
   auto fixture = std::make_unique<ignition::gazebo::TestFixture>(
     ignition::common::joinPaths(
     std::string(PROJECT_SOURCE_PATH), "test", "worlds", "tilted_world.sdf"));
@@ -100,8 +109,8 @@ TEST(Stability, TiltedWorld)
 
   fixture->Finalize();
 
-  fixture->Server()->Run(true, 100000, false);
-  EXPECT_EQ(100000, tethysPoses.size());
+  fixture->Server()->Run(true, 10000, false);
+  EXPECT_EQ(10000, tethysPoses.size());
 
   bool first = true;
 
@@ -118,7 +127,12 @@ TEST(Stability, TiltedWorld)
     }
     EXPECT_NEAR(prev_pose.Pos().X(), pose.Pos().X(), 1e-2);
     EXPECT_NEAR(prev_pose.Pos().Y(), pose.Pos().Y(), 1e-2);
-    EXPECT_NEAR(prev_pose.Pos().Z(), pose.Pos().Z(), 1e-2);
+
+    //Oscillations mean the Z value is not exaclty constant.
+    EXPECT_NEAR(prev_pose.Pos().Z(), pose.Pos().Z(), 1e-1);
+
+    EXPECT_NEAR(prev_pose.Rot().X(), pose.Rot().X(), 1e-2);
+    EXPECT_NEAR(prev_pose.Rot().Z(), pose.Rot().Z(), 1e-2);
     auto pitch = pose.Rot().Euler().Y();
     if (pitch > maxPitch)
     {
