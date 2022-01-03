@@ -82,9 +82,9 @@ def calculate_center_of_mass(total_mass, template_path, output_path):
                         mass = links.find(".inertial/mass")
                         if mass is None:
                             raise Exception("Mass not found")
-                    
-                        sz = float(mass.text) / (0.01 * 0.01 * fluid_density)
-                        size.text = write_float_array([0.01, 0.01, sz])
+
+                        sz = float(mass.text) / (0.1 * 0.1 * fluid_density)
+                        size.text = write_float_array([0.1, 0.1, sz])
                         skipped_masses.append(mass)
                         continue
                     else:
@@ -142,5 +142,5 @@ if __name__ == "__main__":
         print("Usage:")
         print("description_generator.py <infile> <outfile>")
         exit(-100)
-    
+
     calculate_center_of_mass(total_mass, sys.argv[1], sys.argv[2])
