@@ -95,12 +95,12 @@ TEST_F(LrauvTestFixture, PitchMass)
     EXPECT_NEAR(pose.Rot().Euler().Z(), IGN_DTOR(0), 1e-3);
 
     // Check position holds
-    EXPECT_NEAR(pose.Pos().X(), IGN_DTOR(0), 2e-1);
-    EXPECT_NEAR(pose.Pos().Y(), IGN_DTOR(0), 2e-1);
-    EXPECT_NEAR(pose.Pos().Z(), IGN_DTOR(0), 2e-1);
+    EXPECT_NEAR(pose.Pos().X(), 0, 2e-1);
+    EXPECT_NEAR(pose.Pos().Y(), 0, 2e-1);
+    EXPECT_NEAR(pose.Pos().Z(), 0, 2e-1);
 
     // Used later for oscillation check.
-    if (firstPitch = false)
+    if (!firstPitch)
     {
       totalPitchChange += std::fabs(pose.Rot().Euler().Y() - prevPitch);
     }
