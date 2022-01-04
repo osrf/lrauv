@@ -4,7 +4,7 @@
   Research Institute (MBARI) and the David and Lucile Packard Foundation
 -->
 <sdf version="1.9">
-  <world name="multi_lrauv">
+  <world name="star_world">
     <scene>
       <!-- For turquoise ambient to match particle effect -->
       <ambient>0.0 1.0 1.0</ambient>
