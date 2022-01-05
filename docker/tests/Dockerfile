@@ -48,6 +48,9 @@ RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable
 RUN apt-get -qq update && apt-get -q -y install \
   ignition-garden
 
+# Upgrade to make sure we get the latest nightlies
+RUN apt-get upgrade
+
 # Install PCL
 RUN apt-get update \
  && apt-get install -y \
