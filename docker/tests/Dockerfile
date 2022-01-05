@@ -45,8 +45,8 @@ RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable
     /bin/sh -c 'wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add -'
 
 # Install and upgrade the latest Ignition binaries
-RUN apt-get -qq update && apt-get upgrade -y && apt-get -q -y install \
-  ignition-garden
+RUN apt-get -qq update && apt-get -q -y install \
+  ignition-garden && apt-get upgrade -y
 
 # Install PCL
 RUN apt-get update \
