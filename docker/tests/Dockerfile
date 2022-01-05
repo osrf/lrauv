@@ -49,7 +49,7 @@ RUN apt-get -qq update && apt-get -q -y install \
   ignition-garden
 
 # Upgrade to make sure we get the latest nightlies
-RUN apt-get upgrade
+RUN apt-get upgrade -y
 
 # Install PCL
 RUN apt-get update \
