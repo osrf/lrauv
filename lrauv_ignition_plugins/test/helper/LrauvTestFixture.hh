@@ -97,20 +97,11 @@ class LrauvTestFixture : public ::testing::Test
         EXPECT_TRUE(linkVel.has_value());
         tethysLinearVel.push_back(linkVel.value());
 
-        this->iterations++;
-
-        ignition::gazebo::Model model(modelEntity);
-        auto linkEntity = model.LinkByName(_ecm, "base_link");
-        EXPECT_NE(ignition::gazebo::kNullEntity, linkEntity);
-
-        ignition::gazebo::Link link(linkEntity);
         auto linkAngVel = link.WorldAngularVelocity(_ecm);
         EXPECT_TRUE(linkAngVel.has_value());
         tethysAngularVel.push_back(linkAngVel.value());
 
-        auto linkVel = link.WorldLinearVelocity(_ecm);
-        EXPECT_TRUE(linkVel.has_value());
-        tethysLinearVel.push_back(linkVel.value());
+        this->iterations++;
       });
     fixture->Finalize();
   }
