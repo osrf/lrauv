@@ -87,16 +87,16 @@ TEST_F(LrauvTestFixture, PitchMass)
   {
     // Max Pitch 20 degrees.
     // Min Pitch -5 degrees.
-    // TODO(arjo129) Reduce tolerances
-    EXPECT_LT(pose.Rot().Euler().Y(), IGN_DTOR(40));
-    EXPECT_GT(pose.Rot().Euler().Y(), IGN_DTOR(-5));
+    // TODO(chapulina) Reduce tolerances
+    EXPECT_LT(pose.Rot().Euler().Y(), IGN_DTOR(50));
+    EXPECT_GT(pose.Rot().Euler().Y(), IGN_DTOR(-6));
 
     // No roll or yaw
     EXPECT_NEAR(pose.Rot().Euler().X(), IGN_DTOR(0), 1e-3);
     EXPECT_NEAR(pose.Rot().Euler().Z(), IGN_DTOR(0), 1e-3);
 
     // Check position holds
-    // TODO(arjo129) Reduce tolerances
+    // TODO(chapulina) Reduce tolerances
     EXPECT_NEAR(pose.Pos().X(), IGN_DTOR(0), 4.5);
     EXPECT_NEAR(pose.Pos().Y(), IGN_DTOR(0), 2e-1);
     EXPECT_NEAR(pose.Pos().Z(), IGN_DTOR(0), 2.0);

@@ -93,7 +93,7 @@ TEST_F(LrauvTestFixture, YoYoCircle)
 
     // Check velocity is positive
     auto linVel = dist / time100it;
-    if (i > 2000)
+    if (i > 3500)
     {
       // Check that the vehicle actually is moving.
       EXPECT_LT(0.0, linVel) << i;
