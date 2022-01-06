@@ -95,7 +95,7 @@
         <joint_name>propeller_joint</joint_name>
         <!-- Be sure to update TethysComm when updating these numbers -->
         <thrust_coefficient>0.004422</thrust_coefficient>
-        <fluid_density>1000</fluid_density>
+        <fluid_density>1025</fluid_density>
         <propeller_diameter>0.2</propeller_diameter>
         <velocity_control>true</velocity_control>
       </plugin>
@@ -153,7 +153,7 @@
         <command_topic>tethys/command_topic</command_topic>
         <state_topic>tethys/state_topic</state_topic>
         <debug_printout>0</debug_printout>
-        <ocean_density>1000</ocean_density>
+        <ocean_density>1025</ocean_density>
       </plugin>
       <plugin
         filename="HydrodynamicsPlugin"
