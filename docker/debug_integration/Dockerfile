@@ -37,7 +37,8 @@ RUN apt-get update \
         gnupg2 \
         lsb-release \
         tzdata \
-        wget
+        wget \
+        python3-numpy
 
 # Add Ignition's latest packages, which may be more up-to-date than the ones from the MBARI image
 RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list' && \
