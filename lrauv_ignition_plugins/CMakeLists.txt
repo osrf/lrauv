@@ -41,8 +41,8 @@ set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
 find_package(ignition-utils1 REQUIRED)
 set(IGN_UTILS_VER ${ignition-utils1_VERSION_MAJOR})
 
-find_package(ignition-common4 REQUIRED COMPONENTS profiler)
-set(IGN_COMMON_VER ${ignition-common4_VERSION_MAJOR})
+find_package(ignition-common5 REQUIRED COMPONENTS profiler)
+set(IGN_COMMON_VER ${ignition-common5_VERSION_MAJOR})
 
 find_package (Eigen3 3.3 REQUIRED)
 
