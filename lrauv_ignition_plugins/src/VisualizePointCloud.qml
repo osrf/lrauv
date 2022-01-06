@@ -30,10 +30,14 @@ import "qrc:/qml"
 ColumnLayout {
   spacing: 10
   Layout.minimumWidth: 350
-  Layout.minimumHeight: 300
+  Layout.minimumHeight: 350
   anchors.fill: parent
   anchors.leftMargin: 10
   anchors.rightMargin: 10
+
+  function isUniform() {
+    return VisualizePointCloud.minFloatV >= VisualizePointCloud.maxFloatV
+  }
 
   RowLayout {
     spacing: 10
@@ -110,7 +114,23 @@ ColumnLayout {
       }
       ToolTip.visible: hovered
       ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-      ToolTip.text: qsTr("Ignition transport topics publishing FloatV messages")
+      ToolTip.text: qsTr("Ignition transport topics publishing FloatV messages, used to color each point on the cloud")
+    }
+
+    Label {
+      Layout.columnSpan: 1
+      text: "Point size"
+    }
+
+    IgnSpinBox {
+      id: pointSizeSpin
+      value: VisualizePointCloud.pointSize
+      minimumValue: 1
+      maximumValue: 1000
+      decimals: 0
+      onEditingFinished: {
+        VisualizePointCloud.SetPointSize(pointSizeSpin.value)
+      }
     }
   }
 
@@ -120,20 +140,20 @@ ColumnLayout {
 
     Label {
       Layout.columnSpan: 1
-      text: "Min"
+      text: isUniform() ? "Color" : "Min"
     }
 
     Label {
       Layout.columnSpan: 1
       Layout.maximumWidth: 50
-      text: VisualizePointCloud.minFloatV.toFixed(2)
+      text: VisualizePointCloud.minFloatV.toFixed(4)
       elide: Text.ElideRight
+      visible: !isUniform()
     }
 
     Button {
       Layout.columnSpan: 1
       id: minColorButton
-      Layout.fillWidth: true
       ToolTip.visible: hovered
       ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
       ToolTip.text: qsTr("Color for minimum value")
@@ -163,7 +183,7 @@ ColumnLayout {
     Button {
       Layout.columnSpan: 1
       id: maxColorButton
-      Layout.fillWidth: true
+      visible: !isUniform()
       ToolTip.visible: hovered
       ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
       ToolTip.text: qsTr("Color for maximum value")
@@ -193,13 +213,15 @@ ColumnLayout {
     Label {
       Layout.columnSpan: 1
       Layout.maximumWidth: 50
-      text: VisualizePointCloud.maxFloatV.toFixed(2)
+      text: VisualizePointCloud.maxFloatV.toFixed(4)
       elide: Text.ElideRight
+      visible: !isUniform()
     }
 
     Label {
       Layout.columnSpan: 1
       text: "Max"
+      visible: !isUniform()
     }
   }
 
