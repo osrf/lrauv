@@ -26,7 +26,6 @@
 #include <utility>
 #include <vector>
 
-#include "PointCloudIterator.hh"
 #include "VisualizePointCloud.hh"
 
 #include <ignition/common/Console.hh>
@@ -38,6 +37,7 @@
 #include <ignition/math/Vector3.hh>
 #include <ignition/math/Pose3.hh>
 
+#include <ignition/msgs/PointCloudPackedUtils.hh>
 #include <ignition/msgs/Utility.hh>
 
 #include <ignition/transport/Node.hh>
@@ -339,8 +339,7 @@ void VisualizePointCloud::PublishMarkers()
   if (!this->dataPtr->showing)
     return;
 
-  // If point cloud empty, do nothing. (PointCloudPackedIteratorBase errors on
-  // empty cloud.)
+  // If point cloud empty, do nothing.
   if (this->dataPtr->pointCloudMsg.height() == 0 &&
       this->dataPtr->pointCloudMsg.width() == 0)
   {
@@ -358,18 +357,21 @@ void VisualizePointCloud::PublishMarkers()
   ignition::msgs::Set(marker.mutable_scale(),
     ignition::math::Vector3d::One * this->dataPtr->pointSize);
 
-  PointCloudPackedIterator<float> iterX(this->dataPtr->pointCloudMsg, "x");
-  PointCloudPackedIterator<float> iterY(this->dataPtr->pointCloudMsg, "y");
-  PointCloudPackedIterator<float> iterZ(this->dataPtr->pointCloudMsg, "z");
+  ignition::msgs::PointCloudPackedIterator<float>
+      iterX(this->dataPtr->pointCloudMsg, "x");
+  ignition::msgs::PointCloudPackedIterator<float>
+      iterY(this->dataPtr->pointCloudMsg, "y");
+  ignition::msgs::PointCloudPackedIterator<float>
+      iterZ(this->dataPtr->pointCloudMsg, "z");
 
   // Index of point in point cloud, visualized or not
   int ptIdx{0};
   auto minC = this->dataPtr->minColor;
   auto maxC = this->dataPtr->maxColor;
   auto floatRange = this->dataPtr->maxFloatV - this->dataPtr->minFloatV;
-  for (;iterX != iterX.end() &&
-        iterY != iterY.end() &&
-        iterZ != iterZ.end(); ++iterX, ++iterY, ++iterZ, ++ptIdx)
+  for (;iterX != iterX.End() &&
+        iterY != iterY.End() &&
+        iterZ != iterZ.End(); ++iterX, ++iterY, ++iterZ, ++ptIdx)
   {
     // Value from float vector, if available. Otherwise publish all data as
     // zeroes.
