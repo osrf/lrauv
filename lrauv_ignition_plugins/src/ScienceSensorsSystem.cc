@@ -1116,7 +1116,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     }
   }
 
-  // Publish every n iters so that VisualizePointCloud plugin gets it.
+  // Publish every n iters so that GUI PointCloud plugin gets it.
   // Otherwise the initial publication in Configure() is not enough.
   if (this->dataPtr->repeatPubTimes % 10000 == 0)
   {

@@ -238,7 +238,7 @@
           <property type="double" key="x">400</property>
         </ignition-gui>
       </plugin>
-      <plugin filename="VisualizePointCloud" name="Visualize science data">
+      <plugin filename="PointCloud" name="Visualize science data">
         <ignition-gui>
           <title>Visualize science data</title>
           <property type="string" key="state">floating_collapsed</property>
