@@ -37,13 +37,13 @@
       name="ignition::gazebo::systems::Buoyancy">
       <!-- TODO: fix behaviour near surface, see https://github.com/osrf/lrauv/issues/102 -->
       <!--<graded_buoyancy>
-        <default_density>1000</default_density>
+        <default_density>1025</default_density>
         <density_change>
           <above_depth>5</above_depth>
           <density>1</density>
         </density_change>
       </graded_buoyancy>-->
-      <uniform_fluid_density>1000</uniform_fluid_density>
+      <uniform_fluid_density>1025</uniform_fluid_density>
     </plugin>
 
     <include>

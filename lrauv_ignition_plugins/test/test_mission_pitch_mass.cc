@@ -85,24 +85,22 @@ TEST_F(LrauvTestFixture, PitchMass)
   // Vehicle should have a max pitch of 20 degrees
   for(auto pose: this->tethysPoses)
   {
-    // Max Pitch 20 degrees.
-    // Min Pitch -5 degrees.
-    // TODO(chapulina) Reduce tolerances
-    EXPECT_LT(pose.Rot().Euler().Y(), IGN_DTOR(50));
-    EXPECT_GT(pose.Rot().Euler().Y(), IGN_DTOR(-6));
+    // Max Pitch 20 degrees. Allow 5 degrees error for oscillations.
+    // Min Pitch -5 degrees. Again allow 5 degrees error for oscillation.
+    EXPECT_LT(pose.Rot().Euler().Y(), IGN_DTOR(25));
+    EXPECT_GT(pose.Rot().Euler().Y(), IGN_DTOR(-5));
 
     // No roll or yaw
     EXPECT_NEAR(pose.Rot().Euler().X(), IGN_DTOR(0), 1e-3);
     EXPECT_NEAR(pose.Rot().Euler().Z(), IGN_DTOR(0), 1e-3);
 
     // Check position holds
-    // TODO(chapulina) Reduce tolerances
-    EXPECT_NEAR(pose.Pos().X(), IGN_DTOR(0), 4.5);
-    EXPECT_NEAR(pose.Pos().Y(), IGN_DTOR(0), 2e-1);
-    EXPECT_NEAR(pose.Pos().Z(), IGN_DTOR(0), 2.0);
+    EXPECT_NEAR(pose.Pos().X(), 0, 2e-1);
+    EXPECT_NEAR(pose.Pos().Y(), 0, 2e-1);
+    EXPECT_NEAR(pose.Pos().Z(), 0, 2e-1);
 
     // Used later for oscillation check.
-    if (firstPitch = false)
+    if (!firstPitch)
     {
       totalPitchChange += std::fabs(pose.Rot().Euler().Y() - prevPitch);
     }
