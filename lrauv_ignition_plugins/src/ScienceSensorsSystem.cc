@@ -103,14 +103,16 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Create a z slice from a point cloud. Slice contains points sharing
   /// the same given z value.
-  /// \param[in] _depth Target z value
+  /// \param[in] _min_depth z value
+  /// \param[in] _max_depth z value
   /// \param[in] _cloud Cloud from which to create the z slice
   /// \param[out] _zSlice Points in the new point cloud slice at _depth
   /// \param[out] _zSliceInds Indices of points in _zSlices in the original
   /// point cloud _points
   /// \param[in] _invert Invert the filter. Keep everything except the z slice.
   public: void CreateDepthSlice(
-    float _depth,
+    float _min_depth,
+    float _max_depth,
     pcl::PointCloud<pcl::PointXYZ> &_cloud,
     pcl::PointCloud<pcl::PointXYZ> &_zSlice,
     std::vector<int> &_zSliceInds,
@@ -778,7 +780,7 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
     << " points in full cloud" << std::endl;
 
   // Search in z slice for 4 nearest neighbors in this slice
-  this->CreateDepthSlice(nnZ, *(this->timeSpaceCoords[this->timeIdx]), zSlice1,
+  this->CreateDepthSlice(nnZ - 1e-6, nnZ + 1e-6, *(this->timeSpaceCoords[this->timeIdx]), zSlice1,
     zSliceInds1);
   igndbg << "1st nn idx " << nnIdx << ", dist " << sqrt(minDist)
     << ", z slice " << zSlice1.points.size() << " points" << std::endl;
@@ -798,7 +800,7 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   // Set invert flag to get all but the depth slice.
   pcl::PointCloud<pcl::PointXYZ> cloudExceptZSlice1;
   std::vector<int> indsExceptZSlice1;
-  this->CreateDepthSlice(nnZ, *(this->timeSpaceCoords[this->timeIdx]),
+  this->CreateDepthSlice(nnZ - 1e-6, nnZ + 1e-6, *(this->timeSpaceCoords[this->timeIdx]),
     cloudExceptZSlice1, indsExceptZSlice1, true);
   igndbg << "Excluding 1st nn z slice. Remaining cloud has "
     << cloudExceptZSlice1.points.size() << " points" << std::endl;
@@ -829,7 +831,7 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   // Step 4: Look for 4 NNs in the z slice of 2nd NN
 
   // Search in z slice of 1st NN for 4 nearest neighbors in this slice
-  this->CreateDepthSlice(nnZ2, cloudExceptZSlice1, zSlice2, zSliceInds2);
+  this->CreateDepthSlice(nnZ2 - 1e-6, nnZ2 + 1e-6, cloudExceptZSlice1, zSlice2, zSliceInds2);
   igndbg << "2nd nn idx " << nnIdx2 << ", dist " << sqrt(minDist2)
     << ", z slice " << zSlice2.points.size() << " points" << std::endl;
   this->CreateAndSearchOctree(_pt, zSlice2,
@@ -844,7 +846,8 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
 
 /////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::CreateDepthSlice(
-  float _depth,
+  float _min_depth,
+  float _max_depth,
   pcl::PointCloud<pcl::PointXYZ> &_cloud,
   pcl::PointCloud<pcl::PointXYZ> &_zSlice,
   std::vector<int> &_zSliceInds,
@@ -857,7 +860,7 @@ void ScienceSensorsSystemPrivate::CreateDepthSlice(
   passThruFilter.setInputCloud(_cloud.makeShared());
   passThruFilter.setNegative(_invert);
   passThruFilter.setFilterFieldName("z");
-  passThruFilter.setFilterLimits(_depth - 1e-6, _depth + 1e-6);
+  passThruFilter.setFilterLimits(_min_depth, _max_depth);
   passThruFilter.filter(_zSlice);
 
   // Get indices of points kept. Default method returns removed indices, so
