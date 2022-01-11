@@ -727,7 +727,7 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   // TODO(tfoote) magic numbers
   // Should be passed in and paramaterized based on the expected data 
   // distribution height or calculated from the grandularity of the dataset.
-  float slice_depth = 100; // 100 meter. 
+  float slice_depth = 5; // 5 meter. 
   float epsilon = 1e-6; // Enough for not equal
 
   // Sanity checks
