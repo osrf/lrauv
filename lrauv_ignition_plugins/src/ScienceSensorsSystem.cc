@@ -730,6 +730,12 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   std::vector<pcl::PointXYZ> &_interpolators1,
   std::vector<pcl::PointXYZ> &_interpolators2)
 {
+  // TODO(tfoote) magic numbers
+  // Should be passed in and paramaterized based on the expected data 
+  // distribution height or calculated from the grandularity of the dataset.
+  float slice_depth = 1; // 1 meter. 
+  float epsilon = 1e-6; // Enough for not equal
+
   // Sanity checks
   // Vector not populated
   if (this->timeSpaceCoords.size() == 0)
@@ -766,79 +772,31 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   std::vector<int> interpolatorInds1, interpolatorInds2;
   std::vector<float> interpolatorSqrDists1, interpolatorSqrDists2;
 
-  // Step 1: 1st NN, in its z slice, search for 4 NNs
-
-  // 1st nearest neighbor
-  // The distances from kNN search are sorted, so can always just take [0]th
-  int nnIdx = _inds[0];
-  float minDist = _sqrDists[0];
-  // Get z of neighbor
-  float nnZ = this->timeSpaceCoords[this->timeIdx]->at(nnIdx).z;
-
   // Debug output
   igndbg << this->timeSpaceCoords[this->timeIdx]->size()
     << " points in full cloud" << std::endl;
 
-  // Search in z slice for 4 nearest neighbors in this slice
-  this->CreateDepthSlice(nnZ - 1e-6, nnZ + 1e-6, *(this->timeSpaceCoords[this->timeIdx]), zSlice1,
+  // Search in z slice for 4 nearest neighbors above or equal to the point
+  this->CreateDepthSlice(_pt.z, _pt.z + slice_depth, *(this->timeSpaceCoords[this->timeIdx]), zSlice1,
     zSliceInds1);
-  igndbg << "1st nn idx " << nnIdx << ", dist " << sqrt(minDist)
-    << ", z slice " << zSlice1.points.size() << " points" << std::endl;
+  igndbg << "1st z slice " << zSlice1.points.size() << " points" << std::endl;
   this->CreateAndSearchOctree(_pt, zSlice1,
     interpolatorInds1, interpolatorSqrDists1, _interpolators1);
   if (interpolatorInds1.size() < 4 || interpolatorSqrDists1.size() < 4)
   {
-    ignwarn << "Could not find enough neighbors in 1st slice z = " << nnZ
+    ignwarn << "Could not find enough neighbors in 1st slice z = " << _pt.z " or "  << slice_depth << " above"
       << " for trilinear interpolation." << std::endl;
     return;
   }
 
-  // Step 2: exclude z slice of 1st NN from further searches.
-
-  // Remove all points in the z slice of the 1st NN, so that the 2nd NN will be
-  // found in another z slice.
-  // Set invert flag to get all but the depth slice.
-  pcl::PointCloud<pcl::PointXYZ> cloudExceptZSlice1;
-  std::vector<int> indsExceptZSlice1;
-  this->CreateDepthSlice(nnZ - 1e-6, nnZ + 1e-6, *(this->timeSpaceCoords[this->timeIdx]),
-    cloudExceptZSlice1, indsExceptZSlice1, true);
-  igndbg << "Excluding 1st nn z slice. Remaining cloud has "
-    << cloudExceptZSlice1.points.size() << " points" << std::endl;
-
-  // Step 3: Look for 2nd NN everywhere except z slice of 1st NN.
-  // In this 2nd z-slice, search for 4 NNs
-
-  // Search for 2nd NN
-  std::vector<int> inds2;
-  std::vector<float> sqrDists2;
-  std::vector<pcl::PointXYZ> nbrs2;
-  this->CreateAndSearchOctree(_pt, cloudExceptZSlice1,
-    inds2, sqrDists2, nbrs2, 1);
-  if (inds2.size() < 1 || sqrDists2.size() < 1)
-  {
-    ignwarn << "Could not find 2nd NN among "
-      << cloudExceptZSlice1.points.size()
-      << " points for trilinear interpolation" << std::endl;
-    return;
-  }
-
-  // Take closest point as 2nd NN
-  int nnIdx2 = inds2[0];
-  float minDist2 = sqrDists2[0];
-  // Get z of neighbor
-  float nnZ2 = nbrs2[0].z;
-
-  // Step 4: Look for 4 NNs in the z slice of 2nd NN
-
-  // Search in z slice of 1st NN for 4 nearest neighbors in this slice
-  this->CreateDepthSlice(nnZ2 - 1e-6, nnZ2 + 1e-6, cloudExceptZSlice1, zSlice2, zSliceInds2);
-  igndbg << "2nd nn idx " << nnIdx2 << ", dist " << sqrt(minDist2)
-    << ", z slice " << zSlice2.points.size() << " points" << std::endl;
+  // Search in z slice below point for 4 nearest neighbors
+  this->CreateDepthSlice(_pt.z - slice_depth, _pt.z - epsilon, *(this->timeSpaceCoords[this->timeIdx]), zSlice2, zSliceInds2);
+  igndbg << "2nd z slice " << zSlice2.points.size() << " points" << std::endl;
   this->CreateAndSearchOctree(_pt, zSlice2,
     interpolatorInds2, interpolatorSqrDists2, _interpolators2);
   if (interpolatorInds2.size() < 4 || interpolatorSqrDists2.size() < 4)
   {
-    ignwarn << "Could not find enough neighbors in 2nd slice z = " << nnZ2
+    ignwarn << "Could not find enough neighbors in 2nd slice z = " << _pt.z " or " << slice_depth << " below"
       << " for trilinear interpolation." << std::endl;
     return;
   }
