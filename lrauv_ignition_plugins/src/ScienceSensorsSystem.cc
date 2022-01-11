@@ -765,7 +765,7 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
     interpolatorInds1, interpolatorSqrDists1, _interpolators1);
   if (interpolatorInds1.size() < 4 || interpolatorSqrDists1.size() < 4)
   {
-    ignwarn << "Could not find enough neighbors in 1st slice z = " << _pt.z " or "  << slice_depth << " above"
+    ignwarn << "Could not find enough neighbors in 1st slice z = " << _pt.z << " or "  << slice_depth << " above"
       << " for trilinear interpolation." << std::endl;
     return;
   }
@@ -777,7 +777,7 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
     interpolatorInds2, interpolatorSqrDists2, _interpolators2);
   if (interpolatorInds2.size() < 4 || interpolatorSqrDists2.size() < 4)
   {
-    ignwarn << "Could not find enough neighbors in 2nd slice z = " << _pt.z " or " << slice_depth << " below"
+    ignwarn << "Could not find enough neighbors in 2nd slice z = " << _pt.z << " or " << slice_depth << " below"
       << " for trilinear interpolation." << std::endl;
     return;
   }
