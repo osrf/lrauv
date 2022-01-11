@@ -89,15 +89,11 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Find XYZ locations of points in the two closest z slices to
   /// interpolate among.
   /// \param[in] _pt Location in space to interpolate for
-  /// \param[in] _inds Indices of nearest neighbors to _pt
-  /// \param[in] _sqrDists Distances of nearest neighbors to _pt
   /// \param[out] _interpolators1 XYZ points on a z slice to interpolate among
   /// \param[out] _interpolators2 XYZ points on a second z slice to interpolate
   /// among
   public: void FindTrilinearInterpolators(
     pcl::PointXYZ &_pt,
-    std::vector<int> &_inds,
-    std::vector<float> &_sqrDists,
     std::vector<pcl::PointXYZ> &_interpolators1,
     std::vector<pcl::PointXYZ> &_interpolators2);
 
@@ -725,8 +721,6 @@ bool ScienceSensorsSystemPrivate::comparePclPoints(
 /////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   pcl::PointXYZ &_pt,
-  std::vector<int> &_inds,
-  std::vector<float> &_sqrDists,
   std::vector<pcl::PointXYZ> &_interpolators1,
   std::vector<pcl::PointXYZ> &_interpolators2)
 {
@@ -747,20 +741,7 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   {
     return;
   }
-  if (_inds.size() == 0 || _sqrDists.size() == 0)
-  {
-    ignwarn << "FindInterpolators(): Invalid neighbors aray size ("
-            << _inds.size() << " and " << _sqrDists.size()
-            << "). No neighbors to use for interpolation. Returning NaN."
-            << std::endl;
-    return;
-  }
-  if (_inds.size() != _sqrDists.size())
-  {
-    ignwarn << "FindInterpolators(): Number of neighbors != number of "
-            << "distances. Invalid input. Returning NaN." << std::endl;
-    return;
-  }
+
 
   // Two slices of different depth z values
   pcl::PointCloud<pcl::PointXYZ> zSlice1, zSlice2;
@@ -1535,8 +1516,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         // Find 2 sets of 4 nearest neighbors, each set on a different z slice,
         // to use as inputs for trilinear interpolation
         std::vector<pcl::PointXYZ> interpolatorsSlice1, interpolatorsSlice2;
-        this->dataPtr->FindTrilinearInterpolators(searchPoint, spatialIdx,
-          spatialSqrDist, interpolatorsSlice1, interpolatorsSlice2);
+        this->dataPtr->FindTrilinearInterpolators(searchPoint, interpolatorsSlice1, interpolatorsSlice2);
         if (interpolatorsSlice1.size() < 4 || interpolatorsSlice2.size() < 4)
         {
           ignwarn << "Could not find trilinear interpolators near sensor location "
