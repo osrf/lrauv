@@ -167,6 +167,9 @@ void WorldCommPlugin::SpawnCallback(
   coords->set_latitude_deg(lat);
   coords->set_longitude_deg(lon);
   coords->set_elevation(ele);
+  ignition::msgs::Set(factoryReq.mutable_pose()->mutable_orientation(),
+      ignition::math::Quaterniond(
+      _msg.initroll_(), _msg.initpitch_(), _msg.initheading_()));
 
   // TODO(chapulina) Check what's up with all the errors
   if (!this->node.Request(this->createService, factoryReq,

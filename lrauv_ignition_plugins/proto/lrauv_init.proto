@@ -50,13 +50,16 @@ message LRAUVInit
   /// \brief Initial depth in meters.
   double initZ_                   = 5;
 
-  /// \TODO(chapulina)
+  /// \brief Initial vehicle pitch in the world ENU frame (i.e. rotation
+  /// about North). Unit: radians.
   float initPitch_                = 6;
 
-  /// \TODO(chapulina)
+  /// \brief Initial vehicle roll in the world ENU frame (i.e. rotation
+  /// about East). Unit: radians.
   float initRoll_                 = 7;
 
-  /// \TODO(chapulina)
+  /// \brief Initial vehicle yaw in the world ENU frame (i.e. rotation
+  /// about Up). Unit: radians.
   float initHeading_              = 8;
 
   // Add fields as needed
