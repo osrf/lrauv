@@ -202,7 +202,7 @@ void TethysCommPlugin::Configure(
   {
     this->debugPrintout = _sdf->Get<bool>("debug_printout");
   }
-  if (_sdf->HasElement("density"))
+  if (_sdf->HasElement("ocean_density"))
   {
     this->oceanDensity = _sdf->Get<double>("ocean_density");
   }
