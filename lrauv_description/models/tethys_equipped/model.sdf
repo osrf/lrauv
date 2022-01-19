@@ -121,8 +121,8 @@
         <area>0.0244</area>
         <!-- Link's Y is perpendicular to the control surface -->
         <upward>0 1 0</upward>
-        <!-- Link's X is pointing towards the back -->
-        <forward>-1 0 0</forward>
+        <!-- Link's X is pointing towards the front -->
+        <forward>1 0 0</forward>
         <link_name>vertical_fins</link_name>
         <cp>0 0 0</cp>
       </plugin>
@@ -139,9 +139,9 @@
         <a0>0</a0>
         <area>0.0244</area>
         <!-- Link's Z is perpendicular to the control surface -->
-        <upward>0 0 1</upward>
-        <!-- Link's X is pointing towards the back -->
-        <forward>-1 0 0</forward>
+        <upward>0 0 -1</upward>
+        <!-- Link's X is pointing towards the front -->
+        <forward>1 0 0</forward>
         <link_name>horizontal_fins</link_name>
         <cp>0 0 0</cp>
       </plugin>
@@ -160,23 +160,23 @@
         name="tethys::HydrodynamicsPlugin">
         <link_name>base_link</link_name>
         <enable_coriolis>false</enable_coriolis>
-        <xDotU>-4.876161</xDotU>
+        <xDotU>4.876161</xDotU>
         <yDotV>-126.324739</yDotV>
-        <zDotW>-126.324739</zDotW>
+        <zDotW>126.324739</zDotW>
         <kDotP>0</kDotP>
         <mDotQ>-33.46</mDotQ>
-        <nDotR>-33.46</nDotR>
-        <xUU>-6.2282</xUU>
+        <nDotR>33.46</nDotR>
+        <xUU>6.2282</xUU>
         <xU>0</xU>
         <yVV>-601.27</yVV>
         <yV>0</yV>
-        <zWW>-601.27</zWW>
+        <zWW>601.27</zWW>
         <zW>0</zW>
-        <kPP>-0.1916</kPP>
+        <kPP>0.1916</kPP>
         <kP>0</kP>
         <mQQ>-632.698957</mQQ>
         <mQ>0</mQ>
-        <nRR>-632.698957</nRR>
+        <nRR>632.698957</nRR>
         <nR>0</nR>
       </plugin>
       <plugin

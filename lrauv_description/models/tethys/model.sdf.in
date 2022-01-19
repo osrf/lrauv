@@ -4,6 +4,12 @@
   Research Institute (MBARI) and the David and Lucile Packard Foundation
 -->
 <sdf version="1.6">
+  <!--
+    Oriented according to FSK:
+    * X: forward
+    * Y: starboard (right)
+    * Z: keel (down)
+  -->
   <model name="tethys">
     <!-- Body -->
     <link name="base_link">
@@ -30,6 +36,7 @@
       </collision>
 
       <visual name="visual">
+        <pose degrees="true">0 0 0  180 0 180</pose>
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
@@ -61,15 +68,15 @@
 
     <!-- Horizontal fins -->
     <link name="horizontal_fins">
-      <pose>1.05 0 0 0 0 0</pose>
+      <pose>-1.05 0 0 0 0 0</pose>
       <inertial>
         <mass>0.2</mass>
         <inertia>
           <ixx>0.0007924568755</ixx>
-          <ixy>-0.0000000002674</ixy>
+          <ixy>0.0000000002674</ixy>
           <ixz>0.0003978158176</ixz>
           <iyy>0.0010546736475</iyy>
-          <iyz>-0.0000000006729</iyz>
+          <iyz>0.0000000006729</iyz>
           <izz>0.0002633558262</izz>
         </inertia>
       </inertial>
@@ -79,7 +86,7 @@
       </collision>
 
       <visual name= "visual">
-        <pose>-1.05 0 0 0 0 0</pose>
+        <pose degrees="true">1.05 0 0  180 0 180</pose>
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
@@ -111,15 +118,15 @@
 
     <!-- Vertical fins -->
     <link name="vertical_fins">
-      <pose>1.05 0 0 0 0 0</pose>
+      <pose>-1.05 0 0 0 0 0</pose>
       <inertial>
         <mass>0.2</mass>
         <inertia>
           <ixx>0.0007924568755</ixx>
-          <ixy>-0.0000000002674</ixy>
+          <ixy>0.0000000002674</ixy>
           <ixz>0.0003978158176</ixz>
           <iyy>0.0010546736475</iyy>
-          <iyz>-0.0000000006729</iyz>
+          <iyz>0.0000000006729</iyz>
           <izz>0.0002633558262</izz>
         </inertia>
       </inertial>
@@ -129,7 +136,7 @@
       </collision>
 
       <visual name= "visual">
-        <pose>-1.05 0 0 0 0 0</pose>
+        <pose degrees="true">1.05 0 0  180 0 180</pose>
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
@@ -161,16 +168,16 @@
 
     <!-- Propeller -->
     <link name="propeller">
-      <pose>1.43162 0 0 0 0 0</pose>
+      <pose>-1.43162 0 0 0 0 0</pose>
       <inertial>
-        <pose>0 0 0 1.570796 0 0</pose>
+        <pose>0 0 0 -1.570796 0 0</pose>
         <mass>0.09</mass>
         <inertia>
           <ixx>0.000143971303</ixx>
-          <ixy>0.000000000008</ixy>
+          <ixy>-0.000000000008</ixy>
           <ixz>-0.000000000224</ixz>
           <iyy>0.000140915448</iyy>
-          <iyz>-0.000025236433</iyz>
+          <iyz>0.000025236433</iyz>
           <izz>0.000033571862</izz>
         </inertia>
       </inertial>
@@ -180,7 +187,7 @@
       </collision>
 
       <visual name= "visual">
-        <pose>-1.43162 0 0 0 0 0</pose>
+        <pose degrees="true">1.43162 0 0  180 0 180</pose>
         <geometry>
           <mesh>
             <uri>meshes/tethys.dae</uri>
@@ -245,7 +252,7 @@
 
     <link name="buoyancy_engine">
       <!-- TODO: Determine location of buoyancy engine -->
-      <pose>0.137 0 0 0 0 0</pose>
+      <pose>-0.137 0 0 0 0 0</pose>
 
       <!-- TODO: Remove inertial and collision
 
@@ -264,10 +271,10 @@
         <mass>0.3</mass>
         <inertia>
           <ixx>0.000143971303</ixx>
-          <ixy>0.000000000008</ixy>
+          <ixy>-0.000000000008</ixy>
           <ixz>-0.000000000224</ixz>
           <iyy>0.000140915448</iyy>
-          <iyz>-0.000025236433</iyz>
+          <iyz>0.000025236433</iyz>
           <izz>0.000033571862</izz>
         </inertia>
       </inertial>
@@ -299,7 +306,6 @@
     </joint>
 
     <joint name="vertical_fins_joint" type="revolute">
-      <pose degrees="true">0 0 0   180 0 0</pose>
       <parent>base_link</parent>
       <child>vertical_fins</child>
       <axis>
@@ -314,7 +320,6 @@
     </joint>
 
     <joint name="propeller_joint" type="revolute">
-      <pose degrees="true">0 0 0   0 180 0</pose>
       <parent>base_link</parent>
       <child>propeller</child>
       <axis>
@@ -330,7 +335,6 @@
 
     <!-- positive joint values move mass forward -->
     <joint name="battery_joint" type="prismatic">
-      <pose degrees="true">0 0 0   0 0 180</pose>
       <parent>base_link</parent>
       <child>battery</child>
       <axis>
@@ -346,7 +350,7 @@
 
     <!-- Drop weight -->
     <link name="drop_weight">
-      <pose>0.128 0 0 0 0 0</pose>
+      <pose>-0.128 0 0 0 0 0</pose>
       <inertial>
         <mass>1</mass>
         <inertia>
