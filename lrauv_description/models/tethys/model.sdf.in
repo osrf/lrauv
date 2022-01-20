@@ -225,7 +225,7 @@
 
       <inertial>
         <!-- Non-zero y creates roll. Not fun to tune without actual base link inertia minus battery-->
-        <pose>-0.563 0 0 0 0 0</pose>
+        <pose>0.563 0 0 0 0 0</pose>
         <mass>31.7307</mass>
         <inertia>
           <ixx>0.2327</ixx>
