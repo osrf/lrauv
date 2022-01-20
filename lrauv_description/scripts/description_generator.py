@@ -110,7 +110,8 @@ def generate_model(template_path, output_path):
             else:
                 assert False, "Detected unknown collision"
 
-        # Only these links get here
+        # Only these links get here. Checking to be safe because the script
+        # isn't generic enough yet.
         link_name = link_tag.get("name")
         assert link_name == "base_link" or link_name == "battery" or link_name == "drop_weight", link_name
 
@@ -131,21 +132,21 @@ def generate_model(template_path, output_path):
             continue
 
         # Get the CoM pose w.r.t. the model origin for each link
-
-        # battery has inertial pose, but no link pose
-        if link_name == "battery":
-            assert inertial_pose_tag is not None
-            assert link_pose_tag is None
+        # Currently only support links with either <link><pose> or
+        # <inertial><pose>, but not both, and without rotation.
+        if inertial_pose_tag is not None and link_pose_tag is None:
             center_of_mass = [float(token) for token in inertial_pose_tag.text.split()]
-        # drop_weight has link pose, but no inertial pose
-        elif link_name == "drop_weight":
-            assert inertial_pose_tag is None
-            assert link_pose_tag is not None
+        elif inertial_pose_tag is None and link_pose_tag is not None:
             center_of_mass = [float(token) for token in link_pose_tag.text.split()]
         else:
-            assert False, "Unknown link"
+            assert False, "Links with both <link><pose> and <inertial><pose> aren't supported yet."
 
         assert len(center_of_mass) == 6
+
+        # Rotation isn't properly handled yet
+        assert center_of_mass[3] == 0.0 and \
+               center_of_mass[4] == 0.0 and \
+               center_of_mass[5] == 0.0, "Link rotation isn't properly handled yet."
 
         # Moments about the X axis
         x_moments.append((float(mass_tag.text), center_of_mass[0]))
