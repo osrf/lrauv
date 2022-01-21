@@ -31,9 +31,19 @@ import os.path as path
 
 ## These are parameters of the WHOLE VEHICLE
 # TODO(arjo): Implement inertia. Need to implement Inertial<T>::operator-(const Inertial<T>&) first
-total_mass = 147.5671 # Total mass of the vehicle
-buoyancy_z_offset = 0.007 # Buoyancy offset
-fluid_density = 1025 #fluid density
+# Total mass of the vehicle
+total_mass = 147.5671
+
+# Buoyancy offset
+buoyancy_z_offset = 0.007
+
+# Fluid density
+fluid_density = 1025
+
+# X and Y dimensions for base link's collision volume.
+# The Z dimension is calculated by the script.
+base_link_dx = 2.0
+base_link_dy = 0.4
 
 def read_pose(element):
     """ Read pose element."""
@@ -165,9 +175,7 @@ def generate_model(template_path, output_path):
 
     # Calculate base link's volume size and position so that it cancels out the
     # mass of the base link, as well as the components
-    base_link_dx = 2.0
-    base_link_dy = 0.4
-    base_link_dz = total_mass / (2 * 0.4 * fluid_density)
+    base_link_dz = total_mass / (base_link_dx * base_link_dy * fluid_density)
 
     base_link_collision_tag.text = ""
     pose_tag = ET.SubElement(base_link_collision_tag, "pose")
