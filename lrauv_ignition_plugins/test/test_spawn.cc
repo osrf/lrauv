@@ -108,6 +108,7 @@ TEST(SpawnTest, Spawn)
   }
   ASSERT_LE(sleep, maxSleep);
 
+  // No specific orientation, vehicle will face North
   ignition::math::Angle lat1 = IGN_DTOR(20.0);
   ignition::math::Angle lon1 = IGN_DTOR(20.0);
   {
@@ -138,22 +139,20 @@ TEST(SpawnTest, Spawn)
   EXPECT_LT(0, latLon1.size());
   EXPECT_EQ(0, latLon2.size());
 
-  // Spawn second vehicle
-
+  // Spawn vehicle facing South
+  // Orientation is in NED, so 180 degrees yaw is South
   ignition::math::Angle lat2 = IGN_DTOR(20.1);
   ignition::math::Angle lon2 = IGN_DTOR(20.1);
   double depth2 = 10.0;
-  ignition::math::Angle roll2 = IGN_DTOR(5);
-  ignition::math::Angle pitch2 = IGN_DTOR(10);
-  ignition::math::Angle yaw2 = IGN_DTOR(45);
+  ignition::math::Angle yaw2 = IGN_DTOR(180);
   {
     lrauv_ignition_plugins::msgs::LRAUVInit spawnMsg;
     spawnMsg.mutable_id_()->set_data("vehicle2");
     spawnMsg.set_initlat_(lat2.Degree());
     spawnMsg.set_initlon_(lon2.Degree());
     spawnMsg.set_initz_(depth2);
-    spawnMsg.set_initroll_(roll2.Radian());
-    spawnMsg.set_initpitch_(pitch2.Radian());
+    spawnMsg.set_initroll_(0.0);
+    spawnMsg.set_initpitch_(0.0);
     spawnMsg.set_initheading_(yaw2.Radian());
 
     spawnPub.Publish(spawnMsg);
@@ -176,14 +175,17 @@ TEST(SpawnTest, Spawn)
   EXPECT_LT(1, latLon1.size());
   EXPECT_LT(0, latLon2.size());
 
-  // Check vehicle positions
   double tightTol{1e-5};
+
+  // Check vehicle positions in ENU
+  // World origin
   EXPECT_NEAR(0.0, poses1.back().Pos().X(), tightTol);
   EXPECT_NEAR(0.0, poses1.back().Pos().Y(), tightTol);
   EXPECT_NEAR(0.0, poses1.back().Pos().Z(), tightTol);
+  // Facing North (-90 rotation from default West orientation)
   EXPECT_NEAR(0.0, poses1.back().Rot().Roll(), tightTol);
   EXPECT_NEAR(0.0, poses1.back().Rot().Pitch(), tightTol);
-  EXPECT_NEAR(0.0, poses1.back().Rot().Yaw(), tightTol);
+  EXPECT_NEAR(-IGN_PI*0.5, poses1.back().Rot().Yaw(), tightTol);
 
   EXPECT_NEAR(lat1.Degree(), latLon1.back().X(), tightTol);
   EXPECT_NEAR(lon1.Degree(), latLon1.back().Y(), tightTol);
@@ -202,11 +204,14 @@ TEST(SpawnTest, Spawn)
   EXPECT_NEAR(expectedPos2.X(), poses2.back().Pos().X(), latLonTol);
   EXPECT_NEAR(expectedPos2.Y(), poses2.back().Pos().Y(), latLonTol);
   EXPECT_NEAR(expectedPos2.Z() - depth2, poses2.back().Pos().Z(), latLonTol);
-  EXPECT_NEAR(roll2.Radian(), poses2.back().Rot().Roll(), tightTol);
-  EXPECT_NEAR(yaw2.Radian(), poses2.back().Rot().Yaw(), tightTol);
 
   EXPECT_NEAR(lat2.Degree(), latLon2.back().X(), tightTol);
   EXPECT_NEAR(lon2.Degree(), latLon2.back().Y(), tightTol);
   EXPECT_NEAR(-depth2, latLon2.back().Z(), tightTol);
+
+  // For the West-defaulting-vehicle to face South, it has a 90 degree yaw in ENU
+  EXPECT_NEAR(0.0, poses2.back().Rot().Roll(), tightTol);
+  EXPECT_NEAR(0.0, poses2.back().Rot().Pitch(), tightTol);
+  EXPECT_NEAR(IGN_DTOR(90), poses2.back().Rot().Yaw(), tightTol);
 }
 
