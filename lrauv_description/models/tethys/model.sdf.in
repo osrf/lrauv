@@ -26,7 +26,7 @@
       </inertial>
 
       <collision name="main_body_buoyancy">
-        @calculated
+        @base_link_collision
       </collision>
 
       <visual name="visual">
@@ -215,7 +215,7 @@
          Additional collision requires buoyancy volume recalculation. -->
     <link name="battery">
       <!--TODO: On hold till mesh center adjusted to aft dome, then it will be 0.563, 0, 0.024.-->
-      
+
       <inertial>
         <!-- Non-zero y creates roll. Not fun to tune without actual base link inertia minus battery-->
         <pose>-0.563 0 0 0 0 0</pose>
@@ -312,7 +312,7 @@
         </limit>
       </axis>
     </joint>
-    
+
     <joint name="propeller_joint" type="revolute">
       <pose degrees="true">0 0 0   0 180 0</pose>
       <parent>base_link</parent>
