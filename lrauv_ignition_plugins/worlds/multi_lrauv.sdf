@@ -33,7 +33,14 @@
     <plugin
       filename="ignition-gazebo-buoyancy-system"
       name="ignition::gazebo::systems::Buoyancy">
-      <uniform_fluid_density>1025</uniform_fluid_density>
+      <graded_buoyancy>
+        <default_density>1025</default_density>
+        <density_change>
+          <above_depth>0.5</above_depth>
+          <density>1</density>
+        </density_change>
+      </graded_buoyancy>
+      <!--<uniform_fluid_density>1025</uniform_fluid_density>-->
     </plugin>
 
     <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
@@ -101,12 +108,12 @@
     </include>
 
     <include>
-      <pose>0 0 1 0 0 1.57</pose>
+      <pose>0 0 -1 0 0 1.57</pose>
       <uri>tethys_equipped</uri>
     </include>
 
     <include>
-      <pose>5 0 1 0 0 1.57</pose>
+      <pose>5 0 -1 0 0 1.57</pose>
       <uri>tethys_equipped</uri>
       <name>triton</name>
 
@@ -149,7 +156,7 @@
     </include>
 
     <include>
-      <pose>-5 0 1 0 0 1.57</pose>
+      <pose>-5 0 -1 0 0 1.57</pose>
       <uri>tethys_equipped</uri>
       <name>daphne</name>
 
@@ -193,15 +200,16 @@
 
     <!-- Swimming race lane signs -->
     <include>
-      <pose>0 0 -1 0 0 3.1415926</pose>
+      <pose>0 0 -2 0 0 3.1415926</pose>
       <uri>ABCSign_5m</uri>
       <name>start_line</name>
     </include>
     <include>
-      <pose>0 -25 -1 0 0 3.1415926</pose>
+      <pose>0 -25 -2 0 0 3.1415926</pose>
       <uri>ABCSign_5m</uri>
       <name>finish_line</name>
     </include>
 
   </world>
 </sdf>
+ 

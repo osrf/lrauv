@@ -37,7 +37,14 @@
     <plugin
       filename="ignition-gazebo-buoyancy-system"
       name="ignition::gazebo::systems::Buoyancy">
-      <uniform_fluid_density>1025</uniform_fluid_density>
+      <graded_buoyancy>
+        <default_density>1025</default_density>
+        <density_change>
+          <above_depth>0.5</above_depth>
+          <density>1</density>
+        </density_change>
+      </graded_buoyancy>
+      <!--<uniform_fluid_density>1025</uniform_fluid_density>-->
     </plugin>
 
     <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
