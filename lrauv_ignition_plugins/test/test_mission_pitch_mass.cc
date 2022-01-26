@@ -76,21 +76,51 @@ TEST_F(LrauvTestFixture, PitchMass)
 
   ignmsg << "Logged [" << this->tethysPoses.size() << "] poses" << std::endl;
 
-  // Give it some iterations to reach steady state
-  for (auto i = 2000u; i < this->tethysPoses.size(); i = i + 1000)
+  int maxIterations{28000};
+  ASSERT_LT(maxIterations, this->tethysPoses.size());
+
+  double totalPitchChange = 0, prevPitch = 0;
+  bool firstPitch = false, reachedTarget = false;
+
+  // Vehicle should have a max pitch of 20 degrees
+  for(auto pose: this->tethysPoses)
   {
-    this->CheckRange(i,
-      // Target pose has no translation, roll or yaw, and 20 deg pitch
-      {0.0, 0.0, 0.0, 0.0, IGN_DTOR(20), 0},
-      // Y is kept pretty stable close to zero with low tolerances
-      // \TODO(chapulina) X and Y are meant to stay close to zero, but the
-      // vehicle goes forward (-X, +Z) slowly. That's caused by the pitch
-      // oscillation.
-      {4.7, 0.01, 1.8},
-      // Roll and yaw are kept pretty stable close to zero with low tolerances
-      // \TODO(chapulina) The pitch has a lot of oscillation, so we need the
-      // high tolerance
-      {IGN_DTOR(2), IGN_DTOR(21), IGN_DTOR(2)});
+    // Max Pitch 20 degrees. Allow 5 degrees error for oscillations.
+    // Min Pitch -5 degrees. Again allow 5 degrees error for oscillation.
+    EXPECT_LT(pose.Rot().Euler().Y(), IGN_DTOR(25));
+    EXPECT_GT(pose.Rot().Euler().Y(), IGN_DTOR(-5));
+
+    // No roll or yaw
+    EXPECT_NEAR(pose.Rot().Euler().X(), IGN_DTOR(0), 1e-3);
+    EXPECT_NEAR(pose.Rot().Euler().Z(), IGN_DTOR(0), 1e-3);
+
+    // Check position holds
+    EXPECT_NEAR(pose.Pos().X(), 0, 2e-1);
+    EXPECT_NEAR(pose.Pos().Y(), 0, 2e-1);
+    EXPECT_NEAR(pose.Pos().Z(), 0, 2e-1);
+
+    // Used later for oscillation check.
+    if (!firstPitch)
+    {
+      totalPitchChange += std::fabs(pose.Rot().Euler().Y() - prevPitch);
+    }
+
+    // Check if we cross the 20 degree mark
+    if (prevPitch <= IGN_DTOR(20) && pose.Rot().Euler().Y() >= IGN_DTOR(20))
+    {
+      reachedTarget = true;
+    }
+
+    prevPitch = pose.Rot().Euler().Y();
+    firstPitch = true;
   }
+
+  // Check for oscillation by summing over abs delta in pitch
+  // Essentially \Sigma abs(f'(x)) < C. In this case C should be near 2*20
+  // degrees as the vehicle first pitches down and then comes back up.
+  ASSERT_LE(totalPitchChange, IGN_DTOR(21) * 2);
+
+  // Make sure the vehicle actually pitched to 20 degrees.
+  ASSERT_TRUE(reachedTarget);
 }
 

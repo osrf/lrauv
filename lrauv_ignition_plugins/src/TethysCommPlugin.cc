@@ -202,7 +202,7 @@ void TethysCommPlugin::Configure(
   {
     this->debugPrintout = _sdf->Get<bool>("debug_printout");
   }
-  if (_sdf->HasElement("density"))
+  if (_sdf->HasElement("ocean_density"))
   {
     this->oceanDensity = _sdf->Get<double>("ocean_density");
   }
@@ -421,7 +421,7 @@ void TethysCommPlugin::CommandCallback(
   // force = thrust_coefficient * fluid_density * omega ^ 2 *
   //         propeller_diameter ^ 4
   // These values are defined in the model's Thruster plugin's SDF
-  auto force = 0.004422 * 1000 * pow(0.2, 4) * angVel * angVel;
+  auto force = 0.004312328425753156 * this->oceanDensity * pow(0.2, 4) * angVel * angVel;
   if (angVel < 0)
   {
     force *=-1;

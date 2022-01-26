@@ -48,6 +48,7 @@ RUN apt-get update \
         software-properties-common \
         sudo \
         vim \
+        python3-numpy
  && apt-get clean
 
 # setup timezone

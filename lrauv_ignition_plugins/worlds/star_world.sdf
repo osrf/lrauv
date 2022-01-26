@@ -4,7 +4,7 @@
   Research Institute (MBARI) and the David and Lucile Packard Foundation
 -->
 <sdf version="1.9">
-  <world name="multi_lrauv">
+  <world name="star_world">
     <scene>
       <!-- For turquoise ambient to match particle effect -->
       <ambient>0.0 1.0 1.0</ambient>
@@ -33,7 +33,7 @@
     <plugin
       filename="ignition-gazebo-buoyancy-system"
       name="ignition::gazebo::systems::Buoyancy">
-      <uniform_fluid_density>1000</uniform_fluid_density>
+      <uniform_fluid_density>1025</uniform_fluid_density>
     </plugin>
 
     <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
