@@ -69,7 +69,7 @@ TEST_F(LrauvTestFixture, Elevator)
     // FIXME(chapulina) It goes up a little bit in the beginning, is this
     // expected?
     if (i < 1500)
-      EXPECT_GT(0.2, pose.Pos().Z()) << i << " -- " << pose.Pos().Z();
+      EXPECT_GT(0.3, pose.Pos().Z()) << i << " -- " << pose.Pos().Z();
     else
       EXPECT_GT(0.0, pose.Pos().Z()) << i << " -- " << pose.Pos().Z();
   }

@@ -31,9 +31,19 @@ import os.path as path
 
 ## These are parameters of the WHOLE VEHICLE
 # TODO(arjo): Implement inertia. Need to implement Inertial<T>::operator-(const Inertial<T>&) first
-total_mass = 147.5671 # Total mass of the vehicle
-buoyancy_z_offset = 0.007 # Buoyancy offset
-fluid_density = 1000 #fluid density
+# Total mass of the vehicle
+total_mass = 147.5671
+
+# Buoyancy offset
+buoyancy_z_offset = 0.007
+
+# Fluid density
+fluid_density = 1025
+
+# X and Y dimensions for base link's collision volume.
+# The Z dimension is calculated by the script.
+base_link_dx = 2.0
+base_link_dy = 0.4
 
 def read_pose(element):
     """ Read pose element."""
@@ -45,92 +55,140 @@ def write_float_array(pose):
         res += str(p) + " "
     return res
 
+def generate_model(template_path, output_path):
+    """
+    Parses the template_path file and generates a hydrostatically stable file on
+    output_path.
 
-def calculate_center_of_mass(total_mass, template_path, output_path):
+    * Sets the collision volume for control surfaces and buoyancy engine so
+      they're neutrally buoyant.
+    * Sets the base link's volume so that it cancels out the mass from itself,
+      the battery and the drop weight.
+    * Sets the base link's mass and CoM position so that it balances the moments
+      on the X axis from the battery and drop weight.
+
+    :param template_path: Path to templated file
+    :param output_path: Path to save the resulting file
+    """
 
     sdf_file_input = ET.parse(template_path)
 
-    for sdf in sdf_file_input.iter("sdf"):
-        for model in sdf.iter("model"):
-            moments = []
-            main_body_com_tag = None
-            main_body_com_pose = None
-            collision_tag = None
-            skipped_masses = []
-            ## Get all links
-            for links in model.iter("link"):
-                link_pose = links.find(".pose")
-                if link_pose is None:
-                    center_of_mass = [0] * 6
-                else:
-                    # TODO(arjo) generate errors, perform protection
-                    center_of_mass = [float(token) for token in link_pose.text.split()]
+    # Assume only one model in SDF file
+    sdf_tag = sdf_file_input.find(".")
+    assert sdf_tag is not None
 
-                ## Get inertial value of part
-                inertia_element = links.find(".inertial")
-                collision_element = links.find(".collision")
+    model_tag = sdf_tag.find("model")
+    assert model_tag is not None
 
-                ## Calculate buoyancy
-                if collision_element is not None:
-                    if collision_element.text.strip() == "@calculated":
-                        collision_tag = collision_element
-                    elif collision_element.text.strip() == "@neutral_buoyancy":
-                        collision_element.text = ""
-                        geometry = ET.SubElement(collision_element, "geometry")
-                        box = ET.SubElement(geometry, "box")
-                        size = ET.SubElement(box, "size")
-                        mass = links.find(".inertial/mass")
-                        if mass is None:
-                            raise Exception("Mass not found")
+    x_moments = []
+    base_link_mass_tag = None
+    base_link_inertial_pose_tag = None
+    base_link_collision_tag = None
 
-                        sz = float(mass.text) / (0.1 * 0.1 * fluid_density)
-                        size.text = write_float_array([0.1, 0.1, sz])
-                        skipped_masses.append(mass)
-                        continue
-                    else:
-                        # TODO(arjo): Calculate moments arising from collision
-                        continue
+    ## Iterate over all links
+    for link_tag in model_tag.iter("link"):
 
-                ## Calculate moments due to inertia
-                if inertia_element is not None:
-                    # TODO(arjo): Just put a @calculated on the whole inertia itself
-                    mass = links.find(".inertial/mass")
-                    pose = links.find(".inertial/pose")
-                    if mass.text.strip() == "@calculated":
-                        main_body_com_tag = mass
-                        main_body_com_pose = pose
-                        continue
-                    else:
-                        # add the moment into our moment list
-                        if pose is not None:
-                            center_of_mass = [float(token) for token in pose.text.split()]
-                    assert len(center_of_mass) == 6
-                    moments.append((float(mass.text), np.array([center_of_mass[0]] + [0]*5)))
+        ## Calculate buoyancy (collision volume) for links with collisions
+        collision_element = link_tag.find(".collision")
+        if collision_element is not None:
+            # For the main body, hold the tag to calculate below
+            if collision_element.text.strip() == "@base_link_collision":
+                base_link_collision_tag = collision_element
+            # For these links, calculate volume so they're neutrally buoyant
+            # and can be left out of moment computations.
+            # * horizontal_fin
+            # * vertical_fin
+            # * propeller
+            # * buoyancy_engine
+            elif collision_element.text.strip() == "@neutral_buoyancy":
+                mass = link_tag.find(".inertial/mass")
+                assert mass is not None, "Mass not found"
 
-            # get the moments in the model
-            total_moment =  sum([mass * com for mass, com in moments])
+                collision_element.text = ""
+                geometry = ET.SubElement(collision_element, "geometry")
+                box = ET.SubElement(geometry, "box")
+                size = ET.SubElement(box, "size")
+                dx = 0.1
+                dy = 0.1
 
-            # this is the mass of the various other payloads
-            component_mass = sum([mass for mass, _ in moments])
-            remaining_mass = total_mass - component_mass
-            main_body_com = - total_moment / remaining_mass
+                # density * gravity * volume = mass * gravity
+                # density * dx * dy * dz = mass
+                # dz = mass / (density * dx * dy)
+                dz = float(mass.text) / (dx * dy * fluid_density)
+                size.text = write_float_array([dx, dy, dz])
+                continue
+            else:
+                assert False, "Detected unknown collision"
 
-            main_body_com_tag.text = str(remaining_mass)
-            main_body_com_pose.text = write_float_array([main_body_com[0], 0, 0, 0, 0, 0])
+        # Only these links get here. Checking to be safe because the script
+        # isn't generic enough yet.
+        link_name = link_tag.get("name")
+        assert link_name == "base_link" or link_name == "battery" or link_name == "drop_weight", link_name
 
-            # calculate buoyancy position
-            cube_length = total_mass / (2 * 0.4 * fluid_density)
-            collision_tag.text = ""
-            pose_tag = ET.SubElement(collision_tag, "pose")
-            pose_tag.text = write_float_array([0, 0, buoyancy_z_offset, 0, 0, 0])
+        # Get various tags used to calculate moments
+        inertial_tag = link_tag.find(".inertial")
+        assert inertial_tag is not None, "Missing inertial"
 
-            geometry = ET.SubElement(collision_tag, "geometry")
-            box = ET.SubElement(geometry, "box")
-            size = ET.SubElement(box, "size")
-            size.text = write_float_array([2, 0.4, cube_length])
+        mass_tag = link_tag.find(".inertial/mass")
+        assert mass_tag is not None, "Missing mass"
 
-            assert (total_moment + main_body_com * remaining_mass == np.array([0]*6)).all()
+        link_pose_tag = link_tag.find(".pose")
+        inertial_pose_tag = link_tag.find(".inertial/pose")
 
+        # Hold the base link tags to fill below
+        if link_name == "base_link":
+            base_link_mass_tag = mass_tag
+            base_link_inertial_pose_tag = inertial_pose_tag
+            continue
+
+        # Get the CoM pose w.r.t. the model origin for each link
+        # Currently only support links with either <link><pose> or
+        # <inertial><pose>, but not both, and without rotation.
+        if inertial_pose_tag is not None and link_pose_tag is None:
+            center_of_mass = [float(token) for token in inertial_pose_tag.text.split()]
+        elif inertial_pose_tag is None and link_pose_tag is not None:
+            center_of_mass = [float(token) for token in link_pose_tag.text.split()]
+        else:
+            assert False, "Links with both <link><pose> and <inertial><pose> aren't supported yet."
+
+        assert len(center_of_mass) == 6
+
+        # Rotation isn't properly handled yet
+        assert center_of_mass[3] == 0.0 and \
+               center_of_mass[4] == 0.0 and \
+               center_of_mass[5] == 0.0, "Link rotation isn't properly handled yet."
+
+        # Moments about the X axis
+        x_moments.append((float(mass_tag.text), center_of_mass[0]))
+
+    # Moments and mass for non-neutral links other than the base link (i.e. components)
+    component_x_moments =  sum([mass * com for mass, com in x_moments])
+    component_mass = sum([mass for mass, _ in x_moments])
+    assert component_mass < total_mass, "Component mass is larger than total mass"
+
+    # Calculate the base link's inertial pose and mass
+    remaining_mass = total_mass - component_mass
+    base_link_inertial_pose_x = - component_x_moments / remaining_mass
+
+    base_link_mass_tag.text = str(remaining_mass)
+    base_link_inertial_pose_tag.text = write_float_array([base_link_inertial_pose_x, 0, 0, 0, 0, 0])
+
+    # Calculate base link's volume size and position so that it cancels out the
+    # mass of the base link, as well as the components
+    base_link_dz = total_mass / (base_link_dx * base_link_dy * fluid_density)
+
+    base_link_collision_tag.text = ""
+    pose_tag = ET.SubElement(base_link_collision_tag, "pose")
+    pose_tag.text = write_float_array([0, 0, buoyancy_z_offset, 0, 0, 0])
+
+    geometry = ET.SubElement(base_link_collision_tag, "geometry")
+    box = ET.SubElement(geometry, "box")
+    size = ET.SubElement(box, "size")
+    size.text = write_float_array([base_link_dx, base_link_dy, base_link_dz])
+
+    assert component_x_moments + base_link_inertial_pose_x * remaining_mass == 0.0
+
+    # Write to file
     dir_name = path.dirname(output_path)
     if dir_name != '' and not path.exists(dir_name):
         os.makedirs(dir_name)
@@ -143,4 +201,4 @@ if __name__ == "__main__":
         print("description_generator.py <infile> <outfile>")
         exit(-100)
 
-    calculate_center_of_mass(total_mass, sys.argv[1], sys.argv[2])
+    generate_model(sys.argv[1], sys.argv[2])
