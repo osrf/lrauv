@@ -118,7 +118,7 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Create an octree from a point cloud, and search for _k nearest
   /// neighbors.
-  /// \param[in] _searchPt Location in space to interpolate for
+  /// \param[in] _searchPt Location in space to search from
   /// \param[in] _cloud Point cloud to search in
   /// \param[out] _nbrInds Result of octree search, indices of points.
   /// \param[out] _nbrSqrDists Result of octree search, distances.
@@ -728,6 +728,10 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   std::vector<pcl::PointXYZ> &_interpolators1,
   std::vector<pcl::PointXYZ> &_interpolators2)
 {
+  // Initialize return parameters
+  _interpolators1.clear();
+  _interpolators2.clear();
+
   // Sanity checks
   // Vector not populated
   if (this->timeSpaceCoords.size() == 0)
@@ -851,7 +855,7 @@ void ScienceSensorsSystemPrivate::CreateDepthSlice(
   bool _invert)
 {
   // Separate a z slice, i.e. points with z equal to that of 1st NN
-  // Pass in extract_removed_indices=true to get indices of removed points
+  // Pass in _invert=true to get indices of removed points
   pcl::PassThrough<pcl::PointXYZ> passThruFilter =
     pcl::PassThrough<pcl::PointXYZ>(true);
   passThruFilter.setInputCloud(_cloud.makeShared());
