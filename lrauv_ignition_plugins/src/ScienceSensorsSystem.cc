@@ -33,6 +33,7 @@
 #include <ignition/transport/Node.hh>
 
 #include <pcl/conversions.h>
+#include <pcl/filters/extract_indices.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/point_cloud.h>
@@ -797,13 +798,22 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
 
   // Step 2: exclude z slice of 1st NN from further searches.
 
-  // Remove all points in the z slice of the 1st NN, so that the 2nd NN will be
-  // found in another z slice.
-  // Set invert flag to get all but the depth slice.
   pcl::PointCloud<pcl::PointXYZ> cloudExceptZSlice1;
   std::vector<int> indsExceptZSlice1;
-  this->CreateDepthSlice(nnZ, *(this->timeSpaceCoords[this->timeIdx]),
-    cloudExceptZSlice1, indsExceptZSlice1, true);
+
+  // Convert input indices to PCL type
+  pcl::PointIndices::Ptr zSliceInds1pcl(new pcl::PointIndices());
+  zSliceInds1pcl->indices = zSliceInds1;
+
+  // Remove all points in the z slice of the 1st NN, so that the 2nd NN will be
+  // found in another z slice.
+  pcl::ExtractIndices<pcl::PointXYZ> extract;
+  extract.setInputCloud(this->timeSpaceCoords[this->timeIdx]->makeShared());
+  extract.setIndices(zSliceInds1pcl);
+  extract.setNegative(false);
+  extract.filter(cloudExceptZSlice1);
+  extract.filter(indsExceptZSlice1);
+
   igndbg << "Excluding 1st nn z slice. Remaining cloud has "
     << cloudExceptZSlice1.points.size() << " points" << std::endl;
 
