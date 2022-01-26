@@ -43,6 +43,9 @@ using namespace tethys;
 
 class tethys::ScienceSensorsSystemPrivate
 {
+  /// \brief Advertise topics and services.
+  public: void StartTransport();
+
   //////////////////////////////////
   // Functions for data manipulation
 
@@ -1019,32 +1022,36 @@ void ScienceSensorsSystem::Configure(
     ignmsg << "Loading science data from [" << this->dataPtr->dataPath << "]"
            << std::endl;
   }
+}
 
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::StartTransport()
+{
   // Advertise cloud as a service for requests on-demand, and a topic for updates
-  this->dataPtr->cloudPub = this->dataPtr->node.Advertise<
-      ignition::msgs::PointCloudPacked>(this->dataPtr->cloudTopic);
+  this->cloudPub = this->node.Advertise<
+      ignition::msgs::PointCloudPacked>(this->cloudTopic);
 
-  this->dataPtr->node.Advertise(this->dataPtr->cloudTopic,
-      &ScienceSensorsSystemPrivate::PointCloudService, this->dataPtr.get());
+  this->node.Advertise(this->cloudTopic,
+      &ScienceSensorsSystemPrivate::PointCloudService, this);
 
   // Advertise science data, also as service and topics
   std::string temperatureTopic{"/temperature"};
-  this->dataPtr->tempPub = this->dataPtr->node.Advertise<
+  this->tempPub = this->node.Advertise<
       ignition::msgs::Float_V>(temperatureTopic);
-  this->dataPtr->node.Advertise(temperatureTopic,
-      &ScienceSensorsSystemPrivate::TemperatureService, this->dataPtr.get());
+  this->node.Advertise(temperatureTopic,
+      &ScienceSensorsSystemPrivate::TemperatureService, this);
 
   std::string chlorophyllTopic{"/chloropyll"};
-  this->dataPtr->chlorPub = this->dataPtr->node.Advertise<
+  this->chlorPub = this->node.Advertise<
       ignition::msgs::Float_V>(chlorophyllTopic);
-  this->dataPtr->node.Advertise(chlorophyllTopic,
-      &ScienceSensorsSystemPrivate::ChlorophyllService, this->dataPtr.get());
+  this->node.Advertise(chlorophyllTopic,
+      &ScienceSensorsSystemPrivate::ChlorophyllService, this);
 
   std::string salinityTopic{"/salinity"};
-  this->dataPtr->salPub = this->dataPtr->node.Advertise<
+  this->salPub = this->node.Advertise<
       ignition::msgs::Float_V>(salinityTopic);
-  this->dataPtr->node.Advertise(salinityTopic,
-      &ScienceSensorsSystemPrivate::SalinityService, this->dataPtr.get());
+  this->node.Advertise(salinityTopic,
+      &ScienceSensorsSystemPrivate::SalinityService, this);
 }
 
 /////////////////////////////////////////////////
@@ -1086,6 +1093,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     {
       this->dataPtr->sphericalCoordinatesInitialized = true;
 
+      this->dataPtr->StartTransport();
       this->dataPtr->ReadData(_ecm);
       this->dataPtr->GenerateOctrees();
     }
@@ -1116,7 +1124,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     }
   }
 
-  // Publish every n iters so that VisualizePointCloud plugin gets it.
+  // Publish every n iters so that GUI PointCloud plugin gets it.
   // Otherwise the initial publication in Configure() is not enough.
   if (this->dataPtr->repeatPubTimes % 10000 == 0)
   {
