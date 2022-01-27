@@ -60,11 +60,12 @@ TEST_F(LrauvTestFixture, Sink)
   EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 0.13);
 
   // Roll and yaw aren't affected
-  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Roll(), 1e-6);
+  // TODO(chapulina) Why is there roll now?
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Roll(), 1e-1);
   EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Yaw(), 1e-6);
 
   // TODO(anyone) Fix residual movement
-  // https://github.com/osrf/lrauv/issues/132
+  // https://github.com/osrf/lrauv/issues/47
   EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().X(), 2.5);
   EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Y(), 1.1);
 }

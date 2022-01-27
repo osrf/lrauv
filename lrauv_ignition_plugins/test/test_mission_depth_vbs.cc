@@ -35,11 +35,16 @@ TEST_F(LrauvTestFixture, DepthVBS)
 
   ignition::common::chdir(std::string(LRAUV_APP_PATH));
 
-  // Get initial X
+  // Get initial pose (facing North)
   this->fixture->Server()->Run(true, 10, false);
   EXPECT_EQ(10, this->iterations);
   EXPECT_EQ(10, this->tethysPoses.size());
   EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().X(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Y(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Z(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Roll(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Yaw(), 1e-6);
 
   // Run non blocking
   this->fixture->Server()->Run(false, 0, false);
@@ -77,14 +82,12 @@ TEST_F(LrauvTestFixture, DepthVBS)
   ignition::math::Vector3d maxVel(0, 0, 0);
   for (int i = 1; i <= this->tethysPoses.size(); i ++)
   {
-    // Vehicle roll should be constant
-    EXPECT_NEAR(tethysPoses[i].Rot().Euler().X(), 0, 1e-2);
+    // Vehicle roll (about +Y since vehicle is facing North) should be constant
+    EXPECT_NEAR(tethysPoses[i].Rot().Euler().Y(), 0, 1e-2);
 
-    // Vehicle should not go vertical
-    EXPECT_LT(tethysPoses[i].Rot().Euler().Y(), IGN_DTOR(40));
-
-    // Vehicle should not go vertical
-    EXPECT_GT(tethysPoses[i].Rot().Euler().Y(), IGN_DTOR(-40));
+    // Vehicle should not go vertical when tilting nose
+    EXPECT_LT(tethysPoses[i].Rot().Euler().X(), IGN_DTOR(40));
+    EXPECT_GT(tethysPoses[i].Rot().Euler().X(), IGN_DTOR(-40));
 
     // Vehicle should not exceed 20m depth
     // Note: Although the mission has a target depth of 10m, the vehicle has

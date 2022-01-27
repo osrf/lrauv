@@ -48,11 +48,11 @@ TEST_F(LrauvTestFixture, Command)
   cmdMsg.set_buoyancyaction_(0.0005);
 
   // Run server until the command is processed and the model reaches a certain
-  // point ahead (the robot moves towards -X)
-  double targetX{-100.0};
+  // point ahead (the robot moves towards +Y)
+  double targetY{100.0};
   this->PublishCommandWhile(cmdMsg, [&]()
   {
-    return this->tethysPoses.back().Pos().X() > targetX;
+    return this->tethysPoses.back().Pos().Y() < targetY;
   });
 
   int minIterations{5100};
@@ -60,8 +60,8 @@ TEST_F(LrauvTestFixture, Command)
   EXPECT_LT(minIterations, this->tethysPoses.size());
 
   // Check final position
-  EXPECT_GT(targetX, this->tethysPoses.back().Pos().X());
-  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Y(), 1e-3);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().X(), 1e-3);
+  EXPECT_LT(targetY, this->tethysPoses.back().Pos().Y());
   EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Z(), 0.05);
   EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Roll(), 1e-2);
   EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 1e-3);

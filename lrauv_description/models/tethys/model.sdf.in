@@ -3,6 +3,11 @@
   Development of this module has been funded by the Monterey Bay Aquarium
   Research Institute (MBARI) and the David and Lucile Packard Foundation
 -->
+
+<!--
+  This model is oriented so that it faces -X. When inserted into the world
+  (which uses ENU) with a zero pose, it faces West.
+-->
 <sdf version="1.6">
   <model name="tethys">
     <!-- Body -->

@@ -35,11 +35,16 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
 
   ignition::common::chdir(std::string(LRAUV_APP_PATH));
 
-  // Get initial X
+  // Get initial pose (facing North)
   this->fixture->Server()->Run(true, 10, false);
   EXPECT_EQ(10, this->iterations);
   EXPECT_EQ(10, this->tethysPoses.size());
   EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().X(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Y(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Z(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Roll(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Yaw(), 1e-6);
 
   // Run non blocking
   this->fixture->Server()->Run(false, 0, false);
@@ -74,7 +79,8 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
   bool targetReached = false, firstSample = true;
   double prev_z = 0, totalDepthChange = 0;
   // Vehicle should sink to 10 meters and hold there
-  // Pitch should be held relatively constant.
+  // Pitch (rotation about world's X, since robot is facing North (+Y)) should
+  // be held relatively constant.
   for (const auto pose: this->tethysPoses)
   {
     // Vehicle should dive down.
@@ -83,14 +89,14 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
     EXPECT_GT(pose.Pos().Z(), -21.5);
 
     // Vehicle should exhibit minimal lateral translation.
-    EXPECT_NEAR(pose.Pos().X(), 0, 10); // FIXME(arjo): IMPORTANT!!
-    EXPECT_NEAR(pose.Pos().Y(), 0, 1e-1);
+    EXPECT_NEAR(pose.Pos().X(), 0, 1e-3);
+    EXPECT_NEAR(pose.Pos().Y(), 0, 2.0); // FIXME(arjo): IMPORTANT!!
 
-    // Vehicle should hold a fixed pitch
+    // Vehicle should hold a fixed angle about X
     // FIXME(arjo): Shouldnt be pitching this much
-    EXPECT_NEAR(pose.Rot().Euler().X(), 0, 1e-1);
-    EXPECT_NEAR(pose.Rot().Euler().Y(), 0, 4e-1);
-    EXPECT_NEAR(pose.Rot().Euler().Z(), 0, 1e-1);
+    EXPECT_NEAR(pose.Rot().Euler().X(), 0, 0.03);
+    EXPECT_NEAR(pose.Rot().Euler().Y(), 0, 1e-3);
+    EXPECT_NEAR(pose.Rot().Euler().Z(), 0, 1e-3);
 
     if (!firstSample)
     {

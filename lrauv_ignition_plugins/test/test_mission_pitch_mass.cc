@@ -83,15 +83,19 @@ TEST_F(LrauvTestFixture, PitchMass)
   bool firstPitch = false, reachedTarget = false;
 
   // Vehicle should have a max pitch of 20 degrees
+  // Since the vehicle is facing North (+Y):
+  // Euler.Y = roll
+  // Euler.X = pitch
+  // Euler.Z = yaw
   for(auto pose: this->tethysPoses)
   {
     // Max Pitch 20 degrees. Allow 5 degrees error for oscillations.
     // Min Pitch -5 degrees. Again allow 5 degrees error for oscillation.
-    EXPECT_LT(pose.Rot().Euler().Y(), IGN_DTOR(25));
-    EXPECT_GT(pose.Rot().Euler().Y(), IGN_DTOR(-5));
+    EXPECT_LT(pose.Rot().Euler().X(), IGN_DTOR(25));
+    EXPECT_GT(pose.Rot().Euler().X(), IGN_DTOR(-5));
 
     // No roll or yaw
-    EXPECT_NEAR(pose.Rot().Euler().X(), IGN_DTOR(0), 1e-3);
+    EXPECT_NEAR(pose.Rot().Euler().Y(), IGN_DTOR(0), 1e-3);
     EXPECT_NEAR(pose.Rot().Euler().Z(), IGN_DTOR(0), 1e-3);
 
     // Check position holds
@@ -102,16 +106,16 @@ TEST_F(LrauvTestFixture, PitchMass)
     // Used later for oscillation check.
     if (!firstPitch)
     {
-      totalPitchChange += std::fabs(pose.Rot().Euler().Y() - prevPitch);
+      totalPitchChange += std::fabs(pose.Rot().Euler().X() - prevPitch);
     }
 
     // Check if we cross the 20 degree mark
-    if (prevPitch <= IGN_DTOR(20) && pose.Rot().Euler().Y() >= IGN_DTOR(20))
+    if (prevPitch <= IGN_DTOR(20) && pose.Rot().Euler().X() >= IGN_DTOR(20))
     {
       reachedTarget = true;
     }
 
-    prevPitch = pose.Rot().Euler().Y();
+    prevPitch = pose.Rot().Euler().X();
     firstPitch = true;
   }
 
