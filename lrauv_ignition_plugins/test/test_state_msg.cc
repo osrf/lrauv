@@ -81,6 +81,14 @@ TEST_F(LrauvTestFixture, State)
   EXPECT_NEAR(0.0, latest.posrph_().y(), 1e-6);
   EXPECT_NEAR(0.0, latest.posrph_().z(), 1e-6);
 
+  // Velocity
+  EXPECT_NEAR(0.0, latest.speed_(), 1e-6);
+
+  // NED world frame
+  EXPECT_NEAR(0.0, latest.posdot_().x(), 1e-6);
+  EXPECT_NEAR(0.0, latest.posdot_().y(), 1e-6);
+  EXPECT_NEAR(0.0, latest.posdot_().z(), 1e-6);
+
   // TODO(chapulina) Check sensor data once interpolation is complete
   // https://github.com/osrf/lrauv/issues/5
 
@@ -127,6 +135,14 @@ TEST_F(LrauvTestFixture, State)
   EXPECT_NEAR(0.0, latest.posrph_().x(), 1e-3);
   EXPECT_NEAR(0.0, latest.posrph_().y(), 1e-6);
   EXPECT_NEAR(0.0, latest.posrph_().z(), 1e-5);
+
+  // Velocity
+  EXPECT_NEAR(1.0, latest.speed_(), 0.02);
+
+  // NED world frame: vehicle is going North
+  EXPECT_NEAR(1.0, latest.posdot_().x(), 0.02);
+  EXPECT_NEAR(0.0, latest.posdot_().y(), 1e-4);
+  EXPECT_NEAR(0.0, latest.posdot_().z(), 1e-6);
 
   // Keep propelling vehicle forward
   cmdMsg.set_propomegaaction_(10 * IGN_PI);
@@ -175,6 +191,14 @@ TEST_F(LrauvTestFixture, State)
   EXPECT_NEAR(0.0, latest.posrph_().y(), 1e-3);
   EXPECT_LT(0.5, latest.posrph_().z());
 
+  // Velocity
+  EXPECT_NEAR(1.0, latest.speed_(), 0.15);
+
+  // NED world frame: vehicle is going North East
+  EXPECT_LT(0.6, latest.posdot_().x());
+  EXPECT_LT(0.3, latest.posdot_().y());
+  EXPECT_NEAR(0.0, latest.posdot_().z(), 1e-3);
+
   // Stop propelling and rotating vehicle
   cmdMsg.set_propomegaaction_(0);
   cmdMsg.set_rudderangleaction_(0);
@@ -191,7 +215,6 @@ TEST_F(LrauvTestFixture, State)
   });
 
   // We expect the vehicle to sink
-  //
   latest = this->stateMsgs.back();
   commonChecks(latest);
 

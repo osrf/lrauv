@@ -180,6 +180,12 @@ ignition::math::Pose3d ENUToNED(ignition::math::Pose3d &_enu)
           _enu.Pitch(), _enu.Roll(), -_enu.Yaw()};
 }
 
+// Convert a vector in ENU to NED.
+ignition::math::Vector3d ENUToNED(ignition::math::Vector3d &_enu)
+{
+  return {_enu.Y(), _enu.X(), -_enu.Z()};
+}
+
 void TethysCommPlugin::Configure(
   const ignition::gazebo::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
@@ -576,20 +582,20 @@ void TethysCommPlugin::PostUpdate(
   // Velocity
 
   // Speed
-  auto linearVelocity =
+  auto linVelComp =
     _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
     this->baseLink);
-  stateMsg.set_speed_(linearVelocity->Data().Length());
+  auto linVelENU = linVelComp->Data();
+  stateMsg.set_speed_(linVelENU.Length());
 
-  // Robot linear velocity wrt ground
-  ignition::math::Vector3d veloGround = linearVelocity->Data();
-  ROSToFSK(veloGround);
-  ignition::msgs::Set(stateMsg.mutable_posdot_(), veloGround);
+  // Velocity in NED world frame
+  auto linVelNED = ENUToNED(linVelENU);
+  ignition::msgs::Set(stateMsg.mutable_posdot_(), linVelNED);
 
   // Water velocity
   // rateUVW
   // TODO(arjo): include currents in water velocity?
-  auto localVel = modelPoseENU.Rot().Inverse() * veloGround;
+  auto localVel = modelPoseENU.Rot().Inverse() * linVelENU;
   //TODO(louise) check for translation/position effects
   ROSToFSK(localVel);
   ignition::msgs::Set(stateMsg.mutable_rateuvw_(), localVel);
