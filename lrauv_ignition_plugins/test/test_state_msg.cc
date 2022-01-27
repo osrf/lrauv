@@ -191,7 +191,6 @@ TEST_F(LrauvTestFixture, State)
   });
 
   // We expect the vehicle to sink
-  //
   latest = this->stateMsgs.back();
   commonChecks(latest);
 

@@ -173,8 +173,10 @@ void ROSToFSK(ignition::math::Vector3d &_vec)
   _vec.Z(-_vec.Z());
 }
 
-// Convert a pose in ENU to NED.
-ignition::math::Pose3d ENUToNED(ignition::math::Pose3d &_enu)
+/// \brief Convert a pose in ENU to NED.
+/// \param[in] _enu A pose in ENU (Gazebo's world frame)
+/// \return A pose in NED (what the controller expects)
+ignition::math::Pose3d ENUToNED(const ignition::math::Pose3d &_enu)
 {
   return {_enu.Y(), _enu.X(), -_enu.Z(),
           _enu.Pitch(), _enu.Roll(), -_enu.Yaw()};
