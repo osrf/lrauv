@@ -47,16 +47,16 @@ TEST_F(LrauvTestFixture, MassShifterTilt)
   // Run server until the command is processed and the model tilts to a
   // certain angle.
   // Because the vehicle is facing North (+Y in ENU), the nose tilts down with
-  // negative "roll" (about East axis)
-  double targetRoll{-0.15};
+  // negative roll in the world frame (about East axis)
+  double targetWorldRoll{-0.15};
   this->PublishCommandWhile(cmdMsg, [&]()
   {
-    return this->tethysPoses.back().Rot().Roll() > targetRoll;
+    return this->tethysPoses.back().Rot().Roll() > targetWorldRoll;
   });
 
   EXPECT_LT(100, this->iterations);
   EXPECT_LT(100, this->tethysPoses.size());
-  EXPECT_GT(targetRoll, this->tethysPoses.back().Rot().Roll());
+  EXPECT_GT(targetWorldRoll, this->tethysPoses.back().Rot().Roll());
   EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 1e-6);
   EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Yaw(), 1e-6);
 }
