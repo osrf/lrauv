@@ -173,6 +173,13 @@ void ROSToFSK(ignition::math::Vector3d &_vec)
   _vec.Z(-_vec.Z());
 }
 
+// Convert a pose in ENU to NED.
+ignition::math::Pose3d ENUToNED(ignition::math::Pose3d &_enu)
+{
+  return {_enu.Y(), _enu.X(), -_enu.Z(),
+          _enu.Pitch(), _enu.Roll(), -_enu.Yaw()};
+}
+
 void TethysCommPlugin::Configure(
   const ignition::gazebo::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
@@ -550,10 +557,7 @@ void TethysCommPlugin::PostUpdate(
 
   // Gazebo is using ENU, controller expects NED
   auto modelPoseENU = ignition::gazebo::worldPose(this->modelEntity, _ecm);
-
-  ignition::math::Pose3d modelPoseNED{
-      modelPoseENU.Y(), modelPoseENU.X(), -modelPoseENU.Z(),
-      modelPoseENU.Pitch(), modelPoseENU.Roll(), -modelPoseENU.Yaw()};
+  auto modelPoseNED = ENUToNED(modelPoseENU);
 
   stateMsg.set_depth_(-modelPoseENU.Pos().Z());
 
@@ -561,7 +565,7 @@ void TethysCommPlugin::PostUpdate(
   ignition::msgs::Set(stateMsg.mutable_rph_(), modelPoseNED.Rot().Euler());
   ignition::msgs::Set(stateMsg.mutable_posrph_(), modelPoseNED.Rot().Euler());
 
-  auto latlon = ignition::gazebo::sphericalCoordinates(this->baseLink, _ecm);
+  auto latlon = ignition::gazebo::sphericalCoordinates(this->modelEntity, _ecm);
   if (latlon)
   {
     stateMsg.set_latitudedeg_(latlon.value().X());

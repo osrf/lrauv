@@ -33,7 +33,6 @@ void commonChecks(const lrauv_ignition_plugins::msgs::LRAUVState &_msg)
   // Check actuators that don't change throughout the test
   EXPECT_NEAR(0.0, _msg.elevatorangle_(), 1e-4);
   EXPECT_NEAR(0.0, _msg.massposition_(), 1e-6);
-  EXPECT_NEAR(0.0005, _msg.buoyancyposition_(), 1e-6);
 
   // rph is equal to posRPH
   EXPECT_DOUBLE_EQ(_msg.posrph_().x(), _msg.rph_().x());
@@ -44,6 +43,9 @@ void commonChecks(const lrauv_ignition_plugins::msgs::LRAUVState &_msg)
 //////////////////////////////////////////////////
 TEST_F(LrauvTestFixture, State)
 {
+  // TODO(chapulina) Test other fields, see
+  // https://github.com/osrf/lrauv/pull/81
+
   // Initial state
   this->fixture->Server()->Run(true, 100, false);
   int maxSleep{100};
@@ -61,6 +63,7 @@ TEST_F(LrauvTestFixture, State)
   // Actuators
   EXPECT_NEAR(0.0, latest.propomega_(), 1e-6);
   EXPECT_NEAR(0.0, latest.rudderangle_(), 1e-6);
+  EXPECT_NEAR(0.0005, latest.buoyancyposition_(), 1e-6);
 
   // Position
   ignition::math::Angle initialLat(IGN_DTOR(35.5999984741211));
@@ -110,6 +113,7 @@ TEST_F(LrauvTestFixture, State)
   // Actuators
   EXPECT_NEAR(10.0 * IGN_PI, latest.propomega_(), 1e-6);
   EXPECT_NEAR(0.0, latest.rudderangle_(), 1e-3);
+  EXPECT_NEAR(0.0005, latest.buoyancyposition_(), 1e-6);
 
   // Position
   EXPECT_NEAR(0.0, latest.depth_(), 1e-6);
@@ -156,6 +160,7 @@ TEST_F(LrauvTestFixture, State)
   // Actuators
   EXPECT_NEAR(10.0 * IGN_PI, latest.propomega_(), 1e-3);
   EXPECT_NEAR(-0.5, latest.rudderangle_(), 0.06);
+  EXPECT_NEAR(0.0005, latest.buoyancyposition_(), 1e-6);
 
   // Position
   EXPECT_NEAR(0.0, latest.depth_(), 1e-3);
@@ -169,5 +174,36 @@ TEST_F(LrauvTestFixture, State)
   EXPECT_NEAR(0.0, latest.posrph_().x(), 1e-3);
   EXPECT_NEAR(0.0, latest.posrph_().y(), 1e-3);
   EXPECT_LT(0.5, latest.posrph_().z());
+
+  // Stop propelling and rotating vehicle
+  cmdMsg.set_propomegaaction_(0);
+  cmdMsg.set_rudderangleaction_(0);
+
+  // Volume below neutral for vehicle to sink
+  cmdMsg.set_buoyancyaction_(0.0002);
+  cmdMsg.set_dropweightstate_(true);
+
+  // Run server until we collect more states
+  this->stateMsgs.clear();
+  this->PublishCommandWhile(cmdMsg, [&]()
+  {
+    return this->stateMsgs.size() < 1000;
+  });
+
+  // We expect the vehicle to sink
+  //
+  latest = this->stateMsgs.back();
+  commonChecks(latest);
+
+  // Actuators
+  EXPECT_NEAR(0.0, latest.propomega_(), 1e-3);
+  EXPECT_NEAR(0.0, latest.rudderangle_(), 1e-3);
+  EXPECT_NEAR(0.0002, latest.buoyancyposition_(), 1e-3);
+
+  // Position
+  EXPECT_LT(0.3, latest.depth_());
+
+  // NED world frame: higher Z is deeper
+  EXPECT_LT(0.3, latest.pos_().z());
 }
 
