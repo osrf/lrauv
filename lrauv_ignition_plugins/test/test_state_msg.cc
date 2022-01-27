@@ -228,5 +228,9 @@ TEST_F(LrauvTestFixture, State)
 
   // NED world frame: higher Z is deeper
   EXPECT_LT(0.3, latest.pos_().z());
+
+  // Velocity
+  // NED world frame: sinking to higher Z
+  EXPECT_LT(0.02, latest.posdot_().z());
 }
 
