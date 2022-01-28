@@ -95,9 +95,6 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Find XYZ locations of points in the two closest z slices to
   /// interpolate among.
   /// \param[in] _pt Location in space to interpolate for
-  /// \param[in] _inds Indices of nearest neighbors to _pt, used to look for
-  /// first z slice.
-  /// \param[in] _sqrDists Distances of nearest neighbors to _pt
   /// \param[out] _interpolatorInds2 Indices of points in fist z slice
   /// \param[out] _interpolators1 XYZ points on a z slice to interpolate among
   /// \param[out] _interpolatorInds1 Indices of points in second z slice
@@ -107,8 +104,6 @@ class tethys::ScienceSensorsSystemPrivate
   /// interpolation between two z slices of 4 points per slice.
   public: void FindTrilinearInterpolators(
     pcl::PointXYZ &_pt,
-    std::vector<int> &_inds,
-    std::vector<float> &_sqrDists,
     std::vector<int> &_interpolatorInds1,
     std::vector<pcl::PointXYZ> &_interpolators1,
     std::vector<int> &_interpolatorInds2,
@@ -763,8 +758,6 @@ bool ScienceSensorsSystemPrivate::comparePclPoints(
 /////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   pcl::PointXYZ &_pt,
-  std::vector<int> &_inds,
-  std::vector<float> &_sqrDists,
   std::vector<int> &_interpolatorInds1,
   std::vector<pcl::PointXYZ> &_interpolators1,
   std::vector<int> &_interpolatorInds2,
@@ -786,20 +779,6 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   // Point cloud not populated
   if (this->timeSpaceCoords[this->timeIdx]->size() == 0)
   {
-    return;
-  }
-  if (_inds.size() == 0 || _sqrDists.size() == 0)
-  {
-    ignwarn << "FindTrilinearInterpolators(): Invalid neighbors array size ("
-            << _inds.size() << " and " << _sqrDists.size()
-            << "). No neighbors to use for interpolation. Returning NaN."
-            << std::endl;
-    return;
-  }
-  if (_inds.size() != _sqrDists.size())
-  {
-    ignwarn << "FindTrilinearInterpolators(): Number of neighbors != number of "
-            << "distances. Invalid input. Returning NaN." << std::endl;
     return;
   }
 
@@ -1849,8 +1828,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         // to use as inputs for trilinear interpolation
         std::vector<pcl::PointXYZ> interpolatorsSlice1, interpolatorsSlice2;
         std::vector<int> interpolatorInds1, interpolatorInds2;
-        this->dataPtr->FindTrilinearInterpolators(searchPoint, spatialInds,
-          spatialSqrDists, interpolatorInds1, interpolatorsSlice1,
+        this->dataPtr->FindTrilinearInterpolators(searchPoint,
+          interpolatorInds1, interpolatorsSlice1,
           interpolatorInds2, interpolatorsSlice2, nbrsPerZSlice);
 
         if (interpolatorsSlice1.size() < nbrsPerZSlice ||
