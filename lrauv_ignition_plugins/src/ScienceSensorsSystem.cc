@@ -117,8 +117,7 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Create a z slice from a point cloud. Slice contains points sharing
   /// the same given z value.
-  /// \param[in] _min_depth Minimum z value
-  /// \param[in] _max_depth Maximum z value
+  /// \param[in] _depth Target z value
   /// \param[in] _cloud Cloud from which to create the z slice
   /// \param[out] _zSlice Points in the new point cloud slice at _depth
   /// \param[out] _zSliceInds Indices of points in _zSlice in the original
@@ -770,12 +769,6 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   std::vector<pcl::PointXYZ> &_interpolators2,
   int _k)
 {
-  // TODO(tfoote) magic numbers
-  // Should be passed in and paramaterized based on the expected data 
-  // distribution height or calculated from the grandularity of the dataset.
-  float slice_depth = 5; // 5 meter. 
-  float epsilon = 1e-6; // Enough for not equal
-
   // Sanity checks
   // Vector not populated
   if (this->timeSpaceCoords.size() == 0)
@@ -826,7 +819,7 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
       << " points in full cloud" << std::endl;
 
   // Create a sub-cloud containing just the z slice
-  this->CreateDepthSlice(_pt.z, _pt.z + slice_depth, *(this->timeSpaceCoords[this->timeIdx]), zSlice1,
+  this->CreateDepthSlice(nnZ, *(this->timeSpaceCoords[this->timeIdx]), zSlice1,
     zSliceInds1);
   if (this->DEBUG_INTERPOLATE)
   {
@@ -873,7 +866,7 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   // 2nd NN will be found in another z slice.
   // Set invert flag to get all but the depth slice.
   pcl::PointCloud<pcl::PointXYZ> cloudExceptZSlice1;
-  this->CreateDepthSlice(_pt.z, _pt.z + slice_depth, *(this->timeSpaceCoords[this->timeIdx]),
+  this->CreateDepthSlice(nnZ, *(this->timeSpaceCoords[this->timeIdx]),
     cloudExceptZSlice1, newToOldInds, true);
   if (this->DEBUG_INTERPOLATE)
   {
@@ -912,7 +905,7 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   // Step 4: Look for 4 NNs in the z slice of 2nd NN
 
   // Create a sub-sub-cloud containing just the z slice
-  this->CreateDepthSlice(_pt.z - slice_depth, _pt.z - epsilon, cloudExceptZSlice1, zSlice2, zSliceInds2);
+  this->CreateDepthSlice(nnZ2, cloudExceptZSlice1, zSlice2, zSliceInds2);
   if (this->DEBUG_INTERPOLATE)
   {
     igndbg << "2nd nn ("
@@ -966,8 +959,7 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
 
 /////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::CreateDepthSlice(
-  float _min_depth,
-  float _max_depth,
+  float _depth,
   pcl::PointCloud<pcl::PointXYZ> &_cloud,
   pcl::PointCloud<pcl::PointXYZ> &_zSlice,
   std::vector<int> &_zSliceInds,
@@ -980,7 +972,7 @@ void ScienceSensorsSystemPrivate::CreateDepthSlice(
   passThruFilter.setInputCloud(_cloud.makeShared());
   passThruFilter.setNegative(_invert);
   passThruFilter.setFilterFieldName("z");
-  passThruFilter.setFilterLimits(_min_depth, _max_depth);
+  passThruFilter.setFilterLimits(_depth - 1e-6, _depth + 1e-6);
   passThruFilter.filter(_zSlice);
   passThruFilter.filter(_zSliceInds);
 }
