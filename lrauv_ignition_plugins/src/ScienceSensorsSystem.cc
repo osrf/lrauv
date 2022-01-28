@@ -33,6 +33,8 @@
 #include <ignition/transport/Node.hh>
 
 #include <pcl/conversions.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/passthrough.h>
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/point_cloud.h>
 #include <pcl/octree/octree_search.h>
@@ -56,12 +58,99 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Generate octree from spatial data, for searching
   public: void GenerateOctrees();
 
+  /// \brief Interpolate among existing science data to output an estimated
+  /// reading at the current sensor location.
+  /// \param[in] _p Position to interpolate for
+  /// \param[in] _xyzs XYZ coordinates of existing data locations
+  /// \param[in] _values Data values at the locations
+  /// \return Interpolated value, or quiet NaN if inputs invalid.
+  public: float InterpolateData(
+    const Eigen::Vector3f &_p,
+    const Eigen::MatrixXf &_xyzs,
+    const std::vector<float> &_values);
+
+  /// \brief True to use trilinear interpolation, false to use barycentric
+  /// interpolation
+  public: bool useTrilinear = true;
+
   /// \brief Convert a vector of PCL points to an Eigen::Matrix.
   /// \param[in] _vec Source vector
   /// \param[out] _mat Result matrix
   public: void PclVectorToEigen(
     const std::vector<pcl::PointXYZ> &_vec,
     Eigen::MatrixXf &_mat);
+
+  //////////////////////////////////
+  // Trilinear interpolation
+
+  /// \brief Comparison function for std::set_difference().
+  /// Comparison between points is arbitrary. This function is only used for
+  /// set operations, not for literal sorting.
+  public: bool comparePclPoints(
+    const pcl::PointXYZ &a,
+    const pcl::PointXYZ &b);
+
+  /// \brief Find XYZ locations of points in the two closest z slices to
+  /// interpolate among.
+  /// \param[in] _pt Location in space to interpolate for
+  /// \param[in] _inds Indices of nearest neighbors to _pt
+  /// \param[in] _sqrDists Distances of nearest neighbors to _pt
+  /// \param[out] _interpolators1 XYZ points on a z slice to interpolate among
+  /// \param[out] _interpolators2 XYZ points on a second z slice to interpolate
+  /// among
+  public: void FindTrilinearInterpolators(
+    pcl::PointXYZ &_pt,
+    std::vector<int> &_inds,
+    std::vector<float> &_sqrDists,
+    std::vector<pcl::PointXYZ> &_interpolators1,
+    std::vector<pcl::PointXYZ> &_interpolators2);
+
+  /// \brief Create a z slice from a point cloud. Slice contains points sharing
+  /// the same given z value.
+  /// \param[in] _depth Target z value
+  /// \param[in] _cloud Cloud from which to create the z slice
+  /// \param[out] _zSlice Points in the new point cloud slice at _depth
+  /// \param[out] _zSliceInds Indices of points in _zSlices in the original
+  /// point cloud _points
+  /// \param[in] _invert Invert the filter. Keep everything except the z slice.
+  public: void CreateDepthSlice(
+    float _depth,
+    pcl::PointCloud<pcl::PointXYZ> &_cloud,
+    pcl::PointCloud<pcl::PointXYZ> &_zSlice,
+    std::vector<int> &_zSliceInds,
+    bool _invert=false);
+
+  /// \brief Create an octree from a point cloud, and search for _k nearest
+  /// neighbors.
+  /// \param[in] _searchPt Location in space to search from
+  /// \param[in] _cloud Point cloud to search in
+  /// \param[out] _nbrInds Result of octree search, indices of points.
+  /// \param[out] _nbrSqrDists Result of octree search, distances.
+  /// \param[out] _nbrs XYZ of the k nearest neighbors found.
+  /// \param[in] _k Number of nearest neighbors. Default to 4, for trilinear
+  /// interpolation between two z slices of 4 points per slice.
+  public: void CreateAndSearchOctree(
+    pcl::PointXYZ &_searchPt,
+    pcl::PointCloud<pcl::PointXYZ> &_cloud,
+    std::vector<int> &_nbrInds,
+    std::vector<float> &_nbrSqrDists,
+    std::vector<pcl::PointXYZ> &_nbrs,
+    int _k=4);
+
+  /// \brief Trilinear interpolation for a point inside a prism, given 8
+  /// verticies of the prism. Suitable for data laid out in a rectangular grid.
+  /// Otherwise, use a different interpolation method, e.g. barycentric.
+  /// \param[in] _p Position to interpolate for
+  /// \param[in] _xyzs XYZ coordinates of 8 vertices of a prism
+  /// \param[in] _values Data values at the 8 vertices
+  /// \return Interpolated value, or quiet NaN if inputs invalid.
+  public: float TrilinearInterpolate(
+    const Eigen::Vector3f &_p,
+    const Eigen::MatrixXf &_xyzs,
+    const std::vector<float> &_values);
+
+  //////////////////////////////////
+  // Barycentric interpolation
 
   /// \brief Barycentric interpolation in 3D, given 4 points on any arbitrary
   /// tetrahedra.
@@ -596,6 +685,22 @@ void ScienceSensorsSystemPrivate::GenerateOctrees()
 }
 
 /////////////////////////////////////////////////
+float ScienceSensorsSystemPrivate::InterpolateData(
+  const Eigen::Vector3f &_p,
+  const Eigen::MatrixXf &_xyzs,
+  const std::vector<float> &_values)
+{
+  if (this->useTrilinear)
+  {
+    return this->TrilinearInterpolate(_p, _xyzs, _values);
+  }
+  else
+  {
+    return this->BarycentricInterpolate(_p, _xyzs, _values);
+  }
+}
+
+/////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::PclVectorToEigen(
   const std::vector<pcl::PointXYZ> &_vec,
   Eigen::MatrixXf &_mat)
@@ -607,6 +712,262 @@ void ScienceSensorsSystemPrivate::PclVectorToEigen(
   {
     _mat.row(r) << _vec.at(r).x, _vec.at(r).y, _vec.at(r).z;
   }
+}
+
+/////////////////////////////////////////////////
+bool ScienceSensorsSystemPrivate::comparePclPoints(
+  const pcl::PointXYZ &a,
+  const pcl::PointXYZ &b)
+{
+  // Comparison between points is arbitrary. This function is only used for
+  // set operations, not for literal sorting.
+  return a.x < b.x && a.y < b.y && a.z < b.z;
+}
+
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
+  pcl::PointXYZ &_pt,
+  std::vector<int> &_inds,
+  std::vector<float> &_sqrDists,
+  std::vector<pcl::PointXYZ> &_interpolators1,
+  std::vector<pcl::PointXYZ> &_interpolators2)
+{
+  // Initialize return parameters
+  _interpolators1.clear();
+  _interpolators2.clear();
+
+  // Sanity checks
+  // Vector not populated
+  if (this->timeSpaceCoords.size() == 0)
+  {
+    return;
+  }
+  // Point cloud not populated
+  if (this->timeSpaceCoords[this->timeIdx]->size() == 0)
+  {
+    return;
+  }
+  if (_inds.size() == 0 || _sqrDists.size() == 0)
+  {
+    ignwarn << "FindInterpolators(): Invalid neighbors aray size ("
+            << _inds.size() << " and " << _sqrDists.size()
+            << "). No neighbors to use for interpolation. Returning NaN."
+            << std::endl;
+    return;
+  }
+  if (_inds.size() != _sqrDists.size())
+  {
+    ignwarn << "FindInterpolators(): Number of neighbors != number of "
+            << "distances. Invalid input. Returning NaN." << std::endl;
+    return;
+  }
+
+  // Two slices of different depth z values
+  pcl::PointCloud<pcl::PointXYZ> zSlice1, zSlice2;
+  // Indices of points in the z slices
+  std::vector<int> zSliceInds1, zSliceInds2;
+
+  // Indices and distances of neighboring points in the search results
+  // 4 above, 4 below
+  std::vector<int> interpolatorInds1, interpolatorInds2;
+  std::vector<float> interpolatorSqrDists1, interpolatorSqrDists2;
+
+  // Step 1: 1st NN, in its z slice, search for 4 NNs
+
+  // 1st nearest neighbor
+  // The distances from kNN search are sorted, so can always just take [0]th
+  int nnIdx = _inds[0];
+  float minDist = _sqrDists[0];
+  // Get z of neighbor
+  float nnZ = this->timeSpaceCoords[this->timeIdx]->at(nnIdx).z;
+
+  // Debug output
+  igndbg << this->timeSpaceCoords[this->timeIdx]->size()
+    << " points in full cloud" << std::endl;
+
+  // Search in z slice for 4 nearest neighbors in this slice
+  this->CreateDepthSlice(nnZ, *(this->timeSpaceCoords[this->timeIdx]), zSlice1,
+    zSliceInds1);
+  igndbg << "1st nn idx " << nnIdx << ", dist " << sqrt(minDist)
+    << ", z slice " << zSlice1.points.size() << " points" << std::endl;
+  this->CreateAndSearchOctree(_pt, zSlice1,
+    interpolatorInds1, interpolatorSqrDists1, _interpolators1);
+  if (interpolatorInds1.size() < 4 || interpolatorSqrDists1.size() < 4)
+  {
+    ignwarn << "Could not find enough neighbors in 1st slice z = " << nnZ
+      << " for trilinear interpolation." << std::endl;
+    return;
+  }
+
+  // Step 2: exclude z slice of 1st NN from further searches.
+
+  pcl::PointCloud<pcl::PointXYZ> cloudExceptZSlice1;
+  std::vector<int> indsExceptZSlice1;
+
+  // Convert input indices to PCL type
+  pcl::PointIndices::Ptr zSliceInds1pcl(new pcl::PointIndices());
+  zSliceInds1pcl->indices = zSliceInds1;
+
+  // Remove all points in the z slice of the 1st NN, so that the 2nd NN will be
+  // found in another z slice.
+  pcl::ExtractIndices<pcl::PointXYZ> extract;
+  extract.setInputCloud(this->timeSpaceCoords[this->timeIdx]->makeShared());
+  extract.setIndices(zSliceInds1pcl);
+  extract.setNegative(false);
+  extract.filter(cloudExceptZSlice1);
+  extract.filter(indsExceptZSlice1);
+
+  igndbg << "Excluding 1st nn z slice. Remaining cloud has "
+    << cloudExceptZSlice1.points.size() << " points" << std::endl;
+
+  // Step 3: Look for 2nd NN everywhere except z slice of 1st NN.
+  // In this 2nd z-slice, search for 4 NNs
+
+  // Search for 2nd NN
+  std::vector<int> inds2;
+  std::vector<float> sqrDists2;
+  std::vector<pcl::PointXYZ> nbrs2;
+  this->CreateAndSearchOctree(_pt, cloudExceptZSlice1,
+    inds2, sqrDists2, nbrs2, 1);
+  if (inds2.size() < 1 || sqrDists2.size() < 1)
+  {
+    ignwarn << "Could not find 2nd NN among "
+      << cloudExceptZSlice1.points.size()
+      << " points for trilinear interpolation" << std::endl;
+    return;
+  }
+
+  // Take closest point as 2nd NN
+  int nnIdx2 = inds2[0];
+  float minDist2 = sqrDists2[0];
+  // Get z of neighbor
+  float nnZ2 = nbrs2[0].z;
+
+  // Step 4: Look for 4 NNs in the z slice of 2nd NN
+
+  // Search in z slice of 1st NN for 4 nearest neighbors in this slice
+  this->CreateDepthSlice(nnZ2, cloudExceptZSlice1, zSlice2, zSliceInds2);
+  igndbg << "2nd nn idx " << nnIdx2 << ", dist " << sqrt(minDist2)
+    << ", z slice " << zSlice2.points.size() << " points" << std::endl;
+  this->CreateAndSearchOctree(_pt, zSlice2,
+    interpolatorInds2, interpolatorSqrDists2, _interpolators2);
+  if (interpolatorInds2.size() < 4 || interpolatorSqrDists2.size() < 4)
+  {
+    ignwarn << "Could not find enough neighbors in 2nd slice z = " << nnZ2
+      << " for trilinear interpolation." << std::endl;
+    return;
+  }
+}
+
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::CreateDepthSlice(
+  float _depth,
+  pcl::PointCloud<pcl::PointXYZ> &_cloud,
+  pcl::PointCloud<pcl::PointXYZ> &_zSlice,
+  std::vector<int> &_zSliceInds,
+  bool _invert)
+{
+  // Separate a z slice, i.e. points with z equal to that of 1st NN
+  // Pass in _invert=true to get indices of removed points
+  pcl::PassThrough<pcl::PointXYZ> passThruFilter =
+    pcl::PassThrough<pcl::PointXYZ>(true);
+  passThruFilter.setInputCloud(_cloud.makeShared());
+  passThruFilter.setNegative(_invert);
+  passThruFilter.setFilterFieldName("z");
+  passThruFilter.setFilterLimits(_depth - 1e-6, _depth + 1e-6);
+  passThruFilter.filter(_zSlice);
+
+  // Get indices of points kept. Default method returns removed indices, so
+  // invert the filter to get indices of points kept.
+  passThruFilter.setNegative(!_invert);
+  passThruFilter.filter(_zSliceInds);
+}
+
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::CreateAndSearchOctree(
+  pcl::PointXYZ &_searchPt,
+  pcl::PointCloud<pcl::PointXYZ> &_cloud,
+  std::vector<int> &_nbrInds,
+  std::vector<float> &_nbrSqrDists,
+  std::vector<pcl::PointXYZ> &_nbrs,
+  int _k)
+{
+  // Initialize return value populated by hand
+  _nbrs.clear();
+
+  // Create octree for cloud
+  auto octree = pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>(
+    this->spatialRes);
+  octree.setInputCloud(_cloud.makeShared());
+  octree.addPointsFromInputCloud();
+
+  // Search in the depth slice to find 4 closest neighbors
+  if (octree.getLeafCount() > 0)
+  {
+    if (octree.nearestKSearch(
+      _searchPt, _k, _nbrInds, _nbrSqrDists) <= 0)
+    {
+      ignwarn << "No data found near search point " << _searchPt
+        << std::endl;
+      return;
+    }
+    else
+    {
+      igndbg << "Found " << _nbrInds.size() << " neighbors."
+        << std::endl;
+
+      for (std::size_t i = 0; i < _nbrInds.size(); ++i)
+      {
+        pcl::PointXYZ nbrPt = _cloud.at(_nbrInds[i]);
+        _nbrs.push_back(nbrPt);
+
+        igndbg << "Neighbor at ("
+          << nbrPt.x << ", " << nbrPt.y << ", " << nbrPt.z << "), "
+          << "distance " << sqrt(_nbrSqrDists[i]) << " m" << std::endl;
+      }
+    }
+  }
+  else
+  {
+    ignwarn << "Zero points in this octree." << std::endl;
+  }
+}
+
+
+/////////////////////////////////////////////////
+float ScienceSensorsSystemPrivate::TrilinearInterpolate(
+  const Eigen::Vector3f &_p,
+  const Eigen::MatrixXf &_xyzs,
+  const std::vector<float> &_values)
+{
+  IGN_PROFILE("ScienceSensorsSystemPrivate::TrilinearInterpolate");
+
+  // Sanity check: Must have 8 points, 4 above, 4 below.
+  if (_xyzs.rows() != 8)
+  {
+    ignerr << "Size of interpolators invalid (" << _xyzs.size() << "). "
+      << "Need 8 points in a rectangular prism. "
+      << "Cannot perform trilinear interpolation." << std::endl;
+    return std::numeric_limits<float>::quiet_NaN();
+  }
+
+  // Find closest neighbor
+  Eigen::MatrixXf::Index minR, minC;
+
+  // 3 x n
+  Eigen::MatrixXf diff = _xyzs.transpose().colwise() - _p;
+  igndbg << "diff: " << std::endl << diff << std::endl;
+
+  Eigen::VectorXf dists = diff.colwise().norm();
+  igndbg << "dists: " << std::endl << dists << std::endl;
+  float minDist = dists.minCoeff(&minC);
+  igndbg << "minI: " << minC << std::endl;
+
+  // Dummy: Just return the closest element
+  return _values[minC];
+
+
+  // TODO trilinear interpolation using the 8 interpolators found
 }
 
 /////////////////////////////////////////////////
@@ -1143,6 +1504,14 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   // Sensor position to interpolate for
   ignition::math::Vector3d sensorPosENU;
 
+  // Barycentric interpolation searches 4 neighbors directly
+  int initK = 4;
+  // Trilinear interpolation starts by searching for 1 neighbor
+  if (this->dataPtr->useTrilinear)
+  {
+    initK = 1;
+  }
+
   // Indices and distances of neighboring points to sensor position
   std::vector<int> spatialIdx;
   std::vector<float> spatialSqrDist;
@@ -1193,9 +1562,9 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       // kNN search (alternatives are voxel search and radius search. kNN
       // search is good for variable resolution when the distance to the next
       // neighbor is unknown).
-      // Find 4 nearest neighbors for barycentric interpolation
+      // Search for nearest neighbors
       if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]
-        ->nearestKSearch(searchPoint, 4, spatialIdx, spatialSqrDist) <= 0)
+        ->nearestKSearch(searchPoint, initK, spatialIdx, spatialSqrDist) <= 0)
       {
         ignwarn << "Not enough data found near sensor location " << sensorPosENU
           << std::endl;
@@ -1220,11 +1589,47 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       }
       reinterpolate = true;
 
-      // Get neighbor XYZs to pass to interpolation
-      for (int i = 0; i < spatialIdx.size(); ++i)
+      // TODO: refactor so that this if-stmt is replaced with one call. Use the
+      // Boolean in that new function.
+      if (this->dataPtr->useTrilinear)
       {
-        interpolatorXYZs.push_back(this->dataPtr->timeSpaceCoords[
-          this->dataPtr->timeIdx]->at(spatialIdx[i]));
+        // Find 2 sets of 4 nearest neighbors, each set on a different z slice,
+        // to use as inputs for trilinear interpolation
+        std::vector<pcl::PointXYZ> interpolatorsSlice1, interpolatorsSlice2;
+        this->dataPtr->FindTrilinearInterpolators(searchPoint, spatialIdx,
+          spatialSqrDist, interpolatorsSlice1, interpolatorsSlice2);
+        if (interpolatorsSlice1.size() < 4 || interpolatorsSlice2.size() < 4)
+        {
+          ignwarn << "Could not find trilinear interpolators near sensor location "
+            << sensorPosENU << std::endl;
+          continue;
+        }
+
+        // Concatenate the 2 sets of 4 points into a vector of 8 points
+        interpolatorXYZs.reserve(interpolatorsSlice1.size() +
+          interpolatorsSlice2.size());
+        interpolatorXYZs.insert(interpolatorXYZs.end(),
+          interpolatorsSlice1.begin(), interpolatorsSlice1.end());
+        interpolatorXYZs.insert(interpolatorXYZs.end(),
+          interpolatorsSlice2.begin(), interpolatorsSlice2.end());
+
+        // FIXME in FindTrilinearInterpolators():
+        // When call TrilinearInterpolate():
+        // Find 1D indices of the data values d000-d111!!! Manually keep track
+        // of indices of the 4 points in the 2nd z slice (interpolatorsSlice2),
+        // which are scrambled up after the 1st z slice is removed from cloud!
+
+        // FIXME: 4 neighbors found are not on a rectangle! That voids assumption
+        // of trilinear interpolation. Cannot perform valid interpolation.
+      }
+      else
+      {
+        // Get neighbor XYZs to pass to interpolation
+        for (int i = 0; i < spatialIdx.size(); ++i)
+        {
+          interpolatorXYZs.push_back(this->dataPtr->timeSpaceCoords[
+            this->dataPtr->timeIdx]->at(spatialIdx[i]));
+        }
       }
 
       // Update last update position to the current position
@@ -1249,7 +1654,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   {
     if (reinterpolate)
     {
-      // Input values to barycentric interpolation
+      // Input values to interpolation
       std::vector<float> interpolationValues;
 
       // For the correct sensor, interpolate using nearby locations with data
@@ -1260,7 +1665,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         this->dataPtr->ExtractElements(
           this->dataPtr->salinityArr[this->dataPtr->timeIdx], spatialIdx,
           interpolationValues);
-        float sal = this->dataPtr->BarycentricInterpolate(
+        float sal = this->dataPtr->InterpolateData(
           sensorPosENUEigen, interpolatorXYZsMat, interpolationValues);
         casted->SetData(sal);
       }
@@ -1272,7 +1677,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         this->dataPtr->ExtractElements(
           this->dataPtr->temperatureArr[this->dataPtr->timeIdx], spatialIdx,
           interpolationValues);
-        float temp = this->dataPtr->BarycentricInterpolate(
+        float temp = this->dataPtr->InterpolateData(
           sensorPosENUEigen, interpolatorXYZsMat, interpolationValues);
 
         ignition::math::Temperature tempC;
@@ -1287,7 +1692,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         this->dataPtr->ExtractElements(
           this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx], spatialIdx,
           interpolationValues);
-        float chlor = this->dataPtr->BarycentricInterpolate(
+        float chlor = this->dataPtr->InterpolateData(
           sensorPosENUEigen, interpolatorXYZsMat, interpolationValues);
         casted->SetData(chlor);
       }
@@ -1299,7 +1704,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         this->dataPtr->ExtractElements(
           this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx], spatialIdx,
           interpolationValues);
-        float eCurr = this->dataPtr->BarycentricInterpolate(
+        float eCurr = this->dataPtr->InterpolateData(
           sensorPosENUEigen, interpolatorXYZsMat, interpolationValues);
 
         // Reset before reuse
@@ -1308,7 +1713,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         this->dataPtr->ExtractElements(
           this->dataPtr->northCurrentArr[this->dataPtr->timeIdx], spatialIdx,
           interpolationValues);
-        float nCurr = this->dataPtr->BarycentricInterpolate(
+        float nCurr = this->dataPtr->InterpolateData(
           sensorPosENUEigen, interpolatorXYZsMat, interpolationValues);
 
         auto curr = ignition::math::Vector3d(eCurr, nCurr, 0.0);
