@@ -871,11 +871,6 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
       << zSlice2.points[0].y << ", "
       << zSlice2.points[0].z << "), "
       << ", z slice " << zSlice2.points.size() << " points" << std::endl;
-
-    //igndbg << "FindTrilinearInterpolators(): 2nd z slice has indices: "
-    //  << std::endl;
-    //for (int i = 0; i < zSliceInds2.size(); ++i)
-    //  igndbg << newToOldInds[zSliceInds2[i]] << " " << std::endl;
   }
 
   // Search in z slice of 1st NN for 4 nearest neighbors in this slice
@@ -893,16 +888,9 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
 
   // Map back to the indices in the original point cloud for returning
   _interpolatorInds2.clear();
-  for (int i = 0; i < interpolatorInds2NewCloud.size(); ++i)
+ for (int i = 0; i < interpolatorInds2NewCloud.size(); ++i)
   {
-    _interpolatorInds2.push_back(
-      newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]]);
-    //igndbg << "interpolatorInds2NewCloud[i]: "
-    //  << interpolatorInds2NewCloud[i] << std::endl;
-    //igndbg << "zSliceInds2[interpolatorInds2NewCloud[i]]: "
-    //  << zSliceInds2[interpolatorInds2NewCloud[i]] << std::endl;
-    //igndbg << "newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]]: "
-    //  << newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]] << std::endl;
+    _interpolatorInds2.push_back(zSliceInds2[interpolatorInds2NewCloud[i]]);
   }
 
   //if (this->DEBUG_INTERPOLATE)
