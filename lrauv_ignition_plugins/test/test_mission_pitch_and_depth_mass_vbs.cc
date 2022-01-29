@@ -93,7 +93,7 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
     EXPECT_GT(pose.Pos().Z(), -21.5);
 
     // Vehicle should exhibit minimal lateral translation.
-    EXPECT_NEAR(pose.Pos().X(), 0, 1e-5);
+    EXPECT_NEAR(pose.Pos().X(), 0, 2e-3);
     EXPECT_NEAR(pose.Pos().Y(), 0, 2.0); // FIXME(arjo): IMPORTANT!!
 
     // Vehicle should hold a fixed angle about X
