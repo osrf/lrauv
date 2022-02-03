@@ -15,6 +15,8 @@
     <scene>
       <ambient>0.0 1.0 1.0</ambient>
       <background>0.0 0.7 0.8</background>
+
+      <grid>false</grid>
     </scene>
 
     <physics name="1ms" type="dart">
@@ -61,13 +63,11 @@
       name="tethys::TimeAnalysisPlugin">
     </plugin-->
 
-    <!-- Dynamic vehicle spawn not supported by science sensors yet - need to
-      shift all science data positions to new lat/long of world origin. -->
-    <!--plugin
+    <plugin
       filename="ScienceSensorsSystem"
       name="tethys::ScienceSensorsSystem">
       <data_path>2003080103_mb_l3_las.csv</data_path>
-    </plugin-->
+    </plugin>
 
     <!-- Interface with LRAUV Main Vehicle Application for the world -->
     <plugin
@@ -90,7 +90,17 @@
         <scene>scene</scene>
         <ambient_light>0.4 0.4 0.4</ambient_light>
         <background_color>0.8 0.8 0.8</background_color>
+        <!-- looking at robot -->
         <camera_pose>0 6 6 0 0.5 -1.57</camera_pose>
+        <!-- looking at all science data for 2003080103_mb_l3_las.csv -->
+        <!--camera_pose>-50000 -30000 250000 0 1.1 1.58</camera_pose-->
+        <camera_clip>
+          <!-- ortho view needs low near clip -->
+          <!-- but a very low near clip messes orbit's far clip ?! -->
+          <near>0.1</near>
+          <!-- See 3000 km away -->
+          <far>3000000</far>
+        </camera_clip>
       </plugin>
 
       <!-- Plugins that add functionality to the scene -->
@@ -153,6 +163,7 @@
           <property key="state" type="string">floating</property>
           <property key="showTitleBar" type="bool">false</property>
         </ignition-gui>
+        <warn_on_action_failure>false</warn_on_action_failure>
       </plugin>
       <plugin filename="SelectEntities" name="Select Entities">
         <ignition-gui>
@@ -229,9 +240,7 @@
       <plugin filename="Plot3D" name="Plot 3D">
         <ignition-gui>
           <title>Plot Tethys 3D path</title>
-          <property type="string" key="state">floating_collapsed</property>
-          <property key="x" type="double">0</property>
-          <property key="y" type="double">0</property>
+          <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
         <entity_name>tethys</entity_name>
         <color>0 0 1</color>
@@ -241,16 +250,56 @@
       <plugin filename="ComponentInspector" name="Component Inspector">
         <ignition-gui>
           <title>Inspector</title>
-          <property type="string" key="state">floating_collapsed</property>
-          <property type="double" key="x">400</property>
+          <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
       </plugin>
-      <plugin filename="VisualizePointCloud" name="Visualize science data">
+      <plugin filename="PointCloud" name="Visualize science data">
         <ignition-gui>
           <title>Visualize science data</title>
-          <property type="string" key="state">floating_collapsed</property>
-          <property key="x" type="double">800</property>
+          <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
+      </plugin>
+      <plugin filename="ViewAngle" name="Camera controls">
+        <ignition-gui>
+          <title>Camera controls</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="GridConfig" name="Grid config">
+        <ignition-gui>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+        <insert>
+          <!-- 300 km x 300 km -->
+          <cell_count>6</cell_count>
+          <vertical_cell_count>0</vertical_cell_count>
+          <!-- 50 km -->
+          <cell_length>50000</cell_length>
+          <pose>0 100000 0  0 0 0.32</pose>
+          <color>0 1 0 1</color>
+        </insert>
+        <insert>
+          <!-- 0.1 km x 0.1 km -->
+          <cell_count>100</cell_count>
+          <vertical_cell_count>0</vertical_cell_count>
+          <!-- 1 m -->
+          <cell_length>1</cell_length>
+          <pose>0 0 0  0 0 0</pose>
+          <color>0.5 0.5 0.5 1</color>
+        </insert>
+      </plugin>
+      <plugin filename="ControlPanelPlugin" name="Tethys Controls">
+        <ignition-gui>
+          <title>Tethys controls</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="ReferenceAxis" name="Reference axis">
+        <ignition-gui>
+          <title>Reference axis</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+        <fsk>tethys</fsk>
       </plugin>
     </gui>
 
@@ -267,6 +316,24 @@
       </attenuation>
       <direction>-0.5 0.1 -0.9</direction>
     </light>
+
+
+    <!-- This invisible plane helps with orbiting the camera, especially at large scales -->
+    <model name="horizontal_plane">
+      <static>true</static>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <!-- 300 km x 300 km -->
+              <size>300000 300000</size>
+            </plane>
+          </geometry>
+          <transparency>1.0</transparency>
+        </visual>
+      </link>
+    </model>
 
     <!-- Uncomment for particle effect
       Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied

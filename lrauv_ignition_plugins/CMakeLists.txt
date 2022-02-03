@@ -187,7 +187,6 @@ add_lrauv_plugin(TethysCommPlugin
     lrauv_command
     lrauv_state)
 add_lrauv_plugin(TimeAnalysisPlugin)
-add_lrauv_plugin(VisualizePointCloud GUI)
 add_lrauv_plugin(WorldCommPlugin
   PROTO
     lrauv_init)
