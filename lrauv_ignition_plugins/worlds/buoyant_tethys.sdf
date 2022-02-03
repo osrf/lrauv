@@ -103,7 +103,7 @@
         <ambient_light>0.4 0.4 0.4</ambient_light>
         <background_color>0.8 0.8 0.8</background_color>
         <!-- looking at robot -->
-        <camera_pose>0 6 6 0 0.5 -1.57</camera_pose>
+        <camera_pose>4.5 0 4  0 0.45 3.14</camera_pose>
         <!-- looking at all science data for 2003080103_mb_l3_las.csv -->
         <!--camera_pose>-50000 -30000 250000 0 1.1 1.58</camera_pose-->
         <camera_clip>

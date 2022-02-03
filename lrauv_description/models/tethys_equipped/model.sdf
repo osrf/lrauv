@@ -6,6 +6,8 @@
 <sdf version="1.9">
   <model name="tethys">
     <include merge="true">
+      <!-- align with NED (face North) -->
+      <pose degrees="true">0 0 0   0 0 -90</pose>
       <uri>tethys</uri>
 
       <!-- Sensors -->
