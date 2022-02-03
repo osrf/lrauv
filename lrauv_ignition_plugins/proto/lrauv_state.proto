@@ -100,7 +100,8 @@ message LRAUVState
   /// \brief Duplicate of posRPH_
   ignition.msgs.Vector3d rph_     = 13;
 
-  /// \brief TODO(chapulina)
+  /// \brief Magnitude of vehicle's linear velocity in the world frame.
+  /// It's always positive. Unit: m/s
   float speed_                    = 14;
 
   /// \brief Latitude in degrees
@@ -121,7 +122,8 @@ message LRAUVState
   /// \brief Vehicle's orientation in "world frame" (see above) Unit: rad
   ignition.msgs.Vector3d posRPH_  = 20;
 
-  /// \brief \TODO(chapulina)
+  /// \brief Vehicle's instantaneous linear velocity in "world frame" 
+  /// (see above). Units: m / s
   ignition.msgs.Vector3d posDot_  = 21;
 
   /// \brief \TODO(chapulina)
