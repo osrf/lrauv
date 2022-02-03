@@ -106,7 +106,7 @@ namespace tethys
 
     /// Topic to publish to for thruster
     private: std::string thrusterTopic
-      {"propeller_joint/cmd_pos"};
+      {"propeller_joint/cmd_vel"};
 
     /// Topic to publish to for rudder
     private: std::string rudderTopic

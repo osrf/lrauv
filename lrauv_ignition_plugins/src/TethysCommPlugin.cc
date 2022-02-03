@@ -429,21 +429,8 @@ void TethysCommPlugin::CommandCallback(
 
   // Thruster
   ignition::msgs::Double thrusterMsg;
-  // TODO(arjo):
-  // Conversion from angular velocity to force b/c thruster plugin takes force
-  // Maybe we should change that?
-  // https://github.com/osrf/lrauv/issues/75
   auto angVel = _msg.propomegaaction_();
-
-  // force = thrust_coefficient * fluid_density * omega ^ 2 *
-  //         propeller_diameter ^ 4
-  // These values are defined in the model's Thruster plugin's SDF
-  auto force = 0.004312328425753156 * this->oceanDensity * pow(0.2, 4) * angVel * angVel;
-  if (angVel < 0)
-  {
-    force *=-1;
-  }
-  thrusterMsg.set_data(force);
+  thrusterMsg.set_data(angVel);
   this->thrusterPub.Publish(thrusterMsg);
 
   // Mass shifter

@@ -52,14 +52,12 @@ void commandVehicleForward(const std::string &_name)
   transport::Node node;
   auto pub =
       node.Advertise<msgs::Double>(
-          "/model/" + _name + "/joint/propeller_joint/cmd_thrust");
+          "/model/" + _name + "/joint/propeller_joint/cmd_vel");
 
   msgs::Double thrustCmd;
 
   // 300 rpm -> 31.42rads^-1
-  //   -> (31.42rads^-1)^2 * 0.004422 (thrust coeff) * 1000 (fluid density) 
-  //      * 0.2m ^ 4 (prop diameter) = 6.9857
-  thrustCmd.set_data(6.9857);
+  thrustCmd.set_data(31.42);
 
   int sleep{0};
   int maxSleep{30};
