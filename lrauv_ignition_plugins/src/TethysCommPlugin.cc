@@ -183,7 +183,7 @@ ignition::math::Pose3d ENUToNED(const ignition::math::Pose3d &_enu)
 }
 
 // Convert a vector in ENU to NED.
-ignition::math::Vector3d ENUToNED(ignition::math::Vector3d &_enu)
+ignition::math::Vector3d ENUToNED(const ignition::math::Vector3d &_enu)
 {
   return {_enu.Y(), _enu.X(), -_enu.Z()};
 }
