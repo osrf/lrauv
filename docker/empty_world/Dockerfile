@@ -67,6 +67,7 @@ RUN apt-get -qq update && apt-get -q -y install \
   wget \
   python3-vcstool \
   python3-colcon-common-extensions \
+  && apt-get dist-upgrade -y \
   && rm -rf /var/lib/apt/lists/* \
   && apt-get -qq clean
 
@@ -84,7 +85,8 @@ RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable
  && /bin/sh -c 'wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add -' \
  && apt-get update \
  && apt-get install -y \
-  $(sort -u $(find . -iname 'packages-'`lsb_release -cs`'.apt' -o -iname 'packages.apt' | grep -v '/\.git/') | sed '/ignition\|sdf/d' | tr '\n' ' ')
+  $(sort -u $(find . -iname 'packages-'`lsb_release -cs`'.apt' -o -iname 'packages.apt' | grep -v '/\.git/') | sed '/ignition\|sdf/d' | tr '\n' ' ') \
+ && apt-get dist-upgrade -y
 
 # sdformat10 optional dependencies
 #RUN apt-get install -y \
