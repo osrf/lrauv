@@ -6,6 +6,8 @@
 <sdf version="1.9">
   <model name="tethys">
     <include merge="true">
+      <!-- align with NED (face North) -->
+      <pose degrees="true">0 0 0   0 0 -90</pose>
       <uri>tethys</uri>
 
       <!-- Sensors -->
@@ -94,10 +96,11 @@
         <namespace>tethys</namespace>
         <joint_name>propeller_joint</joint_name>
         <!-- Be sure to update TethysComm when updating these numbers -->
-        <thrust_coefficient>0.004422</thrust_coefficient>
-        <fluid_density>1000</fluid_density>
+        <thrust_coefficient>0.004312328425753156</thrust_coefficient>
+        <fluid_density>1025</fluid_density>
         <propeller_diameter>0.2</propeller_diameter>
         <velocity_control>true</velocity_control>
+        <use_angvel_cmd>true</use_angvel_cmd>
       </plugin>
       <plugin
         filename="ignition-gazebo-joint-position-controller-system"
@@ -111,7 +114,7 @@
       <plugin
         filename="ignition-gazebo-lift-drag-system"
         name="ignition::gazebo::systems::LiftDrag">
-        <air_density>1000</air_density>
+        <air_density>1025</air_density>
         <cla>4.13</cla>
         <cla_stall>-1.1</cla_stall>
         <cda>0.2</cda>
@@ -130,7 +133,7 @@
       <plugin
         filename="ignition-gazebo-lift-drag-system"
         name="ignition::gazebo::systems::LiftDrag">
-        <air_density>1000</air_density>
+        <air_density>1025</air_density>
         <cla>4.13</cla>
         <cla_stall>-1.1</cla_stall>
         <cda>0.2</cda>
@@ -153,7 +156,7 @@
         <command_topic>tethys/command_topic</command_topic>
         <state_topic>tethys/state_topic</state_topic>
         <debug_printout>0</debug_printout>
-        <ocean_density>1000</ocean_density>
+        <ocean_density>1025</ocean_density>
       </plugin>
       <plugin
         filename="HydrodynamicsPlugin"
@@ -184,7 +187,7 @@
         name="ignition::gazebo::systems::BuoyancyEngine">
         <link_name>buoyancy_engine</link_name>
         <namespace>tethys</namespace>
-        <fluid_density>1000</fluid_density>
+        <fluid_density>1025</fluid_density>
         <!-- 80 cc == 0.00008 m^3 -->
         <min_volume>0.000080</min_volume>
         <!-- 500 cc == 0.0005 m^3 -->

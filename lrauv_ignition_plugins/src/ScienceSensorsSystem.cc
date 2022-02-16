@@ -33,6 +33,7 @@
 #include <ignition/transport/Node.hh>
 
 #include <pcl/conversions.h>
+#include <pcl/filters/extract_indices.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/point_cloud.h>
@@ -49,6 +50,9 @@ class tethys::ScienceSensorsSystemPrivate
     TRILINEAR,
     BARYCENTRIC
   };
+
+  /// \brief Advertise topics and services.
+  public: void StartTransport();
 
   //////////////////////////////////
   // Functions for data manipulation
@@ -132,7 +136,7 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Create an octree from a point cloud, and search for _k nearest
   /// neighbors.
-  /// \param[in] _searchPt Location in space to interpolate for
+  /// \param[in] _searchPt Location in space to search from
   /// \param[in] _cloud Point cloud to search in
   /// \param[out] _nbrInds Result of octree search, indices of points.
   /// \param[out] _nbrSqrDists Result of octree search, distances.
@@ -316,7 +320,8 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Debug printouts for interpolation. Will keep around at least until
   /// interpolation is stable.
-  public: const bool DEBUG_INTERPOLATE = false;
+  public: const bool DEBUG_INTERPOLATE = true;
+  public: const bool DEBUG_INTERPOLATE_MATH = false;
 
   ///////////////////////////////
   // Variables for coordinate system
@@ -769,6 +774,12 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   std::vector<pcl::PointXYZ> &_interpolators2,
   int _k)
 {
+  // Initialize return parameters
+  _interpolatorInds1.clear();
+  _interpolators1.clear();
+  _interpolatorInds2.clear();
+  _interpolators2.clear();
+
   // Sanity checks
   // Vector not populated
   if (this->timeSpaceCoords.size() == 0)
@@ -830,10 +841,10 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
       << "idx " << nnIdx << ", dist " << sqrt(minDist)
       << ", z slice " << zSlice1.points.size() << " points" << std::endl;
 
-    //igndbg << "FindTrilinearInterpolators(): 1st z slice has indices: "
-    //  << std::endl;
-    //for (int i = 0; i < zSliceInds1.size(); ++i)
-    //  igndbg << zSliceInds1[i] << " " << std::endl;
+    // igndbg << "FindTrilinearInterpolators(): 1st z slice has indices: "
+    //   << std::endl;
+    // for (int i = 0; i < zSliceInds1.size(); ++i)
+    //   igndbg << zSliceInds1[i] << " " << std::endl;
   }
 
   // Search in z slice for 4 nearest neighbors in this slice
@@ -866,17 +877,29 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   // 2nd NN will be found in another z slice.
   // Set invert flag to get all but the depth slice.
   pcl::PointCloud<pcl::PointXYZ> cloudExceptZSlice1;
-  this->CreateDepthSlice(nnZ, *(this->timeSpaceCoords[this->timeIdx]),
-    cloudExceptZSlice1, newToOldInds, true);
+
+  // Convert input indices to PCL type
+  pcl::PointIndices::Ptr zSliceInds1pcl(new pcl::PointIndices());
+  zSliceInds1pcl->indices = zSliceInds1;
+
+  // Remove all points in the z slice of the 1st NN, so that the 2nd NN will be
+  // found in another z slice.
+  pcl::ExtractIndices<pcl::PointXYZ> extract;
+  extract.setInputCloud(this->timeSpaceCoords[this->timeIdx]->makeShared());
+  extract.setIndices(zSliceInds1pcl);
+  extract.setNegative(true);
+  extract.filter(cloudExceptZSlice1);
+  extract.filter(newToOldInds);
+
   if (this->DEBUG_INTERPOLATE)
   {
     igndbg << "Excluding 1st nn z slice. Remaining cloud has "
       << cloudExceptZSlice1.points.size() << " points" << std::endl;
 
-    //igndbg << "FindTrilinearInterpolators(): cloud except 1st z slice has "
-    //  << "indices:" << std::endl;
-    //for (int i = 0; i < newToOldInds.size(); ++i)
-    //  igndbg << newToOldInds[i] << " " << std::endl;
+    // igndbg << "FindTrilinearInterpolators(): cloud except 1st z slice has "
+    //   << "indices:" << std::endl;
+    // for (int i = 0; i < newToOldInds.size(); ++i)
+    //   igndbg << newToOldInds[i] << " " << std::endl;
   }
 
   // Step 3: Look for 2nd NN everywhere except z slice of 1st NN.
@@ -915,10 +938,10 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
       << "idx " << nnIdx2 << ", dist " << sqrt(minDist2)
       << ", z slice " << zSlice2.points.size() << " points" << std::endl;
 
-    //igndbg << "FindTrilinearInterpolators(): 2nd z slice has indices: "
-    //  << std::endl;
-    //for (int i = 0; i < zSliceInds2.size(); ++i)
-    //  igndbg << newToOldInds[zSliceInds2[i]] << " " << std::endl;
+    // igndbg << "FindTrilinearInterpolators(): 2nd z slice has indices: "
+    //   << std::endl;
+    // for (int i = 0; i < zSliceInds2.size(); ++i)
+    //   igndbg << newToOldInds[zSliceInds2[i]] << " " << std::endl;
   }
 
   // Search in z slice of 1st NN for 4 nearest neighbors in this slice
@@ -939,22 +962,22 @@ void ScienceSensorsSystemPrivate::FindTrilinearInterpolators(
   {
     _interpolatorInds2.push_back(
       newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]]);
-    //igndbg << "interpolatorInds2NewCloud[i]: "
-    //  << interpolatorInds2NewCloud[i] << std::endl;
-    //igndbg << "zSliceInds2[interpolatorInds2NewCloud[i]]: "
-    //  << zSliceInds2[interpolatorInds2NewCloud[i]] << std::endl;
-    //igndbg << "newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]]: "
-    //  << newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]] << std::endl;
+    // igndbg << "interpolatorInds2NewCloud[i]: "
+    //   << interpolatorInds2NewCloud[i] << std::endl;
+    // igndbg << "zSliceInds2[interpolatorInds2NewCloud[i]]: "
+    //   << zSliceInds2[interpolatorInds2NewCloud[i]] << std::endl;
+    // igndbg << "newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]]: "
+    //   << newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]] << std::endl;
   }
 
-  //if (this->DEBUG_INTERPOLATE)
-  //{
-  //  igndbg << "FindTrilinearInterpolators(): result indices:" << std::endl;
-  //  for (int i = 0; i < _interpolatorInds1.size(); ++i)
-  //    igndbg << _interpolatorInds1[i] << " " << std::endl;
-  //  for (int i = 0; i < _interpolatorInds2.size(); ++i)
-  //    igndbg << _interpolatorInds2[i] << " " << std::endl;
-  //}
+  // if (this->DEBUG_INTERPOLATE)
+  // {
+  //   igndbg << "FindTrilinearInterpolators(): result indices:" << std::endl;
+  //   for (int i = 0; i < _interpolatorInds1.size(); ++i)
+  //     igndbg << _interpolatorInds1[i] << " " << std::endl;
+  //   for (int i = 0; i < _interpolatorInds2.size(); ++i)
+  //     igndbg << _interpolatorInds2[i] << " " << std::endl;
+  // }
 }
 
 /////////////////////////////////////////////////
@@ -966,7 +989,7 @@ void ScienceSensorsSystemPrivate::CreateDepthSlice(
   bool _invert)
 {
   // Separate a z slice, i.e. points with z equal to that of 1st NN
-  // Pass in extract_removed_indices=true to get indices of removed points
+  // Pass in _invert=true to get indices of removed points
   pcl::PassThrough<pcl::PointXYZ> passThruFilter =
     pcl::PassThrough<pcl::PointXYZ>(true);
   passThruFilter.setInputCloud(_cloud.makeShared());
@@ -1216,7 +1239,7 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
 {
   // Implemented from https://en.wikipedia.org/wiki/Barycentric_coordinate_system#Barycentric_coordinates_on_tetrahedra
 
-  if (this->DEBUG_INTERPOLATE)
+  if (this->DEBUG_INTERPOLATE_MATH)
     igndbg << "_p: " << std::endl << _p << std::endl;
 
   Eigen::Matrix3f T;
@@ -1232,7 +1255,7 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
        _xyzs(0, 2) - _xyzs(3, 2),
        _xyzs(1, 2) - _xyzs(3, 2),
        _xyzs(2, 2) - _xyzs(3, 2);
-  if (this->DEBUG_INTERPOLATE)
+  if (this->DEBUG_INTERPOLATE_MATH)
     igndbg << "T: " << std::endl << T << std::endl;
 
   int zeroRowCount = 0;
@@ -1303,13 +1326,13 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   // r4 = (x4, y4, z4)
   Eigen::Vector3f r4;
   r4 << _xyzs(3, 0), _xyzs(3, 1), _xyzs(3, 2);
-  if (this->DEBUG_INTERPOLATE)
+  if (this->DEBUG_INTERPOLATE_MATH)
     igndbg << "r4: " << std::endl << r4 << std::endl;
 
   // (lambda1, lambda2, lambda3)
   Eigen::Vector3f lambda123 = T.inverse() * (_p - r4);
 
-  if (this->DEBUG_INTERPOLATE)
+  if (this->DEBUG_INTERPOLATE_MATH)
     igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
 
   // lambda4 = 1 - lambda1 - lambda2 - lambda3
@@ -1342,7 +1365,7 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   const Eigen::Matrix<float, 4, 2> &_xys,
   const std::vector<float> &_values)
 {
-  if (this->DEBUG_INTERPOLATE)
+  if (this->DEBUG_INTERPOLATE_MATH)
   {
     igndbg << "_p: " << std::endl << _p << std::endl;
     igndbg << "_xys: " << std::endl << _xys << std::endl;
@@ -1369,7 +1392,7 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
       }
       xys3.row(nextRow++) = _xys.row(r2);
     }
-    if (this->DEBUG_INTERPOLATE)
+    if (this->DEBUG_INTERPOLATE_MATH)
       igndbg << "xys3: " << std::endl << xys3 << std::endl;
 
     // Row 1: x1 - x3, x2 - x3
@@ -1378,18 +1401,18 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
     // Row 2: y1 - y3, y2 - y3
          xys3(0, 1) - xys3(2, 1),
          xys3(1, 1) - xys3(2, 1);
-    if (this->DEBUG_INTERPOLATE)
+    if (this->DEBUG_INTERPOLATE_MATH)
       igndbg << "T: " << std::endl << T << std::endl;
 
     // lastVert = (x3, y3)
     lastVert << xys3(2, 0), xys3(2, 1);
-    if (this->DEBUG_INTERPOLATE)
+    if (this->DEBUG_INTERPOLATE_MATH)
       igndbg << "lastVert: " << std::endl << lastVert << std::endl;
 
     // (lambda1, lambda2)
     lambda12 = T.inverse() * (_p - lastVert);
 
-    if (this->DEBUG_INTERPOLATE)
+    if (this->DEBUG_INTERPOLATE_MATH)
       igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
 
     // lambda3 = 1 - lambda1 - lambda2
@@ -1428,7 +1451,7 @@ float ScienceSensorsSystemPrivate::BarycentricInterpolate(
   const Eigen::VectorXf &_xs,
   const std::vector<float> &_values)
 {
-  if (this->DEBUG_INTERPOLATE)
+  if (this->DEBUG_INTERPOLATE_MATH)
   {
     igndbg << "_p: " << std::endl << _p << std::endl;
     igndbg << "_xs: " << std::endl << _xs << std::endl;
@@ -1687,32 +1710,36 @@ void ScienceSensorsSystem::Configure(
     ignmsg << "Loading science data from [" << this->dataPtr->dataPath << "]"
            << std::endl;
   }
+}
 
+/////////////////////////////////////////////////
+void ScienceSensorsSystemPrivate::StartTransport()
+{
   // Advertise cloud as a service for requests on-demand, and a topic for updates
-  this->dataPtr->cloudPub = this->dataPtr->node.Advertise<
-      ignition::msgs::PointCloudPacked>(this->dataPtr->cloudTopic);
+  this->cloudPub = this->node.Advertise<
+      ignition::msgs::PointCloudPacked>(this->cloudTopic);
 
-  this->dataPtr->node.Advertise(this->dataPtr->cloudTopic,
-      &ScienceSensorsSystemPrivate::PointCloudService, this->dataPtr.get());
+  this->node.Advertise(this->cloudTopic,
+      &ScienceSensorsSystemPrivate::PointCloudService, this);
 
   // Advertise science data, also as service and topics
   std::string temperatureTopic{"/temperature"};
-  this->dataPtr->tempPub = this->dataPtr->node.Advertise<
+  this->tempPub = this->node.Advertise<
       ignition::msgs::Float_V>(temperatureTopic);
-  this->dataPtr->node.Advertise(temperatureTopic,
-      &ScienceSensorsSystemPrivate::TemperatureService, this->dataPtr.get());
+  this->node.Advertise(temperatureTopic,
+      &ScienceSensorsSystemPrivate::TemperatureService, this);
 
   std::string chlorophyllTopic{"/chloropyll"};
-  this->dataPtr->chlorPub = this->dataPtr->node.Advertise<
+  this->chlorPub = this->node.Advertise<
       ignition::msgs::Float_V>(chlorophyllTopic);
-  this->dataPtr->node.Advertise(chlorophyllTopic,
-      &ScienceSensorsSystemPrivate::ChlorophyllService, this->dataPtr.get());
+  this->node.Advertise(chlorophyllTopic,
+      &ScienceSensorsSystemPrivate::ChlorophyllService, this);
 
   std::string salinityTopic{"/salinity"};
-  this->dataPtr->salPub = this->dataPtr->node.Advertise<
+  this->salPub = this->node.Advertise<
       ignition::msgs::Float_V>(salinityTopic);
-  this->dataPtr->node.Advertise(salinityTopic,
-      &ScienceSensorsSystemPrivate::SalinityService, this->dataPtr.get());
+  this->node.Advertise(salinityTopic,
+      &ScienceSensorsSystemPrivate::SalinityService, this);
 }
 
 /////////////////////////////////////////////////
@@ -1754,6 +1781,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     {
       this->dataPtr->sphericalCoordinatesInitialized = true;
 
+      this->dataPtr->StartTransport();
       this->dataPtr->ReadData(_ecm);
       this->dataPtr->GenerateOctrees();
     }
@@ -1784,7 +1812,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     }
   }
 
-  // Publish every n iters so that VisualizePointCloud plugin gets it.
+  // Publish every n iters so that GUI PointCloud plugin gets it.
   // Otherwise the initial publication in Configure() is not enough.
   if (this->dataPtr->repeatPubTimes % 10000 == 0)
   {

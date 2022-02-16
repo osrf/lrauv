@@ -106,7 +106,7 @@ namespace tethys
 
     /// Topic to publish to for thruster
     private: std::string thrusterTopic
-      {"propeller_joint/cmd_pos"};
+      {"propeller_joint/cmd_vel"};
 
     /// Topic to publish to for rudder
     private: std::string rudderTopic
@@ -197,8 +197,11 @@ namespace tethys
     /// Transport node for message passing
     private: ignition::transport::Node node;
 
+    /// The model's entity
+    private: ignition::gazebo::Entity modelEntity;
+
     /// The model's base link
-    private: ignition::gazebo::Entity modelLink;
+    private: ignition::gazebo::Entity baseLink;
 
     /// The thruster link
     private: ignition::gazebo::Entity thrusterLink;

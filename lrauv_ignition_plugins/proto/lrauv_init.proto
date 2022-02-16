@@ -50,13 +50,16 @@ message LRAUVInit
   /// \brief Initial depth in meters.
   double initZ_                   = 5;
 
-  /// \TODO(chapulina)
+  /// \brief Initial pitch with respect to the NED world frame
+  /// (i.e. rotation about the East vector). Radians.
   float initPitch_                = 6;
 
-  /// \TODO(chapulina)
+  /// \brief Initial roll with respect to the NED world frame
+  /// (i.e. rotation about the North vector). Radians.
   float initRoll_                 = 7;
 
-  /// \TODO(chapulina)
+  /// \brief Initial heading with respect to the NED world frame
+  /// (i.e. rotation about the Down vector). Radians.
   float initHeading_              = 8;
 
   // Add fields as needed

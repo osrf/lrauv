@@ -265,7 +265,7 @@ void ReferenceAxisPrivate::OnPreRender()
     vehicleVis->AddChild(fskVis);
     // TODO(chapulina) This rotation won't be needed if we update the model
     // https://github.com/osrf/lrauv/issues/80
-    fskVis->SetLocalRotation(0, IGN_PI, 0);
+    fskVis->SetLocalRotation(IGN_PI, 0, IGN_PI * 0.5);
 
     // Ogre2 doesn't support text yet
     auto textGeom = this->scene->CreateText();

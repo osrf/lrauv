@@ -37,21 +37,22 @@
       name="ignition::gazebo::systems::Buoyancy">
       <!-- TODO: fix behaviour near surface, see https://github.com/osrf/lrauv/issues/102
         <graded_buoyancy>
-        <default_density>1000</default_density>
+        <default_density>1025</default_density>
         <density_change>
           <above_depth>0.5</above_depth>
           <density>1</density>
         </density_change>
       </graded_buoyancy-->
+      <uniform_fluid_density>1025</uniform_fluid_density>
     </plugin>
 
     <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
       to ParticleEmitter in Ignition G.
       See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
-    <plugin
+    <!--<plugin
       filename="ignition-gazebo-particle-emitter2-system"
       name="ignition::gazebo::systems::ParticleEmitter2">
-    </plugin>
+    </plugin>-->
 
     <!-- Uncomment for time analysis -->
     <!--plugin
@@ -85,6 +86,7 @@
       <data_path>2003080103_mb_l3_las.csv</data_path>
       <!--data_path>2003080103_mb_l3_las_1x1km.csv</data_path-->
       <!--data_path>simple_test.csv</data_path-->
+      <!--data_path>interpolation_prism.csv</data_path-->
       <!--data_path>interpolation_test.csv</data_path-->
     </plugin>
 
@@ -103,7 +105,7 @@
         <ambient_light>0.4 0.4 0.4</ambient_light>
         <background_color>0.8 0.8 0.8</background_color>
         <!-- looking at robot -->
-        <camera_pose>0 6 6 0 0.5 -1.57</camera_pose>
+        <camera_pose>4.5 0 4  0 0.45 3.14</camera_pose>
         <!-- looking at all science data for 2003080103_mb_l3_las.csv -->
         <!--camera_pose>-50000 -30000 250000 0 1.1 1.58</camera_pose-->
         <camera_clip>
@@ -265,7 +267,7 @@
           <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
       </plugin>
-      <plugin filename="VisualizePointCloud" name="Visualize science data">
+      <plugin filename="PointCloud" name="Visualize science data">
         <ignition-gui>
           <title>Visualize science data</title>
           <property type="string" key="state">docked_collapsed</property>
