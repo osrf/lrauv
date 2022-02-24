@@ -41,6 +41,8 @@ class Interpolation
     BARYCENTRIC
   };
 
+  public: Interpolation();
+
   /// \brief Interpolate among existing science data to output an estimated
   /// reading at the current sensor location.
   /// \param[in] _p Position to interpolate for
@@ -226,6 +228,12 @@ class InterpolationPrivate
   /// until interpolation is stable.
   public: const bool DEBUG_INTERPOLATE_MATH = false;
 };
+
+/////////////////////////////////////////////////
+Interpolation::Interpolation()
+  : dataPtr(std::make_unique<InterpolationPrivate>())
+{
+}
 
 /////////////////////////////////////////////////
 float Interpolation::InterpolateData(
