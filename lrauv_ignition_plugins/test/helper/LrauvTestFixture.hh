@@ -51,11 +51,13 @@ double angleDiff(double _a, double _b)
 }
 
 /// \brief Convenient fixture that provides boilerplate code common to most
-/// LRAUV tests.
-class LrauvTestFixture : public ::testing::Test
+/// LRAUV tests. This is an abstract class that does not provide any concrete
+/// worlds.
+class LrauvTestFixtureBase : public ::testing::Test
 {
-  // Documentation inherited
-  protected: void SetUp() override
+  // Setup the specified world.
+  // \param[in] _worldName Name of the world to load.
+  public: void SetUp(const std::string &_worldName)
   {
     ignition::common::Console::SetVerbosity(4);
 
@@ -66,12 +68,12 @@ class LrauvTestFixture : public ::testing::Test
       commandTopic);
 
     auto stateTopic = "/tethys/state_topic";
-    this->node.Subscribe(stateTopic, &LrauvTestFixture::OnState, this);
+    this->node.Subscribe(stateTopic, &LrauvTestFixtureBase::OnState, this);
 
     // Setup fixture
     this->fixture = std::make_unique<ignition::gazebo::TestFixture>(
         ignition::common::joinPaths(
-        std::string(PROJECT_SOURCE_PATH), "worlds", "buoyant_tethys.sdf"));
+        std::string(PROJECT_SOURCE_PATH), "worlds", _worldName));
 
     fixture->OnPostUpdate(
       [&](const ignition::gazebo::UpdateInfo &_info,
@@ -301,5 +303,16 @@ class LrauvTestFixture : public ::testing::Test
 
   /// \brief Publishes commands
   public: ignition::transport::Node::Publisher commandPub;
+};
+
+
+/// \brief Loads the default "buyant_tethys.sdf" world.
+class LrauvTestFixture : public LrauvTestFixtureBase
+{
+  /// Documentation inherited
+  protected: void SetUp() override
+  {
+    LrauvTestFixtureBase::SetUp("buoyant_tethys.sdf");
+  }
 };
 #endif
