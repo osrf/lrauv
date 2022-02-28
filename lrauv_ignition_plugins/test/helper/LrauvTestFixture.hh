@@ -314,4 +314,14 @@ class LrauvTestFixture : public LrauvTestFixtureBase
     LrauvTestFixtureBase::SetUp("buoyant_tethys.sdf");
   }
 };
+
+/// \brief Loads the default "buyant_tethys.sdf" world.
+class LrauvTestFixtureAtDepth : public LrauvTestFixtureBase
+{
+  /// Documentation inherited
+  protected: void SetUp() override
+  {
+    LrauvTestFixtureBase::SetUp("buoyant_tethys_at_depth.sdf");
+  }
+};
 #endif
