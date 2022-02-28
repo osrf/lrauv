@@ -50,9 +50,8 @@ double angleDiff(double _a, double _b)
   return diff.Radian();
 }
 
-/// \brief Convenient fixture that provides boilerplate code common to most
-/// LRAUV tests. This is an abstract class that does not provide any concrete
-/// worlds.
+/// \brief Abstract base class for fixture that provides boilerplate code common
+/// to most LRAUV tests.
 class LrauvTestFixtureBase : public ::testing::Test
 {
   // Setup the specified world.
