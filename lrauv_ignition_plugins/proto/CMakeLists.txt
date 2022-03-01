@@ -24,6 +24,7 @@ endfunction()
 
 add_lrauv_message(lrauv_acoustic_message)
 add_lrauv_message(lrauv_command)
+add_lrauv_message(lrauv_dvl_message)
 add_lrauv_message(lrauv_init)
 add_lrauv_message(lrauv_internal_comms)
 add_lrauv_message(lrauv_range_bearing_request)

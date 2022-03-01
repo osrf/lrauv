@@ -1,0 +1,91 @@
+/*
+ * Copyright (C) 2022 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+syntax = "proto3";
+package ignition.msgs;
+option java_package = "com.ignition.msgs";
+option java_outer_classname = "DVLProtos";
+
+/// \ingroup ignition.msgs
+/// \interface Doppler Velocity Log Message
+/// \brief Message for a Doppler Velocity Log. Doppler velocity logs are
+/// used by the maritime community to track the velocity of a vessel. It relies
+/// on the principle of doppler shift of an echo to measure the velocity of the
+/// craft.
+/// The message is based upon the message in the following repository:
+/// https://github.com/apl-ocean-engineering/hydrographic_msgs/blob/main/acoustic_msgs/msg/Dvl.msg
+
+import "ignition/msgs/vector3d.proto";
+import "ignition/msgs/header.proto";
+
+message DVL
+{
+  /// \brief Header
+  Header header = 1;
+
+  /// \brief DVL Type
+  enum DVLType
+  {
+    PISTON = 0;
+    PHASED_ARRAY = 1;
+  };
+  DVLType type = 2;
+
+  /// \brief Velocity mode
+  enum VelocityMode
+  {
+    DVL_MODE_BOTTOM = 0;
+    DVL_MODE_WATER = 1;
+  };
+  VelocityMode mode = 3;
+
+  /// \brief Velocity
+  Vector3d velocity = 4;
+
+  /// \brief Velocity covariance
+  repeated double velocity_covar = 5;
+
+  /// \brief Average altitude of all good beam returns.
+  /// For 30-deg sensor, altitude = (sqrt(3) / 2) * sum(range) / num_good_beams
+  double altitude = 6;
+
+  /// \brief Calculated from xy velocities:
+  ///   course_gnd = atan2(velocity.y, velocity.x)
+  double course_gnd = 7;
+
+  /// \brief Calculated from xy velocities:
+  ///  speed_gnd = sqrt(velocity.x^2 + velocity.y^2)
+  double speed_gnd = 8;
+
+  /// \brief Beam ranges
+  repeated double beam_range = 9;
+
+  /// \brief Beam ranges covariance
+  repeated double beam_range_covar = 10;
+
+  /// \brief Beam velocity for each beam
+  repeated double beam_velocity = 11;
+
+  /// \brief Beam velocity covariance for each beam
+  repeated double beam_velocity_covar = 12;
+
+  /// \brief Speed of sound being used in current medium
+  double speed_of_sound = 13;
+
+  /// \brief Number of good beams
+  int32 num_good_beams = 14;
+}
