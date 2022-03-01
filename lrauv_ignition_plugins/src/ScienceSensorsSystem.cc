@@ -620,6 +620,8 @@ void ScienceSensorsSystem::Configure(
     ignmsg << "Loading science data from [" << this->dataPtr->dataPath << "]"
            << std::endl;
   }
+
+  this->dataPtr->interpolation.SetMethod(TRILINEAR);
 }
 
 /////////////////////////////////////////////////
@@ -745,8 +747,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   int initK = 4;
   // Trilinear interpolation starts by searching for 1 neighbor. Only its z is
   // used, to find the nearest z slice.
-  if (this->dataPtr->interpolation.INTERPOLATION_METHOD ==
-      this->dataPtr->interpolation.TRILINEAR)
+  if (this->dataPtr->interpolation.Method() == TRILINEAR)
   {
     initK = 1;
   }
@@ -835,8 +836,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       }
       reinterpolate = true;
 
-      if (this->dataPtr->interpolation.INTERPOLATION_METHOD ==
-          this->dataPtr->interpolation.TRILINEAR)
+      if (this->dataPtr->interpolation.Method() == TRILINEAR)
       {
         // Vector not populated
         if (this->dataPtr->timeSpaceCoords.size() == 0)
@@ -880,8 +880,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
           interpolatorInds.push_back(interpolatorInds2[i]);
         }
       }
-      else if (this->dataPtr->interpolation.INTERPOLATION_METHOD ==
-        this->dataPtr->interpolation.BARYCENTRIC)
+      else if (this->dataPtr->interpolation.Method() == BARYCENTRIC)
       {
         // Prepare neighbor data to pass to interpolation
         for (int i = 0; i < spatialInds.size(); ++i)

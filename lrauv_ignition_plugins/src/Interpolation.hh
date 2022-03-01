@@ -23,36 +23,37 @@
 #ifndef TETHYS_INTERPOLATION_HH_
 #define TETHYS_INTERPOLATION_HH_
 
+#include <ignition/common/Console.hh>
+#include <ignition/common/Profiler.hh>
+
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/passthrough.h>
-
-#include "Interpolation.hh"
+#include <pcl/octree/octree_search.h>
 
 namespace tethys
 {
 class InterpolationPrivate;
 
+/// \brief Interpolation methods
+enum InterpolationMethod
+{
+  TRILINEAR,
+  BARYCENTRIC
+};
+
 /// \brief Algorithms for data interpolation
 class Interpolation
 {
-  public: enum interpolation
-  {
-    TRILINEAR,
-    BARYCENTRIC
-  };
+  /// \brief Constructor
+  public: Interpolation(InterpolationMethod _method=TRILINEAR);
 
-  public: Interpolation();
+  /// \brief Set interpolation method
+  /// \param[in] _method Number from enum interpolation
+  public: void SetMethod(InterpolationMethod _method);
 
-  /// \brief Interpolate among existing science data to output an estimated
-  /// reading at the current sensor location.
-  /// \param[in] _p Position to interpolate for
-  /// \param[in] _xyzs XYZ coordinates of existing data locations
-  /// \param[in] _values Data values at the locations
-  /// \return Interpolated value, or quiet NaN if inputs invalid.
-  public: float InterpolateData(
-    const Eigen::Vector3f &_p,
-    const Eigen::MatrixXf &_xyzs,
-    const std::vector<float> &_values);
+  /// \brief Get interpolation method
+  /// \returns Interpolation method in enum
+  public: InterpolationMethod Method();
 
   /// \brief Find XYZ locations of points in the two closest z slices to
   /// interpolate among.
@@ -82,13 +83,20 @@ class Interpolation
     std::vector<pcl::PointXYZ> &_interpolators2,
     int _k=4);
 
+  /// \brief Interpolate among existing science data to output an estimated
+  /// reading at the current sensor location.
+  /// \param[in] _p Position to interpolate for
+  /// \param[in] _xyzs XYZ coordinates of existing data locations
+  /// \param[in] _values Data values at the locations
+  /// \return Interpolated value, or quiet NaN if inputs invalid.
+  public: float InterpolateData(
+    const Eigen::Vector3f &_p,
+    const Eigen::MatrixXf &_xyzs,
+    const std::vector<float> &_values);
+
   /// \brief Return debug flag
   /// \return Whether debug flag is on
   public: bool debug();
-
-  /// \brief True to use trilinear interpolation, false to use barycentric
-  /// interpolation
-  public: int INTERPOLATION_METHOD = TRILINEAR;
 
   /// \brief Private data pointer
   private: std::unique_ptr<InterpolationPrivate> dataPtr;
@@ -96,6 +104,9 @@ class Interpolation
 
 class InterpolationPrivate
 {
+  /// \brief Constructor
+  public: InterpolationPrivate(InterpolationMethod _method=TRILINEAR);
+
   //////////////////////////////////
   // Trilinear interpolation
 
@@ -227,34 +238,41 @@ class InterpolationPrivate
   /// \brief Debug printouts for interpolation math. Will keep around at least
   /// until interpolation is stable.
   public: const bool DEBUG_INTERPOLATE_MATH = false;
+
+  /// \brief Interpolation method
+  public: InterpolationMethod method = TRILINEAR;
 };
 
 /////////////////////////////////////////////////
-Interpolation::Interpolation()
+Interpolation::Interpolation(InterpolationMethod _method)
   : dataPtr(std::make_unique<InterpolationPrivate>())
 {
 }
 
 /////////////////////////////////////////////////
-float Interpolation::InterpolateData(
-  const Eigen::Vector3f &_p,
-  const Eigen::MatrixXf &_xyzs,
-  const std::vector<float> &_values)
+InterpolationMethod Interpolation::Method()
 {
-  if (this->INTERPOLATION_METHOD == TRILINEAR)
+  return this->dataPtr->method;
+}
+
+/////////////////////////////////////////////////
+void Interpolation::SetMethod(InterpolationMethod _method)
+{
+  switch (_method)
   {
-    return this->dataPtr->TrilinearInterpolate(_p, _xyzs, _values);
+    case TRILINEAR:
+      ignmsg << "Interpolation method set to TRILINEAR" << std::endl;
+      break;
+    case BARYCENTRIC:
+      ignmsg << "Interpolation method set to BARYCENTRIC" << std::endl;
+      break;
+    default:
+      ignerr << "Invalid interpolation method: " << _method
+        << ". Method not modified."<< std::endl;
+      return;
   }
-  else if (this->INTERPOLATION_METHOD == BARYCENTRIC)
-  {
-    return this->dataPtr->BarycentricInterpolate(_p, _xyzs, _values);
-  }
-  else
-  {
-    ignerr << "INTERPOLATION_METHOD value invalid. "
-      << "Choose a valid interpolation method." << std::endl;
-    return std::numeric_limits<float>::quiet_NaN();
-  }
+
+  this->dataPtr->method = _method;
 }
 
 /////////////////////////////////////////////////
@@ -473,9 +491,37 @@ void Interpolation::FindTrilinearInterpolators(
 }
 
 /////////////////////////////////////////////////
+float Interpolation::InterpolateData(
+  const Eigen::Vector3f &_p,
+  const Eigen::MatrixXf &_xyzs,
+  const std::vector<float> &_values)
+{
+  if (this->dataPtr->method == TRILINEAR)
+  {
+    return this->dataPtr->TrilinearInterpolate(_p, _xyzs, _values);
+  }
+  else if (this->dataPtr->method == BARYCENTRIC)
+  {
+    return this->dataPtr->BarycentricInterpolate(_p, _xyzs, _values);
+  }
+  else
+  {
+    ignerr << "method value invalid. "
+      << "Choose a valid interpolation method." << std::endl;
+    return std::numeric_limits<float>::quiet_NaN();
+  }
+}
+
+/////////////////////////////////////////////////
 bool Interpolation::debug()
 {
   return this->dataPtr->DEBUG_INTERPOLATE;
+}
+
+/////////////////////////////////////////////////
+InterpolationPrivate::InterpolationPrivate(InterpolationMethod _method)
+{
+  this->method = _method;
 }
 
 /////////////////////////////////////////////////
