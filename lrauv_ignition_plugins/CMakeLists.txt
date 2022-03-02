@@ -74,14 +74,14 @@ add_subdirectory(proto)
 #
 # [INCLUDE_COMMS]: Optional. Include comms header files.
 function(add_lrauv_plugin PLUGIN)
-  set(options PCL GUI RENDERING INCLUDE_COMMS)
+  set(options PCL GUI RENDERING SENSORS INCLUDE_COMMS)
   set(oneValueArgs)
-  set(multiValueArgs PROTO PRIVATE_LINK_LIBS)
+  set(multiValueArgs PROTO PRIVATE_LINK_LIBS ADDITIONAL_FILES)
 
   cmake_parse_arguments(add_lrauv_plugin
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  set(PLUGIN_SOURCES src/${PLUGIN}.cc)
+  set(PLUGIN_SOURCES src/${PLUGIN}.cc ${ADDITIONAL_FILES})
   set(INSTALL_LIB lib)
 
   # GUI plugin
@@ -151,6 +151,14 @@ function(add_lrauv_plugin PLUGIN)
     )
   endif()
 
+  # Sensor
+  if (add_lrauv_plugin_SENSORS)
+    target_link_libraries(${PLUGIN}
+      PRIVATE
+        ignition-sensors${IGN_SENSORS_VER}::ignition-sensors${IGN_SENSORS_VER}
+    )
+  endif()
+
   install(
     TARGETS ${PLUGIN}
     DESTINATION ${INSTALL_LIB})
@@ -169,6 +177,11 @@ add_lrauv_plugin(ControlPanelPlugin GUI
   PROTO
     lrauv_command
     lrauv_state)
+add_lrauv_plugin(DVLSystem
+  SENSORS
+  RENDERING
+  ADDITIONAL_FILES src/dvl/DVLSensor.cc
+  PROTO lrauv_dvl_message)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(RangeBearingPlugin
   INCLUDE_COMMS
