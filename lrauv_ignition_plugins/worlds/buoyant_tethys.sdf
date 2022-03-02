@@ -40,7 +40,7 @@
         <default_density>1025</default_density>
         <density_change>
           <above_depth>0.5</above_depth>
-          <density>0</density>
+          <density>1.125</density>
         </density_change>
       </graded_buoyancy>
       <!--<uniform_fluid_density>1025</uniform_fluid_density> -->
