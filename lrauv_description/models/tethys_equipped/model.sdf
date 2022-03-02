@@ -15,6 +15,14 @@
         <sensor
           element_id="base_link"
           action="add"
+          name="dvl"
+          type="custom"
+          ignition:type="dvl">
+          <topic>/model/tethys/pathfinder</topic>
+        </sensor>
+        <sensor
+          element_id="base_link"
+          action="add"
           name="salinity_sensor"
           type="custom"
           ignition:type="salinity">
