@@ -245,7 +245,7 @@ class InterpolationPrivate
 
 /////////////////////////////////////////////////
 Interpolation::Interpolation(InterpolationMethod _method)
-  : dataPtr(std::make_unique<InterpolationPrivate>())
+  : dataPtr(std::make_unique<InterpolationPrivate>(_method))
 {
 }
 
@@ -520,8 +520,8 @@ bool Interpolation::debug()
 
 /////////////////////////////////////////////////
 InterpolationPrivate::InterpolationPrivate(InterpolationMethod _method)
+  : method(_method)
 {
-  this->method = _method;
 }
 
 /////////////////////////////////////////////////

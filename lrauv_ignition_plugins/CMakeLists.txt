@@ -316,6 +316,18 @@ if(BUILD_TESTING)
     lrauv_range_bearing_request
     lrauv_range_bearing_response)
   gtest_discover_tests(test_range_bearing)
+
+  add_executable(UNIT_Interpolation_TEST src/Interpolation_TEST.cc)
+  target_include_directories(UNIT_Interpolation_TEST
+    PUBLIC ${PCL_INCLUDE_DIRS})
+  target_link_libraries(UNIT_Interpolation_TEST
+    PUBLIC gtest_main
+    PRIVATE
+      ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
+      ignition-common${IGN_COMMON_VER}::profiler
+      ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+      ${PCL_LIBRARIES})
+  gtest_discover_tests(UNIT_Interpolation_TEST)
 endif()
 
 #============================================================================
