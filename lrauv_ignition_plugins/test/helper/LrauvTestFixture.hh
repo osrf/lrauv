@@ -54,8 +54,8 @@ double angleDiff(double _a, double _b)
 /// to most LRAUV tests.
 class LrauvTestFixtureBase : public ::testing::Test
 {
-  // Setup the specified world.
-  // \param[in] _worldName Name of the world to load.
+  /// Setup the specified world.
+  /// \param[in] _worldName Name of the world to load.
   public: void SetUp(const std::string &_worldName)
   {
     ignition::common::Console::SetVerbosity(4);
@@ -308,14 +308,14 @@ class LrauvTestFixtureBase : public ::testing::Test
 /// \brief Loads the default "buyant_tethys.sdf" world.
 class LrauvTestFixture : public LrauvTestFixtureBase
 {
-  /// Documentation inherited
+  // Documentation inherited
   protected: void SetUp() override
   {
     LrauvTestFixtureBase::SetUp("buoyant_tethys.sdf");
   }
 };
 
-/// \brief Loads the default "buyant_tethys.sdf" world.
+/// \brief Loads the default "buoyant_tethys_at_depth.sdf" world.
 class LrauvTestFixtureAtDepth : public LrauvTestFixtureBase
 {
   /// Documentation inherited
