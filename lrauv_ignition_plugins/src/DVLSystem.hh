@@ -24,14 +24,15 @@
 #define TETHYS_DVLSYSTEM_HH_
 
 #include <ignition/gazebo/System.hh>
-
+#include "dvl/DVLSensor.hh"
 namespace tethys
 {
 
 class DVLSystem :
   public ignition::gazebo::System,
   public ignition::gazebo::ISystemConfigure,
-  public ignition::gazebo::ISystemPreUpdate
+  public ignition::gazebo::ISystemPreUpdate,
+  public ignition::gazebo::ISystemPostUpdate
 {
   public: DVLSystem();
 
@@ -44,6 +45,13 @@ class DVLSystem :
   public: void PreUpdate(
     const ignition::gazebo::UpdateInfo &_info,
     ignition::gazebo::EntityComponentManager &_ecm);
+
+  public: void PostUpdate(
+    const ignition::gazebo::UpdateInfo &_info,
+    const ignition::gazebo::EntityComponentManager &_ecm);
+
+  private: std::unordered_map<ignition::gazebo::Entity,
+    std::shared_ptr<DVLSensor>> entitySensorMap;
 };
 }
 
