@@ -29,7 +29,7 @@
 #include <fstream>
 
 //////////////////////////////////////////////////
-TEST_F(LrauvTestFixture, MassShifterTilt)
+TEST_F(LrauvTestFixtureAtDepth, MassShifterTilt)
 {
   // Check initial orientation
   this->fixture->Server()->Run(true, 100, false);
