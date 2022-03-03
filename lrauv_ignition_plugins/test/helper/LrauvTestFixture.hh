@@ -314,4 +314,15 @@ class LrauvTestFixture : public LrauvTestFixtureBase
     LrauvTestFixtureBase::SetUp("buoyant_tethys.sdf");
   }
 };
+
+/// \brief Loads the default "buyant_tethys_At_depth.sdf" world.
+/// This world has the robot start at a certain depth.
+class LrauvTestFixtureAtDepth : public LrauvTestFixtureBase
+{
+  /// Documentation inherited
+  protected: void SetUp() override
+  {
+    LrauvTestFixtureBase::SetUp("buoyant_tethys_at_depth.sdf");
+  }
+};
 #endif
