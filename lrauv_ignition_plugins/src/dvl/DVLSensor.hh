@@ -44,7 +44,7 @@ namespace tethys {
 
     /// \brief Makes possible to change sensor scene
     /// \param[in] _scene used with the sensor
-    public: void SetScene(ignition::rendering::ScenePtr _scene) override;
+    public: virtual void SetScene(ignition::rendering::ScenePtr _scene) override;
 
     /// \brief Node for communication
     private: ignition::transport::Node node;

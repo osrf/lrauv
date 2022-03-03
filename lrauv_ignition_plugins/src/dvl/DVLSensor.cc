@@ -24,9 +24,12 @@
 
 #include "lrauv_dvl_message.pb.h"
 
+#include <ignition/common.hh>
+#include <ignition/sensors.hh>
+
 using namespace tethys;
 
-DVLSensor::Load(const sdf::Sensor &_sdf)
+bool DVLSensor::Load(const sdf::Sensor &_sdf)
 {
   auto type = ignition::sensors::customType(_sdf);
   if ("dvl" != type)
@@ -40,7 +43,7 @@ DVLSensor::Load(const sdf::Sensor &_sdf)
   ignition::sensors::Sensor::Load(_sdf);
 
   // Advertise topic where data will be published
-  this->pub = this->node.Advertise<lrauv_ignition_pluging::msgs::DVL>(this->Topic());
+  this->pub = this->node.Advertise<ignition::msgs::DVL>(this->Topic());
 
   if (!_sdf.Element()->HasElement("ignition:dvl"))
   {
@@ -75,7 +78,7 @@ DVLSensor::Load(const sdf::Sensor &_sdf)
 
 bool DVLSensor::Update(const std::chrono::steady_clock::duration &_now)
 {
-  lrauv_ignition_pluging::msgs::DVL dvlMsg;
+  ignition::msgs::DVL dvlMsg;
 
   this->pub.Publish(dvlMsg);
 }

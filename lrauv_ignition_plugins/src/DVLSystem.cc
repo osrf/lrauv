@@ -76,7 +76,10 @@ void DVLSystem::PreUpdate(const ignition::gazebo::UpdateInfo &_info,
 void DVLSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   const ignition::gazebo::EntityComponentManager &_ecm)
 {
-
+  for (auto &pair : this->entitySensorMap)
+  {
+    pair.second->Update(_info.simTime);
+  }
 }
 
 IGNITION_ADD_PLUGIN(

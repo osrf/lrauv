@@ -26,10 +26,10 @@ set(IGN_GAZEBO_VER ${ignition-gazebo7_VERSION_MAJOR})
 find_package(ignition-gui7 REQUIRED)
 set(IGN_GUI_VER ${ignition-gui7_VERSION_MAJOR})
 
-find_package(ignition-rendering7 REQUIRED)
+find_package(ignition-rendering7 REQUIRED ogre ogre2)
 set(IGN_RENDERING_VER ${ignition-rendering7_VERSION_MAJOR})
 
-find_package(ignition-sensors7 REQUIRED)
+find_package(ignition-sensors7 REQUIRED COMPONENTS rendering)
 set(IGN_SENSORS_VER ${ignition-sensors7_VERSION_MAJOR})
 
 find_package(ignition-msgs9 REQUIRED)
@@ -81,7 +81,7 @@ function(add_lrauv_plugin PLUGIN)
   cmake_parse_arguments(add_lrauv_plugin
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  set(PLUGIN_SOURCES src/${PLUGIN}.cc ${ADDITIONAL_FILES})
+  set(PLUGIN_SOURCES src/${PLUGIN}.cc ${add_lrauv_plugin_ADDITIONAL_FILES})
   set(INSTALL_LIB lib)
 
   # GUI plugin
@@ -156,6 +156,7 @@ function(add_lrauv_plugin PLUGIN)
     target_link_libraries(${PLUGIN}
       PRIVATE
         ignition-sensors${IGN_SENSORS_VER}::ignition-sensors${IGN_SENSORS_VER}
+        ignition-sensors${IGN_SENSORS_VER}::rendering
     )
   endif()
 
