@@ -168,7 +168,7 @@
               </noise>
             </z>
           </angular_velocity>
-          <topic>/model/tethys/ahrs/imu</topic>
+          <topic>/tethys/ahrs/imu</topic>
           <plugin filename="ignition-gazebo-imu-system"
                   name="ignition::gazebo::systems::Imu"/>
         </sensor>
@@ -186,7 +186,7 @@
               See https://github.com/osrf/lrauv/issues/80.
           -->
           <pose degrees="true">0 0 0 180 0 180</pose>
-          <topic>/model/tethys/ahrs/magnetometer</topic>
+          <topic>/tethys/ahrs/magnetometer</topic>
           <plugin filename="ignition-gazebo-magnetometer-system"
                   name="ignition::gazebo::systems::Magnetometer"/>
         </sensor>
