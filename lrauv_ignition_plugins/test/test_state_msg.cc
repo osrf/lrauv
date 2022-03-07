@@ -43,9 +43,6 @@ void commonChecks(const lrauv_ignition_plugins::msgs::LRAUVState &_msg)
 //////////////////////////////////////////////////
 TEST_F(LrauvTestFixture, State)
 {
-  // TODO(chapulina) Test other fields, see
-  // https://github.com/osrf/lrauv/pull/81
-
   // Initial state
   this->fixture->Server()->Run(true, 100, false);
   int maxSleep{100};
@@ -88,6 +85,15 @@ TEST_F(LrauvTestFixture, State)
   EXPECT_NEAR(0.0, latest.posdot_().x(), 1e-6);
   EXPECT_NEAR(0.0, latest.posdot_().y(), 1e-6);
   EXPECT_NEAR(0.0, latest.posdot_().z(), 1e-6);
+
+  // FSK vehicle frame
+  EXPECT_NEAR(0.0, latest.rateuvw_().x(), 1e-6);
+  EXPECT_NEAR(0.0, latest.rateuvw_().y(), 1e-6);
+  EXPECT_NEAR(0.0, latest.rateuvw_().z(), 1e-6);
+
+  EXPECT_NEAR(0.0, latest.ratepqr_().x(), 1e-6);
+  EXPECT_NEAR(0.0, latest.ratepqr_().y(), 1e-6);
+  EXPECT_NEAR(0.0, latest.ratepqr_().z(), 1e-6);
 
   // TODO(chapulina) Check sensor data once interpolation is complete
   // https://github.com/osrf/lrauv/issues/5
@@ -144,6 +150,15 @@ TEST_F(LrauvTestFixture, State)
   EXPECT_NEAR(0.0, latest.posdot_().y(), 1e-4);
   EXPECT_NEAR(0.0, latest.posdot_().z(), 1e-6);
 
+  // FSK vehicle frame: vehicle is going forward
+  EXPECT_NEAR(1.0, latest.rateuvw_().x(), 0.02);
+  EXPECT_NEAR(0.0, latest.rateuvw_().y(), 1e-4);
+  EXPECT_NEAR(0.0, latest.rateuvw_().z(), 1e-6);
+
+  EXPECT_NEAR(0.0, latest.ratepqr_().x(), 1e-3);
+  EXPECT_NEAR(0.0, latest.ratepqr_().y(), 1e-6);
+  EXPECT_NEAR(0.0, latest.ratepqr_().z(), 1e-5);
+
   // Keep propelling vehicle forward
   cmdMsg.set_propomegaaction_(10 * IGN_PI);
 
@@ -199,6 +214,15 @@ TEST_F(LrauvTestFixture, State)
   EXPECT_LT(0.3, latest.posdot_().y());
   EXPECT_NEAR(0.0, latest.posdot_().z(), 1e-3);
 
+  // FSK vehicle frame: vehicle is going mostly forward and rotating right.
+  EXPECT_LT(0.8, latest.rateuvw_().x());
+  EXPECT_GT(0.2, abs(latest.rateuvw_().y()));
+  EXPECT_NEAR(0.0, latest.rateuvw_().z(), 1e-3);
+
+  EXPECT_NEAR(0.0, latest.ratepqr_().x(), 1e-2);
+  EXPECT_NEAR(0.0, latest.ratepqr_().y(), 1e-3);
+  EXPECT_NEAR(0.1, latest.ratepqr_().z(), 1e-2);
+
   // Stop propelling and rotating vehicle
   cmdMsg.set_propomegaaction_(0);
   cmdMsg.set_rudderangleaction_(0);
@@ -232,5 +256,8 @@ TEST_F(LrauvTestFixture, State)
   // Velocity
   // NED world frame: sinking to higher Z
   EXPECT_LT(0.02, latest.posdot_().z());
+
+  // FSK vehicle frame: downwards velocity
+  EXPECT_LT(0.01, latest.rateuvw_().z());
 }
 

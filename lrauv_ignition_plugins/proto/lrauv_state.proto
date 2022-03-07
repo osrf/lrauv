@@ -46,8 +46,13 @@ import "ignition/msgs/vector3d.proto";
 //     * Pitch: Right-hand rotation about East
 //     * Yaw: Right-hand rotation about Down
 //
-// TODO(chapulina)
-// * Vehicle frame: FSK 
+// * Vehicle frame: FSK
+//     * X: Fore or forward
+//     * Y: Starboard or right
+//     * Z: Keel or down
+//     * Roll: Clockwise rotation when looking from the back.
+//     * Pitch: Positive angles bring the nose up.
+//     * Yaw: Positive angles bring the nose to the right / starboard.
 //
 message LRAUVState
 {
@@ -122,14 +127,16 @@ message LRAUVState
   /// \brief Vehicle's orientation in "world frame" (see above) Unit: rad
   ignition.msgs.Vector3d posRPH_  = 20;
 
-  /// \brief Vehicle's instantaneous linear velocity in "world frame" 
+  /// \brief Vehicle's instantaneous linear velocity in "world frame"
   /// (see above). Units: m / s
   ignition.msgs.Vector3d posDot_  = 21;
 
-  /// \brief \TODO(chapulina)
+  /// \brief Vehicle's instantaneous linear velocity in "vehicle frame" (see above).
+  /// Units: m / s
   ignition.msgs.Vector3d rateUVW_ = 22;
 
-  /// \brief \TODO(chapulina)
+  /// \brief Vehicle's instantaneous angular velocity in "vehicle frame" (see above).
+  /// Units: rad / s
   ignition.msgs.Vector3d ratePQR_ = 23;
 
   /// \brief Northward sea water velocity collected from current sensor. Unit: m/s.
