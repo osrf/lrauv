@@ -27,10 +27,15 @@
 
 #include <ignition/transport/Node.hh>
 
+#include <ignition/math/Vector3.hh>
+
+#include <ignition/common/Event.hh>
+
 namespace tethys {
   /// \brief Doppler velocity log sensor
   class DVLSensor : public ignition::sensors::RenderingSensor
   {
+    public: ~DVLSensor();
     /// \brief Load the sensor with SDF parameters.
     /// \param[in] _sdf SDF Sensor parameters.
     /// \return True if loading was successful
@@ -46,12 +51,37 @@ namespace tethys {
     /// \param[in] _scene used with the sensor
     public: virtual void SetScene(ignition::rendering::ScenePtr _scene) override;
 
+    public: ignition::common::ConnectionPtr ConnectNewLidarFrame(
+          std::function<void(const float *_scan, unsigned int _width,
+                  unsigned int _height, unsigned int _channels,
+                  const std::string &/*_format*/)> _subscriber);
+
+    void RemoveGpuRays(ignition::rendering::ScenePtr _scene);
+
+    void CreateDvl();
+
+    private: bool initialized = false;
     /// \brief Node for communication
     private: ignition::transport::Node node;
 
     /// \brief Publishes sensor data
     private: ignition::transport::Node::Publisher pub;
-};
+
+    /// \brief Sensor prev pose
+    private: ignition::math::Vector3d prevPose;
+
+    /// \brief Sensor prev update
+    private: std::chrono::steady_clock::duration prevUpdate;
+
+    /// \brief Rendering camera
+    private: ignition::rendering::GpuRaysPtr gpuRays;
+
+    /// \brief Connection to the Manager's scene change event.
+    private: ignition::common::ConnectionPtr sceneChangeConnection;
+
+    private: float *buffer = nullptr;
+
+  };
 }
 
 #endif
