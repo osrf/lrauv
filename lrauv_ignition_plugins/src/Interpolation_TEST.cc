@@ -48,7 +48,7 @@ TEST(InterpolationTest, SetAndGetMethod)
   EXPECT_EQ(interp2.Method(), TRILINEAR);
 }
 
-TEST(InterpolationTest, TrilinearSearchWithinEightPointPrism)
+TEST(InterpolationTest, TrilinearSearchEightPointPrism)
 {
   Interpolation interp(TRILINEAR);
   EXPECT_EQ(interp.Method(), TRILINEAR);
@@ -73,7 +73,7 @@ TEST(InterpolationTest, TrilinearSearchWithinEightPointPrism)
   // An outlier
   cloud.points.push_back(pcl::PointXYZ(100, 100, -100));
 
-  // Query point is almost centered in upper slice, but slightly toward
+  // Query point is almost centered in upper z slice, but slightly toward
   // point [1]
   pcl::PointXYZ queryPt(0.6, 0.3, 0);
   // 1st NN is at index [1]
@@ -104,17 +104,60 @@ TEST(InterpolationTest, TrilinearSearchWithinEightPointPrism)
   EXPECT_EQ(interpInds2[1], 4);
   EXPECT_EQ(interpInds2[2], 7);
   EXPECT_EQ(interpInds2[3], 6);
+
+  // Test query point being outside the prism
+
+  // Move query point outside and above prism. (Nearest neighbor remains same)
+  pcl::PointXYZ queryPtAbove(queryPt.x, queryPt.y, 1);
+  interp.FindTrilinearInterpolators(cloud, queryPtAbove, nnIdx, spatialRes,
+    interpInds1, interps1, interpInds2, interps2, k);
+  // Check that it still finds two z slices, even though the point is not
+  // between the slices (expected behavior, can be improved in algorithm).
+  EXPECT_EQ(interpInds1.size(), k);
+  EXPECT_EQ(interps1.size(), k);
+  EXPECT_EQ(interpInds2.size(), k);
+  EXPECT_EQ(interps2.size(), k);
+
+  // Test invalid cases
+
+  // Move query outside prism, to overlap with outlier
+  pcl::PointXYZ queryPtOutlier(100, 100, -100);
+  nnIdx = 8;
+  interp.FindTrilinearInterpolators(cloud, queryPtOutlier, nnIdx, spatialRes,
+    interpInds1, interps1, interpInds2, interps2, k);
+  // Check that it cannot find 2 z slices for query point
+  EXPECT_EQ(interpInds1.size(), 0);
+
+  // Invalid index for nearest neighbor
+  interp.FindTrilinearInterpolators(cloud, queryPt, -1, spatialRes,
+    interpInds1, interps1, interpInds2, interps2, k);
+  EXPECT_EQ(interpInds1.size(), 0);
+
+  // Remove a point in a z slice
+  pcl::PointCloud<pcl::PointXYZ> cloudShort = cloud;
+  cloudShort.points.erase(cloudShort.points.begin() + 0);
+  interp.FindTrilinearInterpolators(cloudShort, queryPt, 0, spatialRes,
+    interpInds1, interps1, interpInds2, interps2, k);
+  // Check that it cannot find 2 z slices for query point
+  EXPECT_EQ(interpInds1.size(), 0);
+
+  // Empty cloud
+  pcl::PointCloud<pcl::PointXYZ> emptyCloud;
+  interp.FindTrilinearInterpolators(emptyCloud, queryPt, nnIdx, spatialRes,
+    interpInds1, interps1, interpInds2, interps2, k);
+  // Check the function clears return values
+  EXPECT_EQ(interpInds1.size(), 0);
+  EXPECT_EQ(interpInds2.size(), 0);
+  EXPECT_EQ(interps1.size(), 0);
+  EXPECT_EQ(interps2.size(), 0);
 }
 
-TEST(InterpolationTest, TrilinearInterpolationWithinEightPointPrism)
+TEST(InterpolationTest, TrilinearInterpolationInEightPointPrism)
 {
   Interpolation interp(TRILINEAR);
   EXPECT_EQ(interp.Method(), TRILINEAR);
 
   // Inputs to interpolation function
-
-  // Query point at z = 0
-  Eigen::Vector3f queryPtEigen(0.6, 0.3, 0);
 
   // One point per row
   Eigen::MatrixXf interpsEigen(8, 3);
@@ -129,6 +172,10 @@ TEST(InterpolationTest, TrilinearInterpolationWithinEightPointPrism)
     1, 0, -2,
     0, 1, -2,
     1, 1, -2;
+
+  // Query point is almost centered in upper z slice, but slightly toward
+  // point [1]
+  Eigen::Vector3f queryPtEigen(0.6, 0.3, 0);
 
   // Data to test interpolation between two z slices
   std::vector<float> data;
@@ -169,7 +216,7 @@ TEST(InterpolationTest, TrilinearInterpolationWithinEightPointPrism)
   result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
   EXPECT_NEAR(result, 130, 1);
 
-  // Data to test when query point overlaps with data point
+  // Data to test query point overlapping with data point
   std::vector<float> dataUnique;
   dataUnique.push_back(100.0f);
   dataUnique.push_back(200.0f);

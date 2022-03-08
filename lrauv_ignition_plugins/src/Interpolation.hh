@@ -606,7 +606,7 @@ float InterpolationPrivate::TrilinearInterpolate(
   // Sanity check: Must have 8 points, 4 above, 4 below.
   if (_xyzs.rows() != 8)
   {
-    ignerr << "Size of interpolators invalid (" << _xyzs.size() << "). "
+    ignerr << "Size of interpolators invalid (" << _xyzs.rows() << "). "
       << "Need 8 points in a rectangular prism. "
       << "Cannot perform trilinear interpolation." << std::endl;
     return std::numeric_limits<float>::quiet_NaN();
