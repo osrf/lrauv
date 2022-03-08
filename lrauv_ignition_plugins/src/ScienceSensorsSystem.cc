@@ -797,109 +797,114 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         << std::round(searchPoint.z * 1000.0) / 1000.0 << std::endl;
     }
 
-    // TODO: After mabelzhang/interpolate_sci_raw_mat branch is merged, use
-    // the opposite condition and break out of loop.
     // If there are any nodes in the octree, search in octree to find spatial
     // index of science data
     if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]->getLeafCount()
       > 0)
     {
-      IGN_PROFILE("ScienceSensorsSystem::PostUpdate nearestKSearch");
+      break;
+    }
 
-      // kNN search (alternatives are voxel search and radius search. kNN
-      // search is good for variable resolution when the distance to the next
-      // neighbor is unknown).
-      // Search for nearest neighbors
-      if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]
-        ->nearestKSearch(searchPoint, initK, spatialInds, spatialSqrDists) <= 0)
+    IGN_PROFILE("ScienceSensorsSystem::PostUpdate nearestKSearch");
+
+    // kNN search (alternatives are voxel search and radius search. kNN
+    // search is good for variable resolution when the distance to the next
+    // neighbor is unknown).
+    // Search for nearest neighbors
+    if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]
+      ->nearestKSearch(searchPoint, initK, spatialInds, spatialSqrDists) <= 0)
+    {
+      ignwarn << "Not enough data found near sensor location " << sensorPosENU
+        << std::endl;
+      continue;
+    }
+    // Debug output
+    else if (this->dataPtr->interpolation.debug())
+    {
+      for (std::size_t i = 0; i < spatialInds.size(); i++)
       {
-        ignwarn << "Not enough data found near sensor location " << sensorPosENU
-          << std::endl;
+        // Index the point cloud at the current time slice
+        pcl::PointXYZ nbrPt = this->dataPtr->timeSpaceCoords[
+          this->dataPtr->timeIdx]->at(spatialInds[i]);
+
+        igndbg << "Neighbor at ("
+          << std::round(nbrPt.x * 1000) / 1000.0 << ", "
+          << std::round(nbrPt.y * 1000) / 1000.0 << ", "
+          << std::round(nbrPt.z * 1000) / 1000.0
+          << "), squared distance " << spatialSqrDists[i]
+          << " m" << std::endl;
+      }
+    }
+    reinterpolate = true;
+
+    if (this->dataPtr->interpolation.Method() == TRILINEAR)
+    {
+      // Vector not populated
+      if (this->dataPtr->timeSpaceCoords.size() == 0)
+      {
         continue;
       }
-      // Debug output
-      else if (this->dataPtr->interpolation.debug())
+      // No nearest neighbors found, probably meaning cloud has only 1 point
+      if (spatialInds.size() < 1)
       {
-        for (std::size_t i = 0; i < spatialInds.size(); i++)
-        {
-          // Index the point cloud at the current time slice
-          pcl::PointXYZ nbrPt = this->dataPtr->timeSpaceCoords[
-            this->dataPtr->timeIdx]->at(spatialInds[i]);
-
-          igndbg << "Neighbor at ("
-            << std::round(nbrPt.x * 1000) / 1000.0 << ", "
-            << std::round(nbrPt.y * 1000) / 1000.0 << ", "
-            << std::round(nbrPt.z * 1000) / 1000.0
-            << "), squared distance " << spatialSqrDists[i]
-            << " m" << std::endl;
-        }
-      }
-      reinterpolate = true;
-
-      if (this->dataPtr->interpolation.Method() == TRILINEAR)
-      {
-        // Vector not populated
-        if (this->dataPtr->timeSpaceCoords.size() == 0)
-        {
-          continue;
-        }
-
-        // Find 2 sets of 4 nearest neighbors, each set on a different z slice,
-        // to use as inputs for trilinear interpolation
-        std::vector<pcl::PointXYZ> interpolatorsSlice1, interpolatorsSlice2;
-        std::vector<int> interpolatorInds1, interpolatorInds2;
-        this->dataPtr->interpolation.FindTrilinearInterpolators(
-          *(this->dataPtr->timeSpaceCoords[this->dataPtr->timeIdx]),
-          searchPoint, spatialInds, spatialSqrDists, this->dataPtr->spatialRes,
-          interpolatorInds1, interpolatorsSlice1,
-          interpolatorInds2, interpolatorsSlice2, nbrsPerZSlice);
-
-        if (interpolatorsSlice1.size() < nbrsPerZSlice ||
-          interpolatorsSlice2.size() < nbrsPerZSlice)
-        {
-          ignwarn << "Could not find trilinear interpolators near sensor "
-            << "location " << sensorPosENU << std::endl;
-          continue;
-        }
-
-        // Concatenate the 2 sets of 4 points into a vector of 8 points
-        interpolatorXYZs.reserve(interpolatorsSlice1.size() +
-          interpolatorsSlice2.size());
-        interpolatorXYZs.insert(interpolatorXYZs.end(),
-          interpolatorsSlice1.begin(), interpolatorsSlice1.end());
-        interpolatorXYZs.insert(interpolatorXYZs.end(),
-          interpolatorsSlice2.begin(), interpolatorsSlice2.end());
-
-        // Prepare neighbor data to pass to interpolation
-        for (int i = 0; i < interpolatorInds1.size(); ++i)
-        {
-          interpolatorInds.push_back(interpolatorInds1[i]);
-        }
-        for (int i = 0; i < interpolatorInds2.size(); ++i)
-        {
-          interpolatorInds.push_back(interpolatorInds2[i]);
-        }
-      }
-      else if (this->dataPtr->interpolation.Method() == BARYCENTRIC)
-      {
-        // Prepare neighbor data to pass to interpolation
-        for (int i = 0; i < spatialInds.size(); ++i)
-        {
-          interpolatorInds.push_back(spatialInds[i]);
-          interpolatorXYZs.push_back(this->dataPtr->timeSpaceCoords[
-            this->dataPtr->timeIdx]->at(spatialInds[i]));
-        }
-      }
-      else
-      {
-        ignerr << "INTERPOLATION_METHOD value invalid. "
-          << "Choose a valid interpolation method." << std::endl;
-        break;
+        continue;
       }
 
-      // Update last update position to the current position
-      this->dataPtr->lastSensorPosENU = sensorPosENU;
+      // Find 2 sets of 4 nearest neighbors, each set on a different z slice,
+      // to use as inputs for trilinear interpolation
+      std::vector<pcl::PointXYZ> interpolatorsSlice1, interpolatorsSlice2;
+      std::vector<int> interpolatorInds1, interpolatorInds2;
+      this->dataPtr->interpolation.FindTrilinearInterpolators(
+        *(this->dataPtr->timeSpaceCoords[this->dataPtr->timeIdx]),
+        searchPoint, spatialInds[0], this->dataPtr->spatialRes,
+        interpolatorInds1, interpolatorsSlice1,
+        interpolatorInds2, interpolatorsSlice2, nbrsPerZSlice);
+
+      if (interpolatorsSlice1.size() < nbrsPerZSlice ||
+        interpolatorsSlice2.size() < nbrsPerZSlice)
+      {
+        ignwarn << "Could not find trilinear interpolators near sensor "
+          << "location " << sensorPosENU << std::endl;
+        continue;
+      }
+
+      // Concatenate the 2 sets of 4 points into a vector of 8 points
+      interpolatorXYZs.reserve(interpolatorsSlice1.size() +
+        interpolatorsSlice2.size());
+      interpolatorXYZs.insert(interpolatorXYZs.end(),
+        interpolatorsSlice1.begin(), interpolatorsSlice1.end());
+      interpolatorXYZs.insert(interpolatorXYZs.end(),
+        interpolatorsSlice2.begin(), interpolatorsSlice2.end());
+
+      // Prepare neighbor data to pass to interpolation
+      for (int i = 0; i < interpolatorInds1.size(); ++i)
+      {
+        interpolatorInds.push_back(interpolatorInds1[i]);
+      }
+      for (int i = 0; i < interpolatorInds2.size(); ++i)
+      {
+        interpolatorInds.push_back(interpolatorInds2[i]);
+      }
     }
+    else if (this->dataPtr->interpolation.Method() == BARYCENTRIC)
+    {
+      // Prepare neighbor data to pass to interpolation
+      for (int i = 0; i < spatialInds.size(); ++i)
+      {
+        interpolatorInds.push_back(spatialInds[i]);
+        interpolatorXYZs.push_back(this->dataPtr->timeSpaceCoords[
+          this->dataPtr->timeIdx]->at(spatialInds[i]));
+      }
+    }
+    else
+    {
+      ignerr << "INTERPOLATION_METHOD value invalid. "
+        << "Choose a valid interpolation method." << std::endl;
+      break;
+    }
+
+    // Update last update position to the current position
+    this->dataPtr->lastSensorPosENU = sensorPosENU;
 
     // Only need to find position ONCE for the entire robot. Don't need to
     // repeat for every sensor.

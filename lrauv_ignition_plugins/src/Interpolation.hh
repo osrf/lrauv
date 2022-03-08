@@ -58,24 +58,23 @@ class Interpolation
   /// \brief Find XYZ locations of points in the two closest z slices to
   /// interpolate among.
   /// \param[in] _cloud Spatial locations of existing data
-  /// \param[in] _pt Location in space to interpolate for
-  /// \param[in] _inds Indices of nearest neighbors to _pt, used to look for
-  /// first z slice.
-  /// \param[in] _sqrDists Distances of nearest neighbors to _pt
+  /// \param[in] _queryPt Location in space to interpolate for
+  /// \param[in] _nnIdx Index of 1st nearest neighbor in the cloud to _queryPt.
+  /// Only the z of the point is used, to look for the first z slice in the
+  /// data.
   /// \param[in] _spatialRes Spatial resolution to create an octree for the
   /// search
-  /// \param[out] _interpolatorInds2 Indices of points in fist z slice
+  /// \param[out] _interpolatorInds1 Indices of points in fist z slice
   /// \param[out] _interpolators1 XYZ points on a z slice to interpolate among
-  /// \param[out] _interpolatorInds1 Indices of points in second z slice
+  /// \param[out] _interpolatorInds2 Indices of points in second z slice
   /// \param[out] _interpolators2 XYZ points on a second z slice to interpolate
   /// among
   /// \param[in] _k Number of nearest neighbors. Default to 4, for trilinear
   /// interpolation between two z slices of 4 points per slice.
   public: void FindTrilinearInterpolators(
     pcl::PointCloud<pcl::PointXYZ> &_cloud,
-    pcl::PointXYZ &_pt,
-    std::vector<int> &_inds,
-    std::vector<float> &_sqrDists,
+    pcl::PointXYZ &_queryPt,
+    int _nnIdx,
     float _spatialRes,
     std::vector<int> &_interpolatorInds1,
     std::vector<pcl::PointXYZ> &_interpolators1,
@@ -278,9 +277,8 @@ void Interpolation::SetMethod(InterpolationMethod _method)
 /////////////////////////////////////////////////
 void Interpolation::FindTrilinearInterpolators(
   pcl::PointCloud<pcl::PointXYZ> &_cloud,
-  pcl::PointXYZ &_pt,
-  std::vector<int> &_inds,
-  std::vector<float> &_sqrDists,
+  pcl::PointXYZ &_queryPt,
+  int _nnIdx,
   float _spatialRes,
   std::vector<int> &_interpolatorInds1,
   std::vector<pcl::PointXYZ> &_interpolators1,
@@ -300,18 +298,12 @@ void Interpolation::FindTrilinearInterpolators(
   {
     return;
   }
-  if (_inds.size() == 0 || _sqrDists.size() == 0)
+  if (_nnIdx < 0)
   {
-    ignwarn << "FindTrilinearInterpolators(): Invalid neighbors array size ("
-            << _inds.size() << " and " << _sqrDists.size()
-            << "). No neighbors to use for interpolation. Returning NaN."
+    ignwarn << "FindTrilinearInterpolators(): Invalid neighbor index ("
+            << _nnIdx
+            << "). No neighbors to use for slice search. Returning NaN."
             << std::endl;
-    return;
-  }
-  if (_inds.size() != _sqrDists.size())
-  {
-    ignwarn << "FindTrilinearInterpolators(): Number of neighbors != number of "
-            << "distances. Invalid input. Returning NaN." << std::endl;
     return;
   }
 
@@ -326,12 +318,8 @@ void Interpolation::FindTrilinearInterpolators(
 
   // Step 1: 1st NN, in its z slice, search for 4 NNs
 
-  // 1st nearest neighbor
-  // The distances from kNN search are sorted, so can always just take [0]th
-  int nnIdx = _inds[0];
-  float minDist = _sqrDists[0];
-  // Get z of neighbor
-  float nnZ = _cloud.at(nnIdx).z;
+  // Get z of 1st nearest neighbor
+  float nnZ = _cloud.at(_nnIdx).z;
 
   // Debug output
   if (this->dataPtr->DEBUG_INTERPOLATE)
@@ -344,10 +332,10 @@ void Interpolation::FindTrilinearInterpolators(
   if (this->dataPtr->DEBUG_INTERPOLATE)
   {
     igndbg << "1st nn ("
-      << _cloud.at(nnIdx).x << ", "
-      << _cloud.at(nnIdx).y << ", "
-      << _cloud.at(nnIdx).z << "), "
-      << "idx " << nnIdx << ", dist " << sqrt(minDist)
+      << _cloud.at(_nnIdx).x << ", "
+      << _cloud.at(_nnIdx).y << ", "
+      << _cloud.at(_nnIdx).z << "), "
+      << "idx " << _nnIdx
       << ", z slice " << zSlice1.points.size() << " points" << std::endl;
 
     // igndbg << "FindTrilinearInterpolators(): 1st z slice has indices: "
@@ -358,7 +346,7 @@ void Interpolation::FindTrilinearInterpolators(
 
   // Search in z slice for 4 nearest neighbors in this slice
   std::vector<int> interpolatorInds1NewCloud;
-  this->dataPtr->CreateAndSearchOctree(_pt, zSlice1, _spatialRes,
+  this->dataPtr->CreateAndSearchOctree(_queryPt, zSlice1, _spatialRes,
     interpolatorInds1NewCloud, interpolatorSqrDists1, _interpolators1, _k);
   if (interpolatorInds1NewCloud.size() < _k ||
     interpolatorSqrDists1.size() < _k)
@@ -418,8 +406,8 @@ void Interpolation::FindTrilinearInterpolators(
   std::vector<int> inds2;
   std::vector<float> sqrDists2;
   std::vector<pcl::PointXYZ> nbrs2;
-  this->dataPtr->CreateAndSearchOctree(_pt, cloudExceptZSlice1, _spatialRes,
-    inds2, sqrDists2, nbrs2, 1);
+  this->dataPtr->CreateAndSearchOctree(_queryPt, cloudExceptZSlice1,
+    _spatialRes, inds2, sqrDists2, nbrs2, 1);
   if (inds2.size() < 1 || sqrDists2.size() < 1)
   {
     ignwarn << "Could not find 2nd NN among "
@@ -456,7 +444,7 @@ void Interpolation::FindTrilinearInterpolators(
 
   // Search in z slice of 1st NN for 4 nearest neighbors in this slice
   std::vector<int> interpolatorInds2NewCloud;
-  this->dataPtr->CreateAndSearchOctree(_pt, zSlice2, _spatialRes,
+  this->dataPtr->CreateAndSearchOctree(_queryPt, zSlice2, _spatialRes,
     interpolatorInds2NewCloud, interpolatorSqrDists2, _interpolators2, _k);
   if (interpolatorInds2NewCloud.size() < _k ||
     interpolatorSqrDists2.size() < _k)
