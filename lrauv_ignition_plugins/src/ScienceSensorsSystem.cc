@@ -59,7 +59,7 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Helper. Convert a vector of PCL points to an Eigen::Matrix.
   /// \param[in] _vec Source vector
-  /// \param[out] _mat Result matrix
+  /// \param[out] _mat Result matrix. One point per row.
   public: void PclVectorToEigen(
     const std::vector<pcl::PointXYZ> &_vec,
     Eigen::MatrixXf &_mat);

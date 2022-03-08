@@ -48,7 +48,7 @@ TEST(InterpolationTest, SetAndGetMethod)
   EXPECT_EQ(interp2.Method(), TRILINEAR);
 }
 
-TEST(InterpolationTest, EightPointPrismTrilinear)
+TEST(InterpolationTest, EightPointPrismTrilinearSearch)
 {
   Interpolation interp(TRILINEAR);
   EXPECT_EQ(interp.Method(), TRILINEAR);
@@ -56,21 +56,22 @@ TEST(InterpolationTest, EightPointPrismTrilinear)
   float spatialRes = 0.1f;
   int k = 4;
 
-  // Inputs
+  // Inputs to search function
   pcl::PointCloud<pcl::PointXYZ> cloud;
   pcl::PointXYZ queryPt(4, -5, 0);
 
   // Populate input cloud. 8-point prism
-  // Cartesian points corresponding to these (lat, long) in ../data/*.csv file:
-  //   -0.00003,0.00003,0,0,0,300,-1,0
-  //   -0.00006,0.00003,0,0,0,300,-1,0
-  //   -0.00003,0.00006,0,0,0,300,-1,0
-  //   -0.00006,0.00006,0,0,0,300,-1,0
-  //   -0.00003,0.00003,2,0,0,100,-1,0
-  //   -0.00006,0.00003,2,0,0,100,-1,0
-  //   -0.00003,0.00006,2,0,0,100,-1,0
-  //   -0.00006,0.00006,2,0,0,100,-1,0
-  //   1,1,100,0,0,NaN,0,0
+  // Test data. Cartesian points correspond to these tuples of
+  // (lat, long, depth, temperature, salinity, chlorophyll) in ../data/*.csv:
+  //   -0.00003,0.00003,0,0,0,300
+  //   -0.00006,0.00003,0,0,0,300
+  //   -0.00003,0.00006,0,0,0,300
+  //   -0.00006,0.00006,0,0,0,300
+  //   -0.00003,0.00003,2,0,0,100
+  //   -0.00006,0.00003,2,0,0,100
+  //   -0.00003,0.00006,2,0,0,100
+  //   -0.00006,0.00006,2,0,0,100
+  //   1,1,100,0,0,NaN
   // Corresponding debug output from FindTrilinearInterpolators():
   //   [Dbg] 9 points in full cloud
   //   [Dbg] 1st nn (3.33958, -6.63446, -0), idx 1, dist 1.76284, z slice 4 points
@@ -130,12 +131,60 @@ TEST(InterpolationTest, EightPointPrismTrilinear)
   EXPECT_EQ(interpInds2[3], 6);
 }
 
-TEST(InterpolationTest, EightPointPrismBarycentric)
+TEST(InterpolationTest, EightPointPrismTrilinearInterpolation)
 {
-  Interpolation interp(BARYCENTRIC);
-  EXPECT_EQ(interp.Method(), BARYCENTRIC);
+  Interpolation interp(TRILINEAR);
+  EXPECT_EQ(interp.Method(), TRILINEAR);
 
-  float spatialRes = 0.1f;
-  int k = 4;
-}
+  // Inputs to interpolation function
+
+  // Robot at z = 0
+  Eigen::Vector3f queryPtEigen(4, -5, 0);
+
+  // Same data as in test EightPointPrismTrilinearSearch
+  // One point per row
+  Eigen::MatrixXf interpsEigen(8, 3);
+  interpsEigen <<
+    // A rectangle at z = 0
+    3.33958, -3.31723, 0,
+    3.33958, -6.63446, 0,
+    6.679, -3.31723, 0,
+    6.679, -6.63446, 0,
+    // Same rectangle at z = -2
+    3.33958, -3.31723, -2,
+    3.33958, -6.63446, -2,
+    6.679, -3.31723, -2,
+    6.679, -6.63446, -2;
+
+  std::vector<float> data;
+  data.push_back(300.0f);
+  data.push_back(300.0f);
+  data.push_back(300.0f);
+  data.push_back(300.0f);
+  data.push_back(100.0f);
+  data.push_back(100.0f);
+  data.push_back(100.0f);
+  data.push_back(100.0f);
+
+  // Interpolation function
+  float result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
+  // Robot at z = 0 should take on average value in z = 0 slice
+  EXPECT_EQ(result, 300);
+
+  // Move robot to z = -2
+  queryPtEigen[2] = -2;
+  result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
+  // Robot at z = -2 should take on average value in z = -2 slice
+  EXPECT_EQ(result, 100);
+
+  // Move robot to z = -1
+  queryPtEigen[2] = -1;
+  result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
+  // Robot at z = -1 should take on average value of z = 0 and z = -2 slices
+  EXPECT_EQ(result, 200);
+
+  // Test invalid input for which function returns NaN
+  interpsEigen.resize(9, 3);
+  result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
+  EXPECT_TRUE(std::isnan(result));
 }
