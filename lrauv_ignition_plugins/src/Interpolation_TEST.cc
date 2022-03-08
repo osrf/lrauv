@@ -48,7 +48,7 @@ TEST(InterpolationTest, SetAndGetMethod)
   EXPECT_EQ(interp2.Method(), TRILINEAR);
 }
 
-TEST(InterpolationTest, EightPointPrismTrilinearSearch)
+TEST(InterpolationTest, TrilinearSearchWithinEightPointPrism)
 {
   Interpolation interp(TRILINEAR);
   EXPECT_EQ(interp.Method(), TRILINEAR);
@@ -58,49 +58,24 @@ TEST(InterpolationTest, EightPointPrismTrilinearSearch)
 
   // Inputs to search function
   pcl::PointCloud<pcl::PointXYZ> cloud;
-  pcl::PointXYZ queryPt(4, -5, 0);
 
   // Populate input cloud. 8-point prism
-  // Test data. Cartesian points correspond to these tuples of
-  // (lat, long, depth, temperature, salinity, chlorophyll) in ../data/*.csv:
-  //   -0.00003,0.00003,0,0,0,300
-  //   -0.00006,0.00003,0,0,0,300
-  //   -0.00003,0.00006,0,0,0,300
-  //   -0.00006,0.00006,0,0,0,300
-  //   -0.00003,0.00003,2,0,0,100
-  //   -0.00006,0.00003,2,0,0,100
-  //   -0.00003,0.00006,2,0,0,100
-  //   -0.00006,0.00006,2,0,0,100
-  //   1,1,100,0,0,NaN
-  // Corresponding debug output from FindTrilinearInterpolators():
-  //   [Dbg] 9 points in full cloud
-  //   [Dbg] 1st nn (3.33958, -6.63446, -0), idx 1, dist 1.76284, z slice 4 points
-  //   [Dbg] Found 4 neighbors.
-  //   [Dbg] Neighbor at (3.34, -6.634, -0), distance 1.76284 m
-  //   [Dbg] Neighbor at (3.34, -3.317, -0), distance 1.80773 m
-  //   [Dbg] Neighbor at (6.679, -6.634, -0), distance 3.13837 m
-  //   [Dbg] Neighbor at (6.679, -3.317, -0), distance 3.16381 m
-  //   [Dbg] Excluding 1st nn z slice. Remaining cloud has 5 points
-  //   [Dbg] Found 1 neighbors.
-  //   [Dbg] Neighbor at (3.34, -6.634, -2), distance 2.66601 m
-  //   [Dbg] 2nd nn (3.33958, -6.63446, -0), idx 1, dist 2.66601, z slice 4 points
-  //   [Dbg] Found 4 neighbors.
-  //   [Dbg] Neighbor at (3.34, -6.634, -2), distance 2.66601 m
-  //   [Dbg] Neighbor at (3.34, -3.317, -2), distance 2.6959 m
-  //   [Dbg] Neighbor at (6.679, -6.634, -2), distance 3.72148 m
-  //   [Dbg] Neighbor at (6.679, -3.317, -2), distance 3.74295 m
   // A rectangle at z = 0
-  cloud.points.push_back(pcl::PointXYZ(3.33958, -3.31723, 0));
-  cloud.points.push_back(pcl::PointXYZ(3.33958, -6.63446, 0));  // 1st NN
-  cloud.points.push_back(pcl::PointXYZ(6.679, -3.31723, 0));
-  cloud.points.push_back(pcl::PointXYZ(6.679, -6.63446, 0));
+  cloud.points.push_back(pcl::PointXYZ(0, 0, 0));
+  cloud.points.push_back(pcl::PointXYZ(1, 0, 0));
+  cloud.points.push_back(pcl::PointXYZ(0, 1, 0));
+  cloud.points.push_back(pcl::PointXYZ(1, 1, 0));
   // Same rectangle at z = -2
-  cloud.points.push_back(pcl::PointXYZ(3.33958, -3.31723, -2));
-  cloud.points.push_back(pcl::PointXYZ(3.33958, -6.63446, -2));  // 2nd NN
-  cloud.points.push_back(pcl::PointXYZ(6.679, -3.31723, -2));
-  cloud.points.push_back(pcl::PointXYZ(6.679, -6.63446, -2));
+  cloud.points.push_back(pcl::PointXYZ(0, 0, -2));
+  cloud.points.push_back(pcl::PointXYZ(1, 0, -2));
+  cloud.points.push_back(pcl::PointXYZ(0, 1, -2));
+  cloud.points.push_back(pcl::PointXYZ(1, 1, -2));
   // An outlier
   cloud.points.push_back(pcl::PointXYZ(100, 100, -100));
+
+  // Query point is almost centered in upper slice, but slightly toward
+  // point [1]
+  pcl::PointXYZ queryPt(0.6, 0.3, 0);
   // 1st NN is at index [1]
   int nnIdx = 1;
 
@@ -131,60 +106,92 @@ TEST(InterpolationTest, EightPointPrismTrilinearSearch)
   EXPECT_EQ(interpInds2[3], 6);
 }
 
-TEST(InterpolationTest, EightPointPrismTrilinearInterpolation)
+TEST(InterpolationTest, TrilinearInterpolationWithinEightPointPrism)
 {
   Interpolation interp(TRILINEAR);
   EXPECT_EQ(interp.Method(), TRILINEAR);
 
   // Inputs to interpolation function
 
-  // Robot at z = 0
-  Eigen::Vector3f queryPtEigen(4, -5, 0);
+  // Query point at z = 0
+  Eigen::Vector3f queryPtEigen(0.6, 0.3, 0);
 
-  // Same data as in test EightPointPrismTrilinearSearch
   // One point per row
   Eigen::MatrixXf interpsEigen(8, 3);
   interpsEigen <<
     // A rectangle at z = 0
-    3.33958, -3.31723, 0,
-    3.33958, -6.63446, 0,
-    6.679, -3.31723, 0,
-    6.679, -6.63446, 0,
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
     // Same rectangle at z = -2
-    3.33958, -3.31723, -2,
-    3.33958, -6.63446, -2,
-    6.679, -3.31723, -2,
-    6.679, -6.63446, -2;
+    0, 0, -2,
+    1, 0, -2,
+    0, 1, -2,
+    1, 1, -2;
 
+  // Data to test interpolation between two z slices
   std::vector<float> data;
-  data.push_back(300.0f);
-  data.push_back(300.0f);
-  data.push_back(300.0f);
-  data.push_back(300.0f);
-  data.push_back(100.0f);
-  data.push_back(100.0f);
-  data.push_back(100.0f);
-  data.push_back(100.0f);
+  data.push_back(0.0f);
+  data.push_back(0.0f);
+  data.push_back(0.0f);
+  data.push_back(0.0f);
+  data.push_back(200.0f);
+  data.push_back(200.0f);
+  data.push_back(200.0f);
+  data.push_back(200.0f);
 
   // Interpolation function
   float result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
-  // Robot at z = 0 should take on average value in z = 0 slice
-  EXPECT_EQ(result, 300);
+  // Query point at z = 0 should take on average value in z = 0 slice
+  EXPECT_EQ(result, 0);
 
-  // Move robot to z = -2
+  // Move query to z = -2
   queryPtEigen[2] = -2;
   result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
-  // Robot at z = -2 should take on average value in z = -2 slice
-  EXPECT_EQ(result, 100);
+  // Query point at z = -2 should take on average value in z = -2 slice
+  EXPECT_EQ(result, 200);
 
-  // Move robot to z = -1
+  // Move query to z = -1
   queryPtEigen[2] = -1;
   result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
-  // Robot at z = -1 should take on average value of z = 0 and z = -2 slices
-  EXPECT_EQ(result, 200);
+  // Query point at z = -1 should take on average value of z = 0 and z = -2
+  // slices
+  EXPECT_EQ(result, 100);
+
+  // Move query to z = -0.5
+  queryPtEigen[2] = -0.5;
+  result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
+  EXPECT_NEAR(result, 50, 1);
+
+  // Move query to z = -1.3
+  queryPtEigen[2] = -1.3;
+  result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
+  EXPECT_NEAR(result, 130, 1);
+
+  // Data to test when query point overlaps with data point
+  std::vector<float> dataUnique;
+  dataUnique.push_back(100.0f);
+  dataUnique.push_back(200.0f);
+  dataUnique.push_back(300.0f);
+  dataUnique.push_back(400.0f);
+  dataUnique.push_back(500.0f);
+  dataUnique.push_back(600.0f);
+  dataUnique.push_back(700.0f);
+  dataUnique.push_back(800.0f);
+
+  // Move query to overlap exactly with each data point
+  for (int i = 0; i < interpsEigen.rows(); ++i)
+  {
+    queryPtEigen = interpsEigen.row(i);
+    result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
+    // Query point should take on value exactly at the point it overlaps with
+    EXPECT_EQ(result, data[i]);
+  }
 
   // Test invalid input for which function returns NaN
   interpsEigen.resize(9, 3);
   result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
   EXPECT_TRUE(std::isnan(result));
+}
 }
