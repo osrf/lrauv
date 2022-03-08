@@ -241,4 +241,123 @@ TEST(InterpolationTest, TrilinearInterpolationInEightPointPrism)
   result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
   EXPECT_TRUE(std::isnan(result));
 }
+
+// Trilinear interpolation assumption of points being corners of a prism not
+// satisfied, falls back to hybrid "barylinear" interpolation - linear
+// interpolation between non-prism quads in two z slices.
+TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
+{
+  Interpolation interp(TRILINEAR);
+  EXPECT_EQ(interp.Method(), TRILINEAR);
+
+  // Inputs to search function
+  float spatialRes = 0.1f;
+  int k = 4;
+  pcl::PointCloud<pcl::PointXYZ> cloud;
+
+  // Populate input cloud
+  // Top-down view:
+  //            y
+  //            |
+  //   1   *    *    *
+  //   0 --*----*q---*- x
+  //            |
+  //      -1    0    1
+  // z view:
+  //     z
+  //    0| *    *    *
+  //   -2| *         *
+  //
+  // A rectangle at z = 0
+  cloud.points.push_back(pcl::PointXYZ(-1, 0, 0));
+  cloud.points.push_back(pcl::PointXYZ( 1, 0, 0));
+  cloud.points.push_back(pcl::PointXYZ(-1, 1, 0));
+  cloud.points.push_back(pcl::PointXYZ( 1, 1, 0));
+  // Same rectangle at z = -2
+  cloud.points.push_back(pcl::PointXYZ(-1, 0, -2));
+  cloud.points.push_back(pcl::PointXYZ( 1, 0, -2));
+  cloud.points.push_back(pcl::PointXYZ(-1, 1, -2));
+  cloud.points.push_back(pcl::PointXYZ( 1, 1, -2));
+  // A middle column at z = 0 only, between two sides of the rectangle
+  cloud.points.push_back(pcl::PointXYZ(0, 0, 0));
+  cloud.points.push_back(pcl::PointXYZ(0, 1, 0));
+
+  // Query point in middle column, slightly +x. Its nearest neighbors are not
+  // corners of a prism.
+  pcl::PointXYZ queryPt(0.1, 0, 0);
+  // 1st NN is at index [8]
+  int nnIdx = 8;
+
+  // Return values from trilinear search
+  std::vector<int> interpInds1, interpInds2;
+  std::vector<pcl::PointXYZ> interps1, interps2;
+
+  // Search function. Search neighbors to do trilinear interpolation among
+  interp.FindTrilinearInterpolators(cloud, queryPt, nnIdx, spatialRes,
+    interpInds1, interps1, interpInds2, interps2, k);
+
+  // Check that it finds 2 z slices
+  EXPECT_EQ(interpInds1.size(), 4);
+  EXPECT_EQ(interpInds2.size(), 4);
+  EXPECT_EQ(interps1.size(), 4);
+  EXPECT_EQ(interps2.size(), 4);
+
+  // Check neighbors' indices.
+  // Degenerate into a line.
+  // Top-down view of 4 nearest neighbors on 1st z slice, not in a rectangle,
+  // therefore the 8 neighbors together won't be in a prism:
+  //            y
+  //            |
+  //   1        c
+  //   0 --d----aq---b- x
+  //            |
+  //      -1    0    1
+  EXPECT_EQ(interpInds1[0], 8);  // a
+  EXPECT_EQ(interpInds1[1], 1);  // b
+  EXPECT_EQ(interpInds1[2], 9);  // c
+  EXPECT_EQ(interpInds1[3], 0);  // d
+
+  // 2nd z slice only has 4 points
+  EXPECT_EQ(interpInds2[0], 5);
+  EXPECT_EQ(interpInds2[1], 4);
+  EXPECT_EQ(interpInds2[2], 7);
+  EXPECT_EQ(interpInds2[3], 6);
+
+  Eigen::Vector3f queryPtEigen(queryPt.x, queryPt.y, queryPt.z);
+  Eigen::MatrixXf interpsEigen(8, 3);
+  for (int i = 0; i < interpInds1.size(); ++i)
+  {
+    interpsEigen.row(i) = Eigen::Vector3f(
+      cloud.points[interpInds1[i]].x,
+      cloud.points[interpInds1[i]].y,
+      cloud.points[interpInds1[i]].z);
+  }
+  for (int i = 0; i < interpInds2.size(); ++i)
+  {
+    interpsEigen.row(4 + i) = Eigen::Vector3f(
+      cloud.points[interpInds2[i]].x,
+      cloud.points[interpInds2[i]].y,
+      cloud.points[interpInds2[i]].z);
+  }
+
+  // Data to test interpolation between two z slices
+  std::vector<float> data;
+  data.push_back(  50.0f);  // a
+  data.push_back( 100.0f);  // b
+  data.push_back(   0.0f);  // c. Degenerated line independent of this
+  data.push_back(   0.0f);  // d
+  // Set values in 2nd z slice very different from those on 1st z slice.
+  // Since query point is entirely on 1st z slice, it should be independent
+  // of values on 2nd z slice.
+  data.push_back(1000.0f);
+  data.push_back(1000.0f);
+  data.push_back(1000.0f);
+  data.push_back(1000.0f);
+
+  // Interpolation function
+  float result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
+  // Result should be between a and b
+  EXPECT_GT(result, 50);
+  EXPECT_LT(result, 100);
+}
 }
