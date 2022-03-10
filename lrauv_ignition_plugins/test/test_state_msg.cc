@@ -41,7 +41,7 @@ void commonChecks(const lrauv_ignition_plugins::msgs::LRAUVState &_msg)
 }
 
 //////////////////////////////////////////////////
-TEST_F(LrauvTestFixture, State)
+TEST_F(LrauvTestFixtureAtDepth, State)
 {
   // TODO(chapulina) Test other fields, see
   // https://github.com/osrf/lrauv/pull/81
@@ -68,14 +68,14 @@ TEST_F(LrauvTestFixture, State)
   // Position
   ignition::math::Angle initialLat(IGN_DTOR(35.5999984741211));
   ignition::math::Angle initialLon(IGN_DTOR(-121.779998779297));
-  EXPECT_NEAR(0.0, latest.depth_(), 1e-6);
+  EXPECT_NEAR(10.0, latest.depth_(), 1e-6);
   EXPECT_NEAR(initialLat.Degree(), latest.latitudedeg_(), 1e-6);
   EXPECT_NEAR(initialLon.Degree(), latest.longitudedeg_(), 1e-6);
 
-  // Starts aligned with NED world frame (zero pose facing North)
+  // Starts aligned with NED world frame (zero pose facing North) @ 10m depth
   EXPECT_NEAR(0.0, latest.pos_().x(), 1e-6);
   EXPECT_NEAR(0.0, latest.pos_().y(), 1e-6);
-  EXPECT_NEAR(0.0, latest.pos_().z(), 1e-6);
+  EXPECT_NEAR(10.0, latest.pos_().z(), 1e-6);
 
   EXPECT_NEAR(0.0, latest.posrph_().x(), 1e-6);
   EXPECT_NEAR(0.0, latest.posrph_().y(), 1e-6);
@@ -124,14 +124,14 @@ TEST_F(LrauvTestFixture, State)
   EXPECT_NEAR(0.0005, latest.buoyancyposition_(), 1e-6);
 
   // Position
-  EXPECT_NEAR(0.0, latest.depth_(), 1e-6);
+  EXPECT_NEAR(10.0, latest.depth_(), 1e-6);
   EXPECT_LT(initialLat.Degree(), latest.latitudedeg_());
   EXPECT_NEAR(initialLon.Degree(), latest.longitudedeg_(), 1e-6);
 
   // NED world frame: vehicle is going North with no rotation
   EXPECT_LT(28.0, latest.pos_().x());
   EXPECT_NEAR(0.0, latest.pos_().y(), 1e-3);
-  EXPECT_NEAR(0.0, latest.pos_().z(), 1e-6);
+  EXPECT_NEAR(10.0, latest.pos_().z(), 1e-6);
   EXPECT_NEAR(0.0, latest.posrph_().x(), 1e-3);
   EXPECT_NEAR(0.0, latest.posrph_().y(), 1e-6);
   EXPECT_NEAR(0.0, latest.posrph_().z(), 1e-5);
@@ -179,14 +179,14 @@ TEST_F(LrauvTestFixture, State)
   EXPECT_NEAR(0.0005, latest.buoyancyposition_(), 1e-6);
 
   // Position
-  EXPECT_NEAR(0.0, latest.depth_(), 1e-3);
+  EXPECT_NEAR(10.0, latest.depth_(), 1e-3);
   EXPECT_LT(initialLat.Degree(), latest.latitudedeg_());
   EXPECT_LT(initialLon.Degree(), latest.longitudedeg_());
 
   // NED world frame: vehicle is going North East with positive yaw
   EXPECT_LT(30.0, latest.pos_().x());
   EXPECT_LT(0.4, latest.pos_().y());
-  EXPECT_NEAR(0.0, latest.pos_().z(), 1e-3);
+  EXPECT_NEAR(10.0, latest.pos_().z(), 1e-3);
   EXPECT_NEAR(0.0, latest.posrph_().x(), 1e-3);
   EXPECT_NEAR(0.0, latest.posrph_().y(), 1e-3);
   EXPECT_LT(0.5, latest.posrph_().z());

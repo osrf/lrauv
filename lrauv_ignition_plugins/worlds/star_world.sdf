@@ -69,6 +69,11 @@
       <pose>-5 0 1 0 0 0</pose>
       <uri>tethys_equipped</uri>
       <name>tethys</name>
+      <experimental:params>
+        <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
+          <surface>1000</surface>
+        </plugin>
+      </experimental:params>
     </include>
 
     <include>
@@ -98,6 +103,7 @@
         </plugin>
         <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
           <namespace>tethys2</namespace>
+          <surface>1000</surface>
         </plugin>
         <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
           <topic>/model/tethys2/drop_weight</topic>
@@ -139,6 +145,7 @@
         </plugin>
         <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
           <namespace>tethys3</namespace>
+          <surface>1000</surface>
         </plugin>
         <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
           <topic>/model/tethys3/drop_weight</topic>
@@ -180,6 +187,7 @@
         </plugin>
         <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
           <namespace>tethys4</namespace>
+          <surface>1000</surface>
         </plugin>
         <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
           <topic>/model/tethys4/drop_weight</topic>
@@ -192,10 +200,7 @@
           <namespace>tethys4</namespace>
         </plugin>
       </experimental:params>
-
     </include>
-
-
 
   </world>
 </sdf>

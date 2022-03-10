@@ -197,6 +197,8 @@
         <max_volume>0.000955</max_volume>
         <!-- m^3/s -->
         <max_inflation_rate>0.000003</max_inflation_rate>
+        <!-- Default surface at 0m -->
+        <surface>0</surface>
       </plugin>
       <plugin
         filename="ignition-gazebo-detachable-joint-system"

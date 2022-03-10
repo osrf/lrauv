@@ -41,8 +41,8 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
   EXPECT_EQ(10, this->tethysPoses.size());
   EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().X(), 1e-6);
   EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Y(), 1e-6);
-  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Z(), 1e-6);
-  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Roll(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Pos().Z(), 1e-3);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Roll(), 1e-3);
   EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 1e-6);
   EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Yaw(), 1e-6);
 
