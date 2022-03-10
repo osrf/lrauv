@@ -269,7 +269,7 @@ TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
   EXPECT_EQ(interp.Method(), TRILINEAR);
 
   interp.SetDebug(true);
-  interp.SetDebugMath(true);
+  interp.SetDebugMath(false);
 
   // Inputs to search function
   float spatialRes = 0.1f;
