@@ -789,7 +789,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       break;
     }
 
-    if (this->dataPtr->interpolation.debug())
+    if (this->dataPtr->interpolation.Debug())
     {
       igndbg << "Searching around sensor Cartesian location "
         << std::round(searchPoint.x * 1000.0) / 1000.0 << ", "
@@ -819,7 +819,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       continue;
     }
     // Debug output
-    else if (this->dataPtr->interpolation.debug())
+    else if (this->dataPtr->interpolation.Debug())
     {
       for (std::size_t i = 0; i < spatialInds.size(); i++)
       {
@@ -930,7 +930,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       // For the correct sensor, interpolate using nearby locations with data
       if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
       {
-        if (this->dataPtr->interpolation.debug())
+        if (this->dataPtr->interpolation.Debug())
           igndbg << "Interpolating salinity" << std::endl;
         this->dataPtr->ExtractElements(
           this->dataPtr->salinityArr[this->dataPtr->timeIdx],
@@ -942,7 +942,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
         sensor))
       {
-        if (this->dataPtr->interpolation.debug())
+        if (this->dataPtr->interpolation.Debug())
           igndbg << "Interpolating temperature" << std::endl;
         this->dataPtr->ExtractElements(
           this->dataPtr->temperatureArr[this->dataPtr->timeIdx],
@@ -957,7 +957,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
         sensor))
       {
-        if (this->dataPtr->interpolation.debug())
+        if (this->dataPtr->interpolation.Debug())
           igndbg << "Interpolating chlorophyll" << std::endl;
         this->dataPtr->ExtractElements(
           this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx],
@@ -969,7 +969,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(
         sensor))
       {
-        if (this->dataPtr->interpolation.debug())
+        if (this->dataPtr->interpolation.Debug())
           igndbg << "Interpolating E and N currents" << std::endl;
         this->dataPtr->ExtractElements(
           this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx],

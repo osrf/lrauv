@@ -93,9 +93,19 @@ class Interpolation
     const Eigen::MatrixXf &_xyzs,
     const std::vector<float> &_values);
 
-  /// \brief Return debug flag
-  /// \return Whether debug flag is on
-  public: bool debug();
+  /// \brief Return general debug flag
+  /// \return Whether general debug flag is on
+  public: bool Debug();
+
+  /// \brief Set general debug flag
+  public: void SetDebug(bool debug);
+
+  /// \brief Return debug flag for math calculations
+  /// \return Whether math debug flag is on
+  public: bool DebugMath();
+
+  /// \brief Set math debug flag
+  public: void SetDebugMath(bool debug);
 
   /// \brief Private data pointer
   private: std::unique_ptr<InterpolationPrivate> dataPtr;
@@ -232,11 +242,11 @@ class InterpolationPrivate
 
   /// \brief Debug printouts for interpolation. Will keep around at least until
   /// interpolation is stable.
-  public: const bool DEBUG_INTERPOLATE = true;
+  public: bool debugGeneral = true;
 
   /// \brief Debug printouts for interpolation math. Will keep around at least
   /// until interpolation is stable.
-  public: const bool DEBUG_INTERPOLATE_MATH = false;
+  public: bool debugMath = false;
 
   /// \brief Interpolation method
   public: InterpolationMethod method = TRILINEAR;
@@ -322,14 +332,14 @@ void Interpolation::FindTrilinearInterpolators(
   float nnZ = _cloud.at(_nnIdx).z;
 
   // Debug output
-  if (this->dataPtr->DEBUG_INTERPOLATE)
+  if (this->dataPtr->debugGeneral)
     igndbg << _cloud.size()
       << " points in full cloud" << std::endl;
 
   // Create a sub-cloud containing just the z slice
   this->dataPtr->CreateDepthSlice(nnZ, _cloud, zSlice1,
     zSliceInds1);
-  if (this->dataPtr->DEBUG_INTERPOLATE)
+  if (this->dataPtr->debugGeneral)
   {
     igndbg << "1st nn ("
       << _cloud.at(_nnIdx).x << ", "
@@ -388,7 +398,7 @@ void Interpolation::FindTrilinearInterpolators(
   extract.filter(cloudExceptZSlice1);
   extract.filter(newToOldInds);
 
-  if (this->dataPtr->DEBUG_INTERPOLATE)
+  if (this->dataPtr->debugGeneral)
   {
     igndbg << "Excluding 1st nn z slice. Remaining cloud has "
       << cloudExceptZSlice1.points.size() << " points" << std::endl;
@@ -427,7 +437,7 @@ void Interpolation::FindTrilinearInterpolators(
   // Create a sub-sub-cloud containing just the z slice
   this->dataPtr->CreateDepthSlice(nnZ2, cloudExceptZSlice1, zSlice2,
     zSliceInds2);
-  if (this->dataPtr->DEBUG_INTERPOLATE)
+  if (this->dataPtr->debugGeneral)
   {
     igndbg << "2nd nn ("
       << _cloud.at(nnIdx2).x << ", "
@@ -468,7 +478,7 @@ void Interpolation::FindTrilinearInterpolators(
     //   << newToOldInds[zSliceInds2[interpolatorInds2NewCloud[i]]] << std::endl;
   }
 
-  // if (this->dataPtr->DEBUG_INTERPOLATE)
+  // if (this->dataPtr->debugGeneral)
   // {
   //   igndbg << "FindTrilinearInterpolators(): result indices:" << std::endl;
   //   for (int i = 0; i < _interpolatorInds1.size(); ++i)
@@ -501,9 +511,27 @@ float Interpolation::InterpolateData(
 }
 
 /////////////////////////////////////////////////
-bool Interpolation::debug()
+bool Interpolation::Debug()
 {
-  return this->dataPtr->DEBUG_INTERPOLATE;
+  return this->dataPtr->debugGeneral;
+}
+
+/////////////////////////////////////////////////
+void Interpolation::SetDebug(bool debug)
+{
+  this->dataPtr->debugGeneral = debug;
+}
+
+/////////////////////////////////////////////////
+bool Interpolation::DebugMath()
+{
+  return this->dataPtr->debugMath;
+}
+
+/////////////////////////////////////////////////
+void Interpolation::SetDebugMath(bool debug)
+{
+  this->dataPtr->debugMath = debug;
 }
 
 /////////////////////////////////////////////////
@@ -727,7 +755,7 @@ float InterpolationPrivate::TrilinearInterpolate(
     }
   }
 
-  if (this->DEBUG_INTERPOLATE)
+  if (this->debugGeneral)
     igndbg << "Trilinear interpolation, starting with 8 points: "
       << d000 << ", " << d001 << ", " << d010 << ", " << d011 << ", "
       << d100 << ", " << d101 << ", " << d110 << ", " << d111
@@ -750,7 +778,7 @@ float InterpolationPrivate::TrilinearInterpolate(
   float d10 = d010 * (1 - dx) + d110 * dx;
   float d11 = d011 * (1 - dx) + d111 * dx;
 
-  if (this->DEBUG_INTERPOLATE)
+  if (this->debugGeneral)
     igndbg << "Trilinear interpolation, 4 intermediate results from 8 points: "
       << d00 << ", " << d01 << ", " << d10 << ", " << d11 << std::endl;
 
@@ -759,7 +787,7 @@ float InterpolationPrivate::TrilinearInterpolate(
   float d0 = d00 * (1 - dy) + d10 * dy;
   float d1 = d01 * (1 - dy) + d11 * dy;
 
-  if (this->DEBUG_INTERPOLATE)
+  if (this->debugGeneral)
     igndbg << "Trilinear interpolation, 2 intermediate results from 4 points: "
       << d0 << ", " << d1 << std::endl;
 
@@ -768,7 +796,7 @@ float InterpolationPrivate::TrilinearInterpolate(
   // This arrives at the interpolated value at the target xyz position.
   float d = d0 * (1 - dz) + d1 * dz;
 
-  if (this->DEBUG_INTERPOLATE)
+  if (this->debugGeneral)
     igndbg << "Trilinear interpolation result: " << d << std::endl;
 
   return d;
@@ -782,7 +810,7 @@ float InterpolationPrivate::BarycentricInterpolate(
 {
   // Implemented from https://en.wikipedia.org/wiki/Barycentric_coordinate_system#Barycentric_coordinates_on_tetrahedra
 
-  if (this->DEBUG_INTERPOLATE_MATH)
+  if (this->debugMath)
     igndbg << "_p: " << std::endl << _p << std::endl;
 
   Eigen::Matrix3f T;
@@ -798,7 +826,7 @@ float InterpolationPrivate::BarycentricInterpolate(
        _xyzs(0, 2) - _xyzs(3, 2),
        _xyzs(1, 2) - _xyzs(3, 2),
        _xyzs(2, 2) - _xyzs(3, 2);
-  if (this->DEBUG_INTERPOLATE_MATH)
+  if (this->debugMath)
     igndbg << "T: " << std::endl << T << std::endl;
 
   int zeroRowCount = 0;
@@ -816,7 +844,7 @@ float InterpolationPrivate::BarycentricInterpolate(
   // 2D. Interpolate on a plane. Otherwise T inverse will result in nans.
   if (zeroRowCount == 1)
   {
-    if (this->DEBUG_INTERPOLATE)
+    if (this->debugGeneral)
       igndbg << "4 points are on a plane. Using 2D barycentric interpolation "
         "for a triangle." << std::endl;
 
@@ -841,7 +869,7 @@ float InterpolationPrivate::BarycentricInterpolate(
   // 1D. Interpolate on a line. Otherwise T inverse will result in nans.
   else if (zeroRowCount == 2)
   {
-    if (this->DEBUG_INTERPOLATE)
+    if (this->debugGeneral)
       igndbg << "4 points are on a line. Using 1D interpolation." << std::endl;
 
     float p1D;
@@ -860,7 +888,7 @@ float InterpolationPrivate::BarycentricInterpolate(
   // T is entirely zero. Then all points are at the same point. Take any value.
   else if (zeroRowCount == 3)
   {
-    if (this->DEBUG_INTERPOLATE)
+    if (this->debugGeneral)
       igndbg << "4 points are at the exact same point. Arbitrarily selecting "
         "one of their values as interpolation result." << std::endl;
     return _values[0];
@@ -869,19 +897,19 @@ float InterpolationPrivate::BarycentricInterpolate(
   // r4 = (x4, y4, z4)
   Eigen::Vector3f r4;
   r4 << _xyzs(3, 0), _xyzs(3, 1), _xyzs(3, 2);
-  if (this->DEBUG_INTERPOLATE_MATH)
+  if (this->debugMath)
     igndbg << "r4: " << std::endl << r4 << std::endl;
 
   // (lambda1, lambda2, lambda3)
   Eigen::Vector3f lambda123 = T.inverse() * (_p - r4);
 
-  if (this->DEBUG_INTERPOLATE_MATH)
+  if (this->debugMath)
     igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
 
   // lambda4 = 1 - lambda1 - lambda2 - lambda3
   float lambda4 = 1 - lambda123(0) - lambda123(1) - lambda123(2);
 
-  if (this->DEBUG_INTERPOLATE)
+  if (this->debugGeneral)
     igndbg << "Barycentric 3D lambda 1 2 3 4: " << lambda123(0) << ", "
       << lambda123(1) << ", "
       << lambda123(2) << ", "
@@ -894,7 +922,7 @@ float InterpolationPrivate::BarycentricInterpolate(
     lambda123(2) * _values[2] +
     lambda4 * _values[3];
 
-  if (this->DEBUG_INTERPOLATE)
+  if (this->debugGeneral)
     igndbg << "Barycentric 3D interpolation of values " << _values[0] << ", "
       << _values[1] << ", " << _values[2] << ", " << _values[3]
       << " resulted in " << result << std::endl;
@@ -908,10 +936,10 @@ float InterpolationPrivate::BarycentricInterpolate(
   const Eigen::Matrix<float, 4, 2> &_xys,
   const std::vector<float> &_values)
 {
-  if (this->DEBUG_INTERPOLATE_MATH)
+  if (this->debugMath)
   {
-    igndbg << "_p: " << std::endl << _p << std::endl;
-    igndbg << "_xys: " << std::endl << _xys << std::endl;
+    igndbg << "Query point (_p): " << std::endl << _p << std::endl;
+    igndbg << "Interpolating neighbors (_xys): " << std::endl << _xys << std::endl;
   }
 
   // 2D case, consider inputs a triangle and use 2 x 2 matrix for T
@@ -935,7 +963,7 @@ float InterpolationPrivate::BarycentricInterpolate(
       }
       xys3.row(nextRow++) = _xys.row(r2);
     }
-    if (this->DEBUG_INTERPOLATE_MATH)
+    if (this->debugMath)
       igndbg << "xys3: " << std::endl << xys3 << std::endl;
 
     // Row 1: x1 - x3, x2 - x3
@@ -944,27 +972,29 @@ float InterpolationPrivate::BarycentricInterpolate(
     // Row 2: y1 - y3, y2 - y3
          xys3(0, 1) - xys3(2, 1),
          xys3(1, 1) - xys3(2, 1);
-    if (this->DEBUG_INTERPOLATE_MATH)
+    if (this->debugMath)
       igndbg << "T: " << std::endl << T << std::endl;
 
     // lastVert = (x3, y3)
     lastVert << xys3(2, 0), xys3(2, 1);
-    if (this->DEBUG_INTERPOLATE_MATH)
+    if (this->debugMath)
       igndbg << "lastVert: " << std::endl << lastVert << std::endl;
 
     // (lambda1, lambda2)
     lambda12 = T.inverse() * (_p - lastVert);
 
-    if (this->DEBUG_INTERPOLATE_MATH)
+    if (this->debugMath)
       igndbg << "T.inverse(): " << std::endl << T.inverse() << std::endl;
 
     // lambda3 = 1 - lambda1 - lambda2
     lambda3 = 1 - lambda12(0) - lambda12(1);
 
-    if (this->DEBUG_INTERPOLATE)
+    if (this->debugGeneral)
+    {
       igndbg << "Barycentric 2D lambda 1 2 3: " << lambda12(0) << ", "
         << lambda12(1) << ", "
         << lambda3 << std::endl;
+    }
 
     // If all lambdas >= 0, then we found a triangle that the query point
     // lies within. (A lambda would be negative if point is outside triangle)
@@ -980,7 +1010,7 @@ float InterpolationPrivate::BarycentricInterpolate(
     lambda12(1) * _values[1] +
     lambda3 * _values[2];
 
-  if (this->DEBUG_INTERPOLATE)
+  if (this->debugGeneral)
     igndbg << "Barycentric 2D interpolation of values " << _values[0] << ", "
       << _values[1] << ", " << _values[2]
       << " resulted in " << result << std::endl;
@@ -994,7 +1024,7 @@ float InterpolationPrivate::BarycentricInterpolate(
   const Eigen::VectorXf &_xs,
   const std::vector<float> &_values)
 {
-  if (this->DEBUG_INTERPOLATE_MATH)
+  if (this->debugMath)
   {
     igndbg << "_p: " << std::endl << _p << std::endl;
     igndbg << "_xs: " << std::endl << _xs << std::endl;
@@ -1009,7 +1039,7 @@ float InterpolationPrivate::BarycentricInterpolate(
     {
       if (abs(_xs(i) - _p) < 1e-6)
       {
-        if (this->DEBUG_INTERPOLATE)
+        if (this->debugGeneral)
           igndbg << "_p lies on a neighbor. "
             << "1D linear interpolation of values " << _values[0] << ", "
             << _values[1] << ", " << _values[2] << ", " << _values[3]
@@ -1071,7 +1101,7 @@ float InterpolationPrivate::BarycentricInterpolate(
       << "neighbors that query point lies between. Cannot interpolate. "
       << "(This should not happen!)"
       << std::endl;
-    if (this->DEBUG_INTERPOLATE)
+    if (this->debugGeneral)
     {
       igndbg << "Neighbors: " << std::endl << _xs << std::endl;
       igndbg << "Sorted neighbors: " << std::endl;
@@ -1103,7 +1133,7 @@ float InterpolationPrivate::BarycentricInterpolate(
   // Linear interpolation
   float result = ltPWeight * _values[ltPIdx] + gtPWeight * _values[gtPIdx];
 
-  if (this->DEBUG_INTERPOLATE)
+  if (this->debugGeneral)
   {
     igndbg << "ltPWeight: " << ltPWeight << ", gtPWeight: " << gtPWeight
       << std::endl;
@@ -1162,7 +1192,7 @@ float InterpolationPrivate::BaryLinearInterpolate(
   Eigen::Matrix<float, 4, 2> xysSlice2 = _xyzs.block(4, 0, 4, 2);
   float valueSlice1 = this->BarycentricInterpolate(p2d, xysSlice1, _values);
   float valueSlice2 = this->BarycentricInterpolate(p2d, xysSlice2, _values);
-  if (this->DEBUG_INTERPOLATE)
+  if (this->debugGeneral)
     igndbg << "Hybrid bary-linear interpolation, "
       << "2 barycentric interpolations on 2 z slices resulted in: "
       << valueSlice1 << " and " << valueSlice2 << std::endl;
@@ -1181,12 +1211,12 @@ float InterpolationPrivate::BaryLinearInterpolate(
   float dz1Weight = dz1 / (dz1 + dz2);
   float dz2Weight = dz2 / (dz1 + dz2);
   float result = dz1Weight * valueSlice1 + dz2Weight * valueSlice2;
-  if (this->DEBUG_INTERPOLATE)
+  if (this->debugGeneral)
     igndbg << "Hybrid bary-linear interpolation, "
       << "linear interpolation of 2 points on two z slices: " << result
       << std::endl;
 
-  if (this->DEBUG_INTERPOLATE)
+  if (this->debugGeneral)
   {
     igndbg << "Hybrid bary-linear interpolation of " << _values.size()
       << " values:" << std::endl;

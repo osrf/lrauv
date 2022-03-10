@@ -22,11 +22,14 @@
 
 #include <gtest/gtest.h>
 
+#include <ignition/common/Console.hh>
+
 #include "Interpolation.hh"
 
 namespace tethys
 {
 
+/////////////////////////////////////////////////
 TEST(InterpolationTest, SetAndGetMethod)
 {
   // Constructor using default arg
@@ -48,6 +51,7 @@ TEST(InterpolationTest, SetAndGetMethod)
   EXPECT_EQ(interp2.Method(), TRILINEAR);
 }
 
+/////////////////////////////////////////////////
 TEST(InterpolationTest, TrilinearSearchEightPointPrism)
 {
   Interpolation interp(TRILINEAR);
@@ -72,6 +76,9 @@ TEST(InterpolationTest, TrilinearSearchEightPointPrism)
   cloud.points.push_back(pcl::PointXYZ(1, 1, -2));
   // An outlier
   cloud.points.push_back(pcl::PointXYZ(100, 100, -100));
+
+  //////////////////////////////////
+  // Test normal case, query point inside a prism cell
 
   // Query point is almost centered in upper z slice, but slightly toward
   // point [1]
@@ -105,7 +112,9 @@ TEST(InterpolationTest, TrilinearSearchEightPointPrism)
   EXPECT_EQ(interpInds2[2], 7);
   EXPECT_EQ(interpInds2[3], 6);
 
-  // Test query point being outside the prism
+  //////////////////////////////////
+  // Test edge case: query point is outside the prism. Happens when query point
+  // is outside the boundaries of regions where data are available.
 
   // Move query point outside and above prism. (Nearest neighbor remains same)
   pcl::PointXYZ queryPtAbove(queryPt.x, queryPt.y, 1);
@@ -118,6 +127,7 @@ TEST(InterpolationTest, TrilinearSearchEightPointPrism)
   EXPECT_EQ(interpInds2.size(), k);
   EXPECT_EQ(interps2.size(), k);
 
+  //////////////////////////////////
   // Test invalid cases
 
   // Move query outside prism, to overlap with outlier
@@ -150,8 +160,12 @@ TEST(InterpolationTest, TrilinearSearchEightPointPrism)
   EXPECT_EQ(interpInds2.size(), 0);
   EXPECT_EQ(interps1.size(), 0);
   EXPECT_EQ(interps2.size(), 0);
+
+  // TODO Add case where point is to left or right of prism, outside prism, but
+  // is in between z slices
 }
 
+/////////////////////////////////////////////////
 TEST(InterpolationTest, TrilinearInterpolationInEightPointPrism)
 {
   Interpolation interp(TRILINEAR);
@@ -173,7 +187,7 @@ TEST(InterpolationTest, TrilinearInterpolationInEightPointPrism)
     0, 1, -2,
     1, 1, -2;
 
-  // Query point is almost centered in upper z slice, but slightly toward
+  // Query point is almost centered, lying in upper z slice, but slightly toward
   // point [1]
   Eigen::Vector3f queryPtEigen(0.6, 0.3, 0);
 
@@ -193,25 +207,25 @@ TEST(InterpolationTest, TrilinearInterpolationInEightPointPrism)
   // Query point at z = 0 should take on average value in z = 0 slice
   EXPECT_EQ(result, 0);
 
-  // Move query to z = -2
+  // Move query to z = -2, on z slice
   queryPtEigen[2] = -2;
   result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
   // Query point at z = -2 should take on average value in z = -2 slice
   EXPECT_EQ(result, 200);
 
-  // Move query to z = -1
+  // Move query to z = -1, midpoint between z slices
   queryPtEigen[2] = -1;
   result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
   // Query point at z = -1 should take on average value of z = 0 and z = -2
   // slices
   EXPECT_EQ(result, 100);
 
-  // Move query to z = -0.5
+  // Move query to z = -0.5, a fraction between z slices
   queryPtEigen[2] = -0.5;
   result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
   EXPECT_NEAR(result, 50, 1);
 
-  // Move query to z = -1.3
+  // Move query to z = -1.3, a fraction between z slices
   queryPtEigen[2] = -1.3;
   result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
   EXPECT_NEAR(result, 130, 1);
@@ -242,13 +256,20 @@ TEST(InterpolationTest, TrilinearInterpolationInEightPointPrism)
   EXPECT_TRUE(std::isnan(result));
 }
 
-// Trilinear interpolation assumption of points being corners of a prism not
-// satisfied, falls back to hybrid "barylinear" interpolation - linear
-// interpolation between non-prism quads in two z slices.
+/////////////////////////////////////////////////
+// Happens when trilinear interpolation assumption of points being corners of
+// a prism is not satisfied, falls back to hybrid "barylinear" interpolation,
+// i.e. linear interpolation between 3D non-prism quads in two z slices, or the
+// degenerative cases of a 2D triangle, or a 1D line segment.
 TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
 {
+  ignition::common::Console::SetVerbosity(4);
+
   Interpolation interp(TRILINEAR);
   EXPECT_EQ(interp.Method(), TRILINEAR);
+
+  interp.SetDebug(true);
+  interp.SetDebugMath(true);
 
   // Inputs to search function
   float spatialRes = 0.1f;
@@ -302,8 +323,10 @@ TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
   EXPECT_EQ(interps1.size(), 4);
   EXPECT_EQ(interps2.size(), 4);
 
+  // TODO Make a query point that is the general 3D quad case, but not prism
+
   // Check neighbors' indices.
-  // Degenerate into a line.
+  // Degenerate into a 2D triangle.
   // Top-down view of 4 nearest neighbors on 1st z slice, not in a rectangle,
   // therefore the 8 neighbors together won't be in a prism:
   //            y
@@ -344,7 +367,7 @@ TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
   std::vector<float> data;
   data.push_back(  50.0f);  // a
   data.push_back( 100.0f);  // b
-  data.push_back(   0.0f);  // c. Degenerated line independent of this
+  data.push_back(   0.0f);  // c
   data.push_back(   0.0f);  // d
   // Set values in 2nd z slice very different from those on 1st z slice.
   // Since query point is entirely on 1st z slice, it should be independent
@@ -359,5 +382,7 @@ TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
   // Result should be between a and b
   EXPECT_GT(result, 50);
   EXPECT_LT(result, 100);
+
+  // TODO Make a query point that is the degenerate 1D line case
 }
 }
