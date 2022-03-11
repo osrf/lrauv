@@ -248,10 +248,10 @@ TEST_F(LrauvTestFixture, State)
   EXPECT_NEAR(0.0002, latest.buoyancyposition_(), 1e-3);
 
   // Position
-  EXPECT_LT(0.3, latest.depth_());
+  EXPECT_LT(0.2, latest.depth_());
 
   // NED world frame: higher Z is deeper
-  EXPECT_LT(0.3, latest.pos_().z());
+  EXPECT_LT(0.2, latest.pos_().z());
 
   // Velocity
   // NED world frame: sinking to higher Z

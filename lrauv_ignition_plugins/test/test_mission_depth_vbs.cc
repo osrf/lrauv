@@ -60,7 +60,7 @@ TEST_F(LrauvTestFixture, DepthVBS)
 
   // Run enough iterations (chosen empirically) to reach steady state, then kill
   // the controller
-  int targetIterations{50000};
+  int targetIterations{100000};
   int maxSleep{100};
   int sleep{0};
   for (; sleep < maxSleep && lrauvRunning && this->iterations < targetIterations; ++sleep)
@@ -76,7 +76,7 @@ TEST_F(LrauvTestFixture, DepthVBS)
 
   ignmsg << "Logged [" << this->tethysPoses.size() << "] poses" << std::endl;
 
-  int maxIterations{28000};
+  int maxIterations{50000};
   ASSERT_LT(maxIterations, this->tethysPoses.size());
 
   ignition::math::Vector3d maxVel(0, 0, 0);
