@@ -247,8 +247,7 @@ void HydrodynamicsPlugin::PreUpdate(
   // Since we are transforming angular and linear velocity we only care about
   // rotation
   auto localLinearVelocity = pose->Rot().Inverse() * linearVelocity->Data();
-  auto localRotationalVelocity = pose->Rot().Inverse() * *rotationalVelocity /
-    (2 * IGN_PI);
+  auto localRotationalVelocity = pose->Rot().Inverse() * *rotationalVelocity;
 
   state(0) = localLinearVelocity.X();
   state(1) = localLinearVelocity.Y();

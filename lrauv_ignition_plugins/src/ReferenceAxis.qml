@@ -20,32 +20,31 @@
  * Research Institute (MBARI) and the David and Lucile Packard Foundation
  */
 
-#include <ignition/gazebo/System.hh>
+import QtQuick 2.9
+import QtQuick.Controls 2.1
+import QtQuick.Dialogs 1.0
+import QtQuick.Controls.Material 2.1
+import QtQuick.Layouts 1.3
+import "qrc:/qml"
 
-namespace tethys
-{
-  class ThrusterPrivateData;
+GridLayout {
+  columns: 1
+  columnSpacing: 10
+  Layout.minimumWidth: 350
+  Layout.minimumHeight: 200
+  anchors.fill: parent
+  anchors.leftMargin: 10
+  anchors.rightMargin: 10
 
-  class Thruster:
-    public ignition::gazebo::System,
-    public ignition::gazebo::ISystemConfigure,
-    public ignition::gazebo::ISystemPreUpdate
-  {
-    public: Thruster();
+  Label {
+    Layout.columnSpan: 1
+    text: "No configuration options at the moment."
+  }
 
-    public: ~Thruster() = default;
 
-    public: void Configure(
-        const ignition::gazebo::Entity &_entity,
-        const std::shared_ptr<const sdf::Element> &_sdf,
-        ignition::gazebo::EntityComponentManager &_ecm,
-        ignition::gazebo::EventManager &/*_eventMgr*/
-    );
-
-    public: void PreUpdate(
-        const ignition::gazebo::UpdateInfo &_info,
-        ignition::gazebo::EntityComponentManager &_ecm);
-
-    private: std::unique_ptr<ThrusterPrivateData> dataPtr;
-  };
+  Item {
+    Layout.columnSpan: 1
+    width: 10
+    Layout.fillHeight: true
+  }
 }

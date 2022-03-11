@@ -41,13 +41,26 @@ message LRAUVInit
   /// \brief Unique ID identifying vehicle
   ignition.msgs.StringMsg id_     = 2;
 
-  // Initial Position Vector
-  double initLat_                 = 3; //  arcdeg  // Initial latitude
-  double initLon_                 = 4; //  arcdeg  // Initial longitude
-  double initZ_                   = 5; //  m       // Initial depth
-  float initPitch_                = 6; //  rad     // Pitch wrto LV
-  float initRoll_                 = 7; //  rad     // Roll wrto LV
-  float initHeading_              = 8; //  rad     // Yaw wrto LV
+  /// \brief Initial latitude in degrees.
+  double initLat_                 = 3;
+
+  /// \brief Initial longitude in degrees.
+  double initLon_                 = 4;
+
+  /// \brief Initial depth in meters.
+  double initZ_                   = 5;
+
+  /// \brief Initial pitch with respect to the NED world frame
+  /// (i.e. rotation about the East vector). Radians.
+  float initPitch_                = 6;
+
+  /// \brief Initial roll with respect to the NED world frame
+  /// (i.e. rotation about the North vector). Radians.
+  float initRoll_                 = 7;
+
+  /// \brief Initial heading with respect to the NED world frame
+  /// (i.e. rotation about the Down vector). Radians.
+  float initHeading_              = 8;
 
   // Add fields as needed
 }

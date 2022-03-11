@@ -1,5 +1,0 @@
-<!DOCTYPE RCC><RCC version="1.0">
-<qresource prefix="VisualizePointCloud/">
-  <file>VisualizePointCloud.qml</file>
-</qresource>
-</RCC>

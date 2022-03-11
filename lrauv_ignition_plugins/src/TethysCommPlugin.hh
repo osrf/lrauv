@@ -106,7 +106,7 @@ namespace tethys
 
     /// Topic to publish to for thruster
     private: std::string thrusterTopic
-      {"propeller_joint/cmd_pos"};
+      {"propeller_joint/cmd_vel"};
 
     /// Topic to publish to for rudder
     private: std::string rudderTopic
@@ -182,6 +182,9 @@ namespace tethys
     /// Latest chlorophyll data received from sensor. NaN if not received.
     private: float latestChlorophyll{std::nanf("")};
 
+    /// Ocean Density in kg / m ^ 3
+    private: double oceanDensity{1000};
+
     /// Latest current data received from sensor. NaN if not received.
     private: ignition::math::Vector3d latestCurrent
         {std::nan(""), std::nan(""), std::nan("")};
@@ -190,14 +193,15 @@ namespace tethys
     /// sanity check
     private: std::chrono::steady_clock::duration prevPubPrintTime =
       std::chrono::steady_clock::duration::zero();
-    private: std::chrono::steady_clock::duration prevSubPrintTime =
-      std::chrono::steady_clock::duration::zero();
 
     /// Transport node for message passing
     private: ignition::transport::Node node;
 
+    /// The model's entity
+    private: ignition::gazebo::Entity modelEntity;
+
     /// The model's base link
-    private: ignition::gazebo::Entity modelLink;
+    private: ignition::gazebo::Entity baseLink;
 
     /// The thruster link
     private: ignition::gazebo::Entity thrusterLink;

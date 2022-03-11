@@ -7,29 +7,42 @@ cmake_minimum_required(VERSION 3.10.2 FATAL_ERROR)
 
 project(lrauv_ignition_plugins)
 
+# Option to enable profiler
+option(ENABLE_PROFILER "Enable Ignition Profiler" FALSE)
+
+if(ENABLE_PROFILER)
+  add_definitions("-DIGN_PROFILER_ENABLE=1")
+else()
+  add_definitions("-DIGN_PROFILER_ENABLE=0")
+endif()
+
 #============================================================================
 # Find dependencies
 find_package(ignition-cmake2 REQUIRED)
 
-find_package(ignition-gazebo6 REQUIRED COMPONENTS gui)
-set(IGN_GAZEBO_VER ${ignition-gazebo6_VERSION_MAJOR})
+find_package(ignition-gazebo7 REQUIRED COMPONENTS gui)
+set(IGN_GAZEBO_VER ${ignition-gazebo7_VERSION_MAJOR})
 
-find_package(ignition-gui6 REQUIRED)
-set(IGN_GUI_VER ${ignition-gui6_VERSION_MAJOR})
+find_package(ignition-gui7 REQUIRED)
+set(IGN_GUI_VER ${ignition-gui7_VERSION_MAJOR})
 
-find_package(ignition-sensors6 REQUIRED)
-set(IGN_SENSORS_VER ${ignition-sensors6_VERSION_MAJOR})
+find_package(ignition-rendering7 REQUIRED)
+set(IGN_RENDERING_VER ${ignition-rendering7_VERSION_MAJOR})
 
-find_package(ignition-launch5 REQUIRED)
+find_package(ignition-sensors7 REQUIRED)
+set(IGN_SENSORS_VER ${ignition-sensors7_VERSION_MAJOR})
 
-find_package(ignition-msgs8 REQUIRED)
-set(IGN_MSGS_VER ${ignition-msgs8_VERSION_MAJOR})
+find_package(ignition-msgs9 REQUIRED)
+set(IGN_MSGS_VER ${ignition-msgs9_VERSION_MAJOR})
 
 find_package(ignition-plugin1 REQUIRED COMPONENTS register)
 set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
 
 find_package(ignition-utils1 REQUIRED)
 set(IGN_UTILS_VER ${ignition-utils1_VERSION_MAJOR})
+
+find_package(ignition-common5 REQUIRED COMPONENTS profiler)
+set(IGN_COMMON_VER ${ignition-common5_VERSION_MAJOR})
 
 find_package (Eigen3 3.3 REQUIRED)
 
@@ -42,7 +55,7 @@ add_subdirectory(proto)
 # Plugins
 
 # add_lrauv_plugin (<plugin_name>
-#              [PROTO] msg1 msg2 ... [PCL] [GUI] [PRIVATE_LINK_LIBS] [INCLUDE_COMMS])
+#              [PROTO] msg1 msg2 ... [PCL] [GUI] [RENDERING] [PRIVATE_LINK_LIBS] [INCLUDE_COMMS])
 #
 # Configure and install plugins.
 #
@@ -55,11 +68,13 @@ add_subdirectory(proto)
 #
 # [GUI]: Optional. Include for GUI plugins.
 #
+# [RENDERING]: Optional. Include to link against Ignition Rendering.
+#
 # [PRIVATE_LINK_LIBS]: Specify a list of libraries to be privately linked.
 #
 # [INCLUDE_COMMS]: Optional. Include comms header files.
 function(add_lrauv_plugin PLUGIN)
-  set(options PCL GUI INCLUDE_COMMS)
+  set(options PCL GUI RENDERING INCLUDE_COMMS)
   set(oneValueArgs)
   set(multiValueArgs PROTO PRIVATE_LINK_LIBS)
 
@@ -87,6 +102,7 @@ function(add_lrauv_plugin PLUGIN)
   set_property(TARGET ${PLUGIN} PROPERTY CXX_STANDARD 17)
   target_link_libraries(${PLUGIN}
     PUBLIC
+      ignition-common${IGN_COMMON_VER}::profiler
       ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
       ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
     PRIVATE
@@ -127,6 +143,14 @@ function(add_lrauv_plugin PLUGIN)
       PUBLIC ${PCL_INCLUDE_DIRS})
   endif()
 
+  # Rendering
+  if (add_lrauv_plugin_RENDERING)
+    target_link_libraries(${PLUGIN}
+      PRIVATE
+        ignition-rendering${IGN_RENDERING_VER}::ignition-rendering${IGN_RENDERING_VER}
+    )
+  endif()
+
   install(
     TARGETS ${PLUGIN}
     DESTINATION ${INSTALL_LIB})
@@ -141,7 +165,10 @@ add_lrauv_plugin(AcousticCommsPlugin
     lrauv_internal_comms
   PRIVATE_LINK_LIBS
     CommsSupport)
-
+add_lrauv_plugin(ControlPanelPlugin GUI
+  PROTO
+    lrauv_command
+    lrauv_state)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(RangeBearingPlugin
   INCLUDE_COMMS
@@ -149,6 +176,7 @@ add_lrauv_plugin(RangeBearingPlugin
     lrauv_range_bearing_request
     lrauv_range_bearing_response
     lrauv_acoustic_message)
+add_lrauv_plugin(ReferenceAxis GUI RENDERING)
 add_lrauv_plugin(ScienceSensorsSystem
   PCL
   PRIVATE_LINK_LIBS
@@ -158,9 +186,7 @@ add_lrauv_plugin(TethysCommPlugin
   PROTO
     lrauv_command
     lrauv_state)
-add_lrauv_plugin(ThrusterPlugin)
 add_lrauv_plugin(TimeAnalysisPlugin)
-add_lrauv_plugin(VisualizePointCloud GUI)
 add_lrauv_plugin(WorldCommPlugin
   PROTO
     lrauv_init)
@@ -239,12 +265,15 @@ if(BUILD_TESTING)
     test_controller
     test_drop_weight
     test_elevator
+    test_hydrodynamics_equilibrium_velocity
     test_mass_shifter
     test_mission_depth_vbs
+    test_mission_pitch_and_depth_mass_vbs
     test_mission_pitch_mass
     test_mission_yoyo_circle
     test_rudder
-    test_spawn)
+    test_spawn
+    test_state_msg)
 
     add_executable(
       ${TEST_TARGET}
@@ -257,6 +286,7 @@ if(BUILD_TESTING)
       PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
       lrauv_command
       lrauv_init
+      lrauv_state
     )
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
     gtest_discover_tests(${TEST_TARGET})
@@ -294,7 +324,6 @@ endif()
 install(
   DIRECTORY
     data
-    launch
     models
     worlds
     ${CMAKE_CURRENT_BINARY_DIR}/hooks

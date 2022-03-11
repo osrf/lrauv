@@ -63,6 +63,6 @@ TEST_F(LrauvTestFixture, Rudder)
 
   // Vehicle makes a clockwise arch looking from the top
   EXPECT_GT(targetY, this->tethysPoses.back().Pos().Y());
-  EXPECT_GT(-1.5, this->tethysPoses.back().Pos().X());
+  EXPECT_GT(-1.0, this->tethysPoses.back().Pos().X());
 }
 

@@ -25,6 +25,8 @@
 
 #include <gtest/gtest.h>
 
+#include <ignition/gazebo/Link.hh>
+#include <ignition/gazebo/Model.hh>
 #include <ignition/gazebo/TestFixture.hh>
 #include <ignition/gazebo/Util.hh>
 #include <ignition/gazebo/World.hh>
@@ -32,6 +34,7 @@
 #include <ignition/transport/Node.hh>
 
 #include "lrauv_command.pb.h"
+#include "lrauv_state.pb.h"
 
 #include "TestConstants.hh"
 
@@ -47,12 +50,13 @@ double angleDiff(double _a, double _b)
   return diff.Radian();
 }
 
-/// \brief Convenient fixture that provides boilerplate code common to most
-/// LRAUV tests.
-class LrauvTestFixture : public ::testing::Test
+/// \brief Abstract base class for fixture that provides boilerplate code common
+/// to most LRAUV tests.
+class LrauvTestFixtureBase : public ::testing::Test
 {
-  // Documentation inherited
-  protected: void SetUp() override
+  /// Setup the specified world.
+  /// \param[in] _worldName Name of the world to load.
+  public: void SetUp(const std::string &_worldName)
   {
     ignition::common::Console::SetVerbosity(4);
 
@@ -62,15 +66,20 @@ class LrauvTestFixture : public ::testing::Test
       this->node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(
       commandTopic);
 
+    auto stateTopic = "/tethys/state_topic";
+    this->node.Subscribe(stateTopic, &LrauvTestFixtureBase::OnState, this);
+
     // Setup fixture
     this->fixture = std::make_unique<ignition::gazebo::TestFixture>(
         ignition::common::joinPaths(
-        std::string(PROJECT_SOURCE_PATH), "worlds", "buoyant_tethys.sdf"));
+        std::string(PROJECT_SOURCE_PATH), "worlds", _worldName));
 
     fixture->OnPostUpdate(
       [&](const ignition::gazebo::UpdateInfo &_info,
       const ignition::gazebo::EntityComponentManager &_ecm)
       {
+        this->dt = _info.dt;
+
         auto worldEntity = ignition::gazebo::worldEntity(_ecm);
         ignition::gazebo::World world(worldEntity);
 
@@ -79,6 +88,20 @@ class LrauvTestFixture : public ::testing::Test
 
         this->tethysPoses.push_back(
             ignition::gazebo::worldPose(modelEntity, _ecm));
+
+        ignition::gazebo::Model model(modelEntity);
+        auto linkEntity = model.LinkByName(_ecm, "base_link");
+        EXPECT_NE(ignition::gazebo::kNullEntity, linkEntity);
+
+        ignition::gazebo::Link link(linkEntity);
+        auto linkVel = link.WorldLinearVelocity(_ecm);
+        EXPECT_TRUE(linkVel.has_value());
+        tethysLinearVel.push_back(linkVel.value());
+
+        auto linkAngVel = link.WorldAngularVelocity(_ecm);
+        EXPECT_TRUE(linkAngVel.has_value());
+        tethysAngularVel.push_back(linkAngVel.value());
+
         this->iterations++;
       });
     fixture->Finalize();
@@ -102,6 +125,13 @@ class LrauvTestFixture : public ::testing::Test
       std::this_thread::sleep_for(100ms);
     }
     EXPECT_LT(sleep, maxSleep);
+  }
+
+  /// Callback function for state from TethysComm
+  /// \param[in] _msg State message
+  private: void OnState(const lrauv_ignition_plugins::msgs::LRAUVState &_msg)
+  {
+    this->stateMsgs.push_back(_msg);
   }
 
   /// \brief Check that a pose is within a given range.
@@ -190,25 +220,45 @@ class LrauvTestFixture : public ::testing::Test
       return;
     }
 
-    char buffer[128];
-    while (!feof(pipe))
+    char buffer[512];
+    while (fgets(buffer, 512, pipe) != nullptr)
     {
-      if (fgets(buffer, 128, pipe) != nullptr)
-      {
-        igndbg << "CMD OUTPUT: " << buffer << std::endl;
+      igndbg << "CMD OUTPUT: " << buffer << std::endl;
 
-        // FIXME: LRAUV app hangs after quit, so force close it
-        // See https://github.com/osrf/lrauv/issues/83
-        std::string bufferStr{buffer};
-        std::string quit{">quit\n"};
-        if (auto found = bufferStr.find(quit) != std::string::npos)
-        {
-          ignmsg << "Quitting application" << std::endl;
-          break;
-        }
+      // FIXME: LRAUV app hangs after quit, so force close it
+      // See https://github.com/osrf/lrauv/issues/83
+      std::string bufferStr{buffer};
+
+      std::string error{"ERROR"};
+      std::string critical{"CRITICAL"};
+      if (bufferStr.find(error) != std::string::npos ||
+          bufferStr.find(critical) != std::string::npos)
+      {
+        ignerr << buffer << "\n";
+      }
+
+      std::string quit{"Stop Mission called by Supervisor::terminate\n"};
+      if (bufferStr.find(quit) != std::string::npos)
+      {
+        ignmsg << "Quitting application" << std::endl;
+        break;
       }
     }
 
+    KillLRAUV();
+
+    pclose(pipe);
+
+    ignmsg << "Completed command [" << cmd << "]" << std::endl;
+
+    _running = false;
+  }
+
+  /// \brief Kill all LRAUV processes.
+  /// \return True if some process was killed.
+  public: static bool KillLRAUV()
+  {
+    bool killed{false};
     for (auto process : {"sh.*bin/LRAUV", "bin/LRAUV"})
     {
       auto pid = GetPID(process);
@@ -221,20 +271,28 @@ class LrauvTestFixture : public ::testing::Test
 
       ignmsg << "Killing process [" << process << "] with pid [" << pid << "]" << std::endl;
       kill(pid, 9);
+      killed = true;
     }
-
-    pclose(pipe);
-
-    ignmsg << "Completed command [" << cmd << "]" << std::endl;
-
-    _running = false;
+    return killed;
   }
 
   /// \brief How many times has OnPostUpdate been run
   public: unsigned int iterations{0u};
 
+  /// \brief Latest simulation time step.
+  public: std::chrono::steady_clock::duration dt{0};
+
   /// \brief All tethys world poses in order
   public: std::vector<ignition::math::Pose3d> tethysPoses;
+
+  /// \brief All tethys linear velocities in order
+  public: std::vector<ignition::math::Vector3d> tethysLinearVel;
+
+  /// \brief All tethys angular velocities in order
+  public: std::vector<ignition::math::Vector3d> tethysAngularVel;
+
+  /// \brief All state messages in order
+  public: std::vector<lrauv_ignition_plugins::msgs::LRAUVState> stateMsgs;
 
   /// \brief Test fixture
   public: std::unique_ptr<ignition::gazebo::TestFixture> fixture{nullptr};
@@ -244,5 +302,27 @@ class LrauvTestFixture : public ::testing::Test
 
   /// \brief Publishes commands
   public: ignition::transport::Node::Publisher commandPub;
+};
+
+
+/// \brief Loads the default "buyant_tethys.sdf" world.
+class LrauvTestFixture : public LrauvTestFixtureBase
+{
+  // Documentation inherited
+  protected: void SetUp() override
+  {
+    LrauvTestFixtureBase::SetUp("buoyant_tethys.sdf");
+  }
+};
+
+/// \brief Loads the default "buyant_tethys_At_depth.sdf" world.
+/// This world has the robot start at a certain depth.
+class LrauvTestFixtureAtDepth : public LrauvTestFixtureBase
+{
+  /// Documentation inherited
+  protected: void SetUp() override
+  {
+    LrauvTestFixtureBase::SetUp("buoyant_tethys_at_depth.sdf");
+  }
 };
 #endif

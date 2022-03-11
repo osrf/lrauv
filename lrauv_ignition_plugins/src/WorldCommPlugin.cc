@@ -40,6 +40,7 @@
 
 using namespace tethys;
 
+/////////////////////////////////////////////////
 void WorldCommPlugin::Configure(
   const ignition::gazebo::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
@@ -106,13 +107,15 @@ void WorldCommPlugin::Configure(
     + "/set_spherical_coordinates";
 }
 
+/////////////////////////////////////////////////
 void WorldCommPlugin::ServiceResponse(const ignition::msgs::Boolean &_rep,
-    const bool _result)
+  const bool _result)
 {
   if (!_result || !_rep.data())
     ignerr << "Error requesting some service." << std::endl;
 }
 
+/////////////////////////////////////////////////
 void WorldCommPlugin::SpawnCallback(
   const lrauv_ignition_plugins::msgs::LRAUVInit &_msg)
 {
@@ -159,11 +162,40 @@ void WorldCommPlugin::SpawnCallback(
   // Create vehicle
   ignition::msgs::EntityFactory factoryReq;
   factoryReq.set_sdf(this->TethysSdfString(_msg.id_().data()));
+
   auto coords = factoryReq.mutable_spherical_coordinates();
   coords->set_surface_model(ignition::msgs::SphericalCoordinates::EARTH_WGS84);
   coords->set_latitude_deg(lat);
   coords->set_longitude_deg(lon);
   coords->set_elevation(ele);
+  ignition::msgs::Set(factoryReq.mutable_pose()->mutable_orientation(),
+      ignition::math::Quaterniond(
+      _msg.initroll_(), _msg.initpitch_(), _msg.initheading_()));
+
+  // RPH command is in NED
+  // X == R: about N
+  // Y == P: about E
+  // Z == H: about D
+
+  // Gazebo takes ENU
+  // X == R: about E
+  // Y == P: about N
+  // Z == Y: about U
+
+  auto rotENU = ignition::math::Quaterniond::EulerToQuaternion(
+      // East: NED's pitch
+      _msg.initpitch_(),
+      // North: NED's roll
+      _msg.initroll_(),
+      // Up: NED's -yaw
+      -_msg.initheading_());
+
+  // The robot model is facing its own -X, so with zero ENU orientation it faces
+  // West. We add an extra 90 degree yaw so zero means North, to conform with
+  // NED.
+  auto rotRobot = ignition::math::Quaterniond(0.0, 0.0, -IGN_PI * 0.5) * rotENU;
+
+  ignition::msgs::Set(factoryReq.mutable_pose()->mutable_orientation(), rotRobot);
 
   // TODO(chapulina) Check what's up with all the errors
   if (!this->node.Request(this->createService, factoryReq,
@@ -174,12 +206,21 @@ void WorldCommPlugin::SpawnCallback(
   }
 }
 
+/////////////////////////////////////////////////
 std::string WorldCommPlugin::TethysSdfString(const std::string &_id)
 {
   const std::string sdfStr = R"(
   <sdf version="1.9">
   <model name=")" + _id + R"(">
     <include merge="true">
+
+      <!--
+          Without any extra pose offset, the model is facing West.
+          For the controller, zero orientation means the robot is facing North.
+          So we need to rotate it.
+          Note that this pose is expressed in ENU.
+      <pose degrees="true">0 0 0  0 0 -90</pose>
+      -->
 
       <!-- rename included model to avoid frame collisions -->
       <name>tethys_equipped</name>
@@ -204,7 +245,7 @@ std::string WorldCommPlugin::TethysSdfString(const std::string &_id)
           <topic>/model/)" + _id + R"(/current</topic>
         </sensor>
 
-        <plugin element_id="tethys::Thruster" action="modify">
+        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
           <namespace>)" + _id + R"(</namespace>
         </plugin>
 
@@ -214,7 +255,7 @@ std::string WorldCommPlugin::TethysSdfString(const std::string &_id)
           <state_topic>)" + _id + R"(/state_topic</state_topic>
         </plugin>
 
-        <plugin element_id="ignition::gazebo::v6::systems::BuoyancyEnginePlugin" action="modify">
+        <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
           <namespace>)" + _id + R"(</namespace>
         </plugin>
 

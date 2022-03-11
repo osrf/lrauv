@@ -29,13 +29,15 @@
 #include <fstream>
 
 //////////////////////////////////////////////////
-TEST_F(LrauvTestFixture, MassShifterTilt)
+TEST_F(LrauvTestFixtureAtDepth, MassShifterTilt)
 {
-  // Check initial pitch
+  // Check initial orientation
   this->fixture->Server()->Run(true, 100, false);
   EXPECT_EQ(100, this->iterations);
   EXPECT_EQ(100, this->tethysPoses.size());
-  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 0.01);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Roll(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Yaw(), 1e-6);
 
   // Tell the vehicle to tilt downward by moving the mass forward (positive command)
   lrauv_ignition_plugins::msgs::LRAUVCommand cmdMsg;
@@ -43,15 +45,19 @@ TEST_F(LrauvTestFixture, MassShifterTilt)
   cmdMsg.set_buoyancyaction_(0.0005);
 
   // Run server until the command is processed and the model tilts to a
-  // certain pitch. Negative pitch means vehicle's nose is pointing down.
-  double targetPitch{-0.15};
+  // certain angle.
+  // Because the vehicle is facing North (+Y in ENU), the nose tilts down with
+  // negative roll in the world frame (about East axis)
+  double targetWorldRoll{-0.15};
   this->PublishCommandWhile(cmdMsg, [&]()
   {
-    return this->tethysPoses.back().Rot().Pitch() > targetPitch;
+    return this->tethysPoses.back().Rot().Roll() > targetWorldRoll;
   });
 
   EXPECT_LT(100, this->iterations);
   EXPECT_LT(100, this->tethysPoses.size());
-  EXPECT_GT(targetPitch, this->tethysPoses.back().Rot().Pitch());
+  EXPECT_GT(targetWorldRoll, this->tethysPoses.back().Rot().Roll());
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Pitch(), 1e-6);
+  EXPECT_NEAR(0.0, this->tethysPoses.back().Rot().Yaw(), 1e-6);
 }
 
