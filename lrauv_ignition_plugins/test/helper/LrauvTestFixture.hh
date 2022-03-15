@@ -229,9 +229,9 @@ class LrauvTestFixtureBase : public ::testing::Test
       // See https://github.com/osrf/lrauv/issues/83
       std::string bufferStr{buffer};
 
-      std::string error{"ERROR"};
+      std::string fault{"FAULT"};
       std::string critical{"CRITICAL"};
-      if (bufferStr.find(error) != std::string::npos ||
+      if (bufferStr.find(fault) != std::string::npos ||
           bufferStr.find(critical) != std::string::npos)
       {
         ignerr << buffer << "\n";
