@@ -65,10 +65,10 @@ class AhrsTest : public ::testing::Test
                                     "worlds", "buoyant_tethys.sdf"));
 
     this->node.Subscribe(
-        "/model/tethys/ahrs/imu", &AhrsTest::OnImuMessage, this);
+        "/tethys/ahrs/imu", &AhrsTest::OnImuMessage, this);
 
     this->node.Subscribe(
-        "/model/tethys/ahrs/magnetometer",
+        "/tethys/ahrs/magnetometer",
         &AhrsTest::OnMagnetometerMessage, this);
 
     this->fixture->OnConfigure(
@@ -194,9 +194,9 @@ class AhrsTest : public ::testing::Test
 // Acceleration due to gravity
 static constexpr double g0{9.8};  // m/s^2
 // Earth magnetic field
-static constexpr double Be{6.0e-6};  // T
-static constexpr double Bn{2.3e-5};  // T
-static constexpr double Bu{-4.2e-5};  // T
+static constexpr double Be{5.5645e-6};    // T
+static constexpr double Bn{22.8758e-6};   // T
+static constexpr double Bu{-42.3884e-6};  // T
 
 static constexpr double angularVelocityTolerance{1e-4};
 static constexpr double linearAccelerationTolerance{1e-4};
