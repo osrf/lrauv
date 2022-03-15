@@ -116,6 +116,7 @@ TEST(SpawnTest, Spawn)
     spawnMsg.mutable_id_()->set_data("vehicle1");
     spawnMsg.set_initlat_(lat1.Degree());
     spawnMsg.set_initlon_(lon1.Degree());
+    spawnMsg.set_acommsaddress_(666);
 
     spawnPub.Publish(spawnMsg);
   }
@@ -154,6 +155,7 @@ TEST(SpawnTest, Spawn)
     spawnMsg.set_initroll_(0.0);
     spawnMsg.set_initpitch_(0.0);
     spawnMsg.set_initheading_(yaw2.Radian());
+    spawnMsg.set_acommsaddress_(999);
 
     spawnPub.Publish(spawnMsg);
   }
@@ -214,4 +216,3 @@ TEST(SpawnTest, Spawn)
   EXPECT_NEAR(0.0, poses2.back().Rot().Pitch(), tightTol);
   EXPECT_NEAR(IGN_DTOR(90), poses2.back().Rot().Yaw(), tightTol);
 }
-
