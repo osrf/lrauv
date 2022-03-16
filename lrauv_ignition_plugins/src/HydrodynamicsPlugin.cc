@@ -274,7 +274,7 @@ void HydrodynamicsPlugin::PreUpdate(
   Ma(3,3) = this->dataPtr->paramKdotP;
   Ma(4,4) = this->dataPtr->paramMdotQ;
   Ma(5,5) = this->dataPtr->paramNdotR;
-  const Eigen::VectorXd kAmassVec = Ma * stateDot;
+  const Eigen::VectorXd kAmassVec = - Ma * stateDot;
 
   // Coriollis and Centripetal forces for under water vehicles (Fossen P. 37)
   // Note: this is significantly different from VRX because we need to account
