@@ -123,7 +123,7 @@ def generate_model(template_path, output_path):
         # Only these links get here. Checking to be safe because the script
         # isn't generic enough yet.
         link_name = link_tag.get("name")
-        assert link_name == "base_link" or link_name == "battery" or link_name == "drop_weight", link_name
+        assert link_name == "base_link" or link_name == "battery" or link_name == "drop_weight" or link_name == "acoustic_transponder", link_name
 
         # Get various tags used to calculate moments
         inertial_tag = link_tag.find(".inertial")
