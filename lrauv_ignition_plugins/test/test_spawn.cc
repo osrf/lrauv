@@ -116,7 +116,7 @@ TEST(SpawnTest, Spawn)
     spawnMsg.mutable_id_()->set_data("vehicle1");
     spawnMsg.set_initlat_(lat1.Degree());
     spawnMsg.set_initlon_(lon1.Degree());
-    spawnMsg.set_acommsaddress_(666);
+    spawnMsg.set_acommsaddress_(201);
 
     spawnPub.Publish(spawnMsg);
   }
@@ -155,7 +155,7 @@ TEST(SpawnTest, Spawn)
     spawnMsg.set_initroll_(0.0);
     spawnMsg.set_initpitch_(0.0);
     spawnMsg.set_initheading_(yaw2.Radian());
-    spawnMsg.set_acommsaddress_(999);
+    spawnMsg.set_acommsaddress_(202);
 
     spawnPub.Publish(spawnMsg);
   }
@@ -176,6 +176,14 @@ TEST(SpawnTest, Spawn)
   EXPECT_LT(0, poses2.size());
   EXPECT_LT(1, latLon1.size());
   EXPECT_LT(0, latLon2.size());
+
+  // Check if an acomms topic was generated with the correct modem adderss
+  std::vector<std::string> topics;
+  node.TopicList(topics);
+  EXPECT_TRUE(std::any_of(topics.begin(),
+                          topics.end(),
+                          [](const std::string &s)
+                          { return s == "/comms/external/202/tx"; }));
 
   double tightTol{1e-5};
 
