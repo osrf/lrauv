@@ -283,7 +283,7 @@
 
     <link name="acoustic_transponder">
       <!-- TODO: Determine location of buoyancy engine -->
-      <pose degrees="true">0.137 0 0 0 0 180</pose>
+      <pose degrees="true">0 0 0 0 0 180</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.01</mass>

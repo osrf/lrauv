@@ -288,6 +288,8 @@ if(BUILD_TESTING)
       lrauv_command
       lrauv_init
       lrauv_state
+      lrauv_range_bearing_request
+      lrauv_range_bearing_response
     )
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
     gtest_discover_tests(${TEST_TARGET})

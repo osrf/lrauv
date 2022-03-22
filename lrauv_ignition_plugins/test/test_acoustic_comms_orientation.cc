@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Open Source Robotics Foundation
+ * Copyright (C) 2022 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@
 #include "lrauv_command.pb.h"
 
 #include <fstream>
+#include "helper/LrauvRangeBearingClient.hh"
 
 /// \brief Loads the tethys "tethys_acoustic_comms.sdf" world.
 /// This world has the robot start at a certain depth and 3 acoustic comms nodes
@@ -35,12 +36,29 @@ class LrauvTestCommsOrientation : public LrauvTestFixtureBase
   /// Documentation inherited
   protected: void SetUp() override
   {
-    LrauvTestFixtureBase::SetUp("tethys_acoustic_comms.sdf");
+    LrauvTestFixtureBase::SetUp("tethys_acoustic_comms_test.sdf");
   }
 };
 
 //////////////////////////////////////////////////
 TEST_F(LrauvTestCommsOrientation, CheckCommsOrientation)
 {
+  /// Needs to have the server call configure on the plugin before requesting.
+  this->fixture->Server()->Run(true, 100, false);
+  this->fixture->Server()->Run(false, 10000, false);
 
+  RangeBearingClient client("tethys");
+  auto box1 = client.RequestRange(2);
+  //auto box2 = client.RequestRange(3);
+ // auto box3 = client.RequestRange(4);
+
+  //EXPECT_NEAR(box1.bearing().x(), 10, 1);
+  //EXPECT_NEAR(box2.bearing().x(), 10, 1);
+  //EXPECT_NEAR(box3.bearing().x(), 10, 1);
+  // Range bearing in ENU frame
+  // Box1 is directly infront of the vehicle hence the bearing is (10,0,0)
+  // Bearing 
+  EXPECT_NEAR(box1.bearing().x(), 10, 1e-3);
+  EXPECT_NEAR(box1.bearing().y(), 0, 1e-3);
+  EXPECT_NEAR(box1.bearing().z(), 0, 1e-3);
 }

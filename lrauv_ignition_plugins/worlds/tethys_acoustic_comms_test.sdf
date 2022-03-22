@@ -510,7 +510,7 @@
         <processing_delay>0.3</processing_delay>
         <speed_of_sound>1500</speed_of_sound>
         <link_name>base_link</link_name>
-        <namespace>box2</namespace>
+        <namespace>box3</namespace>
       </plugin>
     </model>
 
