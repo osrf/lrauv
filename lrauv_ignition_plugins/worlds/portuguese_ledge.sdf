@@ -10,6 +10,13 @@
   WorldCommPlugin as it receives LRAUVInit messages.
 
 -->
+
+<!--
+   $ gdalinfo -mm PortugueseLedgeTile1_DecDeg.grd | grep -i min
+   Computed Min/Max=-98.637,-73.297
+ -->
+
+
 <sdf version="1.6">
   <world name="LRAUV">
     <scene>
@@ -18,6 +25,18 @@
 
       <grid>false</grid>
     </scene>
+
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+
+      <!-- Center of Tile 1 -->
+      <latitude_deg>36.693509</latitude_deg>
+      <longitude_deg>-121.936568</longitude_deg>
+
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
 
     <physics name="1ms" type="dart">
       <max_step_size>0.02</max_step_size>
@@ -79,7 +98,7 @@
           <property type="string" key="state">docked</property>
         </ignition-gui>
 
-        <engine>ogre</engine>
+        <engine>ogre2</engine>
         <scene>scene</scene>
         <ambient_light>0.4 0.4 0.4</ambient_light>
         <background_color>0.8 0.8 0.8</background_color>
@@ -310,38 +329,564 @@
       <direction>-0.5 0.1 -0.9</direction>
     </light>
 
-
-    <!-- This invisible plane helps with orbiting the camera, especially at large scales -->
-    <model name="horizontal_plane">
+    <model name="portuguese_ledge_tile_1">
       <static>true</static>
       <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>0 0 0</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile1_DecDeg.nc</uri>
+              <size>1000 1000 25.34</size>
+            </heightmap>
+          </geometry>
+        </collision>
         <visual name="visual">
           <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <!-- 300 km x 300 km -->
-              <size>300000 300000</size>
-            </plane>
+            <heightmap>
+              <pos>0 0 0</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile1_DecDeg.nc</uri>
+              <size>1000 1000 25.34</size>
+            </heightmap>
           </geometry>
-          <transparency>1.0</transparency>
         </visual>
       </link>
     </model>
-
-    <!-- Uncomment for particle effect
-      Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
-      to ParticleEmitter in Ignition G.
-      See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
-    <!--include>
-      <pose>-5 0 0 0 0 0</pose>
-      <uri>turbidity_generator</uri>
-    </include-->
-
-    <include>
-      <uri>
-        https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge
-      </uri>
-    </include>
+    <model name="portuguese_ledge_tile_2">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-750.151 8.24476 -0.0440663</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile2_DecDeg.nc</uri>
+              <size>1000 1000 27.094</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-750.151 8.24476 -0.0440663</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile2_DecDeg.nc</uri>
+              <size>1000 1000 27.094</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_3">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-1500.3 16.6662 -0.176266</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile3_DecDeg.nc</uri>
+              <size>1000 1000 11.602</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-1500.3 16.6662 -0.176266</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile3_DecDeg.nc</uri>
+              <size>1000 1000 11.602</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_4">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-2250.54 24.9313 -0.396628</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile4_DecDeg.nc</uri>
+              <size>1000 1000 6.781</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-2250.54 24.9313 -0.396628</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile4_DecDeg.nc</uri>
+              <size>1000 1000 6.781</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_5">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-3000.69 33.2621 -0.705101</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile5_DecDeg.nc</uri>
+              <size>1000 1000 6.689</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-3000.69 33.2621 -0.705101</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile5_DecDeg.nc</uri>
+              <size>1000 1000 6.689</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_6">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-3750.83 41.5476 -1.1017</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile6_DecDeg.nc</uri>
+              <size>1000 1000 30.707</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-3750.83 41.5476 -1.1017</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile6_DecDeg.nc</uri>
+              <size>1000 1000 30.707</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_7">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>8.31046 750.171 -0.0442596</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile7_DecDeg.nc</uri>
+              <size>1000 1000 20.746</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>8.31046 750.171 -0.0442596</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile7_DecDeg.nc</uri>
+              <size>1000 1000 20.746</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_8">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-741.865 758.415 -0.0883251</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile8_DecDeg.nc</uri>
+              <size>1000 1000 29.343</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-741.865 758.415 -0.0883251</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile8_DecDeg.nc</uri>
+              <size>1000 1000 29.343</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_9">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-1492.04 766.835 -0.22055</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile9_DecDeg.nc</uri>
+              <size>1000 1000 6.851</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-1492.04 766.835 -0.22055</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile9_DecDeg.nc</uri>
+              <size>1000 1000 6.851</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_10">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-2242.21 775.1 -0.440893</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile10_DecDeg.nc</uri>
+              <size>1000 1000 6.462</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-2242.21 775.1 -0.440893</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile10_DecDeg.nc</uri>
+              <size>1000 1000 6.462</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_11">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-2992.38 783.43 -0.749382</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile11_DecDeg.nc</uri>
+              <size>1000 1000 29.339</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-2992.38 783.43 -0.749382</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile11_DecDeg.nc</uri>
+              <size>1000 1000 29.339</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_12">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-3742.55 791.715 -1.146</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile12_DecDeg.nc</uri>
+              <size>1000 1000 148.439</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-3742.55 791.715 -1.146</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile12_DecDeg.nc</uri>
+              <size>1000 1000 148.439</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_13">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>16.6195 1500.34 -0.177038</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile13_DecDeg.nc</uri>
+              <size>1000 1000 6.799</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>16.6195 1500.34 -0.177038</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile13_DecDeg.nc</uri>
+              <size>1000 1000 6.799</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_14">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-733.49 1508.59 -0.221093</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile14_DecDeg.nc</uri>
+              <size>1000 1000 6.814</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-733.49 1508.59 -0.221093</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile14_DecDeg.nc</uri>
+              <size>1000 1000 6.814</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_15">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-1483.69 1517.01 -0.353332</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile15_DecDeg.nc</uri>
+              <size>1000 1000 8.834</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-1483.69 1517.01 -0.353332</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile15_DecDeg.nc</uri>
+              <size>1000 1000 8.834</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_16">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-2233.88 1525.27 -0.573678</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile16_DecDeg.nc</uri>
+              <size>1000 1000 11.934</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-2233.88 1525.27 -0.573678</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile16_DecDeg.nc</uri>
+              <size>1000 1000 11.934</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_17">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-2984.08 1533.6 -0.882182</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile17_DecDeg.nc</uri>
+              <size>1000 1000 75.378</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-2984.08 1533.6 -0.882182</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile17_DecDeg.nc</uri>
+              <size>1000 1000 75.378</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name="portuguese_ledge_tile_18">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>-3734.18 1541.88 -1.27876</pos>
+              <!-- FIXME why doesn't fuel URL work? -->
+              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile18_DecDeg.nc</uri>
+              <size>1000 1000 229.765</size>
+            </heightmap>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <heightmap>
+              <pos>-3734.18 1541.88 -1.27876</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile18_DecDeg.nc</uri>
+              <size>1000 1000 229.765</size>
+            </heightmap>
+          </geometry>
+        </visual>
+      </link>
+    </model>
 
   </world>
 </sdf>
