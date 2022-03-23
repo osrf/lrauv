@@ -53,10 +53,11 @@ namespace tethys
     public: void SpawnCallback(
                 const lrauv_ignition_plugins::msgs::LRAUVInit &_msg);
 
-    /// Get the SDF string for a Tethys model with the given ID.
-    /// \param[in] _id Used as model name and namespace for topics.
+    /// Get the SDF string for a Tethys model with given ID and acoustic modem address.
+    /// \param[in] _msg LRAUV init message containing ID and acoustic modem address.
     /// \return SDF string
-    public: std::string TethysSdfString(const std::string &_id);
+    public: std::string TethysSdfString(
+                const lrauv_ignition_plugins::msgs::LRAUVInit &_msg);
 
     /// Generic callback to handle service responses.
     /// \param[in] _rep Response
