@@ -80,6 +80,9 @@
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
+    <!-- Brought from https://github.com/ignitionrobotics/sdformat/blob/1acea10dab1cf0c3fa2583f3e2bfd0a8d14ea340/src/World.cc#L75-L76 -->
+    <magnetic_field>5.5645e-6 22.8758e-6 -42.3884e-6</magnetic_field>
+
     <plugin
       filename="ScienceSensorsSystem"
       name="tethys::ScienceSensorsSystem">
