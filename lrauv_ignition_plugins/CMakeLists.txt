@@ -262,6 +262,7 @@ if(BUILD_TESTING)
   # Tests
   foreach(TEST_TARGET
     test_acoustic_comms_orientation
+    test_ahrs
     test_buoyancy_action
     test_controller
     test_drop_weight
