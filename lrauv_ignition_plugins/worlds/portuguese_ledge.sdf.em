@@ -138,6 +138,21 @@ for tile in tiles:
       <init_topic>/lrauv/init</init_topic>
     </plugin>
 
+    <plugin name="ignition::gazebo" filename="dummy">
+
+@[for tile in tiles[:18]]@
+      <level name="level_@(tile.index)">
+        <pose>@(tile.pos) 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_@(tile.index)</ref>
+      </level>
+@[end for]@
+    </plugin>
+
     <gui fullscreen="0">
 
       <!-- 3D scene -->

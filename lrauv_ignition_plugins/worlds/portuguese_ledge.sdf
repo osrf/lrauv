@@ -88,6 +88,172 @@
       <init_topic>/lrauv/init</init_topic>
     </plugin>
 
+    <plugin name="ignition::gazebo" filename="dummy">
+
+      <level name="level_1">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_1</ref>
+      </level>
+      <level name="level_2">
+        <pose>-750.151 8.24476 -0.0440663 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_2</ref>
+      </level>
+      <level name="level_3">
+        <pose>-1500.3 16.6662 -0.176266 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_3</ref>
+      </level>
+      <level name="level_4">
+        <pose>-2250.54 24.9313 -0.396628 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_4</ref>
+      </level>
+      <level name="level_5">
+        <pose>-3000.69 33.2621 -0.705101 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_5</ref>
+      </level>
+      <level name="level_6">
+        <pose>-3750.83 41.5476 -1.1017 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_6</ref>
+      </level>
+      <level name="level_7">
+        <pose>8.31046 750.171 -0.0442596 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_7</ref>
+      </level>
+      <level name="level_8">
+        <pose>-741.865 758.415 -0.0883251 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_8</ref>
+      </level>
+      <level name="level_9">
+        <pose>-1492.04 766.835 -0.22055 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_9</ref>
+      </level>
+      <level name="level_10">
+        <pose>-2242.21 775.1 -0.440893 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_10</ref>
+      </level>
+      <level name="level_11">
+        <pose>-2992.38 783.43 -0.749382 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_11</ref>
+      </level>
+      <level name="level_12">
+        <pose>-3742.55 791.715 -1.146 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_12</ref>
+      </level>
+      <level name="level_13">
+        <pose>16.6195 1500.34 -0.177038 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_13</ref>
+      </level>
+      <level name="level_14">
+        <pose>-733.49 1508.59 -0.221093 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_14</ref>
+      </level>
+      <level name="level_15">
+        <pose>-1483.69 1517.01 -0.353332 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_15</ref>
+      </level>
+      <level name="level_16">
+        <pose>-2233.88 1525.27 -0.573678 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_16</ref>
+      </level>
+      <level name="level_17">
+        <pose>-2984.08 1533.6 -0.882182 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_17</ref>
+      </level>
+      <level name="level_18">
+        <pose>-3734.18 1541.88 -1.27876 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_18</ref>
+      </level>
+    </plugin>
+
     <gui fullscreen="0">
 
       <!-- 3D scene -->

@@ -103,6 +103,7 @@ void WorldCommPlugin::Configure(
 
   // Services
   this->createService = "/world/" + topicWorldName + "/create";
+  this->performerService = "/world/" + topicWorldName + "/level/set_performer";
   this->setSphericalCoordsService = "/world/" + topicWorldName
     + "/set_spherical_coordinates";
 
@@ -212,6 +213,18 @@ void WorldCommPlugin::SpawnCallback(
   {
     ignerr << "Failed to request service [" << this->createService
            << "]" << std::endl;
+  }
+  else
+  {
+    // Make spawned model a performer
+    ignition::msgs::StringMsg performerReq;
+    performerReq.set_data(_msg.id_().data());
+    if (!this->node.Request(this->performerService, performerReq,
+        &WorldCommPlugin::ServiceResponse, this))
+    {
+      ignerr << "Failed to request service [" << this->performerService
+             << "]" << std::endl;
+    }
   }
 }
 
