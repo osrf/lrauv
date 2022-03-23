@@ -49,16 +49,29 @@ TEST_F(LrauvTestCommsOrientation, CheckCommsOrientation)
 
   RangeBearingClient client("tethys");
   auto box1 = client.RequestRange(2);
-  //auto box2 = client.RequestRange(3);
- // auto box3 = client.RequestRange(4);
+  auto box2 = client.RequestRange(3);
+  auto box3 = client.RequestRange(4);
 
-  //EXPECT_NEAR(box1.bearing().x(), 10, 1);
-  //EXPECT_NEAR(box2.bearing().x(), 10, 1);
-  //EXPECT_NEAR(box3.bearing().x(), 10, 1);
-  // Range bearing in ENU frame
-  // Box1 is directly infront of the vehicle hence the bearing is (10,0,0)
-  // Bearing 
+  // Range bearing in FSK frame with elevation being calculated by
+  // Box2 cartesian coordinates in vehicle ENU local frame (10, 0, 0)
+  // Note convention is (range, elevation, azimuth)
+  // Box1 is directly infront of the vehicle hence the bearing is (10, 0, 0)
   EXPECT_NEAR(box1.bearing().x(), 10, 1e-3);
   EXPECT_NEAR(box1.bearing().y(), 0, 1e-3);
   EXPECT_NEAR(box1.bearing().z(), 0, 1e-3);
+
+  // Range bearing in FSK frame
+  // Box2 cartesian coordinates in vehicle ENU local frame (0, -10, 0)
+  // ?? Seems weird
+  // Box2 is to the right of the vehicle hence the bearing is (10, 0, 1.57)
+  EXPECT_NEAR(box2.bearing().x(), 10, 1e-3);
+  EXPECT_NEAR(box2.bearing().y(), 0, 1e-3);
+  EXPECT_NEAR(box2.bearing().z(), 1.57, 1e-3);
+
+  // Range bearing in FSK frame
+  // Box3 cartesian coordinates in vehicle ENU local frame (0, 0, -10)
+  // Box3 is directly below the vehicle hence the bearing is (10, 1.57, 0)
+  EXPECT_NEAR(box3.bearing().x(), 10, 1e-3);
+  EXPECT_NEAR(box3.bearing().y(), 1.57, 1e-3);
+  EXPECT_NEAR(box3.bearing().z(), 0, 1e-3);
 }

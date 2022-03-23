@@ -182,22 +182,31 @@ void RangeBearingPrivateData::PublishResponse(
     ignition::math::Vector3d(
       resp.bearing().x(), resp.bearing().y(), resp.bearing().z());
   // Transform pose of other vehicle to local frame
-  auto groundTruthPose = poseOffset.Inverse() * otherVehiclesPos;
+  auto poseInLocalFrame = poseOffset.Inverse() * otherVehiclesPos;
 
   igndbg << "Current pose " << poseOffset.Pose().Pos() << "R: " << poseOffset.Pose().Rot().Euler() << "\n";
   igndbg << "Target pose (global frame)" << otherVehiclesPos << "\n";
-  igndbg << "Target pose (local frame)" << groundTruthPose << "\n";
+  igndbg << "Target pose (local frame)" << poseInLocalFrame << "\n";
 
-  auto theta = acos(groundTruthPose.Z() / groundTruthPose.Length());
-  auto phi = atan2(groundTruthPose.Y(), groundTruthPose.X());
-  igndbg << "theta " << theta << " phi " << phi << "\n";
+  // Elevation is given as a function of angle from XY plane of the vehicle 
+  // with positive facing down.
+  auto negativeZAxis = ignition::math::Vector3d(0, 0, -1);
+  auto elev =
+    asin(negativeZAxis.Dot(poseInLocalFrame) / poseInLocalFrame.Length());
+
+  // Azimuth is given by the angle from the X axis in vehicle frame.
+  auto xyProj = ignition::math::Vector2d(poseInLocalFrame.X(),
+    poseInLocalFrame.Y());
+  // TODO(arjo): This minus sign shouldn't be necessary. 
+  auto azimuth = (xyProj.Length() < 0.001) ? 0 : -atan2(xyProj.Y(), xyProj.X());
+  igndbg << "theta " << elev << " phi " << azimuth << "\n";
 
   lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse finalAnswer;
   finalAnswer.set_range(range);
   finalAnswer.set_req_id(resp.req_id());
 
   ignition::msgs::Vector3d* vec = new ignition::msgs::Vector3d;
-  vec->set_x(groundTruthPose.Length()); vec->set_y(theta); vec->set_z(phi);
+  vec->set_x(poseInLocalFrame.Length()); vec->set_y(elev); vec->set_z(azimuth);
   finalAnswer.set_allocated_bearing(vec);
   this->pub.Publish(finalAnswer);
 }
