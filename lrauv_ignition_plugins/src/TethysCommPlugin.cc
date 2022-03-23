@@ -164,13 +164,18 @@ void AddWorldLinearVelocity(
   }
 }
 
-// Convert ROS coordinate frame convention (x forward, y left, z up) to
-// FSK (x fore, y starboard right, z keel down). A 180 degree rotation wrt
-// x (roll axis), i.e. flip signs on y (pitch axis) and z (heading axis).
-void ROSToFSK(ignition::math::Vector3d &_vec)
+/// \brief Convert a vector from "SFU" frame to FSK.
+/// \param[in] _sfu Vector in model frame, which is oriented "SFU":
+///     X: Starboard / Right
+///     Y: Forward
+///     Z: Up
+/// \return Vector in FSK, which is:
+///     X: Forward
+///     Y: Starboard / Right
+///     Z: Up
+ignition::math::Vector3d SFUToFSK(const ignition::math::Vector3d &_sfu)
 {
-  _vec.Y(-_vec.Y());
-  _vec.Z(-_vec.Z());
+  return {_sfu.Y(), _sfu.X(), -_sfu.Z()};
 }
 
 /// \brief Convert a pose in ENU to NED.
@@ -406,6 +411,10 @@ void TethysCommPlugin::SetupEntities(
   AddJointPosition(this->massShifterJoint, _ecm);
   AddJointVelocity(this->thrusterJoint, _ecm);
   AddWorldLinearVelocity(this->baseLink, _ecm);
+
+  ignition::gazebo::enableComponent
+      <ignition::gazebo::components::WorldAngularVelocity>(_ecm,
+      this->baseLink);
 }
 
 void TethysCommPlugin::CommandCallback(
@@ -581,17 +590,27 @@ void TethysCommPlugin::PostUpdate(
   auto linVelNED = ENUToNED(linVelENU);
   ignition::msgs::Set(stateMsg.mutable_posdot_(), linVelNED);
 
-  // Water velocity
-  // rateUVW
+  // Water velocity in FSK vehicle frame
   // TODO(arjo): include currents in water velocity?
-  auto localVel = modelPoseENU.Rot().Inverse() * linVelENU;
-  //TODO(louise) check for translation/position effects
-  ROSToFSK(localVel);
-  ignition::msgs::Set(stateMsg.mutable_rateuvw_(), localVel);
+  // World frame to local model frame
+  auto linVelSFU = modelPoseENU.Rot().Inverse() * linVelENU;
 
-  // Rate of robot roll, pitch, yaw
-  // ratePQR
-  // TODO(anyone)
+  // Model frame is oriented "SFU", convert it to FSK
+  auto linVelFSK = SFUToFSK(linVelSFU);
+  ignition::msgs::Set(stateMsg.mutable_rateuvw_(), linVelFSK);
+
+  // Angular velocity in FSK
+  auto angVelComp =
+    _ecm.Component<ignition::gazebo::components::WorldAngularVelocity>(
+    this->baseLink);
+  auto angVelENU = angVelComp->Data();
+
+  // World frame to local model frame
+  auto angVelSFU = modelPoseENU.Rot().Inverse() * angVelENU;
+
+  // Model frame is oriented "SFU", convert it to FSK
+  auto angVelFSK = SFUToFSK(angVelSFU);
+  ignition::msgs::Set(stateMsg.mutable_ratepqr_(), angVelFSK);
 
   // Sensor data
   stateMsg.set_salinity_(this->latestSalinity);

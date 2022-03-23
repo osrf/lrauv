@@ -3,6 +3,12 @@
   Development of this module has been funded by the Monterey Bay Aquarium
   Research Institute (MBARI) and the David and Lucile Packard Foundation
 -->
+
+<!--
+  This file is essentially identical to buoyant_tethys, except the vehicle
+  starts at a depth of -10m instead of 0m. This is for tests that require the
+  vehicle to be fully submerged.
+-->
 <sdf version="1.6">
   <world name="buoyant_tethys">
     <scene>
@@ -43,7 +49,6 @@
           <density>1.125</density>
         </density_change>
       </graded_buoyancy>
-      <!--<uniform_fluid_density>1025</uniform_fluid_density> -->
     </plugin>
 
     <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
@@ -73,24 +78,19 @@
       <!--latitude_deg>36.8024781413352</latitude_deg>
       <longitude_deg>-121.829647676843</longitude_deg-->
 
-      <!-- For simple_test.csv and interpolation_test.csv -->
+      <!-- For simple_test.csv -->
       <!--latitude_deg>0</latitude_deg>
       <longitude_deg>0</longitude_deg-->
 
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
-    <!-- Brought from https://github.com/ignitionrobotics/sdformat/blob/1acea10dab1cf0c3fa2583f3e2bfd0a8d14ea340/src/World.cc#L75-L76 -->
-    <magnetic_field>5.5645e-6 22.8758e-6 -42.3884e-6</magnetic_field>
-
     <plugin
       filename="ScienceSensorsSystem"
       name="tethys::ScienceSensorsSystem">
       <data_path>2003080103_mb_l3_las.csv</data_path>
       <!--data_path>2003080103_mb_l3_las_1x1km.csv</data_path-->
       <!--data_path>simple_test.csv</data_path-->
-      <!--data_path>interpolation_prism.csv</data_path-->
-      <!--data_path>interpolation_test.csv</data_path-->
     </plugin>
 
     <gui fullscreen="0">
@@ -362,7 +362,7 @@
     </include-->
 
     <include>
-      <pose>0 0 0 0 0 0</pose>
+      <pose>0 0 -10 0 0 0</pose>
       <uri>tethys_equipped</uri>
     </include>
 

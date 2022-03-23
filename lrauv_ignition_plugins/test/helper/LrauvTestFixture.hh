@@ -50,12 +50,13 @@ double angleDiff(double _a, double _b)
   return diff.Radian();
 }
 
-/// \brief Convenient fixture that provides boilerplate code common to most
-/// LRAUV tests.
-class LrauvTestFixture : public ::testing::Test
+/// \brief Abstract base class for fixture that provides boilerplate code common
+/// to most LRAUV tests.
+class LrauvTestFixtureBase : public ::testing::Test
 {
-  // Documentation inherited
-  protected: void SetUp() override
+  /// Setup the specified world.
+  /// \param[in] _worldName Name of the world to load.
+  public: void SetUp(const std::string &_worldName)
   {
     ignition::common::Console::SetVerbosity(4);
 
@@ -66,12 +67,12 @@ class LrauvTestFixture : public ::testing::Test
       commandTopic);
 
     auto stateTopic = "/tethys/state_topic";
-    this->node.Subscribe(stateTopic, &LrauvTestFixture::OnState, this);
+    this->node.Subscribe(stateTopic, &LrauvTestFixtureBase::OnState, this);
 
     // Setup fixture
     this->fixture = std::make_unique<ignition::gazebo::TestFixture>(
         ignition::common::joinPaths(
-        std::string(PROJECT_SOURCE_PATH), "worlds", "buoyant_tethys.sdf"));
+        std::string(PROJECT_SOURCE_PATH), "worlds", _worldName));
 
     fixture->OnPostUpdate(
       [&](const ignition::gazebo::UpdateInfo &_info,
@@ -301,5 +302,27 @@ class LrauvTestFixture : public ::testing::Test
 
   /// \brief Publishes commands
   public: ignition::transport::Node::Publisher commandPub;
+};
+
+
+/// \brief Loads the default "buyant_tethys.sdf" world.
+class LrauvTestFixture : public LrauvTestFixtureBase
+{
+  // Documentation inherited
+  protected: void SetUp() override
+  {
+    LrauvTestFixtureBase::SetUp("buoyant_tethys.sdf");
+  }
+};
+
+/// \brief Loads the default "buyant_tethys_At_depth.sdf" world.
+/// This world has the robot start at a certain depth.
+class LrauvTestFixtureAtDepth : public LrauvTestFixtureBase
+{
+  /// Documentation inherited
+  protected: void SetUp() override
+  {
+    LrauvTestFixtureBase::SetUp("buoyant_tethys_at_depth.sdf");
+  }
 };
 #endif
