@@ -305,12 +305,12 @@ void RangeBearingPlugin::PreUpdate(
   this->dataPtr->timeNow = std::chrono::steady_clock::time_point{
     _info.simTime};
 
-  // Iterate through queue to identify acoustic messages 
+  // Iterate through queue to identify acoustic messages
   // that are ready to be responded to. This part implements the 300ms delay
   // that the transponder has.
   while(
     !this->dataPtr->messageQueue.empty()
-    && (this->dataPtr->messageQueue.front().timeOfReception 
+    && (this->dataPtr->messageQueue.front().timeOfReception
       + this->dataPtr->processingDelay) <= this->dataPtr->timeNow)
   {
     // Handles incoming messages
