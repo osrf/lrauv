@@ -36,6 +36,9 @@ namespace tethys
 {
   /// Listens to LRAUVInit messages from the controller to spawn vehicles
   /// into simulation.
+  ///
+  /// If the world origin's spherical coordinates aren't set from SDF, this
+  /// plugin will set them to match the first vehicle spawned.
   class WorldCommPlugin:
     public ignition::gazebo::System,
     public ignition::gazebo::ISystemConfigure
@@ -77,8 +80,8 @@ namespace tethys
     /// Service to create entities
     private: std::string createService;
 
-    /// Count how many vehicles have been spawned
-    private: int spawnCount{0};
+    /// Whether the world origin's latitude and longitude have already been set.
+    private: bool hasWorldLatLon{false};
   };
 }
 
