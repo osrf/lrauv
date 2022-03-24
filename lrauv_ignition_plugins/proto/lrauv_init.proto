@@ -62,5 +62,8 @@ message LRAUVInit
   /// (i.e. rotation about the Down vector). Radians.
   float initHeading_              = 8;
 
+  /// \brief Unique acoustic comms modem ID
+  uint32 acommsAddress_           = 9;
+
   // Add fields as needed
 }
