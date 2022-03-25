@@ -248,6 +248,14 @@ std::string WorldCommPlugin::TethysSdfString(const lrauv_ignition_plugins::msgs:
           <topic>/model/)" + _id + R"(/current</topic>
         </sensor>
 
+        <sensor element_id="base_link::sparton_ahrs_m2_imu" action="modify">
+          <topic>/)" + _id + R"(/ahrs/imu</topic>
+        </sensor>
+
+        <sensor element_id="base_link::ahrs_magnetometer" action="modify">
+          <topic>/)" + _id + R"(/ahrs/magnetometer</topic>
+        </sensor>
+
         <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
           <namespace>)" + _id + R"(</namespace>
         </plugin>
