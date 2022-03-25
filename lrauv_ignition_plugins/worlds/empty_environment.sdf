@@ -46,7 +46,6 @@
           <density>1.125</density>
         </density_change>
       </graded_buoyancy>
-      <!-- <uniform_fluid_density>1025</uniform_fluid_density> -->
     </plugin>
 
     <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
