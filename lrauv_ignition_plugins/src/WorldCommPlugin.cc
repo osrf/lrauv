@@ -161,7 +161,7 @@ void WorldCommPlugin::SpawnCallback(
 
   // Create vehicle
   ignition::msgs::EntityFactory factoryReq;
-  factoryReq.set_sdf(this->TethysSdfString(_msg.id_().data()));
+  factoryReq.set_sdf(this->TethysSdfString(_msg));
 
   auto coords = factoryReq.mutable_spherical_coordinates();
   coords->set_surface_model(ignition::msgs::SphericalCoordinates::EARTH_WGS84);
@@ -207,8 +207,11 @@ void WorldCommPlugin::SpawnCallback(
 }
 
 /////////////////////////////////////////////////
-std::string WorldCommPlugin::TethysSdfString(const std::string &_id)
+std::string WorldCommPlugin::TethysSdfString(const lrauv_ignition_plugins::msgs::LRAUVInit &_msg)
 {
+  const std::string _id = _msg.id_().data();
+  const std::string _acommsAddress = std::to_string(_msg.acommsaddress_());
+
   const std::string sdfStr = R"(
   <sdf version="1.9">
   <model name=")" + _id + R"(">
@@ -261,6 +264,15 @@ std::string WorldCommPlugin::TethysSdfString(const std::string &_id)
 
         <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
           <topic>/model/)" + _id + R"(/drop_weight</topic>
+        </plugin>
+
+        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
+          <address>)" + _acommsAddress + R"(</address>
+        </plugin>
+
+        <plugin element_id="tethys::RangeBearingPlugin" action="modify">
+          <address>)" + _acommsAddress + R"(</address>
+          <namespace>)" + _id + R"(</namespace>
         </plugin>
 
       </experimental:params>
