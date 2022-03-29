@@ -33,11 +33,16 @@ message LRAUVRangeBearingResponse
   /// \brief Request ID. Each request ID must be unique.
   uint32 req_id = 1;
 
-  /// \brief Bearing in terms of (r, elevation, azimuth). This is based
-  /// on ground truth and not calculated using time-of-flight
-  ignition.msgs.Vector3d bearing = 2;
+  /// \brief Range in terms of ground truth meters.
+  double ground_truth_range = 2;
+
+  /// \brief elevation in radians
+  double elevation = 3;
+
+  /// \brief azimuth in radians
+  double azimuth = 4;
 
   /// \brief Time-Of-Flight reading. This is good for studying errors arising
   /// due to movement. But at high dt this may be prone to error.
-  double range = 3;
+  double range = 5;
 }

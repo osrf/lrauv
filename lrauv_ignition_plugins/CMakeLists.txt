@@ -175,6 +175,7 @@ add_lrauv_plugin(RangeBearingPlugin
   PROTO
     lrauv_range_bearing_request
     lrauv_range_bearing_response
+    lrauv_range_bearing_response_internal
     lrauv_acoustic_message)
 add_lrauv_plugin(ReferenceAxis GUI RENDERING)
 add_lrauv_plugin(ScienceSensorsSystem

@@ -28,6 +28,7 @@ add_lrauv_message(lrauv_init)
 add_lrauv_message(lrauv_internal_comms)
 add_lrauv_message(lrauv_range_bearing_request)
 add_lrauv_message(lrauv_range_bearing_response)
+add_lrauv_message(lrauv_range_bearing_response_internal)
 add_lrauv_message(lrauv_state)
 
 install(

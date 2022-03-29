@@ -13,30 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
-*/
+ */
 
 /*
  * Development of this module has been funded by the Monterey Bay Aquarium
  * Research Institute (MBARI) and the David and Lucile Packard Foundation
  */
 
-#include "helper/LrauvCommsFixture.hh"
-#include "helper/LrauvRangeBearingClient.hh"
+ syntax = "proto3";
+ package lrauv_ignition_plugins.msgs;
+ option java_package = "lrauv_ignition_plugins.msgs";
+ option java_outer_classname = "LRAUVRangeBearingResponse";
 
-using namespace lrauv_ignition_plugins;
+ import "ignition/msgs/vector3d.proto";
 
-TEST_F(LrauvCommsFixture, TestRangingAccuracy)
-{
-  /// Needs to have the server call configure on the plugin before requesting.
-  this->fixture->Server()->Run(true, 100, false);
-  this->fixture->Server()->Run(false, 2000, false);
+ /// \brief This protobuf is used internally by the RangeBearing plugin.
+ message LRAUVRangeBearingResponseInternal
+ {
+   /// \brief Request ID. Each request ID must be unique.
+   uint32 req_id = 1;
 
-  RangeBearingClient client("box1");
-  auto result = client.RequestRange(2);
+   /// \brief Position of the responding craft
+   ignition.msgs.Vector3d position = 2;
 
-  EXPECT_EQ(result.req_id(), 2);
-  EXPECT_NEAR(result.range(), 20, 0.5);
-  EXPECT_NEAR(result.ground_truth_range(), 20, 1e-3);
-  EXPECT_NEAR(result.elevation(), 1.57, 1e-2);
-  EXPECT_NEAR(result.azimuth(), 1.57, 1e-2);
-}
+   /// \brief Time-Of-Flight reading. This is good for studying errors arising
+   /// due to movement. But at high dt this may be prone to error.
+   double range = 3;
+ }
