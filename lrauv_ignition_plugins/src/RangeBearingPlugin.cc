@@ -24,6 +24,7 @@
 
 #include "lrauv_range_bearing_request.pb.h"
 #include "lrauv_range_bearing_response.pb.h"
+#include "lrauv_range_bearing_response_internal.pb.h"
 
 #include <queue>
 
@@ -166,7 +167,7 @@ void RangeBearingPrivateData::OnRangeRequest(
 void RangeBearingPrivateData::PublishResponse(
   const lrauv_ignition_plugins::msgs::LRAUVAcousticMessage& msg)
 {
-  lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse resp;
+  lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponseInternal resp;
   std::istringstream stream{msg.data()};
   resp.ParseFromIstream(&stream);
 
@@ -179,8 +180,8 @@ void RangeBearingPrivateData::PublishResponse(
   // Get current pose
   auto poseOffset = ignition::math::Matrix4d(this->currentPose);
   auto otherVehiclesPos =
-    ignition::math::Vector3d(
-      resp.bearing().x(), resp.bearing().y(), resp.bearing().z());
+    ignition::math::Vector3d(resp.position().x(), resp.position().y(),
+      resp.position().z());
   // Transform pose of other vehicle to local frame
   auto poseInLocalFrame = poseOffset.Inverse() * otherVehiclesPos;
 
@@ -205,9 +206,9 @@ void RangeBearingPrivateData::PublishResponse(
   finalAnswer.set_range(range);
   finalAnswer.set_req_id(resp.req_id());
 
-  ignition::msgs::Vector3d* vec = new ignition::msgs::Vector3d;
-  vec->set_x(poseInLocalFrame.Length()); vec->set_y(elev); vec->set_z(azimuth);
-  finalAnswer.set_allocated_bearing(vec);
+  finalAnswer.set_elevation(elev);
+  finalAnswer.set_azimuth(azimuth);
+  finalAnswer.set_ground_truth_range(poseInLocalFrame.Length());
   this->pub.Publish(finalAnswer);
 }
 
@@ -316,7 +317,7 @@ void RangeBearingPlugin::PreUpdate(
     // Handles incoming messages
     auto ping = this->dataPtr->messageQueue.front();
     lrauv_ignition_plugins::msgs::LRAUVAcousticMessage message;
-    lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse resp;
+    lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponseInternal resp;
     message.set_to(ping.from);
     message.set_from(this->dataPtr->address);
     message.set_type(MsgType::LRAUVAcousticMessage_MessageType_RangeResponse);
@@ -328,7 +329,7 @@ void RangeBearingPlugin::PreUpdate(
     vec->set_x(pose->Pos().X());
     vec->set_y(pose->Pos().Y());
     vec->set_z(pose->Pos().Z());
-    resp.set_allocated_bearing(vec);
+    resp.set_allocated_position(vec);
 
     std::ostringstream stream;
     resp.SerializeToOstream(&stream);
