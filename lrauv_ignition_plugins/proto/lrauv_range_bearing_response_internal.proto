@@ -27,13 +27,16 @@
 
  import "ignition/msgs/vector3d.proto";
 
- /// \brief This protobuf is used internally by the RangeBearing plugin.
+ /// \brief This protobuf is used internally by the RangeBearing plugin. When a
+ /// transponder receives a range bearing request, it will send a response with
+ /// this payload on the acoustic channel.
  message LRAUVRangeBearingResponseInternal
  {
    /// \brief Request ID. Each request ID must be unique.
    uint32 req_id = 1;
 
-   /// \brief Position of the responding craft
+   /// \brief Position of the responding craft. This is derived from the ground
+   /// truth to keep things simple.
    ignition.msgs.Vector3d position = 2;
 
    /// \brief Time-Of-Flight reading. This is good for studying errors arising
