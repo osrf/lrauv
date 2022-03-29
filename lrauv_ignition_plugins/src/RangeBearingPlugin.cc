@@ -197,9 +197,9 @@ void RangeBearingPrivateData::PublishResponse(
   // Azimuth is given by the angle from the X axis in vehicle frame.
   auto xyProj = ignition::math::Vector2d(poseInLocalFrame.X(),
     poseInLocalFrame.Y());
-  // TODO(arjo): This minus sign shouldn't be necessary. 
+  // TODO(arjo): This minus sign shouldn't be necessary.
   auto azimuth = (xyProj.Length() < 0.001) ? 0 : -atan2(xyProj.Y(), xyProj.X());
-  igndbg << "theta " << elev << " phi " << azimuth << "\n";
+  igndbg << "Elevation " << elev << " Azimuth " << azimuth << "\n";
 
   lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse finalAnswer;
   finalAnswer.set_range(range);
@@ -250,7 +250,7 @@ void RangeBearingPlugin::Configure(
 
   if (!_sdf->HasElement("link_name"))
   {
-    ignerr << 
+    ignerr <<
       "<link_name> - expected the link name of the receptor" << std::endl;
     return;
   }
@@ -296,7 +296,7 @@ void RangeBearingPlugin::PreUpdate(
 
   ignition::gazebo::Link baseLink(this->dataPtr->linkEntity);
   auto pose = baseLink.WorldPose(_ecm);
-  
+
   if (!pose.has_value())
     return;
 
