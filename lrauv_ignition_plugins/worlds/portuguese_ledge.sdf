@@ -489,7 +489,7 @@
           <geometry>
             <heightmap>
               <pos>0 0 0</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri>
               <size>1000 1000 25.34</size>
             </heightmap>
           </geometry>
@@ -500,11 +500,11 @@
               <pos>0 0 0</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri>
               <size>1000 1000 25.34</size>
             </heightmap>
           </geometry>
@@ -519,7 +519,7 @@
           <geometry>
             <heightmap>
               <pos>-750.151 8.24476 -0.0440663</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile2_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile2_DecDeg.nc</uri>
               <size>1000 1000 27.094</size>
             </heightmap>
           </geometry>
@@ -530,11 +530,11 @@
               <pos>-750.151 8.24476 -0.0440663</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile2_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile2_DecDeg.nc</uri>
               <size>1000 1000 27.094</size>
             </heightmap>
           </geometry>
@@ -549,7 +549,7 @@
           <geometry>
             <heightmap>
               <pos>-1500.3 16.6662 -0.176266</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile3_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile3_DecDeg.nc</uri>
               <size>1000 1000 11.602</size>
             </heightmap>
           </geometry>
@@ -560,11 +560,11 @@
               <pos>-1500.3 16.6662 -0.176266</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile3_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile3_DecDeg.nc</uri>
               <size>1000 1000 11.602</size>
             </heightmap>
           </geometry>
@@ -579,7 +579,7 @@
           <geometry>
             <heightmap>
               <pos>-2250.54 24.9313 -0.396628</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile4_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile4_DecDeg.nc</uri>
               <size>1000 1000 6.781</size>
             </heightmap>
           </geometry>
@@ -590,11 +590,11 @@
               <pos>-2250.54 24.9313 -0.396628</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile4_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile4_DecDeg.nc</uri>
               <size>1000 1000 6.781</size>
             </heightmap>
           </geometry>
@@ -609,7 +609,7 @@
           <geometry>
             <heightmap>
               <pos>-3000.69 33.2621 -0.705101</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile5_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile5_DecDeg.nc</uri>
               <size>1000 1000 6.689</size>
             </heightmap>
           </geometry>
@@ -620,11 +620,11 @@
               <pos>-3000.69 33.2621 -0.705101</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile5_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile5_DecDeg.nc</uri>
               <size>1000 1000 6.689</size>
             </heightmap>
           </geometry>
@@ -639,7 +639,7 @@
           <geometry>
             <heightmap>
               <pos>-3750.83 41.5476 -1.1017</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile6_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile6_DecDeg.nc</uri>
               <size>1000 1000 30.707</size>
             </heightmap>
           </geometry>
@@ -650,11 +650,11 @@
               <pos>-3750.83 41.5476 -1.1017</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile6_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile6_DecDeg.nc</uri>
               <size>1000 1000 30.707</size>
             </heightmap>
           </geometry>
@@ -669,7 +669,7 @@
           <geometry>
             <heightmap>
               <pos>8.31046 750.171 -0.0442596</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile7_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile7_DecDeg.nc</uri>
               <size>1000 1000 20.746</size>
             </heightmap>
           </geometry>
@@ -680,11 +680,11 @@
               <pos>8.31046 750.171 -0.0442596</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile7_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile7_DecDeg.nc</uri>
               <size>1000 1000 20.746</size>
             </heightmap>
           </geometry>
@@ -699,7 +699,7 @@
           <geometry>
             <heightmap>
               <pos>-741.865 758.415 -0.0883251</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile8_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile8_DecDeg.nc</uri>
               <size>1000 1000 29.343</size>
             </heightmap>
           </geometry>
@@ -710,11 +710,11 @@
               <pos>-741.865 758.415 -0.0883251</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile8_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile8_DecDeg.nc</uri>
               <size>1000 1000 29.343</size>
             </heightmap>
           </geometry>
@@ -729,7 +729,7 @@
           <geometry>
             <heightmap>
               <pos>-1492.04 766.835 -0.22055</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile9_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile9_DecDeg.nc</uri>
               <size>1000 1000 6.851</size>
             </heightmap>
           </geometry>
@@ -740,11 +740,11 @@
               <pos>-1492.04 766.835 -0.22055</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile9_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile9_DecDeg.nc</uri>
               <size>1000 1000 6.851</size>
             </heightmap>
           </geometry>
@@ -759,7 +759,7 @@
           <geometry>
             <heightmap>
               <pos>-2242.21 775.1 -0.440893</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile10_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile10_DecDeg.nc</uri>
               <size>1000 1000 6.462</size>
             </heightmap>
           </geometry>
@@ -770,11 +770,11 @@
               <pos>-2242.21 775.1 -0.440893</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile10_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile10_DecDeg.nc</uri>
               <size>1000 1000 6.462</size>
             </heightmap>
           </geometry>
@@ -789,7 +789,7 @@
           <geometry>
             <heightmap>
               <pos>-2992.38 783.43 -0.749382</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile11_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile11_DecDeg.nc</uri>
               <size>1000 1000 29.339</size>
             </heightmap>
           </geometry>
@@ -800,11 +800,11 @@
               <pos>-2992.38 783.43 -0.749382</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile11_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile11_DecDeg.nc</uri>
               <size>1000 1000 29.339</size>
             </heightmap>
           </geometry>
@@ -819,7 +819,7 @@
           <geometry>
             <heightmap>
               <pos>-3742.55 791.715 -1.146</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile12_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile12_DecDeg.nc</uri>
               <size>1000 1000 148.439</size>
             </heightmap>
           </geometry>
@@ -830,11 +830,11 @@
               <pos>-3742.55 791.715 -1.146</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile12_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile12_DecDeg.nc</uri>
               <size>1000 1000 148.439</size>
             </heightmap>
           </geometry>
@@ -849,7 +849,7 @@
           <geometry>
             <heightmap>
               <pos>16.6195 1500.34 -0.177038</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile13_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile13_DecDeg.nc</uri>
               <size>1000 1000 6.799</size>
             </heightmap>
           </geometry>
@@ -860,11 +860,11 @@
               <pos>16.6195 1500.34 -0.177038</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile13_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile13_DecDeg.nc</uri>
               <size>1000 1000 6.799</size>
             </heightmap>
           </geometry>
@@ -879,7 +879,7 @@
           <geometry>
             <heightmap>
               <pos>-733.49 1508.59 -0.221093</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile14_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile14_DecDeg.nc</uri>
               <size>1000 1000 6.814</size>
             </heightmap>
           </geometry>
@@ -890,11 +890,11 @@
               <pos>-733.49 1508.59 -0.221093</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile14_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile14_DecDeg.nc</uri>
               <size>1000 1000 6.814</size>
             </heightmap>
           </geometry>
@@ -909,7 +909,7 @@
           <geometry>
             <heightmap>
               <pos>-1483.69 1517.01 -0.353332</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile15_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile15_DecDeg.nc</uri>
               <size>1000 1000 8.834</size>
             </heightmap>
           </geometry>
@@ -920,11 +920,11 @@
               <pos>-1483.69 1517.01 -0.353332</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile15_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile15_DecDeg.nc</uri>
               <size>1000 1000 8.834</size>
             </heightmap>
           </geometry>
@@ -939,7 +939,7 @@
           <geometry>
             <heightmap>
               <pos>-2233.88 1525.27 -0.573678</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile16_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile16_DecDeg.nc</uri>
               <size>1000 1000 11.934</size>
             </heightmap>
           </geometry>
@@ -950,11 +950,11 @@
               <pos>-2233.88 1525.27 -0.573678</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile16_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile16_DecDeg.nc</uri>
               <size>1000 1000 11.934</size>
             </heightmap>
           </geometry>
@@ -969,7 +969,7 @@
           <geometry>
             <heightmap>
               <pos>-2984.08 1533.6 -0.882182</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile17_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile17_DecDeg.nc</uri>
               <size>1000 1000 75.378</size>
             </heightmap>
           </geometry>
@@ -980,11 +980,11 @@
               <pos>-2984.08 1533.6 -0.882182</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile17_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile17_DecDeg.nc</uri>
               <size>1000 1000 75.378</size>
             </heightmap>
           </geometry>
@@ -999,7 +999,7 @@
           <geometry>
             <heightmap>
               <pos>-3734.18 1541.88 -1.27876</pos>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile18_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile18_DecDeg.nc</uri>
               <size>1000 1000 229.765</size>
             </heightmap>
           </geometry>
@@ -1010,11 +1010,11 @@
               <pos>-3734.18 1541.88 -1.27876</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile18_DecDeg.nc</uri>
+              <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile18_DecDeg.nc</uri>
               <size>1000 1000 229.765</size>
             </heightmap>
           </geometry>

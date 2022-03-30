@@ -1,12 +1,16 @@
+# Takes in a template and generates an SDF file.
+
 import em
 import os
 import sys
 
 def main():
-    template = open('portuguese_ledge.sdf.em').read()
+    in_file = 'portuguese_ledge.sdf.em'
+    out_file = 'portuguese_ledge.sdf'
+    template = open(in_file).read()
     arguments = {}
     result = em.expand(template, arguments)
-    with open(os.path.join('portuguese_ledge.sdf'), 'w') as outfile:
+    with open(os.path.join(out_file), 'w') as outfile:
         outfile.write(result)
 
 if __name__ == '__main__':

@@ -24,7 +24,7 @@ import math
 from dataclasses import dataclass
 from ignition.math import SphericalCoordinates, Vector3d, Angle
 
-fuel_model_url = "https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge"
+fuel_model_url = "https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Portuguese Ledge"
 
 @dataclass
 class Tile:
