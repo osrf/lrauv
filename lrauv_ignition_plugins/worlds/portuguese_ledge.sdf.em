@@ -386,7 +386,8 @@ for tile in tiles:
     <model name="portuguese_ledge_tile_@(tile.index)">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>@(tile.pos_enu)</pos>
@@ -394,7 +395,7 @@ for tile in tiles:
               <size>1000 1000 @(tile.height)</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>

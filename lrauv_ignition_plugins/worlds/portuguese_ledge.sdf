@@ -484,7 +484,8 @@
     <model name="portuguese_ledge_tile_1">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>0 0 0</pos>
@@ -492,7 +493,7 @@
               <size>1000 1000 25.34</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -513,7 +514,8 @@
     <model name="portuguese_ledge_tile_2">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-750.151 8.24476 -0.0440663</pos>
@@ -521,7 +523,7 @@
               <size>1000 1000 27.094</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -542,7 +544,8 @@
     <model name="portuguese_ledge_tile_3">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-1500.3 16.6662 -0.176266</pos>
@@ -550,7 +553,7 @@
               <size>1000 1000 11.602</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -571,7 +574,8 @@
     <model name="portuguese_ledge_tile_4">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-2250.54 24.9313 -0.396628</pos>
@@ -579,7 +583,7 @@
               <size>1000 1000 6.781</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -600,7 +604,8 @@
     <model name="portuguese_ledge_tile_5">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-3000.69 33.2621 -0.705101</pos>
@@ -608,7 +613,7 @@
               <size>1000 1000 6.689</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -629,7 +634,8 @@
     <model name="portuguese_ledge_tile_6">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-3750.83 41.5476 -1.1017</pos>
@@ -637,7 +643,7 @@
               <size>1000 1000 30.707</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -658,7 +664,8 @@
     <model name="portuguese_ledge_tile_7">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>8.31046 750.171 -0.0442596</pos>
@@ -666,7 +673,7 @@
               <size>1000 1000 20.746</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -687,7 +694,8 @@
     <model name="portuguese_ledge_tile_8">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-741.865 758.415 -0.0883251</pos>
@@ -695,7 +703,7 @@
               <size>1000 1000 29.343</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -716,7 +724,8 @@
     <model name="portuguese_ledge_tile_9">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-1492.04 766.835 -0.22055</pos>
@@ -724,7 +733,7 @@
               <size>1000 1000 6.851</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -745,7 +754,8 @@
     <model name="portuguese_ledge_tile_10">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-2242.21 775.1 -0.440893</pos>
@@ -753,7 +763,7 @@
               <size>1000 1000 6.462</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -774,7 +784,8 @@
     <model name="portuguese_ledge_tile_11">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-2992.38 783.43 -0.749382</pos>
@@ -782,7 +793,7 @@
               <size>1000 1000 29.339</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -803,7 +814,8 @@
     <model name="portuguese_ledge_tile_12">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-3742.55 791.715 -1.146</pos>
@@ -811,7 +823,7 @@
               <size>1000 1000 148.439</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -832,7 +844,8 @@
     <model name="portuguese_ledge_tile_13">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>16.6195 1500.34 -0.177038</pos>
@@ -840,7 +853,7 @@
               <size>1000 1000 6.799</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -861,7 +874,8 @@
     <model name="portuguese_ledge_tile_14">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-733.49 1508.59 -0.221093</pos>
@@ -869,7 +883,7 @@
               <size>1000 1000 6.814</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -890,7 +904,8 @@
     <model name="portuguese_ledge_tile_15">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-1483.69 1517.01 -0.353332</pos>
@@ -898,7 +913,7 @@
               <size>1000 1000 8.834</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -919,7 +934,8 @@
     <model name="portuguese_ledge_tile_16">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-2233.88 1525.27 -0.573678</pos>
@@ -927,7 +943,7 @@
               <size>1000 1000 11.934</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -948,7 +964,8 @@
     <model name="portuguese_ledge_tile_17">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-2984.08 1533.6 -0.882182</pos>
@@ -956,7 +973,7 @@
               <size>1000 1000 75.378</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
@@ -977,7 +994,8 @@
     <model name="portuguese_ledge_tile_18">
       <static>true</static>
       <link name="link">
-        <collision name="collision">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
           <geometry>
             <heightmap>
               <pos>-3734.18 1541.88 -1.27876</pos>
@@ -985,7 +1003,7 @@
               <size>1000 1000 229.765</size>
             </heightmap>
           </geometry>
-        </collision>
+        </collision-->
         <visual name="visual">
           <geometry>
             <heightmap>
