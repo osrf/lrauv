@@ -12,6 +12,8 @@
 -->
 
 <!--
+   Tile heights calculated manually with
+
    $ gdalinfo -mm PortugueseLedgeTile1_DecDeg.grd | grep -i min
    Computed Min/Max=-98.637,-73.297
  -->
@@ -22,13 +24,15 @@ import math
 from dataclasses import dataclass
 from ignition.math import SphericalCoordinates, Vector3d, Angle
 
+fuel_model_url = "https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge"
+
 @dataclass
 class Tile:
     index: int
     lat_deg: float
     lon_deg: float
     height: float
-    pos: Vector3d = Vector3d()
+    pos_enu: Vector3d = Vector3d()
 
 # Center of all 18 tiles in degrees
 tiles = [
@@ -63,7 +67,7 @@ for tile in tiles:
     pos_enu = sc.position_transform(vec,
         SphericalCoordinates.SPHERICAL,
         SphericalCoordinates.LOCAL2)
-    tile.pos = pos_enu
+    tile.pos_enu = pos_enu
 
 }@
 
@@ -111,27 +115,11 @@ for tile in tiles:
       <uniform_fluid_density>1025</uniform_fluid_density>
     </plugin>
 
-    <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
-      to ParticleEmitter in Ignition G.
-      See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
     <plugin
       filename="ignition-gazebo-particle-emitter2-system"
       name="ignition::gazebo::systems::ParticleEmitter2">
     </plugin>
 
-    <!-- Uncomment for time analysis -->
-    <!--plugin
-      filename="TimeAnalysisPlugin"
-      name="tethys::TimeAnalysisPlugin">
-    </plugin-->
-
-    <plugin
-      filename="ScienceSensorsSystem"
-      name="tethys::ScienceSensorsSystem">
-      <data_path>2003080103_mb_l3_las.csv</data_path>
-    </plugin>
-
-    <!-- Interface with LRAUV Main Vehicle Application for the world -->
     <plugin
       filename="WorldCommPlugin"
       name="tethys::WorldCommPlugin">
@@ -140,9 +128,9 @@ for tile in tiles:
 
     <plugin name="ignition::gazebo" filename="dummy">
 
-@[for tile in tiles[:18]]@
+@[for tile in tiles]@
       <level name="level_@(tile.index)">
-        <pose>@(tile.pos) 0 0 0</pose>
+        <pose>@(tile.pos_enu) 0 0 0</pose>
         <geometry>
           <box>
             <size>1000 1000 1000</size>
@@ -401,10 +389,8 @@ for tile in tiles:
         <collision name="collision">
           <geometry>
             <heightmap>
-              <pos>@(tile.pos)</pos>
-              <!-- FIXME why doesn't fuel URL work? -->
-              <!--uri>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/meshes/PortugueseLedgeTile1_DecDeg.nc</uri-->
-              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile@(tile.index)_DecDeg.nc</uri>
+              <pos>@(tile.pos_enu)</pos>
+              <uri>@(fuel_model_url)/tip/files/meshes/PortugueseLedgeTile@(tile.index)_DecDeg.nc</uri>
               <size>1000 1000 @(tile.height)</size>
             </heightmap>
           </geometry>
@@ -412,14 +398,14 @@ for tile in tiles:
         <visual name="visual">
           <geometry>
             <heightmap>
-              <pos>@(tile.pos)</pos>
+              <pos>@(tile.pos_enu)</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
-                <diffuse>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
-                <normal>https://fuel.ignitionrobotics.org/1.0/chapulina/models/Portuguese Ledge/tip/files/materials/textures/flat_normal.png</normal>
+                <diffuse>@(fuel_model_url)/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>@(fuel_model_url)/tip/files/materials/textures/flat_normal.png</normal>
                 <size>10</size>
               </texture>
-              <uri>/home/developer/.ignition/fuel/fuel.ignitionrobotics.org/chapulina/models/portuguese ledge/1/meshes/PortugueseLedgeTile@(tile.index)_DecDeg.nc</uri>
+              <uri>@(fuel_model_url)/tip/files/meshes/PortugueseLedgeTile@(tile.index)_DecDeg.nc</uri>
               <size>1000 1000 @(tile.height)</size>
             </heightmap>
           </geometry>
