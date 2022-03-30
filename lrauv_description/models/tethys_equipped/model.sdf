@@ -323,7 +323,7 @@
         <address>1</address>
         <model_plugin_file>simpleacousticmodel</model_plugin_file>
         <model_name>tethys::SimpleAcousticModel</model_name>
-        <link_name>base_link</link_name>
+        <link_name>acoustic_transponder</link_name>
         <max_range>2500</max_range>
         <speed_of_sound>1500</speed_of_sound>
       </plugin>
@@ -334,7 +334,7 @@
         <address>1</address>
         <processing_delay>0.3</processing_delay>
         <speed_of_sound>1500</speed_of_sound>
-        <link_name>base_link</link_name>
+        <link_name>acoustic_transponder</link_name>
         <namespace>tethys</namespace>
       </plugin>
 
