@@ -3,6 +3,12 @@
   Development of this module has been funded by the Monterey Bay Aquarium
   Research Institute (MBARI) and the David and Lucile Packard Foundation
 -->
+
+<!--
+  This file is essentially identical to buoyant_tethys, except the vehicle
+  starts at a depth of -10m instead of 0m. This is for tests that require the
+  vehicle to be fully submerged.
+-->
 <sdf version="1.6">
   <world name="buoyant_tethys">
     <scene>
@@ -33,14 +39,6 @@
     </plugin>
 
     <plugin
-      filename="ignition-gazebo-imu-system"
-      name="ignition::gazebo::systems::Imu">
-    </plugin>
-    <plugin
-      filename="ignition-gazebo-magnetometer-system"
-      name="ignition::gazebo::systems::Magnetometer">
-    </plugin>
-    <plugin
       filename="ignition-gazebo-buoyancy-system"
       name="ignition::gazebo::systems::Buoyancy">
       <!-- TODO: fix behaviour near surface, see https://github.com/osrf/lrauv/issues/102-->
@@ -51,7 +49,6 @@
           <density>1.125</density>
         </density_change>
       </graded_buoyancy>
-      <!--<uniform_fluid_density>1025</uniform_fluid_density> -->
     </plugin>
 
     <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
@@ -88,9 +85,6 @@
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
-    <!-- Brought from https://github.com/ignitionrobotics/sdformat/blob/1acea10dab1cf0c3fa2583f3e2bfd0a8d14ea340/src/World.cc#L75-L76 -->
-    <magnetic_field>5.5645e-6 22.8758e-6 -42.3884e-6</magnetic_field>
-
     <plugin
       filename="ScienceSensorsSystem"
       name="tethys::ScienceSensorsSystem">
@@ -368,9 +362,157 @@
     </include-->
 
     <include>
-      <pose>0 0 0 0 0 0</pose>
+      <pose>0 0 -10 0 0 0</pose>
       <uri>tethys_equipped</uri>
     </include>
+
+
+    <model name="commsLink1">
+      <static>true</static>
+      <pose>0 10 -10 0 0 0</pose>
+      <link name="base_link">
+        <inertial>
+          <mass>1000</mass>
+          <inertia>
+            <ixx>86.289</ixx>
+            <iyy>86.289</iyy>
+            <izz>86.289</izz>
+          </inertia>
+        </inertial>
+        <visual name="base_link_vis">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </visual>
+        <collision name="base_link_coll">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+      <plugin
+        filename="AcousticCommsPlugin"
+        name="tethys::AcousticCommsPlugin">
+        <address>2</address>
+        <model_plugin_file>simpleacousticmodel</model_plugin_file>
+        <model_name>tethys::SimpleAcousticModel</model_name>
+        <link_name>base_link</link_name>
+        <max_range>2500</max_range>
+        <speed_of_sound>1500</speed_of_sound>
+        <timestep>0.000001</timestep>
+      </plugin>
+      <plugin
+        filename="RangeBearingPlugin"
+        name="tethys::RangeBearingPlugin">
+        <address>2</address>
+        <processing_delay>0.3</processing_delay>
+        <speed_of_sound>1500</speed_of_sound>
+        <link_name>base_link</link_name>
+        <namespace>box1</namespace>
+      </plugin>
+    </model>
+
+    <model name="commsLink2">
+      <static>true</static>
+      <pose>10 0 -10 0 0 0</pose>
+      <link name="base_link">
+        <inertial>
+          <mass>1000</mass>
+          <inertia>
+            <ixx>86.289</ixx>
+            <iyy>86.289</iyy>
+            <izz>86.289</izz>
+          </inertia>
+        </inertial>
+        <visual name="base_link_vis">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </visual>
+        <collision name="base_link_coll">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+      <plugin
+        filename="AcousticCommsPlugin"
+        name="tethys::AcousticCommsPlugin">
+        <address>3</address>
+        <model_plugin_file>simpleacousticmodel</model_plugin_file>
+        <model_name>tethys::SimpleAcousticModel</model_name>
+        <link_name>base_link</link_name>
+        <max_range>2500</max_range>
+        <speed_of_sound>1500</speed_of_sound>
+        <timestep>0.000001</timestep>
+      </plugin>
+      <plugin
+        filename="RangeBearingPlugin"
+        name="tethys::RangeBearingPlugin">
+        <address>3</address>
+        <processing_delay>0.3</processing_delay>
+        <speed_of_sound>1500</speed_of_sound>
+        <link_name>base_link</link_name>
+        <namespace>box2</namespace>
+      </plugin>
+    </model>
+
+    <model name="commsLink3">
+      <static>true</static>
+      <pose>0 0 -20 0 0 0</pose>
+      <link name="base_link">
+        <inertial>
+          <mass>1000</mass>
+          <inertia>
+            <ixx>86.289</ixx>
+            <iyy>86.289</iyy>
+            <izz>86.289</izz>
+          </inertia>
+        </inertial>
+        <visual name="base_link_vis">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </visual>
+        <collision name="base_link_coll">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+      <plugin
+        filename="AcousticCommsPlugin"
+        name="tethys::AcousticCommsPlugin">
+        <address>4</address>
+        <model_plugin_file>simpleacousticmodel</model_plugin_file>
+        <model_name>tethys::SimpleAcousticModel</model_name>
+        <link_name>base_link</link_name>
+        <max_range>2500</max_range>
+        <speed_of_sound>1500</speed_of_sound>
+        <timestep>0.000001</timestep>
+      </plugin>
+      <plugin
+        filename="RangeBearingPlugin"
+        name="tethys::RangeBearingPlugin">
+        <address>4</address>
+        <processing_delay>0.3</processing_delay>
+        <speed_of_sound>1500</speed_of_sound>
+        <link_name>base_link</link_name>
+        <namespace>box3</namespace>
+      </plugin>
+    </model>
 
   </world>
 </sdf>

@@ -169,14 +169,12 @@
             </z>
           </angular_velocity>
           <topic>/tethys/ahrs/imu</topic>
-          <plugin filename="ignition-gazebo-imu-system"
-                  name="ignition::gazebo::systems::Imu"/>
         </sensor>
         <!--Magnetometer in a Sparton AHRS-M2 -->
         <sensor
             element_id="base_link"
             action="add"
-            name="ahrs_magnetometer"
+            name="sparton_ahrs_m2_magnetometer"
             type="magnetometer">
           <always_on>1</always_on>
           <update_rate>10</update_rate>
@@ -187,8 +185,6 @@
           -->
           <pose degrees="true">0 0 0 180 0 180</pose>
           <topic>/tethys/ahrs/magnetometer</topic>
-          <plugin filename="ignition-gazebo-magnetometer-system"
-                  name="ignition::gazebo::systems::Magnetometer"/>
         </sensor>
       </experimental:params>
       <!-- Joint controllers -->
@@ -327,7 +323,7 @@
         <address>1</address>
         <model_plugin_file>simpleacousticmodel</model_plugin_file>
         <model_name>tethys::SimpleAcousticModel</model_name>
-        <link_name>base_link</link_name>
+        <link_name>acoustic_transponder</link_name>
         <max_range>2500</max_range>
         <speed_of_sound>1500</speed_of_sound>
       </plugin>
@@ -338,7 +334,7 @@
         <address>1</address>
         <processing_delay>0.3</processing_delay>
         <speed_of_sound>1500</speed_of_sound>
-        <link_name>base_link</link_name>
+        <link_name>acoustic_transponder</link_name>
         <namespace>tethys</namespace>
       </plugin>
 

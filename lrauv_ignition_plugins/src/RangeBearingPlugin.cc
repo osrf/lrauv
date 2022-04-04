@@ -130,10 +130,12 @@ void RangeBearingPrivateData::OnReceiveCommsMsg(
 
   switch(message.type())
   {
-  case MsgType::LRAUVAcousticMessage_MessageType_RangeRequest:  
+  case MsgType::LRAUVAcousticMessage_MessageType_RangeRequest:
+    // Place range ping from other vehicle on queue
     this->messageQueue.push(ping);
     break;
   case MsgType::LRAUVAcousticMessage_MessageType_RangeResponse:
+    // Publish range response
     this->PublishResponse(message);
     break;
   default:
@@ -167,29 +169,45 @@ void RangeBearingPrivateData::PublishResponse(
   lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse resp;
   std::istringstream stream{msg.data()};
   resp.ParseFromIstream(&stream);
-  
+
   auto timeOfTx = transmissionTime[resp.req_id()];
   transmissionTime.erase(resp.req_id());
   auto duration = std::chrono::duration<double>(
     this->timeNow - timeOfTx - this->processingDelay);
   auto range = (this->speedOfSound * duration.count()) / 2;
 
+  // Get current pose
   auto poseOffset = ignition::math::Matrix4d(this->currentPose);
   auto otherVehiclesPos =
     ignition::math::Vector3d(
       resp.bearing().x(), resp.bearing().y(), resp.bearing().z());
-  auto groundTruthPose = poseOffset.Inverse() * otherVehiclesPos;
+  // Transform pose of other vehicle to local frame
+  auto poseInLocalFrame = poseOffset.Inverse() * otherVehiclesPos;
 
-  auto theta = acos(groundTruthPose.Z() / groundTruthPose.Length());
-  auto phi = atan2(groundTruthPose.Y(), groundTruthPose.X());
+  igndbg << "Current pose " << poseOffset.Pose().Pos() << "R: " << poseOffset.Pose().Rot().Euler() << "\n";
+  igndbg << "Target pose (global frame)" << otherVehiclesPos << "\n";
+  igndbg << "Target pose (local frame)" << poseInLocalFrame << "\n";
+
+  // Elevation is given as a function of angle from XY plane of the vehicle 
+  // with positive facing down.
+  auto negativeZAxis = ignition::math::Vector3d(0, 0, -1);
+  auto elev =
+    asin(negativeZAxis.Dot(poseInLocalFrame) / poseInLocalFrame.Length());
+
+  // Azimuth is given by the angle from the X axis in vehicle frame.
+  auto xyProj = ignition::math::Vector2d(poseInLocalFrame.X(),
+    poseInLocalFrame.Y());
+  // TODO(arjo): This minus sign shouldn't be necessary.
+  auto azimuth = (xyProj.Length() < 0.001) ? 0 : -atan2(xyProj.Y(), xyProj.X());
+  igndbg << "Elevation " << elev << " Azimuth " << azimuth << "\n";
 
   lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse finalAnswer;
   finalAnswer.set_range(range);
   finalAnswer.set_req_id(resp.req_id());
-  
+
   ignition::msgs::Vector3d* vec = new ignition::msgs::Vector3d;
-  vec->set_x(groundTruthPose.Length()); vec->set_y(theta); vec->set_z(phi);
-  finalAnswer.set_allocated_bearing(vec); 
+  vec->set_x(poseInLocalFrame.Length()); vec->set_y(elev); vec->set_z(azimuth);
+  finalAnswer.set_allocated_bearing(vec);
   this->pub.Publish(finalAnswer);
 }
 
@@ -232,7 +250,7 @@ void RangeBearingPlugin::Configure(
 
   if (!_sdf->HasElement("link_name"))
   {
-    ignerr << 
+    ignerr <<
       "<link_name> - expected the link name of the receptor" << std::endl;
     return;
   }
@@ -278,7 +296,7 @@ void RangeBearingPlugin::PreUpdate(
 
   ignition::gazebo::Link baseLink(this->dataPtr->linkEntity);
   auto pose = baseLink.WorldPose(_ecm);
-  
+
   if (!pose.has_value())
     return;
 
@@ -286,12 +304,16 @@ void RangeBearingPlugin::PreUpdate(
   this->dataPtr->currentPose = pose.value();
   this->dataPtr->timeNow = std::chrono::steady_clock::time_point{
     _info.simTime};
-  
+
+  // Iterate through queue to identify acoustic messages
+  // that are ready to be responded to. This part implements the 300ms delay
+  // that the transponder has.
   while(
     !this->dataPtr->messageQueue.empty()
-    && (this->dataPtr->messageQueue.front().timeOfReception 
+    && (this->dataPtr->messageQueue.front().timeOfReception
       + this->dataPtr->processingDelay) <= this->dataPtr->timeNow)
   {
+    // Handles incoming messages
     auto ping = this->dataPtr->messageQueue.front();
     lrauv_ignition_plugins::msgs::LRAUVAcousticMessage message;
     lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse resp;
@@ -301,6 +323,8 @@ void RangeBearingPlugin::PreUpdate(
 
     resp.set_req_id(ping.reqId);
     ignition::msgs::Vector3d* vec = new ignition::msgs::Vector3d;
+
+    // We cheat a little here and send the pose of the vehicle itself.
     vec->set_x(pose->Pos().X());
     vec->set_y(pose->Pos().Y());
     vec->set_z(pose->Pos().Z());

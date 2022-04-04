@@ -21,86 +21,22 @@
  */
 
 #include "helper/LrauvCommsFixture.hh"
-#include "lrauv_range_bearing_request.pb.h"
-#include "lrauv_range_bearing_response.pb.h"
+#include "helper/LrauvRangeBearingClient.hh"
 
 using namespace lrauv_ignition_plugins;
-
-class RangeBearingClient
-{
-
-public: RangeBearingClient(std::string address) :
-  request_counter(2)
-{
-  this->pub = this->node.Advertise<msgs::LRAUVRangeBearingRequest>(
-    "/"+address+"/range_bearing/requests");
-  this->node.Subscribe("/"+address+"/range_bearing/responses",
-    &RangeBearingClient::onCallback,
-    this
-  );
-}
-
-public: msgs::LRAUVRangeBearingResponse RequestRange(uint32_t address)
-{
-  msgs::LRAUVRangeBearingRequest req;
-  req.set_to(address);
-  req.set_req_id(this->request_counter);
-
-  this->received = false;
-
-  this->pub.Publish(req);
-
-  igndbg << "Published request" << "\n";
-
-  std::unique_lock<std::mutex> lk(this->mtx);
-  cv.wait(lk, [this]{return this->received;});
-
-  this->request_counter++;
-
-  return this->lastResponse;
-}
-
-public: void onCallback(const msgs::LRAUVRangeBearingResponse& resp)
-{
-  igndbg << "Received message\n";
-  if(resp.req_id() == this->request_counter)
-  {
-    {
-      std::lock_guard<std::mutex> lk(this->mtx);
-      this->lastResponse = resp;
-      this->received = true;
-    }
-    cv.notify_all();
-  }
-}
-
-private: ignition::transport::Node node;
-
-private: ignition::transport::Node::Publisher pub;
-
-private: uint32_t request_counter;
-
-private: std::mutex mtx;
-
-private: std::condition_variable cv;
-
-private: msgs::LRAUVRangeBearingResponse lastResponse;
-
-private: bool received;
-};
 
 TEST_F(LrauvCommsFixture, TestRangingAccuracy)
 {
   /// Needs to have the server call configure on the plugin before requesting.
   this->fixture->Server()->Run(true, 100, false);
   this->fixture->Server()->Run(false, 2000, false);
-  
+
   RangeBearingClient client("box1");
   auto result = client.RequestRange(2);
 
   EXPECT_EQ(result.req_id(), 2);
   EXPECT_NEAR(result.range(), 20, 0.5);
   EXPECT_NEAR(result.bearing().x(), 20, 1e-3);
-  EXPECT_NEAR(result.bearing().y(), 1.57, 1e-2);
-  EXPECT_NEAR(result.bearing().z(), 1.57, 1e-2);
+  EXPECT_NEAR(result.bearing().y(), 0., 1e-2);
+  EXPECT_NEAR(result.bearing().z(), -1.57, 1e-2);
 }

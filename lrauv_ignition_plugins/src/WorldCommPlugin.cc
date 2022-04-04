@@ -105,6 +105,12 @@ void WorldCommPlugin::Configure(
   this->createService = "/world/" + topicWorldName + "/create";
   this->setSphericalCoordsService = "/world/" + topicWorldName
     + "/set_spherical_coordinates";
+
+  // We assume that the world origin spherical coordinates will either be set
+  // through SDF, or through this plugin. This assumption is broken if a user
+  // sets it manually.
+  this->hasWorldLatLon =
+      ignition::gazebo::sphericalCoordinates(worldEntity, _ecm).has_value();
 }
 
 /////////////////////////////////////////////////
@@ -133,7 +139,7 @@ void WorldCommPlugin::SpawnCallback(
   auto ele = -_msg.initz_();
 
   // Center the world around the first vehicle spawned
-  if (this->spawnCount == 0)
+  if (!this->hasWorldLatLon)
   {
     igndbg << "Setting world origin coordinates to latitude [" << lat
            << "], longitude [" << lon << "], elevation [" << ele << "]"
@@ -156,8 +162,11 @@ void WorldCommPlugin::SpawnCallback(
       ignerr << "Failed to request service [" << this->setSphericalCoordsService
              << "]" << std::endl;
     }
+    else
+    {
+      this->hasWorldLatLon = true;
+    }
   }
-  this->spawnCount++;
 
   // Create vehicle
   ignition::msgs::EntityFactory factoryReq;
@@ -246,6 +255,14 @@ std::string WorldCommPlugin::TethysSdfString(const lrauv_ignition_plugins::msgs:
 
         <sensor element_id="base_link::current_sensor" action="modify">
           <topic>/model/)" + _id + R"(/current</topic>
+        </sensor>
+
+        <sensor element_id="base_link::sparton_ahrs_m2_imu" action="modify">
+          <topic>/)" + _id + R"(/ahrs/imu</topic>
+        </sensor>
+
+        <sensor element_id="base_link::sparton_ahrs_m2_magnetometer" action="modify">
+          <topic>/)" + _id + R"(/ahrs/magnetometer</topic>
         </sensor>
 
         <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
