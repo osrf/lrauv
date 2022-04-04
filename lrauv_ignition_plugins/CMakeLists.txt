@@ -328,6 +328,18 @@ if(BUILD_TESTING)
       ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
       ${PCL_LIBRARIES})
   gtest_discover_tests(UNIT_Interpolation_TEST)
+
+  add_executable(UNIT_ndarray_lookup_TEST src/science/NDArrayLookup_TEST.cc)
+  target_include_directories(UNIT_ndarray_lookup_TEST
+    PUBLIC ${PCL_INCLUDE_DIRS})
+  target_link_libraries(UNIT_ndarray_lookup_TEST
+    PUBLIC gtest_main
+    PRIVATE
+      ignition-common${IGN_COMMON_VER}::ignition-common${IGN_COMMON_VER}
+      ignition-common${IGN_COMMON_VER}::profiler
+      ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+      ${PCL_LIBRARIES})
+  gtest_discover_tests(UNIT_ndarray_lookup_TEST)
 endif()
 
 #============================================================================

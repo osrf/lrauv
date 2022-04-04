@@ -44,6 +44,17 @@ using namespace tethys;
 
 class tethys::ScienceSensorsSystemPrivate
 {
+  /// \brief Lookup Type
+  public: enum LookupType
+  {
+    /// \brief If we use this then we use KNN to search for the nearest
+    /// interpolators
+    K_NEAREST,
+    /// \brief If we use this then we use a giant N-Dimensional Array for
+    /// searching
+    ND_ARRAY
+  };
+
   /// \brief Advertise topics and services.
   public: void StartTransport();
 
