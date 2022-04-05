@@ -207,8 +207,12 @@ class LrauvTestFixtureBase : public ::testing::Test
   public: static void ExecLRAUV(const std::string &_mission,
       std::atomic<bool> &_running)
   {
-    std::string cmd = std::string(LRAUV_APP_PATH) + "/bin/LRAUV -x 'run " +
-        std::string(LRAUV_APP_PATH) + _mission + " quitAtEnd' 2>&1";
+    std::ostringstream os;
+    os << LRAUV_APP_PATH << "/bin/LRAUV"
+       << " -c regressionTests/ignitionTests"
+       << " -x 'run " << LRAUV_APP_PATH << _mission
+       << " quitAtEnd' 2>&1";
+    const std::string cmd = os.str();
 
     ignmsg << "Running command [" << cmd << "]" << std::endl;
 
