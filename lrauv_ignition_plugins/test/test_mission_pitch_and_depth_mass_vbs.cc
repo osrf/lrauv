@@ -88,19 +88,19 @@ TEST_F(LrauvTestFixture, PitchDepthVBS)
   for (const auto pose: this->tethysPoses)
   {
     // Vehicle should dive down.
-    EXPECT_LT(pose.Pos().Z(), 0.1);
+    EXPECT_LE(pose.Pos().Z(), 0.5);
     // FIXME(arjo): This should dive to a max of 10m I think
     EXPECT_GT(pose.Pos().Z(), -21.5);
 
     // Vehicle should exhibit minimal lateral translation.
-    EXPECT_NEAR(pose.Pos().X(), 0, 2e-3);
-    EXPECT_NEAR(pose.Pos().Y(), 0, 2.0); // FIXME(arjo): IMPORTANT!!
+    EXPECT_NEAR(pose.Pos().X(), 0, 1e-2);
+    EXPECT_NEAR(pose.Pos().Y(), 0, 3.0); // FIXME(arjo): IMPORTANT!!
 
     // Vehicle should hold a fixed angle about X
     // FIXME(arjo): Shouldnt be pitching this much
     EXPECT_NEAR(pose.Rot().Euler().X(), 0, 4e-1);
-    EXPECT_NEAR(pose.Rot().Euler().Y(), 0, 1e-3);
-    EXPECT_NEAR(pose.Rot().Euler().Z(), 0, 1e-3);
+    EXPECT_NEAR(pose.Rot().Euler().Y(), 0, 1e-2);
+    EXPECT_NEAR(pose.Rot().Euler().Z(), 0, 1e-2);
 
     if (!firstSample)
     {

@@ -113,7 +113,7 @@ TEST_F(LrauvTestFixture, YoYoCircle)
     EXPECT_LT(IGN_DTOR(-20), pose.Rot().Pitch()) << i;
     EXPECT_GT(IGN_DTOR(20), pose.Rot().Pitch()) << i;
 
-    if (i > 7000)
+    if (i > 14000)
     {
       // Once the vehicle achieves its full velocity the vehicle should have a
       // nominal yaw rate of around 0.037-0.038rad/s. This means that the
