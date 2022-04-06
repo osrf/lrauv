@@ -133,12 +133,14 @@ class InterpolationPrivate
   /// \param[out] _zSlice Points in the new point cloud slice at _depth
   /// \param[out] _zSliceInds Indices of points in _zSlice in the original
   /// point cloud _points
+  /// \param[in] _tol Tolerance around _depth to include in the slice
   /// \param[in] _invert Invert the filter. Keep everything except the z slice.
   public: void CreateDepthSlice(
     float _depth,
     pcl::PointCloud<pcl::PointXYZ> &_cloud,
     pcl::PointCloud<pcl::PointXYZ> &_zSlice,
     std::vector<int> &_zSliceInds,
+    float _tol=1e-6,
     bool _invert=false);
 
   /// \brief Create an octree from a point cloud, and search for _k nearest
@@ -296,6 +298,9 @@ void Interpolation::FindTrilinearInterpolators(
   std::vector<pcl::PointXYZ> &_interpolators2,
   int _k)
 {
+  IGN_PROFILE_THREAD_NAME("Interpolation FindTrilinearInterpolators");
+  IGN_PROFILE("Interpolation::FindTrilinearInterpolators");
+
   // Initialize return parameters
   _interpolatorInds1.clear();
   _interpolators1.clear();
@@ -556,6 +561,7 @@ void InterpolationPrivate::CreateDepthSlice(
   pcl::PointCloud<pcl::PointXYZ> &_cloud,
   pcl::PointCloud<pcl::PointXYZ> &_zSlice,
   std::vector<int> &_zSliceInds,
+  float _tol,
   bool _invert)
 {
   // Separate a z slice, i.e. points with z equal to that of 1st NN
@@ -565,7 +571,7 @@ void InterpolationPrivate::CreateDepthSlice(
   passThruFilter.setInputCloud(_cloud.makeShared());
   passThruFilter.setNegative(_invert);
   passThruFilter.setFilterFieldName("z");
-  passThruFilter.setFilterLimits(_depth - 1e-6, _depth + 1e-6);
+  passThruFilter.setFilterLimits(_depth - _tol, _depth + _tol);
   passThruFilter.filter(_zSlice);
   passThruFilter.filter(_zSliceInds);
 }
@@ -629,6 +635,7 @@ float InterpolationPrivate::TrilinearInterpolate(
   const Eigen::MatrixXf &_xyzs,
   const std::vector<float> &_values)
 {
+  IGN_PROFILE_THREAD_NAME("Interpolation TrilinearInterpolate");
   IGN_PROFILE("InterpolationPrivate::TrilinearInterpolate");
 
   // Sanity check: Must have 8 points, 4 above, 4 below.
@@ -808,6 +815,9 @@ float InterpolationPrivate::BarycentricInterpolate(
   const Eigen::MatrixXf &_xyzs,
   const std::vector<float> &_values)
 {
+  IGN_PROFILE_THREAD_NAME("Interpolation BarycentricInterpolate");
+  IGN_PROFILE("InterpolationPrivate::BarycentricInterpolate");
+
   // Implemented from https://en.wikipedia.org/wiki/Barycentric_coordinate_system#Barycentric_coordinates_on_tetrahedra
 
   if (this->debugMath)

@@ -800,7 +800,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     // If there are any nodes in the octree, search in octree to find spatial
     // index of science data
     if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]->getLeafCount()
-      > 0)
+      == 0)
     {
       break;
     }
