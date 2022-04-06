@@ -261,7 +261,9 @@ TEST(InterpolationTest, TrilinearInterpolationInEightPointPrism)
 // a prism is not satisfied, falls back to hybrid "barylinear" interpolation,
 // i.e. linear interpolation between 3D non-prism quads in two z slices, or the
 // degenerative cases of a 2D triangle, or a 1D line segment.
-TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
+// This tests the 3D case.
+/* TODO: Not passing yet. Need to fix _values indexing
+TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear3D)
 {
   ignition::common::Console::SetVerbosity(4);
 
@@ -286,6 +288,142 @@ TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
   //      -1    0    1
   // z view:
   //     z
+  //    0|      *    *  (4 points)
+  //     |       q
+  //   -1|
+  //   -2| *    *       (4 points)
+  //
+  // A rectangle at z = 0
+  cloud.points.push_back(pcl::PointXYZ( 0, 0, 0));
+  cloud.points.push_back(pcl::PointXYZ( 1, 0, 0));
+  cloud.points.push_back(pcl::PointXYZ( 0, 1, 0));
+  cloud.points.push_back(pcl::PointXYZ( 1, 1, 0));
+  // Same rectangle at z = -2
+  cloud.points.push_back(pcl::PointXYZ( 0, 0, -2));
+  cloud.points.push_back(pcl::PointXYZ(-1, 0, -2));
+  cloud.points.push_back(pcl::PointXYZ( 0, 1, -2));
+  cloud.points.push_back(pcl::PointXYZ(-1, 1, -2));
+
+  // Make a query point that is the general 3D quad case, but not prism
+  pcl::PointXYZ queryPt(0.1, 0, -0.3);
+  // 1st NN is at this index
+  int nnIdx = 0;
+
+  // Return values from trilinear search
+  std::vector<int> interpInds1, interpInds2;
+  std::vector<pcl::PointXYZ> interps1, interps2;
+
+  // Search function. Search neighbors to do trilinear interpolation among
+  interp.FindTrilinearInterpolators(cloud, queryPt, nnIdx, spatialRes,
+    interpInds1, interps1, interpInds2, interps2, k);
+
+  // Check that it finds 2 z slices
+  EXPECT_EQ(interpInds1.size(), 4);
+  EXPECT_EQ(interpInds2.size(), 4);
+  EXPECT_EQ(interps1.size(), 4);
+  EXPECT_EQ(interps2.size(), 4);
+
+  // Check neighbors' indices.
+  // Degenerate into a 2D triangle.
+  // Top-down view of 4 nearest neighbors on 1st z slice, not in a rectangle,
+  // therefore the 8 neighbors together won't be in a prism:
+  // z = 0:
+  //            y
+  //            |
+  //   1        c    d
+  //   0 -------a----b- x
+  //            |
+  //      -1    0    1
+  // z = -2:
+  //            y
+  //            |
+  //   1   h    f
+  //   0 --g----e------ x
+  //            |
+  //      -1    0    1
+  EXPECT_EQ(interpInds1[0], 0);  // a
+  EXPECT_EQ(interpInds1[1], 1);  // b
+  EXPECT_EQ(interpInds1[2], 2);  // c
+  EXPECT_EQ(interpInds1[3], 3);  // d
+
+  // 2nd z slice only has 4 points
+  EXPECT_EQ(interpInds2[0], 4);  // e
+  EXPECT_EQ(interpInds2[1], 6);  // f
+  EXPECT_EQ(interpInds2[2], 5);  // g
+  EXPECT_EQ(interpInds2[3], 7);  // h
+
+  // Package into variable types for interpolation function
+  Eigen::Vector3f queryPtEigen(queryPt.x, queryPt.y, queryPt.z);
+  Eigen::MatrixXf interpsEigen(8, 3);
+  for (int i = 0; i < interpInds1.size(); ++i)
+  {
+    interpsEigen.row(i) = Eigen::Vector3f(
+      cloud.points[interpInds1[i]].x,
+      cloud.points[interpInds1[i]].y,
+      cloud.points[interpInds1[i]].z);
+  }
+  for (int i = 0; i < interpInds2.size(); ++i)
+  {
+    interpsEigen.row(4 + i) = Eigen::Vector3f(
+      cloud.points[interpInds2[i]].x,
+      cloud.points[interpInds2[i]].y,
+      cloud.points[interpInds2[i]].z);
+  }
+
+  // Data to test interpolation between two z slices
+  std::vector<float> data;
+  data.push_back(   0.0f);  // a
+  data.push_back(   0.0f);  // b
+  data.push_back(   0.0f);  // c
+  data.push_back(   0.0f);  // d
+  // Set values in 2nd z slice very different from those on 1st z slice.
+  // Since query point is entirely on 1st z slice, it should be independent
+  // of values on 2nd z slice.
+  data.push_back(1000.0f);
+  data.push_back(1000.0f);
+  data.push_back(1000.0f);
+  data.push_back(1000.0f);
+
+  // Interpolation function
+  float result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
+  // Result should be between the two z slices
+  EXPECT_GT(result, 0);
+  EXPECT_LT(result, 1000);
+}
+*/
+
+/////////////////////////////////////////////////
+// Happens when trilinear interpolation assumption of points being corners of
+// a prism is not satisfied, falls back to hybrid "barylinear" interpolation,
+// i.e. linear interpolation between 3D non-prism quads in two z slices, or the
+// degenerative cases of a 2D triangle, or a 1D line segment.
+// This tests the 2D case from the 3D overloaded BarycentricInterpolate().
+TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear2D)
+{
+  ignition::common::Console::SetVerbosity(4);
+
+  Interpolation interp(TRILINEAR);
+  EXPECT_EQ(interp.Method(), TRILINEAR);
+
+  interp.SetDebug(true);
+  interp.SetDebugMath(false);
+
+  // Inputs to search function
+  float spatialRes = 0.1f;
+  int k = 4;
+  pcl::PointCloud<pcl::PointXYZ> cloud;
+
+  // Populate input cloud
+  // Top-down view:
+  //            y
+  //            |
+  //   1   *    *    *
+  //             q
+  //   0 --*----*----*- x
+  //            |
+  //      -1    0    1
+  // z view:
+  //     z
   //    0| *    *    *
   //   -2| *         *
   //
@@ -303,10 +441,10 @@ TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
   cloud.points.push_back(pcl::PointXYZ(0, 0, 0));
   cloud.points.push_back(pcl::PointXYZ(0, 1, 0));
 
-  // Query point in middle column, slightly +x. Its nearest neighbors are not
+  // Query point q in middle column, slightly +x. Its nearest neighbors are not
   // corners of a prism.
-  pcl::PointXYZ queryPt(0.1, 0, 0);
-  // 1st NN is at index [8]
+  pcl::PointXYZ queryPt(0.1, 0.3, 0);
+  // 1st NN is at this index
   int nnIdx = 8;
 
   // Return values from trilinear search
@@ -323,8 +461,6 @@ TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
   EXPECT_EQ(interps1.size(), 4);
   EXPECT_EQ(interps2.size(), 4);
 
-  // TODO Make a query point that is the general 3D quad case, but not prism
-
   // Check neighbors' indices.
   // Degenerate into a 2D triangle.
   // Top-down view of 4 nearest neighbors on 1st z slice, not in a rectangle,
@@ -332,20 +468,141 @@ TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
   //            y
   //            |
   //   1        c
-  //   0 --d----aq---b- x
+  //             q
+  //   0 --d----a----b- x
   //            |
   //      -1    0    1
   EXPECT_EQ(interpInds1[0], 8);  // a
-  EXPECT_EQ(interpInds1[1], 1);  // b
-  EXPECT_EQ(interpInds1[2], 9);  // c
-  EXPECT_EQ(interpInds1[3], 0);  // d
+  EXPECT_EQ(interpInds1[1], 9);  // b
+  EXPECT_EQ(interpInds1[2], 1);  // c
+  EXPECT_EQ(interpInds1[3], 3);  // d
 
   // 2nd z slice only has 4 points
   EXPECT_EQ(interpInds2[0], 5);
-  EXPECT_EQ(interpInds2[1], 4);
-  EXPECT_EQ(interpInds2[2], 7);
+  EXPECT_EQ(interpInds2[1], 7);
+  EXPECT_EQ(interpInds2[2], 4);
   EXPECT_EQ(interpInds2[3], 6);
 
+  // Package into variable types for interpolation function
+  Eigen::Vector3f queryPtEigen(queryPt.x, queryPt.y, queryPt.z);
+  Eigen::MatrixXf interpsEigen(8, 3);
+  for (int i = 0; i < interpInds1.size(); ++i)
+  {
+    interpsEigen.row(i) = Eigen::Vector3f(
+      cloud.points[interpInds1[i]].x,
+      cloud.points[interpInds1[i]].y,
+      cloud.points[interpInds1[i]].z);
+  }
+  for (int i = 0; i < interpInds2.size(); ++i)
+  {
+    interpsEigen.row(4 + i) = Eigen::Vector3f(
+      cloud.points[interpInds2[i]].x,
+      cloud.points[interpInds2[i]].y,
+      cloud.points[interpInds2[i]].z);
+  }
+
+  // Data to test interpolation between two z slices
+  std::vector<float> data;
+  data.push_back(   0.0f);  // a
+  data.push_back(  25.0f);  // b
+  data.push_back(  50.0f);  // c
+  data.push_back(   0.0f);  // d
+  // Set values in 2nd z slice very different from those on 1st z slice.
+  // Since query point is entirely on 1st z slice, it should be independent
+  // of values on 2nd z slice.
+  data.push_back(1000.0f);
+  data.push_back(1000.0f);
+  data.push_back(1000.0f);
+  data.push_back(1000.0f);
+
+  // Interpolation function
+  float result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
+  // Result should be among a, b, and c
+  EXPECT_GT(result, 0);
+  EXPECT_LT(result, 50);
+}
+
+/////////////////////////////////////////////////
+// Happens when trilinear interpolation assumption of points being corners of
+// a prism is not satisfied, falls back to hybrid "barylinear" interpolation,
+// i.e. linear interpolation between 3D non-prism quads in two z slices, or the
+// degenerative cases of a 2D triangle, or a 1D line segment.
+// This tests the 1D case from the 2D overloaded BarycentricInterpolate().
+TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear1D)
+{
+  ignition::common::Console::SetVerbosity(4);
+
+  Interpolation interp(TRILINEAR);
+  EXPECT_EQ(interp.Method(), TRILINEAR);
+
+  interp.SetDebug(true);
+  interp.SetDebugMath(false);
+
+  // Inputs to search function
+  float spatialRes = 0.1f;
+  int k = 4;
+  pcl::PointCloud<pcl::PointXYZ> cloud;
+
+  // Populate input cloud
+  // Top-down view (each corner point is 2 points overlapped):
+  //            y
+  //            |
+  //   0 ---*-*-*q--*---- x
+  //            |
+  //       -1   0   1
+  // z view:
+  //     z
+  //    0| * *  *    *
+  //   -2| * *  *    *
+  //
+  // A line at z = 0
+  cloud.points.push_back(pcl::PointXYZ(-1, 0, 0));
+  cloud.points.push_back(pcl::PointXYZ(-0.5, 0, 0));
+  cloud.points.push_back(pcl::PointXYZ( 0, 0, 0));
+  cloud.points.push_back(pcl::PointXYZ( 1, 0, 0));
+  // Same line at z = -2
+  cloud.points.push_back(pcl::PointXYZ(-1, 0, -2));
+  cloud.points.push_back(pcl::PointXYZ(-0.5, 0, -2));
+  cloud.points.push_back(pcl::PointXYZ( 0, 0, -2));
+  cloud.points.push_back(pcl::PointXYZ( 1, 0, -2));
+
+  pcl::PointXYZ queryPt(0.1, 0, 0);
+  // 1st NN is at this index
+  int nnIdx = 2;
+
+  // Return values from trilinear search
+  std::vector<int> interpInds1, interpInds2;
+  std::vector<pcl::PointXYZ> interps1, interps2;
+
+  // Search function. Search neighbors to do trilinear interpolation among
+  interp.FindTrilinearInterpolators(cloud, queryPt, nnIdx, spatialRes,
+    interpInds1, interps1, interpInds2, interps2, k);
+
+  // Check that it finds 2 z slices
+  EXPECT_EQ(interpInds1.size(), 4);
+  EXPECT_EQ(interpInds2.size(), 4);
+  EXPECT_EQ(interps1.size(), 4);
+  EXPECT_EQ(interps2.size(), 4);
+
+  // Check neighbors' indices.
+  // Degenerate into a 1D line.
+  // Top-down view:
+  //            |
+  //   0 ---d-b-aq--c---- x
+  //            |
+  //       -1   0   1
+  EXPECT_EQ(interpInds1[0], 2);  // a
+  EXPECT_EQ(interpInds1[1], 1);  // b
+  EXPECT_EQ(interpInds1[2], 3);  // c
+  EXPECT_EQ(interpInds1[3], 0);  // d
+
+  // 2nd z slice only has 4 points
+  EXPECT_EQ(interpInds2[0], 6);
+  EXPECT_EQ(interpInds2[1], 5);
+  EXPECT_EQ(interpInds2[2], 7);
+  EXPECT_EQ(interpInds2[3], 4);
+
+  // Package into variable types for interpolation function
   Eigen::Vector3f queryPtEigen(queryPt.x, queryPt.y, queryPt.z);
   Eigen::MatrixXf interpsEigen(8, 3);
   for (int i = 0; i < interpInds1.size(); ++i)
@@ -366,8 +623,8 @@ TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
   // Data to test interpolation between two z slices
   std::vector<float> data;
   data.push_back(  50.0f);  // a
-  data.push_back( 100.0f);  // b
-  data.push_back(   0.0f);  // c
+  data.push_back(  25.0f);  // b
+  data.push_back( 100.0f);  // c
   data.push_back(   0.0f);  // d
   // Set values in 2nd z slice very different from those on 1st z slice.
   // Since query point is entirely on 1st z slice, it should be independent
@@ -379,10 +636,8 @@ TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
 
   // Interpolation function
   float result = interp.InterpolateData(queryPtEigen, interpsEigen, data);
-  // Result should be between a and b
+  // Result should be between closest points on the line to q
   EXPECT_GT(result, 50);
   EXPECT_LT(result, 100);
-
-  // TODO Make a query point that is the degenerate 1D line case
 }
 }

@@ -758,7 +758,7 @@ float InterpolationPrivate::TrilinearInterpolate(
         << ") not within tolerance (" << TOLERANCE
         << ") of any of 8 vertices of rectangular prism. "
         << "Using hybrid bary-linear interpolation instead." << std::endl;
-      return this->BaryLinearInterpolate(_p, _xyzs,_values);
+      return this->BaryLinearInterpolate(_p, _xyzs, _values);
     }
   }
 
@@ -820,6 +820,8 @@ float InterpolationPrivate::BarycentricInterpolate(
 
   // Implemented from https://en.wikipedia.org/wiki/Barycentric_coordinate_system#Barycentric_coordinates_on_tetrahedra
 
+  if (this->debugGeneral)
+    igndbg << "BarycentricInterpolate() 3D tetrahedron" << std::endl;
   if (this->debugMath)
     igndbg << "_p: " << std::endl << _p << std::endl;
 
@@ -839,8 +841,9 @@ float InterpolationPrivate::BarycentricInterpolate(
   if (this->debugMath)
     igndbg << "T: " << std::endl << T << std::endl;
 
+  // Count number of rows in T that are all zeros
   int zeroRowCount = 0;
-  bool rowIsZero [3] = {false, false, false};
+  bool rowIsZero[3] = {false, false, false};
   for (int r = 0; r < T.rows(); ++r)
   {
     if ((T.row(r).array().abs() < 1e-6).all())
@@ -946,6 +949,8 @@ float InterpolationPrivate::BarycentricInterpolate(
   const Eigen::Matrix<float, 4, 2> &_xys,
   const std::vector<float> &_values)
 {
+  if (this->debugGeneral)
+    igndbg << "BarycentricInterpolate() 2D triangle" << std::endl;
   if (this->debugMath)
   {
     igndbg << "Query point (_p): " << std::endl << _p << std::endl;
@@ -957,6 +962,8 @@ float InterpolationPrivate::BarycentricInterpolate(
   Eigen::Vector2f lastVert;
   Eigen::Vector2f lambda12;
   float lambda3;
+
+  bool foundTriangle = false;
 
   // Eliminate the correct point, so that we have a triangle that the query
   // point lies within.
@@ -1010,7 +1017,43 @@ float InterpolationPrivate::BarycentricInterpolate(
     // lies within. (A lambda would be negative if point is outside triangle)
     if ((lambda12.array() >= 0).all() && lambda3 >= 0)
     {
+      foundTriangle = true;
       break;
+    }
+  }
+
+  // If no valid triangle found, check if this is a degenerative case
+  if (!foundTriangle)
+  {
+    // Count number of rows in T that are all zeros, to detect degenerative case
+    int zeroRowCount = 0;
+    bool rowIsZero[2] = {false, false};
+    for (int r = 0; r < T.rows(); ++r)
+    {
+      if ((T.row(r).array().abs() < 1e-6).all())
+      {
+        zeroRowCount++;
+        rowIsZero[r] = true;
+      }
+    }
+    // If T has a row of zeros, degenerate to 1D
+    if (zeroRowCount == 1)
+    {
+      if (this->debugGeneral)
+        igndbg << "4 points are on a line. Using 1D interpolation." << std::endl;
+     
+      float p1D;
+      Eigen::VectorXf xys1D(_xys.rows());
+      for (int r = 0; r < T.rows(); ++r)
+      {
+        // Only one row is non-zero
+        if (!rowIsZero[r])
+        {
+          p1D = _p(r);
+          xys1D = _xys.col(r);
+        }
+      }
+      return this->BarycentricInterpolate(p1D, xys1D, _values);
     }
   }
 
@@ -1034,6 +1077,8 @@ float InterpolationPrivate::BarycentricInterpolate(
   const Eigen::VectorXf &_xs,
   const std::vector<float> &_values)
 {
+  if (this->debugGeneral)
+    igndbg << "BarycentricInterpolate() 1D line" << std::endl;
   if (this->debugMath)
   {
     igndbg << "_p: " << std::endl << _p << std::endl;
@@ -1145,8 +1190,9 @@ float InterpolationPrivate::BarycentricInterpolate(
 
   if (this->debugGeneral)
   {
-    igndbg << "ltPWeight: " << ltPWeight << ", gtPWeight: " << gtPWeight
-      << std::endl;
+    igndbg << "ltPWeight " << ltPWeight << " on value " << _values[ltPIdx]
+         << ", gtPWeight " << gtPWeight << " on value " << _values[gtPIdx]
+         << std::endl;
     igndbg << "1D linear interpolation of values " << _values[0] << ", "
       << _values[1] << ", " << _values[2] << ", " << _values[3]
       << " resulted in " << result << std::endl;
