@@ -308,6 +308,16 @@
         </ignition-gui>
         <fsk>tethys</fsk>
       </plugin>
+
+      <!-- Map -->
+      <plugin filename="NavSatMap" name="NavSat Map">
+        <ignition-gui>
+          <title>NavSat Map</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+        <topic>/tethys/navsat</topic>
+        <topic_picker>true</topic_picker>
+      </plugin>
     </gui>
 
     <light type="directional" name="sun">

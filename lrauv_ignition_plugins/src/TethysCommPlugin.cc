@@ -31,6 +31,7 @@
 #include <ignition/msgs/double.pb.h>
 #include <ignition/msgs/empty.pb.h>
 #include <ignition/msgs/header.pb.h>
+#include <ignition/msgs/navsat.pb.h>
 #include <ignition/msgs/time.pb.h>
 #include <ignition/msgs/vector3d.pb.h>
 #include <ignition/plugin/Register.hh>
@@ -243,6 +244,14 @@ void TethysCommPlugin::Configure(
   {
     ignerr << "Error advertising topic [" << this->stateTopic << "]"
       << std::endl;
+  }
+
+  std::string navSatTopic = this->ns + "/navsat";
+  this->navSatPub =
+    this->node.Advertise<ignition::msgs::NavSat>(navSatTopic);
+  if (!this->navSatPub)
+  {
+    ignerr << "Error advertising topic [" << navSatTopic << "]" << std::endl;
   }
 
   SetupControlTopics(ns);
@@ -574,6 +583,12 @@ void TethysCommPlugin::PostUpdate(
   {
     stateMsg.set_latitudedeg_(latlon.value().X());
     stateMsg.set_longitudedeg_(latlon.value().Y());
+
+    // Publish NavSat message to see position on NavSat GUI map
+    ignition::msgs::NavSat navSatMsg;
+    navSatMsg.set_latitude_deg(latlon.value().X());
+    navSatMsg.set_longitude_deg(latlon.value().Y());
+    this->navSatPub.Publish(navSatMsg);
   }
 
   ///////////////////////////////////
