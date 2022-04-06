@@ -50,7 +50,6 @@ namespace tethys {
     public: VolumetricScalarField(
       const pcl::PointCloud<pcl::PointXYZ> &_cloud)
     {
-      pcl::getMinMax3D (_cloud, minPt, maxPt);
       // NOTE: This part of the code assumes an exact grid of points.
       // The grid may be distorted or the stride between different points may
       // not be the same, but fundamentally the data is structured in a grid.

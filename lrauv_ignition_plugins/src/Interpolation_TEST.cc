@@ -50,7 +50,7 @@ TEST(InterpolationTest, SetAndGetMethod)
   interp2.SetMethod(TRILINEAR);
   EXPECT_EQ(interp2.Method(), TRILINEAR);
 }
-
+#if 0
 /////////////////////////////////////////////////
 TEST(InterpolationTest, TrilinearSearchEightPointPrism)
 {
@@ -164,6 +164,7 @@ TEST(InterpolationTest, TrilinearSearchEightPointPrism)
   // TODO Add case where point is to left or right of prism, outside prism, but
   // is in between z slices
 }
+#endif
 
 /////////////////////////////////////////////////
 TEST(InterpolationTest, TrilinearInterpolationInEightPointPrism)
@@ -256,6 +257,8 @@ TEST(InterpolationTest, TrilinearInterpolationInEightPointPrism)
   EXPECT_TRUE(std::isnan(result));
 }
 
+
+#if 0
 /////////////////////////////////////////////////
 // Happens when trilinear interpolation assumption of points being corners of
 // a prism is not satisfied, falls back to hybrid "barylinear" interpolation,
@@ -385,4 +388,5 @@ TEST(InterpolationTest, TrilinearFallbackToHybridBarylinear)
 
   // TODO Make a query point that is the degenerate 1D line case
 }
+#endif
 }

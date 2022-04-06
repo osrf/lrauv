@@ -24,33 +24,6 @@
 #include <gtest/gtest.h>
 using namespace tethys;
 
-TEST(NDArrayLookup, CheckSorting)
-{
-  // Sort this point cloud in accordance to the x, y, z coordinates
-  // Sort along X, then by Y and finally by Z.
-  pcl::PointCloud<pcl::PointXYZ> cloud;
-  cloud.push_back(pcl::PointXYZ(0, 0, 0));
-  cloud.push_back(pcl::PointXYZ(0, 1, 0));
-  cloud.push_back(pcl::PointXYZ(2, 0, 1));
-  cloud.push_back(pcl::PointXYZ(0, 1, 1));
-  cloud.push_back(pcl::PointXYZ(0, 0, 1));
-
-  std::vector<VolumetricScalarField::SortableIndices> indices;
-  for (std::size_t i = 0; i < cloud.size(); ++i)
-  {
-    VolumetricScalarField::SortableIndices si;
-    si.index = i;
-    si.location = cloud[i];
-    indices.push_back(si);
-  }
-  std::sort(indices.begin(), indices.end());
-
-  std::vector expected{0,1,4,2,3};
-  for (std::size_t i = 0; i < indices.size(); ++i)
-  {
-    EXPECT_EQ(expected[i], indices[i].index);
-  }
-}
 
 TEST(NDArrayLookup, CheckInterpolationExact)
 {

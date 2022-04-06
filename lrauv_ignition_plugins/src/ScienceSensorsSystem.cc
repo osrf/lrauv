@@ -37,6 +37,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/octree/octree_search.h>
 
+#include "science/NDArrayLookup.hh"
 #include "Interpolation.hh"
 #include "ScienceSensorsSystem.hh"
 
@@ -195,6 +196,9 @@ class tethys::ScienceSensorsSystemPrivate
   /// Point cloud: spatial coordinates to index science data by location
   /// in the ENU world frame.
   public: std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> timeSpaceCoords;
+
+  /// \brief Spatial coordinate index of data for fast lookup.
+  public: std::vector<VolumetricScalarField> timeSpaceCoordsIndex;
 
   /// \brief Resolution of spatial coordinates in meters in octree, for data
   /// search.
@@ -429,6 +433,7 @@ void ScienceSensorsSystemPrivate::ReadData(
           auto newCloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(
               new pcl::PointCloud<pcl::PointXYZ>);
           this->timeSpaceCoords.push_back(newCloud->makeShared());
+
           // Is this valid memory management?
           this->temperatureArr.push_back(std::vector<float>());
           this->salinityArr.push_back(std::vector<float>());
@@ -504,17 +509,16 @@ void ScienceSensorsSystemPrivate::ReadData(
       if (!std::isnan(latitude) && !std::isnan(longitude) && !std::isnan(depth))
       {
         // Convert lat / lon / elevation to Cartesian ENU
-        auto cart = this->world.SphericalCoordinates(_ecm).value()
-            .PositionTransform({IGN_DTOR(latitude), IGN_DTOR(longitude), 0.0},
-            ignition::math::SphericalCoordinates::SPHERICAL,
-            ignition::math::SphericalCoordinates::LOCAL2);
+        //auto cart = this->world.SphericalCoordinates(_ecm).value()
+        //    .PositionTransform({IGN_DTOR(latitude), IGN_DTOR(longitude), 0.0},
+        //    ignition::math::SphericalCoordinates::SPHERICAL,
+        //    ignition::math::SphericalCoordinates::LOCAL2);
         // Flip sign of z, because positive depth is negative z.
-        cart.Z() = -depth;
 
         // Gather spatial coordinates, 3 fields in the line, into point cloud
         // for indexing this time slice of data.
         this->timeSpaceCoords[lineTimeIdx]->push_back(
-          pcl::PointXYZ(cart.X(), cart.Y(), cart.Z()));
+          pcl::PointXYZ(latitude, longitude, depth));
 
         // Populate science data
         this->temperatureArr[lineTimeIdx].push_back(temp);
@@ -539,6 +543,8 @@ void ScienceSensorsSystemPrivate::ReadData(
 
   for (int i = 0; i < this->timeSpaceCoords.size(); i++)
   {
+    this->timeSpaceCoordsIndex.emplace_back(*this->timeSpaceCoords[i]);
+
     igndbg << "At time slice " << this->timestamps[i] << ", populated "
            << this->timeSpaceCoords[i]->size()
            << " spatial coordinates." << std::endl;
@@ -808,44 +814,6 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         << std::round(searchPoint.z * 1000.0) / 1000.0 << std::endl;
     }
 
-    // If there are any nodes in the octree, search in octree to find spatial
-    // index of science data
-    if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]->getLeafCount()
-      > 0)
-    {
-      break;
-    }
-
-    IGN_PROFILE("ScienceSensorsSystem::PostUpdate nearestKSearch");
-
-    // kNN search (alternatives are voxel search and radius search. kNN
-    // search is good for variable resolution when the distance to the next
-    // neighbor is unknown).
-    // Search for nearest neighbors
-    if (this->dataPtr->spatialOctrees[this->dataPtr->timeIdx]
-      ->nearestKSearch(searchPoint, initK, spatialInds, spatialSqrDists) <= 0)
-    {
-      ignwarn << "Not enough data found near sensor location " << sensorPosENU
-        << std::endl;
-      continue;
-    }
-    // Debug output
-    else if (this->dataPtr->interpolation.Debug())
-    {
-      for (std::size_t i = 0; i < spatialInds.size(); i++)
-      {
-        // Index the point cloud at the current time slice
-        pcl::PointXYZ nbrPt = this->dataPtr->timeSpaceCoords[
-          this->dataPtr->timeIdx]->at(spatialInds[i]);
-
-        igndbg << "Neighbor at ("
-          << std::round(nbrPt.x * 1000) / 1000.0 << ", "
-          << std::round(nbrPt.y * 1000) / 1000.0 << ", "
-          << std::round(nbrPt.z * 1000) / 1000.0
-          << "), squared distance " << spatialSqrDists[i]
-          << " m" << std::endl;
-      }
-    }
     reinterpolate = true;
 
     if (this->dataPtr->interpolation.Method() == TRILINEAR)
@@ -863,7 +831,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
 
       // Find 2 sets of 4 nearest neighbors, each set on a different z slice,
       // to use as inputs for trilinear interpolation
-      std::vector<pcl::PointXYZ> interpolatorsSlice1, interpolatorsSlice2;
+      /*std::vector<pcl::PointXYZ> interpolatorsSlice1, interpolatorsSlice2;
       std::vector<int> interpolatorInds1, interpolatorInds2;
       this->dataPtr->interpolation.FindTrilinearInterpolators(
         *(this->dataPtr->timeSpaceCoords[this->dataPtr->timeIdx]),
@@ -895,6 +863,19 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       for (int i = 0; i < interpolatorInds2.size(); ++i)
       {
         interpolatorInds.push_back(interpolatorInds2[i]);
+      }*/
+
+      auto pos = this->dataPtr->world.SphericalCoordinates(_ecm)->LocalFromSphericalPosition({searchPoint.x, searchPoint.y, searchPoint.z});
+
+      pcl::PointXYZ searchLatLon {pos.X(), pos.Y(), -searchPoint.z};
+      auto indices = this->dataPtr->timeSpaceCoordsIndex[this->dataPtr->timeIdx].GetInterpolators(searchLatLon);
+
+      for (auto index : indices)
+      {
+        if (index.has_value())
+        {
+          interpolatorInds.push_back(index.value());
+        }
       }
     }
     else if (this->dataPtr->interpolation.Method() == BARYCENTRIC)

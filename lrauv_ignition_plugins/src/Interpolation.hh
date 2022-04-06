@@ -71,16 +71,16 @@ class Interpolation
   /// among
   /// \param[in] _k Number of nearest neighbors. Default to 4, for trilinear
   /// interpolation between two z slices of 4 points per slice.
-  public: void FindTrilinearInterpolators(
-    pcl::PointCloud<pcl::PointXYZ> &_cloud,
-    pcl::PointXYZ &_queryPt,
-    int _nnIdx,
-    float _spatialRes,
-    std::vector<int> &_interpolatorInds1,
-    std::vector<pcl::PointXYZ> &_interpolators1,
-    std::vector<int> &_interpolatorInds2,
-    std::vector<pcl::PointXYZ> &_interpolators2,
-    int _k=4);
+  //public: void FindTrilinearInterpolators(
+  //  pcl::PointCloud<pcl::PointXYZ> &_cloud,
+  //  pcl::PointXYZ &_queryPt,
+  //  int _nnIdx,
+  //  float _spatialRes,
+  //  std::vector<int> &_interpolatorInds1,
+  //  std::vector<pcl::PointXYZ> &_interpolators1,
+  //  std::vector<int> &_interpolatorInds2,
+  //  std::vector<pcl::PointXYZ> &_interpolators2,
+  //  int _k=4);
 
   /// \brief Interpolate among existing science data to output an estimated
   /// reading at the current sensor location.
@@ -285,6 +285,7 @@ void Interpolation::SetMethod(InterpolationMethod _method)
 }
 
 /////////////////////////////////////////////////
+/*
 void Interpolation::FindTrilinearInterpolators(
   pcl::PointCloud<pcl::PointXYZ> &_cloud,
   pcl::PointXYZ &_queryPt,
@@ -486,7 +487,7 @@ void Interpolation::FindTrilinearInterpolators(
   //   for (int i = 0; i < _interpolatorInds2.size(); ++i)
   //     igndbg << _interpolatorInds2[i] << " " << std::endl;
   // }
-}
+}*/
 
 /////////////////////////////////////////////////
 float Interpolation::InterpolateData(
