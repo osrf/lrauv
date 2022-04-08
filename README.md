@@ -511,24 +511,6 @@ And with levels:
 
 ![portuguese_ledge_no_levels](https://user-images.githubusercontent.com/5751272/159813230-809d1cad-b3f5-457a-af19-3752bec0710f.gif)
 
-#### Generating Portuguese Ledge world
-
-The generated file is committed to the repository. Whenever it is changed, a
-manual step is needed to regenerate it.
-
-Pre-requisites:
-
-```
-sudo apt install python3-empy
-```
-
-Generate:
-
-```
-cd lrauv_ignition_plugins/worlds
-python3 portuguese_ledge.py
-```
-
 ### Troubleshoot
 
 After issuing control commands, for example, rudder and thrust, if you then

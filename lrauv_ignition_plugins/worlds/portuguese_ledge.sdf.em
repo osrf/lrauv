@@ -382,7 +382,7 @@ for tile in tiles:
       <direction>-0.5 0.1 -0.9</direction>
     </light>
 
-@[for tile in tiles[:18]]@
+@[for tile in tiles]@
     <model name="portuguese_ledge_tile_@(tile.index)">
       <static>true</static>
       <link name="link">
