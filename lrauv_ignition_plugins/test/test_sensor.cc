@@ -98,6 +98,8 @@ TEST(SensorTest, Sensor)
   }
   ASSERT_LE(sleep, maxSleep);
 
+  double spawnDepth{50};
+
   // No specific orientation, vehicle will face North
   ignition::math::Angle lat1 = IGN_DTOR(36.7999992370605);
   ignition::math::Angle lon1 = IGN_DTOR(-122.720001220703);
@@ -106,6 +108,7 @@ TEST(SensorTest, Sensor)
     spawnMsg.mutable_id_()->set_data("vehicle1");
     spawnMsg.set_initlat_(lat1.Degree());
     spawnMsg.set_initlon_(lon1.Degree());
+    spawnMsg.set_initz_(spawnDepth);
     spawnMsg.set_acommsaddress_(201);
 
     spawnPub.Publish(spawnMsg);
@@ -142,7 +145,7 @@ TEST(SensorTest, Sensor)
 
   EXPECT_NEAR(lat1.Degree(), latLon1.back().X(), tightTol);
   EXPECT_NEAR(lon1.Degree(), latLon1.back().Y(), tightTol);
-  EXPECT_NEAR(0.0, latLon1.back().Z(), tightTol);
+  EXPECT_NEAR(-spawnDepth, latLon1.back().Z(), tightTol);
 
   // Higher tolerance for lat/lon because of the conversions
   double latLonTol{2e-2};

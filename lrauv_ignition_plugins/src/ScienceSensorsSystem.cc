@@ -667,6 +667,11 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   // to generate data for that sensor.
   for (auto &[entity, sensor] : this->entitySensorMap)
   {
+    auto sensorPosENU = ignition::gazebo::worldPose(entity, _ecm).Pos();
+    auto spherical =
+      this->dataPtr->world.SphericalCoordinates(_ecm)
+        ->SphericalFromLocalPosition(sensorPosENU);
+
     // For the correct sensor, interpolate using nearby locations with data
     if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
     {
