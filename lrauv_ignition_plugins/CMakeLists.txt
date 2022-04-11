@@ -274,6 +274,7 @@ if(BUILD_TESTING)
     test_mission_pitch_mass
     test_mission_yoyo_circle
     test_rudder
+    test_sensor
     test_spawn
     test_state_msg)
 

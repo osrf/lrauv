@@ -170,8 +170,14 @@ class tethys::ScienceSensorsSystemPrivate
   /// this->timestamps.
   /// Point cloud: spatial coordinates to index science data by location
   /// in the ENU world frame.
-  /// TODO(arjo): remove dependence on PCL
+  /// TODO(arjo): remove dependence on PCL. We literally are only using it for
+  /// the visuallization.
   public: std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> timeSpaceCoords;
+
+  /// \brief Spatial index of data.
+  /// Vector size: number of time slices. Indices correspond to those of
+  public: std::vector<ignition::math::VolumetricGridLookupField<double>>
+    timeSpaceIndex;
 
   /// \brief Science data.
   /// Outer vector size: number of time slices. Indices correspond to those of
@@ -495,6 +501,17 @@ void ScienceSensorsSystemPrivate::ReadData(
     igndbg << "At time slice " << this->timestamps[i] << ", populated "
            << this->timeSpaceCoords[i]->size()
            << " spatial coordinates." << std::endl;
+    // This is fairly inefficient but overall I'd like to eleminate PCL as a
+    // dependency.
+    std::vector<ignition::math::Vector3d> points;
+    for (int j = 0; j < this->timeSpaceCoords[i]->size(); j++)
+    {
+      points.push_back(
+        ignition::math::Vector3d(this->timeSpaceCoords[i]->at(j).x,
+                                 this->timeSpaceCoords[i]->at(j).y,
+                                 this->timeSpaceCoords[i]->at(j).z));
+    }
+    this->timeSpaceIndex.emplace_back(points);
   }
 }
 
@@ -671,7 +688,14 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     auto spherical =
       this->dataPtr->world.SphericalCoordinates(_ecm)
         ->SphericalFromLocalPosition(sensorPosENU);
+    auto sphericalDepthCorrected = ignition::math::Vector3d{spherical.X(), spherical.Y(),
+      -spherical.Z()};
+    auto interpolators =
+      this->dataPtr->timeSpaceIndex[this->dataPtr->timeIdx].GetInterpolators(
+        sphericalDepthCorrected);
 
+    igndbg << "Got " << interpolators.size() << "interpolators at" << sphericalDepthCorrected
+           << std::endl;
     // For the correct sensor, interpolate using nearby locations with data
     if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
     {
