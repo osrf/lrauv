@@ -1,0 +1,375 @@
+<?xml version="1.0" ?>
+<!--
+  Development of this module has been funded by the Monterey Bay Aquarium
+  Research Institute (MBARI) and the David and Lucile Packard Foundation
+-->
+<sdf version="1.6">
+  <world name="buoyant_tethys">
+    <scene>
+      <!-- For turquoise ambient to match particle effect -->
+      <ambient>0.0 1.0 1.0</ambient>
+      <!-- For default gray ambient -->
+      <!--background>0.8 0.8 0.8</background-->
+      <background>0.0 0.7 0.8</background>
+
+      <grid>false</grid>
+    </scene>
+
+    <physics name="1ms" type="dart">
+      <max_step_size>0.02</max_step_size>
+      <real_time_factor>0</real_time_factor>
+    </physics>
+    <plugin
+      filename="ignition-gazebo-physics-system"
+      name="ignition::gazebo::systems::Physics">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-user-commands-system"
+      name="ignition::gazebo::systems::UserCommands">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-scene-broadcaster-system"
+      name="ignition::gazebo::systems::SceneBroadcaster">
+    </plugin>
+
+    <plugin
+      filename="ignition-gazebo-imu-system"
+      name="ignition::gazebo::systems::Imu">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-magnetometer-system"
+      name="ignition::gazebo::systems::Magnetometer">
+    </plugin>
+    <plugin
+      filename="ignition-gazebo-buoyancy-system"
+      name="ignition::gazebo::systems::Buoyancy">
+      <graded_buoyancy>
+        <default_density>1025</default_density>
+        <density_change>
+          <above_depth>0.5</above_depth>
+          <density>1.125</density>
+        </density_change>
+      </graded_buoyancy>
+    </plugin>
+
+    <!-- Spawn by default in a location with science data in csv -->
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+
+      <!-- For 2003080103_mb_l3_las.csv -->
+      <latitude_deg>35.5999984741211</latitude_deg>
+      <longitude_deg>-121.779998779297</longitude_deg>
+
+      <!-- For 2003080103_mb_l3_las_1x1km.csv -->
+      <!--latitude_deg>36.8024781413352</latitude_deg>
+      <longitude_deg>-121.829647676843</longitude_deg-->
+
+      <!-- For simple_test.csv -->
+      <!--latitude_deg>0</latitude_deg>
+      <longitude_deg>0</longitude_deg-->
+
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+    <!-- Brought from https://github.com/ignitionrobotics/sdformat/blob/1acea10dab1cf0c3fa2583f3e2bfd0a8d14ea340/src/World.cc#L75-L76 -->
+    <magnetic_field>5.5645e-6 22.8758e-6 -42.3884e-6</magnetic_field>
+
+    <plugin
+      filename="ignition-gazebo-wind-effects-system"
+      name="ignition::gazebo::systems::WindEffects">
+      <force_approximation_scaling_factor>
+        <!-- No wind below sea surface -->
+        <when zlt="-0.5">0</when>
+        <!-- NOTE(hidmic): enable wind forces slightly
+             below sea surface for the partially submerged
+             vehicle hull to be affected by them -->
+        <when zge="-0.5">0.1</when>
+      </force_approximation_scaling_factor>
+      <horizontal>
+        <magnitude>
+          <time_for_rise>1</time_for_rise>
+          <sin>
+            <amplitude_percent>0.05</amplitude_percent>
+            <period>60</period>
+          </sin>
+        </magnitude>
+        <direction>
+          <time_for_rise>1</time_for_rise>
+          <sin>
+            <amplitude>5</amplitude>
+            <period>20</period>
+          </sin>
+        </direction>
+      </horizontal>
+    </plugin>
+    <wind>
+      <!-- Wind is calm, blowing East -->
+      <linear_velocity>1 0 0</linear_velocity>
+    </wind>
+
+    <gui fullscreen="0">
+
+      <!-- 3D scene -->
+      <plugin filename="MinimalScene" name="3D View">
+        <ignition-gui>
+          <title>3D View</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="string" key="state">docked</property>
+        </ignition-gui>
+
+        <engine>ogre2</engine>
+        <scene>scene</scene>
+        <ambient_light>0.4 0.4 0.4</ambient_light>
+        <background_color>0.8 0.8 0.8</background_color>
+        <!-- looking at robot -->
+        <camera_pose>4.5 0 4  0 0.45 3.14</camera_pose>
+        <!-- looking at all science data for 2003080103_mb_l3_las.csv -->
+        <!--camera_pose>-50000 -30000 250000 0 1.1 1.58</camera_pose-->
+        <camera_clip>
+          <!-- ortho view needs low near clip -->
+          <!-- but a very low near clip messes orbit's far clip ?! -->
+          <near>0.1</near>
+          <!-- See 3000 km away -->
+          <far>3000000</far>
+        </camera_clip>
+      </plugin>
+
+      <!-- Plugins that add functionality to the scene -->
+      <plugin filename="EntityContextMenuPlugin" name="Entity context menu">
+        <ignition-gui>
+          <property key="state" type="string">floating</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="GzSceneManager" name="Scene Manager">
+        <ignition-gui>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="InteractiveViewControl" name="Interactive view control">
+        <ignition-gui>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="CameraTracking" name="Camera Tracking">
+        <ignition-gui>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="MarkerManager" name="Marker manager">
+        <ignition-gui>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </ignition-gui>
+        <warn_on_action_failure>false</warn_on_action_failure>
+      </plugin>
+      <plugin filename="SelectEntities" name="Select Entities">
+        <ignition-gui>
+          <anchors target="Select entities">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="VisualizationCapabilities" name="Visualization Capabilities">
+        <ignition-gui>
+          <anchors target="Select entities">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </ignition-gui>
+      </plugin>
+
+      <!-- World control -->
+      <plugin filename="WorldControl" name="World control">
+        <ignition-gui>
+          <title>World control</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">false</property>
+          <property type="double" key="height">72</property>
+          <property type="double" key="width">121</property>
+          <property type="double" key="z">1</property>
+
+          <property type="string" key="state">floating</property>
+          <anchors target="3D View">
+            <line own="left" target="left"/>
+            <line own="bottom" target="bottom"/>
+          </anchors>
+        </ignition-gui>
+
+        <play_pause>true</play_pause>
+        <step>true</step>
+        <start_paused>true</start_paused>
+      </plugin>
+
+      <!-- World statistics -->
+      <plugin filename="WorldStats" name="World stats">
+        <ignition-gui>
+          <title>World stats</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">false</property>
+          <property type="double" key="height">110</property>
+          <property type="double" key="width">290</property>
+          <property type="double" key="z">1</property>
+
+          <property type="string" key="state">floating</property>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="bottom" target="bottom"/>
+          </anchors>
+        </ignition-gui>
+
+        <sim_time>true</sim_time>
+        <real_time>true</real_time>
+        <real_time_factor>true</real_time_factor>
+        <iterations>true</iterations>
+      </plugin>
+
+      <plugin filename="Plot3D" name="Plot 3D">
+        <ignition-gui>
+          <title>Plot Tethys 3D path</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+        <entity_name>tethys</entity_name>
+        <color>0 0 1</color>
+        <maximum_points>10000</maximum_points>
+        <minimum_distance>0.5</minimum_distance>
+      </plugin>
+      <plugin filename="ComponentInspector" name="Component Inspector">
+        <ignition-gui>
+          <title>Inspector</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="PointCloud" name="Visualize science data">
+        <ignition-gui>
+          <title>Visualize science data</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="ViewAngle" name="Camera controls">
+        <ignition-gui>
+          <title>Camera controls</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="GridConfig" name="Grid config">
+        <ignition-gui>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+        <insert>
+          <!-- 300 km x 300 km -->
+          <cell_count>6</cell_count>
+          <vertical_cell_count>0</vertical_cell_count>
+          <!-- 50 km -->
+          <cell_length>50000</cell_length>
+          <pose>0 100000 0  0 0 0.32</pose>
+          <color>0 1 0 1</color>
+        </insert>
+        <insert>
+          <!-- 0.1 km x 0.1 km -->
+          <cell_count>100</cell_count>
+          <vertical_cell_count>0</vertical_cell_count>
+          <!-- 1 m -->
+          <cell_length>1</cell_length>
+          <pose>0 0 0  0 0 0</pose>
+          <color>0.5 0.5 0.5 1</color>
+        </insert>
+      </plugin>
+      <plugin filename="ControlPanelPlugin" name="Tethys Controls">
+        <ignition-gui>
+          <title>Tethys controls</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+      </plugin>
+      <plugin filename="ReferenceAxis" name="Reference axis">
+        <ignition-gui>
+          <title>Reference axis</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+        <fsk>tethys</fsk>
+      </plugin>
+    </gui>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>0.5 0.5 0.5 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- This invisible plane helps with orbiting the camera, especially at large scales -->
+    <model name="horizontal_plane">
+      <static>true</static>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <!-- 300 km x 300 km -->
+              <size>300000 300000</size>
+            </plane>
+          </geometry>
+          <transparency>1.0</transparency>
+        </visual>
+      </link>
+    </model>
+
+    <include>
+      <pose>0 0 0 0 0 0</pose>
+      <uri>tethys_equipped</uri>
+    </include>
+
+  </world>
+</sdf>
