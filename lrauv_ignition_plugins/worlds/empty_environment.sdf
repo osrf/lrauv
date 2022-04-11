@@ -46,7 +46,7 @@
     </plugin>
     <plugin
       filename="ignition-gazebo-buoyancy-system"
-      name="ignition::gazebo::systems::Buoyancy">        
+      name="ignition::gazebo::systems::Buoyancy">
       <graded_buoyancy>
         <default_density>1025</default_density>
         <density_change>
