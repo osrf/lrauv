@@ -38,7 +38,8 @@ using namespace std::chrono_literals;
 
 void ChlorophyllCb(const ignition::msgs::Float &_msg)
 {
-  igndbg << "got reading " << _msg.data() << std::endl;
+  // 0.22934943324714 is the value at this point. Allow some noise.
+  EXPECT_NEAR(_msg.data(), 0.229, 0.001);
 }
 
 //////////////////////////////////////////////////
@@ -150,6 +151,6 @@ TEST(SensorTest, Sensor)
   // Higher tolerance for lat/lon because of the conversions
   double latLonTol{2e-2};
 
-  fixture->Server()->Run(true, 1000, false);
+  fixture->Server()->Run(true, 10000, false);
 
 }

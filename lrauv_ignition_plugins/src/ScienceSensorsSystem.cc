@@ -684,6 +684,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   // to generate data for that sensor.
   for (auto &[entity, sensor] : this->entitySensorMap)
   {
+    IGN_PROFILE("ScienceSensorsSystem::LookupInterpolators");
     auto sensorPosENU = ignition::gazebo::worldPose(entity, _ecm).Pos();
     auto spherical =
       this->dataPtr->world.SphericalCoordinates(_ecm)
@@ -694,18 +695,35 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       this->dataPtr->timeSpaceIndex[this->dataPtr->timeIdx].GetInterpolators(
         sphericalDepthCorrected);
 
-    igndbg << "Got " << interpolators.size() << "interpolators at" << sphericalDepthCorrected
-           << std::endl;
+    ///igndbg << "Got " << interpolators.size() << "interpolators at" << sphericalDepthCorrected
+    ///       << std::endl
+    ///       << "The interpolators are at: ";
+    ///for (auto &interpolator : interpolators)
+    ///{
+    ///  if (interpolator.has_value())
+    ///    igndbg << this->dataPtr->timeSpaceCoords[this->dataPtr->timeIdx]->at(interpolator.value()).x << ", "
+    ///      << this->dataPtr->timeSpaceCoords[this->dataPtr->timeIdx]->at(interpolator.value()).y << ", "
+    ///      << this->dataPtr->timeSpaceCoords[this->dataPtr->timeIdx]->at(interpolator.value()).z << std::endl;
+    ///}
     // For the correct sensor, interpolate using nearby locations with data
+
+    //TODO(arjo): Replace with interpolation code.
+    //For now just report some measurement.
+    IGN_PROFILE("ScienceSensorsSystem::Interpolation");
+    if (interpolators.size() == 0) return;
+    if (!interpolators[0].has_value()) return;
+
     if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
     {
-      float sal =0;
+      float sal =
+        this->dataPtr->salinityArr[this->dataPtr->timeIdx][interpolators[0].value()];
       casted->SetData(sal);
     }
     else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
       sensor))
     {
-      float temp = 100;
+      float temp =
+        this->dataPtr->temperatureArr[this->dataPtr->timeIdx][interpolators[0].value()];
       ignition::math::Temperature tempC;
       tempC.SetCelsius(temp);
       casted->SetData(tempC);
@@ -713,13 +731,15 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
       sensor))
     {
-      float chlor = 500;
+      float chlor =
+        this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx][interpolators[0].value()];
       casted->SetData(chlor);
     }
     else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(
       sensor))
     {
-      float nCurr = 0, eCurr = 0;
+      float nCurr = this->dataPtr->northCurrentArr[this->dataPtr->timeIdx][interpolators[0].value()];
+      float eCurr = this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx][interpolators[0].value()];
       auto curr = ignition::math::Vector3d(eCurr, nCurr, 0.0);
       casted->SetData(curr);
     }
