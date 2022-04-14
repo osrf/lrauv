@@ -705,19 +705,19 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     //For now just report some measurement.
     IGN_PROFILE("ScienceSensorsSystem::Interpolation");
     if (interpolators.size() == 0) return;
-    if (!interpolators[0].has_value()) return;
+    if (!interpolators[0].index.has_value()) return;
 
     if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
     {
       const float sal =
-        this->dataPtr->salinityArr[this->dataPtr->timeIdx][interpolators[0].value()];
+        this->dataPtr->salinityArr[this->dataPtr->timeIdx][interpolators[0].index.value()];
       casted->SetData(sal);
     }
     else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
       sensor))
     {
       const float temp =
-        this->dataPtr->temperatureArr[this->dataPtr->timeIdx][interpolators[0].value()];
+        this->dataPtr->temperatureArr[this->dataPtr->timeIdx][interpolators[0].index.value()];
       ignition::math::Temperature tempC;
       tempC.SetCelsius(temp);
       casted->SetData(tempC);
@@ -726,14 +726,14 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       sensor))
     {
       const float chlor =
-        this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx][interpolators[0].value()];
+        this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx][interpolators[0].index.value()];
       casted->SetData(chlor);
     }
     else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(
       sensor))
     {
-      const float nCurr = this->dataPtr->northCurrentArr[this->dataPtr->timeIdx][interpolators[0].value()];
-      const float eCurr = this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx][interpolators[0].value()];
+      const float nCurr = this->dataPtr->northCurrentArr[this->dataPtr->timeIdx][interpolators[0].index.value()];
+      const float eCurr = this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx][interpolators[0].index.value()];
       auto curr = ignition::math::Vector3d(eCurr, nCurr, 0.0);
       casted->SetData(curr);
     }
