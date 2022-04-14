@@ -237,6 +237,20 @@ configure_file(
 )
 
 #============================================================================
+# World generation
+set(WORLD_NAME "portuguese_ledge")
+add_custom_command(
+  OUTPUT world_gen_cmd
+  COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/worlds/empy_expander.py
+  ${CMAKE_CURRENT_SOURCE_DIR}/worlds/${WORLD_NAME}.sdf.em
+  ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME}.sdf
+)
+
+add_custom_target(world_gen_target ALL
+  DEPENDS world_gen_cmd
+)
+
+#============================================================================
 # Tests
 if(BUILD_TESTING)
 

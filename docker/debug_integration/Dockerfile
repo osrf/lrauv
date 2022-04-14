@@ -38,6 +38,7 @@ RUN apt-get update \
         lsb-release \
         tzdata \
         wget \
+        python3-empy \
         python3-numpy
 
 # Add Ignition's latest packages, which may be more up-to-date than the ones from the MBARI image
@@ -47,7 +48,7 @@ RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable
 
 # Install the latest Ignition binaries
 RUN apt-get -qq update && apt-get -q -y install \
-  ignition-garden python3-numpy
+  ignition-garden
 
 # Install PCL
 RUN apt-get update \
