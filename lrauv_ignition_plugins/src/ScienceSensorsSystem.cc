@@ -673,12 +673,6 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   // Sensor position to interpolate for
   ignition::math::Vector3d sensorPosENU;
 
-  // Indices and distances of neighboring points to sensor position
-  std::vector<int> spatialIdx;
-  std::vector<float> spatialSqrDist;
-
-  // Positions of neighbors to use in interpolation
-  std::vector<pcl::PointXYZ> interpolatorXYZs;
 
   // For each sensor, interpolate using existing data at neighboring positions,
   // to generate data for that sensor.
@@ -715,14 +709,14 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
 
     if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
     {
-      float sal =
+      const float sal =
         this->dataPtr->salinityArr[this->dataPtr->timeIdx][interpolators[0].value()];
       casted->SetData(sal);
     }
     else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
       sensor))
     {
-      float temp =
+      const float temp =
         this->dataPtr->temperatureArr[this->dataPtr->timeIdx][interpolators[0].value()];
       ignition::math::Temperature tempC;
       tempC.SetCelsius(temp);
@@ -731,15 +725,15 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
       sensor))
     {
-      float chlor =
+      const float chlor =
         this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx][interpolators[0].value()];
       casted->SetData(chlor);
     }
     else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(
       sensor))
     {
-      float nCurr = this->dataPtr->northCurrentArr[this->dataPtr->timeIdx][interpolators[0].value()];
-      float eCurr = this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx][interpolators[0].value()];
+      const float nCurr = this->dataPtr->northCurrentArr[this->dataPtr->timeIdx][interpolators[0].value()];
+      const float eCurr = this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx][interpolators[0].value()];
       auto curr = ignition::math::Vector3d(eCurr, nCurr, 0.0);
       casted->SetData(curr);
     }
