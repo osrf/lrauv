@@ -30,7 +30,7 @@
 #include <ignition/math/Temperature.hh>
 #include <ignition/transport/Node.hh>
 
-#include "lrauv_init.pb.h"
+#include "lrauv_ignition_plugins/lrauv_init.pb.h"
 
 namespace tethys
 {

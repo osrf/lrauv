@@ -5,21 +5,21 @@
 
 add_subdirectory(models/)
 
-add_library(CommsSupport SHARED CommsPacket.cc)
+add_library(acoustic_comms_support SHARED CommsPacket.cc)
 
-target_link_libraries(CommsSupport
-PUBLIC
+target_link_libraries(acoustic_comms_support PUBLIC
   ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
   ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-)
-target_include_directories(CommsSupport 
-  PUBLIC ../../include/
-  PUBLIC ${CMAKE_BINARY_DIR}/proto)
-add_dependencies(CommsSupport
   lrauv_acoustic_message
-  lrauv_internal_comms)
+  lrauv_internal_comms
+)
+target_include_directories(acoustic_comms_support PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
 
 install(
-  TARGETS CommsSupport
+  TARGETS acoustic_comms_support
+  EXPORT ${PROJECT_NAME}
   DESTINATION lib
 )
