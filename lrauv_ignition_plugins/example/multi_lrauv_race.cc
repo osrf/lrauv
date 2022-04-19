@@ -33,7 +33,7 @@
 
 #include <ignition/msgs.hh>
 #include <ignition/transport.hh>
-#include "lrauv_command.pb.h"
+#include "lrauv_ignition_plugins/lrauv_command.pb.h"
 
 // Fin joint limits from tethys model.sdf
 double random_angle_within_limits(double min=-0.261799, double max=0.261799)
