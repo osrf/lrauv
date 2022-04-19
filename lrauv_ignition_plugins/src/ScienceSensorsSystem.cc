@@ -685,20 +685,10 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         ->SphericalFromLocalPosition(sensorPosENU);
     auto sphericalDepthCorrected = ignition::math::Vector3d{spherical.X(), spherical.Y(),
       -spherical.Z()};
-    auto interpolators =
-      this->dataPtr->timeSpaceIndex[this->dataPtr->timeIdx].GetInterpolators(
-        sphericalDepthCorrected);
 
-    ///igndbg << "Got " << interpolators.size() << "interpolators at" << sphericalDepthCorrected
-    ///       << std::endl
-    ///       << "The interpolators are at: ";
-    ///for (auto &interpolator : interpolators)
-    ///{
-    ///  if (interpolator.has_value())
-    ///    igndbg << this->dataPtr->timeSpaceCoords[this->dataPtr->timeIdx]->at(interpolator.value()).x << ", "
-    ///      << this->dataPtr->timeSpaceCoords[this->dataPtr->timeIdx]->at(interpolator.value()).y << ", "
-    ///      << this->dataPtr->timeSpaceCoords[this->dataPtr->timeIdx]->at(interpolator.value()).z << std::endl;
-    ///}
+    const auto& timeslice = this->dataPtr->timeSpaceIndex[this->dataPtr->timeIdx];
+    auto interpolators = timeslice.GetInterpolators(sphericalDepthCorrected);
+
     // For the correct sensor, interpolate using nearby locations with data
 
     //TODO(arjo): Replace with interpolation code.
@@ -709,33 +699,60 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
 
     if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
     {
-      const float sal =
-        this->dataPtr->salinityArr[this->dataPtr->timeIdx][interpolators[0].index.value()];
-      casted->SetData(sal);
+      const auto sal = timeslice.EstimateValueUsingTrilinear(
+        interpolators,
+        sphericalDepthCorrected,
+        this->dataPtr->salinityArr[this->dataPtr->timeIdx]
+      );
+
+      if (sal.has_value())
+        casted->SetData(sal.value());
     }
     else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
       sensor))
     {
-      const float temp =
-        this->dataPtr->temperatureArr[this->dataPtr->timeIdx][interpolators[0].index.value()];
-      ignition::math::Temperature tempC;
-      tempC.SetCelsius(temp);
-      casted->SetData(tempC);
+      const auto temp = timeslice.EstimateValueUsingTrilinear(
+          interpolators,
+          sphericalDepthCorrected,
+          this->dataPtr->temperatureArr[this->dataPtr->timeIdx]
+        );
+
+      if (temp.has_value())
+      {
+        ignition::math::Temperature tempC;
+        tempC.SetCelsius(temp.value());
+        casted->SetData(tempC);
+      }
     }
     else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
       sensor))
     {
-      const float chlor =
-        this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx][interpolators[0].index.value()];
-      casted->SetData(chlor);
+      const auto chlor = timeslice.EstimateValueUsingTrilinear(
+          interpolators,
+          sphericalDepthCorrected,
+          this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx]
+        );
+      if (chlor.has_value())
+        casted->SetData(chlor.value());
     }
     else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(
       sensor))
     {
-      const float nCurr = this->dataPtr->northCurrentArr[this->dataPtr->timeIdx][interpolators[0].index.value()];
-      const float eCurr = this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx][interpolators[0].index.value()];
-      auto curr = ignition::math::Vector3d(eCurr, nCurr, 0.0);
-      casted->SetData(curr);
+      const auto nCurr = timeslice.EstimateValueUsingTrilinear(
+          interpolators,
+          sphericalDepthCorrected,
+          this->dataPtr->northCurrentArr[this->dataPtr->timeIdx]
+        );
+      const auto eCurr = timeslice.EstimateValueUsingTrilinear(
+          interpolators,
+          sphericalDepthCorrected,
+          this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx]
+        );
+      if (nCurr.has_value() && eCurr.has_value())
+      {
+        ignition::math::Vector3d current(nCurr.value(), eCurr.value(), 0);
+        casted->SetData(current);
+      }
     }
     else
     {
