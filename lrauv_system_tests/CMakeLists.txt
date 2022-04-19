@@ -44,3 +44,11 @@ target_link_libraries(${PROJECT_NAME}_support PUBLIC
   lrauv_ignition_plugins::lrauv_state
   gtest)
 target_compile_features(${PROJECT_NAME}_support PUBLIC cxx_std_17)
+#============================================================================
+# Tests
+if(BUILD_TESTING)
+  enable_testing()
+  include(Dart)
+
+  add_subdirectory(test)
+endif()
