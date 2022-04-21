@@ -62,7 +62,7 @@ class AcousticCommsPrivateData;
 ///         filename="AcousticCommsPlugin"
 ///         name="tethys::AcousticCommsPlugin">
 ///         <address>2</address>
-///         <model_plugin_file>simpleacousticmodel</model_plugin_file>
+///         <model_plugin_file>simple_acoustic_model</model_plugin_file>
 ///         <model_name>tethys::SimpleAcousticModel</model_name>
 ///         <link_name>base_link</link_name>
 ///         <timestep>0.00001</timestep>
