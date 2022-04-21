@@ -33,12 +33,12 @@
 #include "lrauv_system_tests/Publisher.hh"
 
 using namespace lrauv_system_tests;
+using namespace std::literals::chrono_literals;
 
 class HydrodynamicsTestFixture : public TestFixture
 {
   public: HydrodynamicsTestFixture() : TestFixture("star_world.sdf")
   {
-    constexpr size_t historyDepth = 100u;
     for (size_t i = 0; i < 4; ++i)
     {
       this->thrustPublishers.push_back(
@@ -46,8 +46,8 @@ class HydrodynamicsTestFixture : public TestFixture
               "/model/tethys" + std::to_string(i + 1) +
               "/joint/propeller_joint/cmd_vel"));
       this->vehicleObservers.push_back(ModelObserver(
-          "tethys" + std::to_string(i + 1), "base_link",
-          historyDepth));
+          "tethys" + std::to_string(i + 1), "base_link"));
+      this->vehicleObservers.back().LimitTo(5s);
     }
   }
 
@@ -62,12 +62,12 @@ class HydrodynamicsTestFixture : public TestFixture
   }
 
   protected: void OnPostUpdate(
-     const ignition::gazebo::UpdateInfo &,
+     const ignition::gazebo::UpdateInfo &_info,
      const ignition::gazebo::EntityComponentManager &_ecm) override
   {
     for (auto &observer : this->vehicleObservers)
     {
-      observer.Update(_ecm);
+      observer.Update(_info, _ecm);
     }
   }
 
@@ -99,7 +99,6 @@ inline std::vector<T> Diff(const std::deque<T> &_input)
 /// transforms of the hydrodynamics plugin are correct.
 TEST(HydrodynamicsTest, DampForwardThrust)
 {
-  ignition::common::Console::SetVerbosity(4);
   HydrodynamicsTestFixture fixture;
 
   // Step once for simulation to be setup
@@ -116,7 +115,7 @@ TEST(HydrodynamicsTest, DampForwardThrust)
     publisher.Publish(thrustCommand);
   }
 
-  fixture.Step(40000u);
+  EXPECT_LT(0, fixture.Step(45s));
 
   for (const auto &observer : fixture.VehicleObservers())
   {

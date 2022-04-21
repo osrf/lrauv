@@ -23,9 +23,12 @@
 #ifndef LRAUV_SYSTEM_TESTS__LRAUVCONTROLLER_HH
 #define LRAUV_SYSTEM_TESTS__LRAUVCONTROLLER_HH
 
+#include <signal.h>
+
 #include <cstdio>
 #include <string>
 #include <thread>
+#include <vector>
 
 namespace lrauv_system_tests
 {
@@ -36,16 +39,25 @@ class LRAUVController
  public: ~LRAUVController();
 
  /// Whether the controller process is still running or not.
- public: bool IsRunning() const;
+ /// \throws std::system_error if a system call fails.
+ public: bool IsRunning();
 
  /// Kill controller process if running.
- public: void Kill();
+ /// \param[in] signal Signal to be sent.
+ /// \return true if the signal was delivered, false otherwise.
+ /// \throws std::system_error if a system call fails.
+ public: bool Kill(int signal);
 
- /// Start an LRAUV controller process to run a `_mission`.
- /// \param[in] _mission Path to mission XML file,
- /// relative to MBARI's root application directory.
+ /// Wait for controller process to exit.
+ /// \return process exit status.
+ /// \throws std::system_error if a system call fails.
+ public: int Wait();
+
+ /// Start an LRAUV controller process to run `_commands`.
+ /// \param[in] _commands A sequence of LRAUV commands to execute.
  /// \return handler instance for underlying controller process.
- public: static LRAUVController Execute(const std::string &_mission);
+ /// \throws std::system_error if a system call fails.
+ public: static LRAUVController Execute(const std::vector<std::string> &_commands);
 
  // Constructor.
  // \param[in] pid LRAUV controller process ID.

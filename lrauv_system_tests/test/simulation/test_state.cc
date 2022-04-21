@@ -82,14 +82,14 @@ TEST_F(VehicleStateTest, InitialState)
   EXPECT_NEAR(0.0005, latestState.buoyancyposition_(), 1e-6);
 
   // Position
-  EXPECT_NEAR(0.0, latestState.depth_(), 1e-6);
+  EXPECT_NEAR(0.5, latestState.depth_(), 1e-6);
   EXPECT_NEAR(initialLat.Degree(), latestState.latitudedeg_(), 1e-6);
   EXPECT_NEAR(initialLon.Degree(), latestState.longitudedeg_(), 1e-6);
 
   // Starts aligned with NED world frame (zero pose facing North)
   EXPECT_NEAR(0.0, latestState.pos_().x(), 1e-6);
   EXPECT_NEAR(0.0, latestState.pos_().y(), 1e-6);
-  EXPECT_NEAR(0.0, latestState.pos_().z(), 1e-6);
+  EXPECT_NEAR(0.5, latestState.pos_().z(), 1e-6);
 
   EXPECT_NEAR(0.0, latestState.posrph_().x(), 1e-6);
   EXPECT_NEAR(0.0, latestState.posrph_().y(), 1e-6);
@@ -158,14 +158,14 @@ TEST_F(VehicleStateTest, ThrustState)
   EXPECT_NEAR(0.0005, latestState.buoyancyposition_(), 1e-6);
 
   // Position
-  EXPECT_NEAR(0.0, latestState.depth_(), 1e-6);
+  EXPECT_NEAR(0.5, latestState.depth_(), 1e-6);
   EXPECT_LT(initialLat.Degree(), latestState.latitudedeg_());
   EXPECT_NEAR(initialLon.Degree(), latestState.longitudedeg_(), 1e-6);
 
   // NED world frame: vehicle is going North with no rotation
   EXPECT_LT(25.0, latestState.pos_().x());
   EXPECT_NEAR(0.0, latestState.pos_().y(), 1e-3);
-  EXPECT_NEAR(0.0, latestState.pos_().z(), 1e-6);
+  EXPECT_NEAR(0.5, latestState.pos_().z(), 1e-6);
   EXPECT_NEAR(0.0, latestState.posrph_().x(), 1e-3);
   EXPECT_NEAR(0.0, latestState.posrph_().y(), 1e-6);
   EXPECT_NEAR(0.0, latestState.posrph_().z(), 1e-5);
@@ -241,14 +241,14 @@ TEST_F(VehicleStateTest, ThrustAndTurnState)
   EXPECT_NEAR(0.0005, latestState.buoyancyposition_(), 1e-6);
 
   // Position
-  EXPECT_NEAR(0.0, latestState.depth_(), 1e-3);
+  EXPECT_NEAR(0.5, latestState.depth_(), 1e-3);
   EXPECT_LT(initialLat.Degree(), latestState.latitudedeg_());
   EXPECT_LT(initialLon.Degree(), latestState.longitudedeg_());
 
   // NED world frame: vehicle is going North East with positive yaw
   EXPECT_LT(30.0, latestState.pos_().x());
   EXPECT_LT(0.4, latestState.pos_().y());
-  EXPECT_NEAR(0.0, latestState.pos_().z(), 1e-3);
+  EXPECT_NEAR(0.5, latestState.pos_().z(), 1e-3);
   EXPECT_NEAR(0.0, latestState.posrph_().x(), 1e-3);
   EXPECT_NEAR(0.0, latestState.posrph_().y(), 1e-3);
   EXPECT_LT(0.5, latestState.posrph_().z());
@@ -301,10 +301,10 @@ TEST_F(VehicleStateTest, SinkState)
   EXPECT_NEAR(0.0002, latestState.buoyancyposition_(), 1e-3);
 
   // Position
-  EXPECT_LT(0.2, latestState.depth_());
+  EXPECT_LT(0.5, latestState.depth_());
 
   // NED world frame: higher Z is deeper
-  EXPECT_LT(0.2, latestState.pos_().z());
+  EXPECT_LT(0.5, latestState.pos_().z());
 
   // Velocity
   // NED world frame: sinking to higher Z

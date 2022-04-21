@@ -131,7 +131,6 @@ inline bool AreQuaternionsEqual(
 //////////////////////////////////////////////////
 TEST(AHRSTest, FrameConventionsAreCorrect)
 {
-  ignition::common::Console::SetVerbosity(4);
   AHRSTestFixture fixture("buoyant_tethys.sdf", "tethys");
 
   EXPECT_LT(0, fixture.Step(200ms));

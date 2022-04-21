@@ -11,15 +11,20 @@ namespace lrauv_system_tests
 {
 ModelObserver::ModelObserver(
   const std::string &_modelName,
-  const std::string &_baseLinkName,
-  size_t _historyDepth)
+  const std::string &_baseLinkName)
 : modelName(_modelName),
-  baseLinkName(_baseLinkName),
-  historyDepth(_historyDepth)
+  baseLinkName(_baseLinkName)
 {
 }
 
+void ModelObserver::LimitTo(
+  std::chrono::steady_clock::duration _windowSize)
+{
+  this->windowSize = _windowSize;
+}
+
 void ModelObserver::Update(
+  const ignition::gazebo::UpdateInfo &_info,
   const ignition::gazebo::EntityComponentManager &_ecm)
 {
   const ignition::gazebo::Entity worldEntity =
@@ -30,29 +35,15 @@ void ModelObserver::Update(
       world.ModelByName(_ecm, this->modelName);
   if (ignition::gazebo::kNullEntity != modelEntity)
   {
+    this->times.push_back(_info.simTime);
+
     this->poses.push_back(
         ignition::gazebo::worldPose(modelEntity, _ecm));
-    if (this->historyDepth > 0u)
-    {
-      if (this->poses.size() > this->historyDepth)
-      {
-        this->poses.pop_front();
-      }
-    }
 
     auto coordinates =
         ignition::gazebo::sphericalCoordinates(modelEntity, _ecm);
-    if (coordinates.has_value())
-    {
-      this->sphericalCoordinates.push_back(coordinates.value());
-      if (this->historyDepth > 0u)
-      {
-        if (this->sphericalCoordinates.size() > this->historyDepth)
-        {
-          this->sphericalCoordinates.pop_front();
-        }
-      }
-    }
+    this->sphericalCoordinates.push_back(
+        coordinates.value_or(ignition::math::Vector3d::NaN));
 
     ignition::gazebo::Model model(modelEntity);
     const ignition::gazebo::Entity linkEntity =
@@ -61,31 +52,31 @@ void ModelObserver::Update(
     ignition::gazebo::Link link(linkEntity);
 
     auto linearVelocity = link.WorldLinearVelocity(_ecm);
-    if (linearVelocity.has_value())
-    {
-      this->linearVelocities.push_back(linearVelocity.value());
-      if (this->historyDepth > 0u)
-      {
-        if(this->linearVelocities.size() > this->historyDepth)
-        {
-          this->linearVelocities.pop_front();
-        }
-      }
-    }
+    this->linearVelocities.push_back(
+        linearVelocity.value_or(ignition::math::Vector3d::NaN));
 
     auto angularVelocity = link.WorldAngularVelocity(_ecm);
-    if (angularVelocity.has_value())
+    this->angularVelocities.push_back(
+        angularVelocity.value_or(ignition::math::Vector3d::NaN));
+
+    if (this->windowSize != std::chrono::steady_clock::duration::zero())
     {
-      this->angularVelocities.push_back(angularVelocity.value());
-      if (this->historyDepth > 0u)
+      while (this->times.back() - this->times.front() > this->windowSize)
       {
-        if (this->angularVelocities.size() > this->historyDepth)
-        {
-          this->angularVelocities.pop_front();
-        }
+        this->times.pop_front();
+        this->poses.pop_front();
+        this->sphericalCoordinates.pop_front();
+        this->linearVelocities.pop_front();
+        this->angularVelocities.pop_front();
       }
     }
   }
+}
+
+const std::deque<std::chrono::steady_clock::duration> &
+ModelObserver::Times() const
+{
+  return this->times;
 }
 
 const std::deque<ignition::math::Pose3d> &

@@ -33,66 +33,70 @@ using namespace std::literals::chrono_literals;
 TEST(MissionTest, YoYoCircle)
 {
   TestFixtureWithVehicle fixture("buoyant_tethys.sdf", "tethys");
-  fixture.Step(10u);
+  auto &observer = fixture.VehicleObserver();
+  // Limit window sizes ensuring overlap between loop iterations
+  observer.LimitTo(2min + 10s);
 
-  const auto &observer = fixture.VehicleObserver();
+  fixture.Step();
   const auto &poses = observer.Poses();
-  EXPECT_NEAR(0.0, poses.back().Pos().X(), 1e-6);
-
-  {
-    // Launch mission
-    //   Mass.position: default
-    //   Buouancy.position: neutral
-    //   Point.rudderAngle: 9 deg
-    //   SetSpeed.speed: 1 m/s
-    //   DepthEnvelope.minDepth: 2 m
-    //   DepthEnvelope.maxDepth: 20 m
-    //   DepthEnvelope.downPitch: -20 deg
-    //   DepthEnvelope.upPitch: 20 deg
-    auto controller = LRAUVController::Execute(
-        "RegressionTests/IgnitionTests/testYoYoCircle.xml");
-
-    // Run for a bit longer than mission timeout
-    fixture.Step(10min);
-  }
-
+  const auto &times = observer.Times();
   const auto &linearVelocities = observer.LinearVelocities();
   const auto &angularVelocities = observer.AngularVelocities();
-  for (uint64_t i = 100u; i < fixture.Iterations(); i += 100u)
+  EXPECT_NEAR(0.0, poses.back().Pos().X(), 1e-6);
+
+  // Launch mission
+  //   Mass.position: default
+  //   Buouancy.position: neutral
+  //   Point.rudderAngle: 9 deg
+  //   SetSpeed.speed: 1 m/s
+  //   DepthEnvelope.minDepth: 2 m
+  //   DepthEnvelope.maxDepth: 20 m
+  //   DepthEnvelope.downPitch: -20 deg
+  //   DepthEnvelope.upPitch: 20 deg
+  auto controller = LRAUVController::Execute({
+    "run RegressionTests/IgnitionTests/testYoYoCircle.xml quitAtEnd"});
+
+  for (size_t _ = 0; _ < 5; ++_)
   {
-    // Pitch should be between -20 and 20 degrees
-    EXPECT_LT(IGN_DTOR(-20), poses[i].Rot().Pitch()) << i;
-    EXPECT_GT(IGN_DTOR(20), poses[i].Rot().Pitch()) << i;
-
-    if (i > 3500u)
+    EXPECT_LT(0, fixture.Step(2min));
+    for (size_t i = 0; i < times.size(); ++i)
     {
-      // Check that the vehicle is actually moving
-      EXPECT_LT(0.0, linearVelocities[i].Length()) << i;
-    }
+      // Pitch should be between -20 and 20 degrees
+      EXPECT_LT(IGN_DTOR(-20), poses[i].Rot().Pitch());
+      EXPECT_GT(IGN_DTOR(20), poses[i].Rot().Pitch());
 
-    // Depth should be less than 20m at all times
-    // EXPECT_LT(-22.7, pose.Pos().Z()) << i;
-    EXPECT_LT(-20.0, poses[i].Pos().Z()) << i;
-    if (i > 4000u)
-    {
-      // Depth should be at greater than 2m after initial descent
-      EXPECT_GT(-2.0, poses[i].Pos().Z()) << i;
-    }
+      if (times[i] > 2min)
+      {
+        // Check that the vehicle is actually moving
+        EXPECT_LT(0.0, linearVelocities[i].Length());
+      }
 
-    if (i > 14000u)
-    {
-      // Once the vehicle achieves its full velocity the vehicle should have
-      // a nominal yaw rate of around 0.037-0.038rad/s. This means that the
-      // vehicle should keep spinning in a circle.
-      EXPECT_NEAR(angularVelocities[i].Z(), 0.037, 0.0022)
-        << i << " yaw rate: " << angularVelocities[i].Z();
+      // Depth should be less than 20m, with some tolerance
+      // to accommodate vertical control overshoot
+      EXPECT_LT(-20.0 - 4.0, poses[i].Pos().Z());
+      if (times[i] > 3min)
+      {
+        // Depth should be at greater than 2m after initial descent,
+        // with some tolerance to accommodate vertical control overshoot
+        EXPECT_GT(-2.0 + 1.8, poses[i].Pos().Z());
+      }
 
-      // At the same time the roll rate should be near zero
-      EXPECT_NEAR(angularVelocities[i].Y(), 0, 1e-1) << i;
+      if (times[i] > 5min)
+      {
+        // Once the vehicle achieves its full velocity the vehicle should have
+        // a nominal yaw rate of around 0.037-0.038rad/s. This means that the
+        // vehicle should keep spinning in a circle.
+        EXPECT_NEAR(angularVelocities[i].Z(), 0.037, 0.0022)
+            << i << " yaw rate: " << angularVelocities[i].Z();
 
-      // And the linear velocity should be near 1m/s
-      EXPECT_NEAR(linearVelocities[i].Length(), 1.0, 2e-1) << i;
+        // At the same time the roll rate should be near zero
+        EXPECT_NEAR(angularVelocities[i].Y(), 0, 1e-1);
+
+        // And the linear velocity should be near 1m/s
+        EXPECT_NEAR(linearVelocities[i].Length(), 1.0, 2e-1);
+      }
     }
   }
+  EXPECT_TRUE(controller.Kill(SIGINT));
+  EXPECT_EQ(SIGINT, controller.Wait());
 }
-

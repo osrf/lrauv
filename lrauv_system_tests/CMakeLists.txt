@@ -42,9 +42,8 @@ target_link_libraries(${PROJECT_NAME}_support PUBLIC
   ignition-transport12::ignition-transport12
   lrauv_ignition_plugins::lrauv_command
   lrauv_ignition_plugins::lrauv_state
-  gtest
-)
-
+  gtest)
+target_compile_features(${PROJECT_NAME}_support PUBLIC cxx_std_17)
 #============================================================================
 # Tests
 if(BUILD_TESTING)

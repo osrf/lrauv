@@ -68,7 +68,7 @@ TEST(PropellerActionTest, ForwardThrust)
   // Check final position
   EXPECT_NEAR(0.0, poses.back().Pos().X(), 1e-3);
   EXPECT_LT(targetY, poses.back().Pos().Y());
-  EXPECT_NEAR(0.0, poses.back().Pos().Z(), 0.05);
+  EXPECT_NEAR(-0.5, poses.back().Pos().Z(), 0.05);
   EXPECT_NEAR(0.0, poses.back().Rot().Roll(), 1e-2);
   EXPECT_NEAR(0.0, poses.back().Rot().Pitch(), 1e-3);
   EXPECT_NEAR(0.0, poses.back().Rot().Yaw(), 1e-3);

@@ -37,7 +37,7 @@ TEST(BuoyancyActionTest, Sink)
 
   // Vehicle is at the surface
   const auto &poses = fixture.VehicleObserver().Poses();
-  EXPECT_NEAR(0.0, poses.back().Pos().Z(), 0.05);
+  EXPECT_NEAR(-0.5, poses.back().Pos().Z(), 0.05);
 
   // Command the vehicle to sink
   lrauv_ignition_plugins::msgs::LRAUVCommand command;

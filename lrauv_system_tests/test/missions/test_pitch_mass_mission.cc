@@ -34,67 +34,78 @@ using namespace std::literals::chrono_literals;
 TEST(MissionTest, PitchMass)
 {
   TestFixtureWithVehicle fixture("buoyant_tethys_at_depth.sdf", "tethys");
-
-  EXPECT_EQ(10u, fixture.Step(10u));
+  auto &observer = fixture.VehicleObserver();
+  // Limit window sizes ensuring overlap between loop iterations
+  observer.LimitTo(2min + 10s);
 
   // Check initial X
-  const auto &observer = fixture.VehicleObserver();
+  fixture.Step();
+  const auto &times = observer.Times();
   const auto &poses = observer.Poses();
   EXPECT_NEAR(0.0, poses.back().Pos().X(), 1e-6);
 
-  {
-    // Launch mission
-    //   SetSpeed.speed = 0 m/s^2
-    //   Point.rudderAngle = 0 deg
-    //   Buoyancy.position = neutral
-    //   Pitch.pitch = 20 deg
-    //   Pitch.elevatorAngle = 0
-    auto controller = LRAUVController::Execute(
-        "RegressionTests/IgnitionTests/testPitchMass.xml");
+  // Launch mission
+  //   SetSpeed.speed = 0 m/s^2
+  //   Point.rudderAngle = 0 deg
+  //   Buoyancy.position = neutral
+  //   Pitch.pitch = 20 deg
+  //   Pitch.elevatorAngle = 0
+  auto controller = LRAUVController::Execute({
+    // Force neutral buoyancy to prevent the vehicle
+    // from surfacing during controller startup
+    "configSet VerticalControl.buoyancyDefault 500 cc",
+    "run RegressionTests/IgnitionTests/testPitchMass.xml quitAtEnd"
+  });
 
-    // Run for a bit longer than mission timeout
-    fixture.Step(10min);
-  }
-
-  // Vehicle should have a max pitch of 20 degrees
-  // Since the vehicle is facing North (+Y):
-  // Euler.Y = roll
-  // Euler.X = pitch
-  // Euler.Z = yaw
   double totalPitchChange = 0, prevPitch = 0;
   bool firstPitch = false, reachedTarget = false;
-  for(const auto &pose : poses)
+  for (size_t _ = 0; _ < 5; ++_)
   {
-    // Check position holds
-    EXPECT_NEAR(pose.Pos().X(), 0, 2e-1);
-    EXPECT_NEAR(pose.Pos().Y(), 0, 2e-1);
-    EXPECT_NEAR(pose.Pos().Z(), 0, 2e-1);
+    EXPECT_LT(0u, fixture.Step(2min));
 
-    // Max Pitch 20 degrees, allowing for an error of
-    // up to 5 degrees to accomodate for oscillations
-    // during pitch control.
-    EXPECT_LT(pose.Rot().Euler().X(), IGN_DTOR(25));
-    EXPECT_GT(pose.Rot().Euler().X(), IGN_DTOR(-5));
-
-    // No roll or yaw
-    EXPECT_NEAR(pose.Rot().Euler().Y(), IGN_DTOR(0), 1e-2);
-    EXPECT_NEAR(pose.Rot().Euler().Z(), IGN_DTOR(0), 1e-2);
-
-    // Used later for oscillation check.
-    if (!firstPitch)
+    // Vehicle should have a max pitch of 20 degrees
+    // Since the vehicle is facing North (+Y):
+    // Euler.Y = roll
+    // Euler.X = pitch
+    // Euler.Z = yaw
+    for (size_t i = 0; i < times.size(); ++i)
     {
-      totalPitchChange += std::abs(pose.Rot().Euler().X() - prevPitch);
-      firstPitch = true;
-    }
+      // Check position holds
+      EXPECT_NEAR(poses[i].Pos().X(), 0.0, 2e-1);
+      EXPECT_NEAR(poses[i].Pos().Y(), 0.0, 2e-1);
+      EXPECT_NEAR(poses[i].Pos().Z(), -10.0, 2e-1);
 
-    // Check if we cross the 20 degree mark
-    if (prevPitch <= IGN_DTOR(20) && pose.Rot().Euler().X() >= IGN_DTOR(20))
-    {
-      reachedTarget = true;
-    }
+      if (times[i] > 3min)  // Initialization is complete
+      {
+        // Max Pitch 20 degrees, allowing for an error of
+        // up to 5 degrees to accomodate for oscillations
+        // during pitch control.
+        EXPECT_LT(poses[i].Rot().Euler().X(), IGN_DTOR(25));
+        EXPECT_GT(poses[i].Rot().Euler().X(), IGN_DTOR(-5));
+      }
 
-    prevPitch = pose.Rot().Euler().X();
+      // No roll or yaw
+      EXPECT_NEAR(poses[i].Rot().Euler().Y(), IGN_DTOR(0), 1e-2);
+      EXPECT_NEAR(poses[i].Rot().Euler().Z(), IGN_DTOR(0), 1e-2);
+
+      // Used later for oscillation check.
+      if (!firstPitch)
+      {
+        totalPitchChange += std::abs(poses[i].Rot().Euler().X() - prevPitch);
+        firstPitch = true;
+      }
+
+      // Check if we cross the 20 degree mark
+      if (prevPitch <= IGN_DTOR(20) && poses[i].Rot().Euler().X() >= IGN_DTOR(20))
+      {
+        reachedTarget = true;
+      }
+
+      prevPitch = poses[i].Rot().Euler().X();
+    }
   }
+  EXPECT_TRUE(controller.Kill(SIGINT));
+  EXPECT_EQ(SIGINT, controller.Wait());
 
   // Check for oscillation by summing over abs delta in pitch
   // Essentially \Sigma abs(f'(x)) < C. In this case C should be near 2*20

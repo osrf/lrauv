@@ -43,15 +43,13 @@
     <plugin
       filename="ignition-gazebo-buoyancy-system"
       name="ignition::gazebo::systems::Buoyancy">
-      <!-- TODO: fix behaviour near surface, see https://github.com/osrf/lrauv/issues/102-->
-        <graded_buoyancy>
+      <graded_buoyancy>
         <default_density>1025</default_density>
         <density_change>
-          <above_depth>0.5</above_depth>
+          <above_depth>0</above_depth>
           <density>1.125</density>
         </density_change>
       </graded_buoyancy>
-      <!--<uniform_fluid_density>1025</uniform_fluid_density> -->
     </plugin>
 
     <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
@@ -369,7 +367,8 @@
     </include-->
 
     <include>
-      <pose>0 0 0 0 0 0</pose>
+      <!-- TODO: fix behaviour near surface, see https://github.com/osrf/lrauv/issues/102-->
+      <pose>0 0 -0.5 0 0 0</pose>
       <uri>tethys_equipped</uri>
     </include>
 

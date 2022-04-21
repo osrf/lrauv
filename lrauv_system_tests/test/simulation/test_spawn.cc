@@ -57,12 +57,12 @@ class DynamicTestFixture : public TestFixture
   }
 
   protected: void OnPostUpdate(
-    const ignition::gazebo::UpdateInfo &,
+    const ignition::gazebo::UpdateInfo &_info,
     const ignition::gazebo::EntityComponentManager &_ecm) override
   {
     for (auto &observer : this->vehicleObservers)
     {
-      observer->Update(_ecm);
+      observer->Update(_info, _ecm);
     }
   }
 
@@ -72,7 +72,6 @@ class DynamicTestFixture : public TestFixture
 //////////////////////////////////////////////////
 TEST(VehicleSpawnTest, Spawn)
 {
-  ignition::common::Console::SetVerbosity(3);
   DynamicTestFixture fixture("empty_environment.sdf");
   auto &observer1 = fixture.Observe("vehicle1");
   auto &observer2 = fixture.Observe("vehicle2");

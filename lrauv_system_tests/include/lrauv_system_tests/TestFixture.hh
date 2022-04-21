@@ -58,6 +58,7 @@ class TestFixture
     : fixture(ignition::common::joinPaths(
           PROJECT_SOURCE_PATH, "worlds", _worldName))
   {
+    ignition::common::Console::SetVerbosity(4);
   }
 
   virtual ~TestFixture() = default;
@@ -214,7 +215,7 @@ class TestFixtureWithVehicle : public TestFixture
   }
 
   /// Returns an observer for the vehicle.
-  public: const ModelObserver &VehicleObserver() const
+  public: ModelObserver &VehicleObserver()
   {
     return this->vehicleObserver;
   }
@@ -227,10 +228,10 @@ class TestFixtureWithVehicle : public TestFixture
   }
 
   protected: void OnPostUpdate(
-    const ignition::gazebo::UpdateInfo &,
+    const ignition::gazebo::UpdateInfo &_info,
     const ignition::gazebo::EntityComponentManager &_ecm) override
   {
-    this->vehicleObserver.Update(_ecm);
+    this->vehicleObserver.Update(_info, _ecm);
   }
 
   private: ModelManipulator vehicleManipulator;

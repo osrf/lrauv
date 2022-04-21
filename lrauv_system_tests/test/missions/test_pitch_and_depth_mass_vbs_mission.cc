@@ -34,71 +34,76 @@ using namespace std::literals::chrono_literals;
 TEST(MissionTest, PitchDepthVBS)
 {
   TestFixtureWithVehicle fixture("buoyant_tethys.sdf", "tethys");
-
-  EXPECT_EQ(10u, fixture.Step(10u));
+  auto &observer = fixture.VehicleObserver();
+  // Limit window sizes ensuring overlap between loop iterations
+  observer.LimitTo(2min + 10s);
 
   // Check initial pose (facing North)
-  const auto &observer = fixture.VehicleObserver();
+  fixture.Step();
+  const auto &times = observer.Times();
   const auto &poses = observer.Poses();
   EXPECT_NEAR(0.0, poses.back().Pos().X(), 1e-6);
   EXPECT_NEAR(0.0, poses.back().Pos().Y(), 1e-6);
-  EXPECT_NEAR(0.0, poses.back().Pos().Z(), 1e-6);
+  EXPECT_NEAR(-0.5, poses.back().Pos().Z(), 1e-6);
   EXPECT_NEAR(0.0, poses.back().Rot().Roll(), 1e-6);
   EXPECT_NEAR(0.0, poses.back().Rot().Pitch(), 1e-6);
   EXPECT_NEAR(0.0, poses.back().Rot().Yaw(), 1e-6);
 
-  {
-    // Launch mission
-    //   SetSpeed.speed = 0 m/s^2
-    //   Point.rudderAngle = 0 deg
-    //   Pitch.depth = 10 m
-    //   Pitch.elevatorAngle = 0
-    auto controller = LRAUVController::Execute(
-        "RegressionTests/IgnitionTests/testPitchAndDepthMassVBS.xml");
-
-    // Run for a bit longer than mission timeout
-    fixture.Step(10min);
-  };
+  // Launch mission
+  //   SetSpeed.speed = 0 m/s^2
+  //   Point.rudderAngle = 0 deg
+  //   Pitch.depth = 10 m
+  //   Pitch.elevatorAngle = 0
+  auto controller = LRAUVController::Execute({
+    "run RegressionTests/IgnitionTests/testPitchAndDepthMassVBS.xml quitAtEnd"});
 
   bool targetReached = false, firstSample = true;
   double prevZ = 0, totalDepthChange = 0;
-  // Vehicle should sink to 10 meters and hold there
-  // Pitch (rotation about world's X, since robot is facing North (+Y)) should
-  // be held relatively constant.
-  for (const auto &pose : poses)
+  for (size_t _ = 0; _ < 5; ++_)
   {
-    // Vehicle should dive down.
-    EXPECT_LE(pose.Pos().Z(), 0.5);
-    // FIXME(arjo): This should dive to a max of 10m I think
-    EXPECT_GT(pose.Pos().Z(), -21.5);
-
-    // Vehicle should exhibit minimal lateral translation.
-    EXPECT_NEAR(pose.Pos().X(), 0, 1e-2);
-    EXPECT_NEAR(pose.Pos().Y(), 0, 3.0); // FIXME(arjo): IMPORTANT!!
-
-    // Vehicle should hold a fixed angle about X
-    // FIXME(arjo): Shouldnt be pitching this much
-    EXPECT_NEAR(pose.Rot().Euler().X(), 0, 4e-1);
-    EXPECT_NEAR(pose.Rot().Euler().Y(), 0, 1e-2);
-    EXPECT_NEAR(pose.Rot().Euler().Z(), 0, 1e-2);
-
-    if (!firstSample)
+    EXPECT_LT(0u, fixture.Step(2min));
+    for (size_t i = 0; i < times.size(); ++i)
     {
-      // Check we actually crossed the 10m mark
-      if (prevZ >= -10 && pose.Pos().Z() <= -10)
+      // Vehicle should not breach the surface.
+      EXPECT_LE(poses[i].Pos().Z(), 0.0);
+      // NOTE: vehicle target depth is 10m, but vertical
+      // control exhibits considerable overshoot.
+      EXPECT_GT(poses[i].Pos().Z(), -20.);
+
+      // Vehicle should exhibit minimal lateral translation.
+      // FIXME: Hydrodynamic damping and graded buoyancy introduce
+      // spurious thrusts. Reduce tolerances when fixed.
+      EXPECT_NEAR(poses[i].Pos().X(), 0, 0.3);
+      EXPECT_NEAR(poses[i].Pos().Y(), 0, 5.0);
+
+      if (times[i] > 3min)  // Initialization is complete
       {
-        targetReached = true;
+        // Vehicle should hold a fixed angle about X
+        EXPECT_NEAR(poses[i].Rot().Euler().X(), 0.0, 1e-1);
+        EXPECT_NEAR(poses[i].Rot().Euler().Y(), 0.0, 1e-2);
+        EXPECT_NEAR(poses[i].Rot().Euler().Z(), 0.0, 1e-2);
+
+        if (!firstSample)
+        {
+          // Check we actually crossed the 10m mark
+          if (prevZ >= -10.0 && poses[i].Pos().Z() <= -10.0)
+          {
+            targetReached = true;
+          }
+          // Use total depth change as a proxy for oscillations
+          totalDepthChange += std::fabs(poses[i].Pos().Z() - prevZ);
+        }
+        prevZ = poses[i].Pos().Z();
+        firstSample = false;
       }
-      // Use total depth change as a proxy for oscillations
-      totalDepthChange += std::fabs(pose.Pos().Z() - prevZ);
     }
-    prevZ = pose.Pos().Z();
-    firstSample = false;
   }
-  // vehicle should have reached the desired target.
+  EXPECT_TRUE(controller.Kill(SIGINT));
+  EXPECT_EQ(SIGINT, controller.Wait());
+
+  // Vehicle should have reached the desired target.
   EXPECT_TRUE(targetReached);
 
-  // vehicle should not oscillate when at target.
-  // FIXME(arjo): Change this value. It should be 10.
-  EXPECT_LT(totalDepthChange, 50);
+  // Vehicle oscillations should be limited.
+  EXPECT_LT(totalDepthChange, 30.0);
 }

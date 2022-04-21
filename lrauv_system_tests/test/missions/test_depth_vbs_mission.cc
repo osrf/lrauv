@@ -34,68 +34,65 @@ using namespace std::literals::chrono_literals;
 TEST(MissionTest, DepthVBS)
 {
   TestFixtureWithVehicle fixture("buoyant_tethys.sdf", "tethys");
-
-  EXPECT_EQ(10u, fixture.Step(10u));
+  auto &observer = fixture.VehicleObserver();
+  // Limit window sizes ensuring overlap between loop iterations
+  observer.LimitTo(3min + 10s);
 
   // Check initial pose (facing North)
-  const auto &observer = fixture.VehicleObserver();
+  fixture.Step();
+  const auto &times = observer.Times();
   const auto &poses = observer.Poses();
+  const auto &linearVelocities = observer.LinearVelocities();
   EXPECT_NEAR(0.0, poses.back().Pos().X(), 1e-6);
   EXPECT_NEAR(0.0, poses.back().Pos().Y(), 1e-6);
-  EXPECT_NEAR(0.0, poses.back().Pos().Z(), 1e-6);
+  EXPECT_NEAR(-0.5, poses.back().Pos().Z(), 1e-6);
   EXPECT_NEAR(0.0, poses.back().Rot().Roll(), 1e-6);
   EXPECT_NEAR(0.0, poses.back().Rot().Pitch(), 1e-6);
   EXPECT_NEAR(0.0, poses.back().Rot().Yaw(), 1e-6);
 
-  {
-    // Launch mission
-    auto controller = LRAUVController::Execute(
-        "RegressionTests/IgnitionTests/testDepthVBS.xml");
-
-    // Run for a bit longer than mission timeout
-    fixture.Step(20min);
-  }
-
+  // Launch mission
+  auto controller = LRAUVController::Execute({
+    "run RegressionTests/IgnitionTests/testDepthVBS.xml quitAtEnd"});
   auto maxLinearVelocity = ignition::math::Vector3d::Zero;
-  const auto &linearVelocities = observer.LinearVelocities();
-  for (uint64_t i = 10u; i <= fixture.Iterations(); ++i)
+  // Run until mission timeout (30min).
+  for (size_t _ = 0; _ < 10; ++_)
   {
-    // Vehicle roll (about +Y since vehicle is facing North) should be constant
-    EXPECT_NEAR(poses[i].Rot().Euler().Y(), 0, 1e-2);
-
-    // Vehicle should not go vertical when tilting nose
-    EXPECT_LT(poses[i].Rot().Euler().X(), IGN_DTOR(40));
-    EXPECT_GT(poses[i].Rot().Euler().X(), IGN_DTOR(-40));
-
-    // Vehicle should not exceed 20m depth
-    // NOTE: Although the mission has a target depth of 10m, the vehicle has
-    // a tendency to overshoot first. Eventually the vehicle will reach steady
-    // state, however at this point we are just checking for excess overshoot.
-    EXPECT_GT(poses[i].Pos().Z(), -20);
-
-    if (linearVelocities[i].Length() > maxLinearVelocity.Length())
+    EXPECT_LT(0u, fixture.Step(3min));
+    for (size_t i = 0; i < times.size(); ++i)
     {
-      maxLinearVelocity = linearVelocities[i];
+      // Vehicle roll (about +Y since vehicle is facing North) should be constant
+      EXPECT_NEAR(poses[i].Rot().Euler().Y(), 0, 1e-2);
+
+      if (times[i] > 3min)  // Initialization is complete
+      {
+        // Vehicle should not go vertical when tilting nose
+        EXPECT_LT(poses[i].Rot().Euler().X(), IGN_DTOR(10));
+        EXPECT_GT(poses[i].Rot().Euler().X(), IGN_DTOR(-10));
+      }
+
+      // Vehicle should not exceed 20m depth
+      // NOTE: Although the mission has a target depth of 10m, the vehicle has
+      // a tendency to overshoot first. Eventually the vehicle will reach steady
+      // state, however at this point we are just checking for excess overshoot.
+      EXPECT_GT(poses[i].Pos().Z(), -20.0);
+
+      if (linearVelocities[i].Length() > maxLinearVelocity.Length())
+      {
+        maxLinearVelocity = linearVelocities[i];
+      }
     }
   }
+  EXPECT_TRUE(controller.Kill(SIGINT));
+  EXPECT_EQ(SIGINT, controller.Wait());
 
-  // FIXME(hidmic): hydrodynamic damping forces induce
-  // a thrust on the vehicle, and thus it does not
-  // remain steady unless controlled.
-  // // Vehicle's final pose should be near the 10m mark
-  // EXPECT_NEAR(tethysPoses.back().Pos().Z(), -10, 1e-1);
+  // Vehicle's final depth should be near the 10m mark
+  EXPECT_NEAR(poses.back().Pos().Z(), -10.0, 1e-1);
 
-  // // Vehicle should have almost zero Z velocity at the end.
-  // EXPECT_NEAR(tethysLinearVel.back().Z(), 0, 1e-1);
+  // // Vehicle should have near zero Z velocity at the end.
+  EXPECT_NEAR(linearVelocities.back().Z(), 0, 1e-1);
 
-  // // Expect velocity to approach zero. At the end of the test, the vehicle may
-  // // not have actually reached zero as it may still be translating or yawing,
-  // // but its velocity should be less than the maximum velocity.
-  // EXPECT_LT(tethysLinearVel.back().Length(), maxVel.Length());
-
-  // Vehicle should pitch backward slightly
-  // TODO(arjo): enable pitch check after #89 is merged
-  // EXPECT_GE(tethysPoses.back().Rot().Euler().Y(), 0);
-  // EXPECT_LE(tethysPoses.back().Rot().Euler().Y(), IGN_DTOR(25));
+  // Expect velocity to approach zero. At the end of the test, the vehicle may
+  // not have actually reached zero as it may still be translating or yawing,
+  // but its velocity should be less than the maximum velocity.
+  EXPECT_LT(linearVelocities.back().Length(), maxLinearVelocity.Length());
 }
-

@@ -23,6 +23,7 @@
 #ifndef LRAUV_SYSTEM_TESTS__MODEL_OBSERVER_HH
 #define LRAUV_SYSTEM_TESTS__MODEL_OBSERVER_HH
 
+#include <chrono>
 #include <string>
 #include <deque>
 
@@ -41,17 +42,24 @@ class ModelObserver
   /// \param[in] _modelName Name of the model to observe.
   /// \param[in] _baseLinkName Name of the model's base link
   /// (to be used to measure linear and angular velocity).
-  /// \param[in] _historyDepth Maximum size for historic
-  /// buffers. Buffers grow indefinitely by default.
   public: ModelObserver(
     const std::string &_modelName,
-    const std::string &_baseLinkName = "base_link",
-    size_t _historyDepth = 0u);
+    const std::string &_baseLinkName = "base_link");
+
+  /// Limit buffers' window size.
+  /// \param[in] _windowSize Maximum window size as a duration
+  /// measured against the simulation clock.
+  public: void LimitTo(std::chrono::steady_clock::duration _windowSize);
 
   /// Update internal state from simulation state.
   /// \note To be called on world post-update.
+  /// \param[in] _info Info for the current iteration.
   /// \param[in] _ecm Entity component manager to be queried.
-  public: void Update(const ignition::gazebo::EntityComponentManager &_ecm);
+  public: void Update(const ignition::gazebo::UpdateInfo &_info,
+                      const ignition::gazebo::EntityComponentManager &_ecm);
+
+  /// Returns simulation times at which the model was observed.
+  public: const std::deque<std::chrono::steady_clock::duration> &Times() const;
 
   /// Returns model world poses seen.
   public: const std::deque<ignition::math::Pose3d> &Poses() const;
@@ -72,7 +80,10 @@ class ModelObserver
 
   private: std::string baseLinkName;
 
-  private: size_t historyDepth;
+  private: std::chrono::steady_clock::duration windowSize{
+    std::chrono::steady_clock::duration::zero()};
+
+  private: std::deque<std::chrono::steady_clock::duration> times;
 
   private: std::deque<ignition::math::Pose3d> poses;
 

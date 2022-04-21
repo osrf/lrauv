@@ -35,7 +35,7 @@ TEST(ElevatorActionTest, Sink)
   const auto &poses = fixture.VehicleObserver().Poses();
   EXPECT_NEAR(0.0, poses.back().Pos().X(), 1e-6);
   EXPECT_NEAR(0.0, poses.back().Pos().Y(), 1e-6);
-  EXPECT_NEAR(0.0, poses.back().Pos().Z(), 2e-2);
+  EXPECT_NEAR(-0.5, poses.back().Pos().Z(), 2e-2);
 
   // Propel vehicle
   lrauv_ignition_plugins::msgs::LRAUVCommand command;
