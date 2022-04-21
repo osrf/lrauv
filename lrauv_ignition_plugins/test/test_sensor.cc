@@ -36,10 +36,30 @@
 
 using namespace std::chrono_literals;
 
-void ChlorophyllCb(const ignition::msgs::Float &_msg)
+void ChlorophyllVeh1Cb(const ignition::msgs::Float &_msg)
 {
   // 0.22934943324714 is the value at this point. Allow some noise.
   EXPECT_NEAR(_msg.data(), 0.229, 0.001);
+}
+
+void SpawnVehicle(
+  ignition::transport::Node::Publisher &_spawnPub,
+  const std::string &_modelName,
+  const double _lat, const double _lon, const double _depth,
+  const int _acommsAddr)
+{
+  ignition::math::Angle lat1 = IGN_DTOR(_lat);
+  ignition::math::Angle lon1 = IGN_DTOR(_lon);
+
+  lrauv_ignition_plugins::msgs::LRAUVInit spawnMsg;
+  spawnMsg.mutable_id_()->set_data(_modelName);
+  spawnMsg.set_initlat_(lat1.Degree());
+  spawnMsg.set_initlon_(lon1.Degree());
+  spawnMsg.set_initz_(_depth);
+  spawnMsg.set_acommsaddress_(_acommsAddr);
+
+  _spawnPub.Publish(spawnMsg);
+
 }
 
 //////////////////////////////////////////////////
@@ -54,8 +74,8 @@ TEST(SensorTest, Sensor)
 
   ignition::gazebo::Entity vehicle1{ignition::gazebo::kNullEntity};
   unsigned int iterations{0u};
-  std::vector<ignition::math::Pose3d> poses1;
-  std::vector<ignition::math::Vector3d> latLon1;
+
+  std::unordered_set<std::string> vehicles;
 
   fixture->OnPostUpdate(
     [&](const ignition::gazebo::UpdateInfo &_info,
@@ -63,17 +83,7 @@ TEST(SensorTest, Sensor)
     {
       auto worldEntity = ignition::gazebo::worldEntity(_ecm);
       ignition::gazebo::World world(worldEntity);
-
       vehicle1 = world.ModelByName(_ecm, "vehicle1");
-      if (ignition::gazebo::kNullEntity != vehicle1)
-      {
-        poses1.push_back(ignition::gazebo::worldPose(vehicle1, _ecm));
-
-        auto latLon = ignition::gazebo::sphericalCoordinates(vehicle1, _ecm);
-        EXPECT_TRUE(latLon);
-        latLon1.push_back(latLon.value());
-      }
-
       iterations++;
     });
   fixture->Finalize();
@@ -82,12 +92,9 @@ TEST(SensorTest, Sensor)
   fixture->Server()->RunOnce();
   EXPECT_EQ(ignition::gazebo::kNullEntity, vehicle1);
   EXPECT_EQ(1, iterations);
-  EXPECT_EQ(0, poses1.size());
-  EXPECT_EQ(0, latLon1.size());
-
   // Spawn first vehicle
   ignition::transport::Node node;
-  node.Subscribe("/model/vehicle1/chlorophyll", &ChlorophyllCb);
+  node.Subscribe("/model/vehicle1/chlorophyll", &ChlorophyllVeh1Cb);
   auto spawnPub = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVInit>(
     "/lrauv/init");
 
@@ -101,19 +108,21 @@ TEST(SensorTest, Sensor)
 
   double spawnDepth{50};
 
-  // No specific orientation, vehicle will face North
-  ignition::math::Angle lat1 = IGN_DTOR(36.7999992370605);
-  ignition::math::Angle lon1 = IGN_DTOR(-122.720001220703);
-  {
-    lrauv_ignition_plugins::msgs::LRAUVInit spawnMsg;
-    spawnMsg.mutable_id_()->set_data("vehicle1");
-    spawnMsg.set_initlat_(lat1.Degree());
-    spawnMsg.set_initlon_(lon1.Degree());
-    spawnMsg.set_initz_(spawnDepth);
-    spawnMsg.set_acommsaddress_(201);
+  // On a depth coplanar to a peice of data
+  SpawnVehicle(
+    spawnPub, "vehicle1", 36.7999992370605, -122.720001220703, 50, 0);
 
-    spawnPub.Publish(spawnMsg);
-  }
+  // At the surface should still have reading
+  SpawnVehicle(
+    spawnPub, "vehicle2", 36.7999992370605, -122.720001220703, 0, 0);
+
+  // In the middle of two slices
+  SpawnVehicle(
+    spawnPub, "vehicle3", 36.7999992370605, -122.720001220703, 48, 0);
+
+  // In the middle of a quadrant
+  SpawnVehicle(
+    spawnPub, "vehicle4", 36.7999992370605, -122.7, 48, 0);
 
   // Check that vehicle was spawned
   int expectedIterations = iterations;
@@ -126,30 +135,7 @@ TEST(SensorTest, Sensor)
     expectedIterations++;
     igndbg << "Waiting for vehicle1" << std::endl;
   }
-  EXPECT_LE(sleep, maxSleep);
-  EXPECT_NE(ignition::gazebo::kNullEntity, vehicle1);
-  EXPECT_EQ(expectedIterations, iterations);
-  EXPECT_LT(0, poses1.size());
-  EXPECT_LT(0, latLon1.size());
 
-  double tightTol{1e-5};
-
-  // Check vehicle positions in ENU
-  // World origin
-  EXPECT_NEAR(0.0, poses1.back().Pos().X(), tightTol);
-  EXPECT_NEAR(0.0, poses1.back().Pos().Y(), tightTol);
-  EXPECT_NEAR(0.0, poses1.back().Pos().Z(), tightTol);
-  // Facing North (-90 rotation from default West orientation)
-  EXPECT_NEAR(0.0, poses1.back().Rot().Roll(), tightTol);
-  EXPECT_NEAR(0.0, poses1.back().Rot().Pitch(), tightTol);
-  EXPECT_NEAR(-IGN_PI*0.5, poses1.back().Rot().Yaw(), tightTol);
-
-  EXPECT_NEAR(lat1.Degree(), latLon1.back().X(), tightTol);
-  EXPECT_NEAR(lon1.Degree(), latLon1.back().Y(), tightTol);
-  EXPECT_NEAR(-spawnDepth, latLon1.back().Z(), tightTol);
-
-  // Higher tolerance for lat/lon because of the conversions
-  double latLonTol{2e-2};
 
   fixture->Server()->Run(true, 10000, false);
 
