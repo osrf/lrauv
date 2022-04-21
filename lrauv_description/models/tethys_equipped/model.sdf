@@ -321,7 +321,7 @@
         filename="AcousticCommsPlugin"
         name="tethys::AcousticCommsPlugin">
         <address>1</address>
-        <model_plugin_file>simpleacousticmodel</model_plugin_file>
+        <model_plugin_file>simple_acoustic_model</model_plugin_file>
         <model_name>tethys::SimpleAcousticModel</model_name>
         <link_name>acoustic_transponder</link_name>
         <max_range>2500</max_range>
