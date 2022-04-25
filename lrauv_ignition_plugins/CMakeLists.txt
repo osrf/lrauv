@@ -20,7 +20,7 @@ endif()
 
 #============================================================================
 # Find dependencies
-find_package(ignition-cmake2 REQUIRED)
+find_package(ignition-cmake3 REQUIRED)
 
 find_package(ignition-gazebo7 REQUIRED COMPONENTS gui)
 set(IGN_GAZEBO_VER ${ignition-gazebo7_VERSION_MAJOR})
