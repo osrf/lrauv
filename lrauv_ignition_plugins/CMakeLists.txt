@@ -38,8 +38,8 @@ set(IGN_MSGS_VER ${ignition-msgs9_VERSION_MAJOR})
 find_package(ignition-plugin1 REQUIRED COMPONENTS register)
 set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
 
-find_package(ignition-utils1 REQUIRED)
-set(IGN_UTILS_VER ${ignition-utils1_VERSION_MAJOR})
+find_package(ignition-utils2 REQUIRED)
+set(IGN_UTILS_VER ${ignition-utils2_VERSION_MAJOR})
 
 find_package(ignition-common5 REQUIRED COMPONENTS profiler)
 set(IGN_COMMON_VER ${ignition-common5_VERSION_MAJOR})
