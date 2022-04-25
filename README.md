@@ -490,6 +490,27 @@ for example:
 1. `~/lrauv_ws/src/lrauv-application-2/bin/LRAUV`
 1. Start more `bin/LRAUV` as needed
 
+## Levels
+
+Some worlds support [levels](https://ignitionrobotics.org/api/gazebo/6.7/levels.html).
+Levels are turned off by default, which means that all heightmap tiles will
+be loaded at all times. When levels are enabled, only the tiles containing
+vehicles (performers) spawned with `WorldCommPlugin` with an
+[lrauv_init](https://github.com/osrf/lrauv/blob/main/lrauv_ignition_plugins/proto/lrauv_init.proto)
+message will be loaded.
+
+For example, loading without levels:
+
+`ign gazebo -v 4 portuguese_ledge.sdf`
+
+![portuguese_ledge_no_levels](https://user-images.githubusercontent.com/5751272/159629754-9206a9fe-eeed-4afc-a516-5c25a9fbdaf6.png)
+
+And with levels:
+
+`ign gazebo -v 4 portuguese_ledge.sdf --levels`
+
+![portuguese_ledge_no_levels](https://user-images.githubusercontent.com/5751272/159813230-809d1cad-b3f5-457a-af19-3752bec0710f.gif)
+
 ### Troubleshoot
 
 After issuing control commands, for example, rudder and thrust, if you then

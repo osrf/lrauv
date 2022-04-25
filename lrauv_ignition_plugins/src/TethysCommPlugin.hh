@@ -221,6 +221,9 @@ namespace tethys
     /// Publisher of robot state
     private: ignition::transport::Node::Publisher statePub;
 
+    /// Publisher of robot NavSat location
+    private: ignition::transport::Node::Publisher navSatPub;
+
     /// Publisher of thruster
     private: ignition::transport::Node::Publisher thrusterPub;
 

@@ -80,6 +80,9 @@ namespace tethys
     /// Service to create entities
     private: std::string createService;
 
+    /// Service to make spawned entities performers (for levels)
+    private: std::string performerService;
+
     /// Whether the world origin's latitude and longitude have already been set.
     private: bool hasWorldLatLon{false};
   };

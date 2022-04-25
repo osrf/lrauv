@@ -38,6 +38,7 @@ RUN apt-get update \
         lsb-release \
         tzdata \
         wget \
+        python3-empy \
         python3-numpy
 
 # Add Ignition's latest packages, which may be more up-to-date than the ones from the MBARI image
