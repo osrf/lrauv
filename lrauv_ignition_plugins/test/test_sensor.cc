@@ -36,10 +36,46 @@
 
 using namespace std::chrono_literals;
 
+bool received_msg[4] = {false};
+
 void ChlorophyllVeh1Cb(const ignition::msgs::Float &_msg)
 {
   // 0.22934943324714 is the value at this point. Allow some noise.
   EXPECT_NEAR(_msg.data(), 0.229, 0.001);
+  received_msg[0] = true;
+}
+
+void ChlorophyllVeh2Cb(const ignition::msgs::Float &_msg)
+{
+  // 0.3935107401546 is the value at this point. Allow some noise.
+  EXPECT_NEAR(_msg.data(), 0.393, 0.001);
+  received_msg[1] = true;
+}
+
+void ChlorophyllVeh3Cb(const ignition::msgs::Float &_msg)
+{
+  // Nearest readings are:
+  // Chlorophyll sensor: 0.935823@36.8 -122.72 40
+  // Chlorophyll sensor: 0.229349@36.8 -122.72 50
+  // Chlorophyll sensor: 0.576666@36.8 -122.7 40
+  // Chlorophyll sensor: 0.946913@36.8 -122.7 50
+  // Therefore value should lie between 0.94 and 0.229
+  EXPECT_GT(_msg.data(), 0.229);
+  EXPECT_LT(_msg.data(), 0.95);
+  received_msg[2] = true;
+}
+
+void ChlorophyllVeh4Cb(const ignition::msgs::Float &_msg)
+{
+  // Nearest readings are:
+  // Chlorophyll sensor: 0.935823@36.8 -122.72 40
+  //Chlorophyll sensor: 0.229349@36.8 -122.72 50
+  //Chlorophyll sensor: 0.576666@36.8 -122.7 40
+  //Chlorophyll sensor: 0.946913@36.8 -122.7 50
+  // Therefore value should lie between 0.95 and 0.229
+  EXPECT_GT(_msg.data(), 0.229);
+  EXPECT_LT(_msg.data(), 0.95);
+  received_msg[3] = true;
 }
 
 void SpawnVehicle(
@@ -71,11 +107,11 @@ TEST(SensorTest, Sensor)
   auto fixture = std::make_unique<ignition::gazebo::TestFixture>(
       ignition::common::joinPaths(
       std::string(PROJECT_SOURCE_PATH), "worlds", "empty_environment.sdf"));
-
-  ignition::gazebo::Entity vehicle1{ignition::gazebo::kNullEntity};
   unsigned int iterations{0u};
 
-  std::unordered_set<std::string> vehicles;
+  std::atomic<bool> spawnedAllVehicles = {false};
+  static const std::string vehicles[] =
+    {"vehicle1", "vehicle2", "vehicle3", "vehicle4"};
 
   fixture->OnPostUpdate(
     [&](const ignition::gazebo::UpdateInfo &_info,
@@ -83,18 +119,28 @@ TEST(SensorTest, Sensor)
     {
       auto worldEntity = ignition::gazebo::worldEntity(_ecm);
       ignition::gazebo::World world(worldEntity);
-      vehicle1 = world.ModelByName(_ecm, "vehicle1");
+      int numVehiclesSpawned{0};
+      for (auto v1 : vehicles)
+      {
+        if (world.ModelByName(_ecm, v1) != ignition::gazebo::kNullEntity)
+        {
+          numVehiclesSpawned++;
+        }
+      }
+
+      if (numVehiclesSpawned == 4)
+      {
+        spawnedAllVehicles = true;
+      }
       iterations++;
     });
   fixture->Finalize();
 
   // Check that vehicles don't exist
   fixture->Server()->RunOnce();
-  EXPECT_EQ(ignition::gazebo::kNullEntity, vehicle1);
   EXPECT_EQ(1, iterations);
   // Spawn first vehicle
   ignition::transport::Node node;
-  node.Subscribe("/model/vehicle1/chlorophyll", &ChlorophyllVeh1Cb);
   auto spawnPub = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVInit>(
     "/lrauv/init");
 
@@ -106,37 +152,44 @@ TEST(SensorTest, Sensor)
   }
   ASSERT_LE(sleep, maxSleep);
 
-  double spawnDepth{50};
 
-  // On a depth coplanar to a peice of data
+  // On a depth coplanar to a piece of data
   SpawnVehicle(
     spawnPub, "vehicle1", 36.7999992370605, -122.720001220703, 50, 0);
+  node.Subscribe("/model/vehicle1/chlorophyll", &ChlorophyllVeh1Cb);
 
   // At the surface should still have reading
   SpawnVehicle(
     spawnPub, "vehicle2", 36.7999992370605, -122.720001220703, 0, 0);
+  node.Subscribe("/model/vehicle2/chlorophyll", &ChlorophyllVeh2Cb);
 
-  // In the middle of two slices
+  // In the middle of two slices, still in a plane
   SpawnVehicle(
-    spawnPub, "vehicle3", 36.7999992370605, -122.720001220703, 48, 0);
+    spawnPub, "vehicle3", 36.7999992370605, -122.720001220703, 45, 0);
+  node.Subscribe("/model/vehicle3/chlorophyll", &ChlorophyllVeh3Cb);
 
   // In the middle of a quadrant
   SpawnVehicle(
     spawnPub, "vehicle4", 36.7999992370605, -122.7, 48, 0);
+  node.Subscribe("/model/vehicle4/chlorophyll", &ChlorophyllVeh4Cb);
 
   // Check that vehicle was spawned
   int expectedIterations = iterations;
-  for (sleep = 0; ignition::gazebo::kNullEntity == vehicle1 && sleep < maxSleep;
+  for (sleep = 0; spawnedAllVehicles.load() == false && sleep < maxSleep;
       ++sleep)
   {
     std::this_thread::sleep_for(100ms);
     // Run paused so we avoid the physics moving the vehicles
     fixture->Server()->RunOnce(true);
     expectedIterations++;
-    igndbg << "Waiting for vehicle1" << std::endl;
+    igndbg << "Waiting for vehicles to spawn" << std::endl;
   }
+  EXPECT_TRUE(spawnedAllVehicles.load());
 
+  fixture->Server()->Run(true, 10, false);
 
-  fixture->Server()->Run(true, 10000, false);
-
+  for (auto msg: received_msg)
+  {
+    EXPECT_TRUE(msg);
+  }
 }

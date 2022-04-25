@@ -689,10 +689,6 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     const auto& timeslice = this->dataPtr->timeSpaceIndex[this->dataPtr->timeIdx];
     auto interpolators = timeslice.GetInterpolators(sphericalDepthCorrected);
 
-    // For the correct sensor, interpolate using nearby locations with data
-
-    //TODO(arjo): Replace with interpolation code.
-    //For now just report some measurement.
     IGN_PROFILE("ScienceSensorsSystem::Interpolation");
     if (interpolators.size() == 0) return;
     if (!interpolators[0].index.has_value()) return;
@@ -727,6 +723,19 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
       sensor))
     {
+      /// Uncomment to debug
+      /// igndbg << "------------------" << std::endl;
+      /// igndbg << "Sensor position: " << sphericalDepthCorrected << std::endl;
+      /// igndbg << "Got" << interpolators.size() << " interpolators" << std::endl;
+      /// for (auto interp: interpolators)
+      /// {
+      ///   if (!interp.index.has_value()) continue;
+      ///   igndbg << "Chlorophyll sensor: " <<
+      ///     this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx][
+      ///       interp.index.value()] << "@" << interp.position << std::endl;
+      ///   igndbg << "My distance is " << interp.position.X() - sphericalDepthCorrected.X()
+      ///   << ", " << interp.position.Y() - sphericalDepthCorrected.Y() << std::endl;
+      /// }
       const auto chlor = timeslice.EstimateValueUsingTrilinear(
           interpolators,
           sphericalDepthCorrected,
