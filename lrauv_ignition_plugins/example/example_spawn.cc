@@ -32,7 +32,7 @@
 #include <thread>
 
 #include <ignition/transport/Node.hh>
-#include "lrauv_init.pb.h"
+#include "lrauv_ignition_plugins/lrauv_init.pb.h"
 
 int main(int _argc, char **_argv)
 {
