@@ -52,7 +52,7 @@ class Subscription
   {
     if (this->subscribed)
     {
-      throw std::logic_error("cannot ");
+      throw std::logic_error("Subscription already subscribed");
     }
     std::lock_guard<std::mutex> lock(this->mutex);
     const auto callback = &Subscription::OnMessage;
