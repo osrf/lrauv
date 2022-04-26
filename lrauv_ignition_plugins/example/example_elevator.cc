@@ -30,7 +30,7 @@
 
 #include <ignition/msgs.hh>
 #include <ignition/transport.hh>
-#include "lrauv_command.pb.h"
+#include "lrauv_ignition_plugins/lrauv_command.pb.h"
 
 int main(int _argc, char **_argv)
 {

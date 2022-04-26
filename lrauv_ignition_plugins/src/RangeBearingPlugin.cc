@@ -22,8 +22,8 @@
 
 #include "RangeBearingPlugin.hh"
 
-#include "lrauv_range_bearing_request.pb.h"
-#include "lrauv_range_bearing_response.pb.h"
+#include "lrauv_ignition_plugins/lrauv_range_bearing_request.pb.h"
+#include "lrauv_ignition_plugins/lrauv_range_bearing_response.pb.h"
 
 #include <queue>
 
