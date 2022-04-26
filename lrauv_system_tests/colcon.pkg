@@ -1,0 +1,3 @@
+{
+    "dependencies": ["lrauv_description", "lrauv_ignition_plugins"]
+}
