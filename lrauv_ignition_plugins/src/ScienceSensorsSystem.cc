@@ -396,6 +396,7 @@ void ScienceSensorsSystemPrivate::ReadData(
           auto newCloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(
               new pcl::PointCloud<pcl::PointXYZ>);
           this->timeSpaceCoords.push_back(newCloud->makeShared());
+          this->timeSpaceIndex.push_back({});
           // Is this valid memory management?
           this->temperatureArr.push_back(std::vector<float>());
           this->salinityArr.push_back(std::vector<float>());
@@ -472,8 +473,13 @@ void ScienceSensorsSystemPrivate::ReadData(
       {
         // Gather spatial coordinates, 3 fields in the line, into point cloud
         // for indexing this time slice of data.
+        auto cart =
+          this->world.SphericalCoordinates(_ecm)->LocalFromSphericalPosition(
+            {latitude, longitude, -depth});
         this->timeSpaceCoords[lineTimeIdx]->push_back(
-          pcl::PointXYZ(latitude, longitude, depth));
+          pcl::PointXYZ(cart.X(), cart.Y(), cart.Z()));
+        this->timeSpaceIndex[lineTimeIdx]emplace_back(
+          latitude, longitude, depth);
 
         // Populate science data
         this->temperatureArr[lineTimeIdx].push_back(temp);
@@ -495,24 +501,6 @@ void ScienceSensorsSystemPrivate::ReadData(
   // Make sure the number of timestamps in the 1D indexing array, and the
   // number of time slices of data, are the same.
   assert(this->timestamps.size() == this->timeSpaceCoords.size());
-
-  for (int i = 0; i < this->timeSpaceCoords.size(); i++)
-  {
-    igndbg << "At time slice " << this->timestamps[i] << ", populated "
-           << this->timeSpaceCoords[i]->size()
-           << " spatial coordinates." << std::endl;
-    // This is fairly inefficient but overall I'd like to eleminate PCL as a
-    // dependency.
-    std::vector<ignition::math::Vector3d> points;
-    for (int j = 0; j < this->timeSpaceCoords[i]->size(); j++)
-    {
-      points.push_back(
-        ignition::math::Vector3d(this->timeSpaceCoords[i]->at(j).x,
-                                 this->timeSpaceCoords[i]->at(j).y,
-                                 this->timeSpaceCoords[i]->at(j).z));
-    }
-    this->timeSpaceIndex.emplace_back(points);
-  }
 }
 
 /////////////////////////////////////////////////
