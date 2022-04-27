@@ -30,7 +30,7 @@
 #include <ignition/math/SphericalCoordinates.hh>
 #include <ignition/transport/Node.hh>
 
-#include "lrauv_init.pb.h"
+#include <lrauv_ignition_plugins/lrauv_init.pb.h>
 
 #include "TestConstants.hh"
 
@@ -184,7 +184,7 @@ TEST(SensorTest, Sensor)
     expectedIterations++;
     igndbg << "Waiting for vehicles to spawn" << std::endl;
   }
-  EXPECT_TRUE(spawnedAllVehicles.load());
+  EXPECT_TRUE(spawnedAllVehicles);
 
   fixture->Server()->Run(true, 10, false);
 
