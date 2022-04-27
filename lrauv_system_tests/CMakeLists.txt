@@ -46,9 +46,9 @@ target_link_libraries(${PROJECT_NAME}_support PUBLIC
 target_compile_features(${PROJECT_NAME}_support PUBLIC cxx_std_17)
 #============================================================================
 # Tests
+include(CTest)
 if(BUILD_TESTING)
   enable_testing()
-  include(Dart)
 
   add_subdirectory(test)
 endif()

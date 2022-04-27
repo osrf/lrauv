@@ -34,7 +34,7 @@
 #include <ignition/plugin/Register.hh>
 #include <ignition/transport/TopicUtils.hh>
 
-#include "lrauv_init.pb.h"
+#include "lrauv_ignition_plugins/lrauv_init.pb.h"
 
 #include "WorldCommPlugin.hh"
 

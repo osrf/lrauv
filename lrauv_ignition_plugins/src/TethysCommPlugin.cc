@@ -37,8 +37,8 @@
 #include <ignition/plugin/Register.hh>
 #include <ignition/transport/TopicUtils.hh>
 
-#include "lrauv_command.pb.h"
-#include "lrauv_state.pb.h"
+#include "lrauv_ignition_plugins/lrauv_command.pb.h"
+#include "lrauv_ignition_plugins/lrauv_state.pb.h"
 
 #include "TethysCommPlugin.hh"
 
