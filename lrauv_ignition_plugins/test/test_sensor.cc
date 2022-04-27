@@ -36,7 +36,7 @@
 
 using namespace std::chrono_literals;
 
-bool received_msg[4] = {false};
+std::atomic<bool> received_msg[4] = {false};
 
 void ChlorophyllVeh1Cb(const ignition::msgs::Float &_msg)
 {
@@ -109,7 +109,7 @@ TEST(SensorTest, Sensor)
       std::string(PROJECT_SOURCE_PATH), "worlds", "empty_environment.sdf"));
   unsigned int iterations{0u};
 
-  std::atomic<bool> spawnedAllVehicles = {false};
+  bool spawnedAllVehicles = {false};
   static const std::string vehicles[] =
     {"vehicle1", "vehicle2", "vehicle3", "vehicle4"};
 
@@ -175,7 +175,7 @@ TEST(SensorTest, Sensor)
 
   // Check that vehicle was spawned
   int expectedIterations = iterations;
-  for (sleep = 0; spawnedAllVehicles.load() == false && sleep < maxSleep;
+  for (sleep = 0; !spawnedAllVehicles && sleep < maxSleep;
       ++sleep)
   {
     std::this_thread::sleep_for(100ms);
@@ -188,8 +188,8 @@ TEST(SensorTest, Sensor)
 
   fixture->Server()->Run(true, 10, false);
 
-  for (auto msg: received_msg)
+  for (auto &msg: received_msg)
   {
-    EXPECT_TRUE(msg);
+    EXPECT_TRUE(msg.load());
   }
 }
