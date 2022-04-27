@@ -1,0 +1,10 @@
+_colcon_prepend_unique_value IGN_GAZEBO_RESOURCE_PATH @CMAKE_INSTALL_PREFIX@/share/@PROJECT_NAME@/worlds
+_colcon_prepend_unique_value IGN_GAZEBO_RESOURCE_PATH @CMAKE_INSTALL_PREFIX@/share/@PROJECT_NAME@/models
+_colcon_prepend_unique_value IGN_GAZEBO_RESOURCE_PATH @CMAKE_INSTALL_PREFIX@/share/@PROJECT_NAME@/data
+_colcon_prepend_unique_value IGN_GAZEBO_SYSTEM_PLUGIN_PATH @CMAKE_INSTALL_PREFIX@/lib
+
+_colcon_prepend_unique_value IGN_GUI_PLUGIN_PATH @CMAKE_INSTALL_PREFIX@/lib/gui
+
+_colcon_prepend_unique_value TETHYS_COMMS_MODEL @CMAKE_INSTALL_PREFIX@/lib
+
+_colcon_prepend_unique_value LD_LIBRARY_PATH @CMAKE_INSTALL_PREFIX@/lib

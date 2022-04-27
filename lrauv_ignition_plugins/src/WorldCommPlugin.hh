@@ -30,7 +30,7 @@
 #include <ignition/math/Temperature.hh>
 #include <ignition/transport/Node.hh>
 
-#include "lrauv_init.pb.h"
+#include "lrauv_ignition_plugins/lrauv_init.pb.h"
 
 namespace tethys
 {
@@ -79,6 +79,9 @@ namespace tethys
 
     /// Service to create entities
     private: std::string createService;
+
+    /// Service to make spawned entities performers (for levels)
+    private: std::string performerService;
 
     /// Whether the world origin's latitude and longitude have already been set.
     private: bool hasWorldLatLon{false};

@@ -28,8 +28,8 @@
 
 #include <ignition/math/Vector3.hh>
 
-#include "lrauv_acoustic_message.pb.h"
-#include "lrauv_internal_comms.pb.h"
+#include "lrauv_ignition_plugins/lrauv_acoustic_message.pb.h"
+#include "lrauv_ignition_plugins/lrauv_internal_comms.pb.h"
 
 namespace tethys
 {

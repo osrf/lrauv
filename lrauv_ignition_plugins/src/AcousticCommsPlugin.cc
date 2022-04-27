@@ -39,8 +39,8 @@
 #include <lrauv_ignition_plugins/comms/MessageManager.hh>
 #include <lrauv_ignition_plugins/comms/TopicDefinitions.hh>
 
-#include "lrauv_acoustic_message.pb.h"
-#include "lrauv_internal_comms.pb.h"
+#include "lrauv_ignition_plugins/lrauv_acoustic_message.pb.h"
+#include "lrauv_ignition_plugins/lrauv_internal_comms.pb.h"
 
 namespace tethys
 {

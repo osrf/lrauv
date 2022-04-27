@@ -30,7 +30,7 @@
 #include <ignition/math/Temperature.hh>
 #include <ignition/transport/Node.hh>
 
-#include "lrauv_command.pb.h"
+#include "lrauv_ignition_plugins/lrauv_command.pb.h"
 
 namespace tethys
 {
@@ -220,6 +220,9 @@ namespace tethys
 
     /// Publisher of robot state
     private: ignition::transport::Node::Publisher statePub;
+
+    /// Publisher of robot NavSat location
+    private: ignition::transport::Node::Publisher navSatPub;
 
     /// Publisher of thruster
     private: ignition::transport::Node::Publisher thrusterPub;

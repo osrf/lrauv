@@ -4,7 +4,7 @@
   Research Institute (MBARI) and the David and Lucile Packard Foundation
 -->
 <sdf version="1.6">
-  <world name="tilted_world">
+  <world name="flat_tethys_no_damping">
     <gravity>0 0 -9.8</gravity>
     <scene>
       <!-- For turquoise ambient to match particle effect -->
@@ -13,7 +13,6 @@
       <!--background>0.8 0.8 0.8</background-->
       <background>0.0 0.7 0.8</background>
     </scene>
-
 
     <physics name="1ms" type="dart">
       <max_step_size>0.02</max_step_size>
@@ -35,19 +34,11 @@
     <plugin
       filename="ignition-gazebo-buoyancy-system"
       name="ignition::gazebo::systems::Buoyancy">
-      <!-- TODO: fix behaviour near surface, see https://github.com/osrf/lrauv/issues/102
-        <graded_buoyancy>
-        <default_density>1025</default_density>
-        <density_change>
-          <above_depth>5</above_depth>
-          <density>1</density>
-        </density_change>
-      </graded_buoyancy> -->
       <uniform_fluid_density>1025</uniform_fluid_density>
     </plugin>
 
     <include>
-      <pose>0 0 0 0 0.08 0</pose>
+      <pose>0 0 0 0 0 0</pose>
       <uri>tethys</uri>
       <plugin
         filename="ignition-gazebo-detachable-joint-system"
