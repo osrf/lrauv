@@ -174,6 +174,9 @@ class tethys::ScienceSensorsSystemPrivate
   /// the visuallization.
   public: std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> timeSpaceCoords;
 
+  public: std::vector<std::vector<ignition::math::Vector3d>> 
+    timeSpaceCoordsLatLon;
+
   /// \brief Spatial index of data.
   /// Vector size: number of time slices. Indices correspond to those of
   public: std::vector<ignition::math::VolumetricGridLookupField<double>>
@@ -396,7 +399,7 @@ void ScienceSensorsSystemPrivate::ReadData(
           auto newCloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(
               new pcl::PointCloud<pcl::PointXYZ>);
           this->timeSpaceCoords.push_back(newCloud->makeShared());
-          this->timeSpaceIndex.push_back({});
+          this->timeSpaceCoordsLatLon.push_back({});
           // Is this valid memory management?
           this->temperatureArr.push_back(std::vector<float>());
           this->salinityArr.push_back(std::vector<float>());
@@ -478,7 +481,7 @@ void ScienceSensorsSystemPrivate::ReadData(
             {latitude, longitude, -depth});
         this->timeSpaceCoords[lineTimeIdx]->push_back(
           pcl::PointXYZ(cart.X(), cart.Y(), cart.Z()));
-        this->timeSpaceIndex[lineTimeIdx]emplace_back(
+        this->timeSpaceCoordsLatLon[lineTimeIdx].emplace_back(
           latitude, longitude, depth);
 
         // Populate science data
@@ -496,6 +499,11 @@ void ScienceSensorsSystemPrivate::ReadData(
         continue;
       }
     }
+  }
+
+  for(const auto &pCloud: this->timeSpaceCoordsLatLon)
+  {
+    this->timeSpaceIndex.emplace_back(pCloud);
   }
 
   // Make sure the number of timestamps in the 1D indexing array, and the
