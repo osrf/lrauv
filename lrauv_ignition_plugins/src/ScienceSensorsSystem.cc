@@ -703,6 +703,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
 
       if (sal.has_value())
         casted->SetData(sal.value());
+      else
+        casted->SetData(std::nanf(""));
     }
     else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
       sensor))
@@ -717,6 +719,12 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       {
         ignition::math::Temperature tempC;
         tempC.SetCelsius(temp.value());
+        casted->SetData(tempC);
+      }
+      else
+      {
+        ignition::math::Temperature tempC;
+        tempC.SetCelsius(std::nanf(""));
         casted->SetData(tempC);
       }
     }
@@ -743,6 +751,8 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         );
       if (chlor.has_value())
         casted->SetData(chlor.value());
+      else
+        casted->SetData(std::nanf(""));
     }
     else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(
       sensor))
@@ -760,6 +770,11 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       if (nCurr.has_value() && eCurr.has_value())
       {
         ignition::math::Vector3d current(nCurr.value(), eCurr.value(), 0);
+        casted->SetData(current);
+      }
+      else
+      {
+        ignition::math::Vector3d current(std::nan(""), std::nan(""), 0);
         casted->SetData(current);
       }
     }
