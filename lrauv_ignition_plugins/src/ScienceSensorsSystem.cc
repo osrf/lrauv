@@ -676,9 +676,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   {
     IGN_PROFILE("ScienceSensorsSystem::LookupInterpolators");
     auto sensorPosENU = ignition::gazebo::worldPose(entity, _ecm).Pos();
-    auto spherical =
-      this->dataPtr->world.SphericalCoordinates(_ecm)
-        ->SphericalFromLocalPosition(sensorPosENU);
+    auto spherical = ignition::gazebo::sphericalCoordinates(entity, _ecm).value();
     auto sphericalDepthCorrected = ignition::math::Vector3d{spherical.X(), spherical.Y(),
       -spherical.Z()};
 
