@@ -78,7 +78,7 @@ TEST(MissionTest, YoYoCircle)
       {
         // Depth should be at greater than 2m after initial descent,
         // with some tolerance to accommodate vertical control overshoot
-        EXPECT_GT(-2.0 + 1.8, poses[i].Pos().Z());
+        EXPECT_GT(-2.0 + 2.0, poses[i].Pos().Z());
       }
 
       if (times[i] > 5min)
