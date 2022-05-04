@@ -24,6 +24,8 @@
 
 #include <Eigen/Eigen>
 
+#include <ignition/msgs.hh>
+
 namespace tethys
 {
 
@@ -91,12 +93,27 @@ class HydrodynamicsPrivateData
   /// \brief Water density [kg/m^3].
   public: double waterDensity;
 
+  /// \brief Water current [m/s].
+  public: ignition::math::Vector3d waterCurrent {0.0, 0.0, 0.0};
+
   public: Eigen::VectorXd prevState;
 
   public: Eigen::VectorXd prevStateDot;
 
+  /// \brief Update current during simulation
+  public: void UpdateCurrent(
+    const ignition::msgs::Vector3d &_msg)
+  {
+    std::lock_guard<std::mutex> lock(this->mtx);
+    this->waterCurrent = ignition::msgs::Convert(_msg);
+  }
+
   /// Link entity
   public: ignition::gazebo::Entity linkEntity;
+
+  public: ignition::transport::Node node;
+
+  public: std::mutex mtx;
 };
 
 
@@ -208,6 +225,26 @@ void HydrodynamicsPlugin::Configure(
   AddWorldPose(this->dataPtr->linkEntity, _ecm);
   AddAngularVelocityComponent(this->dataPtr->linkEntity, _ecm);
   AddWorldLinearVelocity(this->dataPtr->linkEntity, _ecm);
+
+  std::string ns {""};
+  std::string currentTopic {"/ocean_current"};
+  if (_sdf->HasElement("namespace"))
+  {
+    ns = _sdf->Get<std::string>("namespace");
+    currentTopic = ignition::transport::TopicUtils::AsValidTopic(
+        "/model/" + ns + "/ocean_current");
+  }
+
+  this->dataPtr->node.Subscribe(
+    currentTopic,
+    &HydrodynamicsPrivateData::UpdateCurrent,
+    this->dataPtr.get());
+
+  if(_sdf->HasElement("default_current"))
+  {
+    this->dataPtr->waterCurrent =
+      _sdf->Get<ignition::math::Vector3d>("default_current");
+  }
 }
 
 void HydrodynamicsPlugin::PreUpdate(
@@ -230,6 +267,7 @@ void HydrodynamicsPlugin::PreUpdate(
   Eigen::MatrixXd Dmat     = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd Ma = Eigen::MatrixXd::Zero(6,6);
 
+  std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
   // Get vehicle state
   ignition::gazebo::Link baseLink(this->dataPtr->linkEntity);
   auto linearVelocity =
@@ -246,7 +284,8 @@ void HydrodynamicsPlugin::PreUpdate(
   auto pose = baseLink.WorldPose(_ecm);
   // Since we are transforming angular and linear velocity we only care about
   // rotation
-  auto localLinearVelocity = pose->Rot().Inverse() * linearVelocity->Data();
+  auto localLinearVelocity = pose->Rot().Inverse() *
+    (linearVelocity->Data() - this->dataPtr->waterCurrent);
   auto localRotationalVelocity = pose->Rot().Inverse() * *rotationalVelocity;
 
   state(0) = localLinearVelocity.X();
