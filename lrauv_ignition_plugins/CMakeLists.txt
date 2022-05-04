@@ -263,7 +263,6 @@ add_custom_target(world_gen_target ALL
 
 #============================================================================
 # Resources
-
 install(
   DIRECTORY
     data
