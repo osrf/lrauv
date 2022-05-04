@@ -7,6 +7,8 @@ cmake_minimum_required(VERSION 3.10.2 FATAL_ERROR)
 
 project(lrauv_ignition_plugins)
 
+include(CTest)
+
 # Option to enable profiler
 option(ENABLE_PROFILER "Enable Ignition Profiler" FALSE)
 
@@ -18,7 +20,7 @@ endif()
 
 #============================================================================
 # Find dependencies
-find_package(ignition-cmake2 REQUIRED)
+find_package(ignition-cmake3 REQUIRED)
 
 find_package(ignition-gazebo7 REQUIRED COMPONENTS gui)
 set(IGN_GAZEBO_VER ${ignition-gazebo7_VERSION_MAJOR})
@@ -34,12 +36,13 @@ set(IGN_SENSORS_VER ${ignition-sensors7_VERSION_MAJOR})
 
 find_package(ignition-msgs9 REQUIRED)
 set(IGN_MSGS_VER ${ignition-msgs9_VERSION_MAJOR})
+set(IGNITION_MSGS ignition-msgs${IGN_MSGS_VER}::ignition-msgs${IGN_MSGS_VER})
 
-find_package(ignition-plugin1 REQUIRED COMPONENTS register)
-set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
+find_package(ignition-plugin2 REQUIRED COMPONENTS register)
+set(IGN_PLUGIN_VER ${ignition-plugin2_VERSION_MAJOR})
 
-find_package(ignition-utils1 REQUIRED)
-set(IGN_UTILS_VER ${ignition-utils1_VERSION_MAJOR})
+find_package(ignition-utils2 REQUIRED)
+set(IGN_UTILS_VER ${ignition-utils2_VERSION_MAJOR})
 
 find_package(ignition-common5 REQUIRED COMPONENTS profiler)
 set(IGN_COMMON_VER ${ignition-common5_VERSION_MAJOR})
@@ -71,8 +74,6 @@ add_subdirectory(proto)
 # [RENDERING]: Optional. Include to link against Ignition Rendering.
 #
 # [PRIVATE_LINK_LIBS]: Specify a list of libraries to be privately linked.
-#
-# [INCLUDE_COMMS]: Optional. Include comms header files.
 function(add_lrauv_plugin PLUGIN)
   set(options PCL GUI RENDERING INCLUDE_COMMS)
   set(oneValueArgs)
@@ -97,8 +98,7 @@ function(add_lrauv_plugin PLUGIN)
   endif()
 
   # All plugins
-  add_library(${PLUGIN}
-    SHARED ${PLUGIN_SOURCES})
+  add_library(${PLUGIN} SHARED ${PLUGIN_SOURCES})
   set_property(TARGET ${PLUGIN} PROPERTY CXX_STANDARD 17)
   target_link_libraries(${PLUGIN}
     PUBLIC
@@ -111,17 +111,8 @@ function(add_lrauv_plugin PLUGIN)
 
   # Link against proto libraries
   if (add_lrauv_plugin_PROTO)
-    target_include_directories(${PLUGIN}
-      PUBLIC ${CMAKE_BINARY_DIR}/proto)
     target_link_libraries(${PLUGIN}
       PUBLIC ${add_lrauv_plugin_PROTO})
-    add_dependencies(${PLUGIN} ${add_lrauv_plugin_PROTO})
-  endif()
-
-  # Include comms
-  if (add_lrauv_plugin_INCLUDE_COMMS)
-    target_include_directories(${PLUGIN}
-      PUBLIC include)
   endif()
 
   # Include PCL
@@ -159,23 +150,23 @@ endfunction()
 add_subdirectory(src/comms/)
 
 add_lrauv_plugin(AcousticCommsPlugin
-  INCLUDE_COMMS
   PROTO
     lrauv_acoustic_message
     lrauv_internal_comms
   PRIVATE_LINK_LIBS
-    CommsSupport)
+    acoustic_comms_support)
 add_lrauv_plugin(ControlPanelPlugin GUI
   PROTO
     lrauv_command
     lrauv_state)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(RangeBearingPlugin
-  INCLUDE_COMMS
   PROTO
     lrauv_range_bearing_request
     lrauv_range_bearing_response
-    lrauv_acoustic_message)
+    lrauv_acoustic_message
+  PRIVATE_LINK_LIBS
+    acoustic_comms_support)
 add_lrauv_plugin(ReferenceAxis GUI RENDERING)
 add_lrauv_plugin(ScienceSensorsSystem
   PCL
@@ -216,12 +207,10 @@ foreach(EXAMPLE
 
   add_executable(${EXAMPLE_EXEC} example/${EXAMPLE}.cc)
   set_property(TARGET ${EXAMPLE_EXEC} PROPERTY CXX_STANDARD 17)
-  target_include_directories(${EXAMPLE_EXEC}
-    PUBLIC ${CMAKE_BINARY_DIR}/proto)
-  target_link_libraries(${EXAMPLE_EXEC}
-    PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-    PUBLIC lrauv_command
-           lrauv_init)
+  target_link_libraries(${EXAMPLE_EXEC} PRIVATE
+    ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+    lrauv_acoustic_message lrauv_command lrauv_init lrauv_internal_comms
+    lrauv_range_bearing_request lrauv_range_bearing_response lrauv_state)
 
   install(
     TARGETS ${EXAMPLE_EXEC}
@@ -230,10 +219,32 @@ foreach(EXAMPLE
 endforeach()
 
 #============================================================================
+# Exports
+install(
+  EXPORT ${PROJECT_NAME}
+  FILE ${PROJECT_NAME}-targets.cmake
+  NAMESPACE ${PROJECT_NAME}::
+  DESTINATION share/${PROJECT_NAME}/cmake)
+
+include(CMakePackageConfigHelpers)
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION "share/${PROJECT_NAME}/cmake"
+  NO_SET_AND_CHECK_MACRO
+  NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+  DESTINATION share/${PROJECT_NAME}/cmake)
+
+#============================================================================
 # Hooks
 configure_file(
   "hooks/hook.dsv.in"
   "${CMAKE_CURRENT_BINARY_DIR}/hooks/hook.dsv" @ONLY
+)
+configure_file(
+  "hooks/hook.sh.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/hooks/hook.sh" @ONLY
 )
 
 #============================================================================
@@ -249,80 +260,6 @@ add_custom_command(
 add_custom_target(world_gen_target ALL
   DEPENDS world_gen_cmd
 )
-
-#============================================================================
-# Tests
-if(BUILD_TESTING)
-
-  # Fetch and configure GTest
-  include(FetchContent)
-  FetchContent_Declare(
-    googletest
-    URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
-  )
-  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-  FetchContent_MakeAvailable(googletest)
-
-  enable_testing()
-  include(Dart)
-
-  # Build-time constants
-  set("PROJECT_BINARY_PATH" ${CMAKE_CURRENT_BINARY_DIR})
-  set("PROJECT_SOURCE_PATH" ${CMAKE_CURRENT_SOURCE_DIR})
-  configure_file(test/helper/TestConstants.hh.in TestConstants.hh @ONLY)
-
-  include(GoogleTest)
-
-  # Tests
-  foreach(TEST_TARGET
-    test_acoustic_comms_orientation
-    test_ahrs
-    test_buoyancy_action
-    test_controller
-    test_drop_weight
-    test_elevator
-    test_hydrodynamics_equilibrium_velocity
-    test_mass_shifter
-    test_mission_depth_vbs
-    test_mission_pitch_and_depth_mass_vbs
-    test_mission_pitch_mass
-    test_mission_yoyo_circle
-    test_rudder
-    test_spawn
-    test_state_msg)
-
-    add_executable(
-      ${TEST_TARGET}
-      test/${TEST_TARGET}.cc
-    )
-    target_include_directories(${TEST_TARGET}
-      PUBLIC ${CMAKE_BINARY_DIR}/proto)
-    target_link_libraries(${TEST_TARGET}
-      PUBLIC gtest_main
-      PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-      lrauv_command
-      lrauv_init
-      lrauv_state
-      lrauv_range_bearing_request
-      lrauv_range_bearing_response
-    )
-    include_directories(${CMAKE_CURRENT_BINARY_DIR})
-    gtest_discover_tests(${TEST_TARGET})
-  endforeach()
-
-  add_executable(test_comms test/test_comms.cc)
-  target_include_directories(test_comms
-    PUBLIC
-    ${CMAKE_BINARY_DIR}/proto
-    include/)
-  target_link_libraries(test_comms
-    PUBLIC gtest_main
-    PRIVATE ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-    lrauv_acoustic_message
-    lrauv_internal_comms
-    CommsSupport)
-  gtest_discover_tests(test_comms)
-endif()
 
 #============================================================================
 # Resources

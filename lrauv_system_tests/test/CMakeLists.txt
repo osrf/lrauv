@@ -1,0 +1,4 @@
+add_subdirectory(dynamics)
+add_subdirectory(missions)
+add_subdirectory(simulation)
+add_subdirectory(vehicle)

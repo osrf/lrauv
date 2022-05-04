@@ -35,7 +35,7 @@
 #include <thread>
 
 #include <ignition/transport.hh>
-#include "lrauv_command.pb.h"
+#include "lrauv_ignition_plugins/lrauv_command.pb.h"
 
 char getch()
 {

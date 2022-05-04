@@ -30,7 +30,7 @@
 #include "CommsPacket.hh"
 #include "TopicDefinitions.hh"
 
-#include "lrauv_acoustic_message.pb.h"
+#include "lrauv_ignition_plugins/lrauv_acoustic_message.pb.h"
 
 namespace tethys
 {
