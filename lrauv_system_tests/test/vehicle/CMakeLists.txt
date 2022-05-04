@@ -19,17 +19,19 @@ gtest_discover_tests(test_ahrs)
 
 foreach(_test
     test_buoyancy_action
-    test_rudder_action
+    test_drop_weight
     test_elevator_action
-    test_propeller_action
     test_mass_shifter
-    test_drop_weight)
+    test_propeller_action
+    test_rudder_action
+    test_sensor)
   add_executable(${_test} ${_test}.cc)
   target_link_libraries(${_test}
     PUBLIC gtest_main
     PRIVATE
       ${PROJECT_NAME}_support ${IGN_GAZEBO_TARGET}
-      lrauv_ignition_plugins::lrauv_command)
+      lrauv_ignition_plugins::lrauv_command
+      lrauv_ignition_plugins::lrauv_init)
   gtest_discover_tests(${_test})
 endforeach()
 
