@@ -10,6 +10,8 @@
 -->
 <sdf version="1.6">
   <model name="tethys">
+    <enable_wind>true</enable_wind>
+
     <!-- Body -->
     <link name="base_link">
       <inertial>
