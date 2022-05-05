@@ -52,6 +52,30 @@
       </graded_buoyancy>
     </plugin>
 
+      <!-- TODO : Verify the following parameters : -->
+      <!-- * smooth_current_tau -->
+      <!-- * open_circuit_voltage_* -->
+      <plugin filename="ignition-gazebo-linearbatteryplugin-system"
+        name="ignition::gazebo::systems::LinearBatteryPlugin">
+        <battery_name>linear_battery</battery_name>
+        <voltage>14.4</voltage>
+
+        <open_circuit_voltage_constant_coef>12.694</open_circuit_voltage_constant_coef>
+        <open_circuit_voltage_linear_coef>-3.1424</open_circuit_voltage_linear_coef>
+
+        <!-- Initial charge in Ah -->
+        <initial_charge>400</initial_charge>
+        <capacity>400</capacity>
+        <!-- 190mOhm / 62 -->
+        <resistance>0.003064</resistance>
+
+        <smooth_current_tau>1.9499</smooth_current_tau>
+
+        <!-- Power consumption: 14.4V * 2 A -->
+        <power_load>28.8</power_load>  <!-- high load to quickly drain battery -->
+        <power_draining_topic>/battery/discharge</power_draining_topic>
+      </plugin>
+
     <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
       to ParticleEmitter in Ignition G.
       See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
