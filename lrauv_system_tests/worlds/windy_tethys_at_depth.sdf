@@ -5,15 +5,17 @@
 -->
 
 <!--
-
-  This world doesn't contain any vehicles. They're spawned at runtime by
-  WorldCommPlugin as it receives LRAUVInit messages.
-
+  This file is essentially identical to windy_world, except the vehicle
+  starts at a depth of -10m instead of 0m. This is for tests that require the
+  vehicle to be fully submerged.
 -->
 <sdf version="1.6">
-  <world name="LRAUV">
+  <world name="buoyant_tethys">
     <scene>
+      <!-- For turquoise ambient to match particle effect -->
       <ambient>0.0 1.0 1.0</ambient>
+      <!-- For default gray ambient -->
+      <!--background>0.8 0.8 0.8</background-->
       <background>0.0 0.7 0.8</background>
 
       <grid>false</grid>
@@ -37,51 +39,70 @@
     </plugin>
 
     <plugin
-      filename="ignition-gazebo-imu-system"
-      name="ignition::gazebo::systems::Imu">
-    </plugin>
-    <plugin
-      filename="ignition-gazebo-magnetometer-system"
-      name="ignition::gazebo::systems::Magnetometer">
-    </plugin>
-    <plugin
       filename="ignition-gazebo-buoyancy-system"
       name="ignition::gazebo::systems::Buoyancy">
       <graded_buoyancy>
         <default_density>1025</default_density>
         <density_change>
-          <above_depth>0.5</above_depth>
+          <above_depth>0</above_depth>
           <density>1.125</density>
         </density_change>
       </graded_buoyancy>
     </plugin>
 
-    <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
-      to ParticleEmitter in Ignition G.
-      See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
-    <plugin
-      filename="ignition-gazebo-particle-emitter2-system"
-      name="ignition::gazebo::systems::ParticleEmitter2">
-    </plugin>
+    <!-- Spawn by default in a location with science data in csv -->
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
 
-    <!-- Uncomment for time analysis -->
-    <!--plugin
-      filename="TimeAnalysisPlugin"
-      name="tethys::TimeAnalysisPlugin">
-    </plugin-->
+      <!-- For 2003080103_mb_l3_las.csv -->
+      <latitude_deg>35.5999984741211</latitude_deg>
+      <longitude_deg>-121.779998779297</longitude_deg>
+
+      <!-- For 2003080103_mb_l3_las_1x1km.csv -->
+      <!--latitude_deg>36.8024781413352</latitude_deg>
+      <longitude_deg>-121.829647676843</longitude_deg-->
+
+      <!-- For simple_test.csv -->
+      <!--latitude_deg>0</latitude_deg>
+      <longitude_deg>0</longitude_deg-->
+
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
 
     <plugin
-      filename="ScienceSensorsSystem"
-      name="tethys::ScienceSensorsSystem">
-      <data_path>2003080103_mb_l3_las.csv</data_path>
+      filename="ignition-gazebo-wind-effects-system"
+      name="ignition::gazebo::systems::WindEffects">
+      <force_approximation_scaling_factor>
+        <!-- No wind below sea surface -->
+        <when zlt="0">0</when>
+        <!-- NOTE(hidmic): enable wind forces slightly
+             below sea surface for the partially submerged
+             vehicle hull to be affected by them -->
+        <when zge="0">0.1</when>
+      </force_approximation_scaling_factor>
+      <horizontal>
+        <magnitude>
+          <time_for_rise>1</time_for_rise>
+          <sin>
+            <amplitude_percent>0.05</amplitude_percent>
+            <period>60</period>
+          </sin>
+        </magnitude>
+        <direction>
+          <time_for_rise>1</time_for_rise>
+          <sin>
+            <amplitude>5</amplitude>
+            <period>20</period>
+          </sin>
+        </direction>
+      </horizontal>
     </plugin>
-
-    <!-- Interface with LRAUV Main Vehicle Application for the world -->
-    <plugin
-      filename="WorldCommPlugin"
-      name="tethys::WorldCommPlugin">
-      <init_topic>/lrauv/init</init_topic>
-    </plugin>
+    <wind>
+      <!-- Wind is calm, blowing East -->
+      <linear_velocity>1 0 0</linear_velocity>
+    </wind>
 
     <gui fullscreen="0">
 
@@ -98,7 +119,7 @@
         <ambient_light>0.4 0.4 0.4</ambient_light>
         <background_color>0.8 0.8 0.8</background_color>
         <!-- looking at robot -->
-        <camera_pose>0 6 6 0 0.5 -1.57</camera_pose>
+        <camera_pose>4.5 0 4  0 0.45 3.14</camera_pose>
         <!-- looking at all science data for 2003080103_mb_l3_las.csv -->
         <!--camera_pose>-50000 -30000 250000 0 1.1 1.58</camera_pose-->
         <camera_clip>
@@ -342,14 +363,10 @@
       </link>
     </model>
 
-    <!-- Uncomment for particle effect
-      Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
-      to ParticleEmitter in Ignition G.
-      See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
-    <!--include>
-      <pose>-5 0 0 0 0 0</pose>
-      <uri>turbidity_generator</uri>
-    </include-->
+    <include>
+      <pose>0 0 -10 0 0 0</pose>
+      <uri>tethys_equipped</uri>
+    </include>
 
   </world>
 </sdf>
