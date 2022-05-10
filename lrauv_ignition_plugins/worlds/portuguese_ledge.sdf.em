@@ -130,7 +130,7 @@ for tile in tiles:
 
 @[for tile in tiles]@
       <level name="level_@(tile.index)">
-        <pose>@(tile.pos_enu) 0 0 0</pose>
+        <pose>@(tile.pos_enu.x()) @(tile.pos_enu.y()) @(tile.pos_enu.z()) 0 0 0</pose>
         <geometry>
           <box>
             <size>1000 1000 1000</size>
@@ -399,7 +399,7 @@ for tile in tiles:
         <visual name="visual">
           <geometry>
             <heightmap>
-              <pos>@(tile.pos_enu)</pos>
+              <pos>@(tile.pos_enu.x()) @(tile.pos_enu.y()) @(tile.pos_enu.z()) 0 0 0</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
                 <diffuse>@(fuel_model_url)/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
