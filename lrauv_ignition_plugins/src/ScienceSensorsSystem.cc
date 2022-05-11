@@ -30,6 +30,7 @@
 #include <ignition/math/SphericalCoordinates.hh>
 #include <ignition/math/VolumetricGridLookupField.hh>
 #include <ignition/msgs/Utility.hh>
+#include <ignition/msgs/stringmsg.pb.h>
 #include <ignition/plugin/Register.hh>
 #include <ignition/transport/Node.hh>
 
@@ -48,6 +49,15 @@ class tethys::ScienceSensorsSystemPrivate
 {
   /// \brief Advertise topics and services.
   public: void StartTransport();
+
+  public: void OnReloadData(const ignition::msgs::StringMsg &_filepath)
+  {
+    igndbg << "Reloading file " << _filepath.data() << "\n";
+
+    // Trigger reload and reread data
+    this->sphericalCoordinatesInitialized = false;
+    this->dataPath = _filepath.data();
+  }
 
   //////////////////////////////////
   // Functions for data manipulation
@@ -315,12 +325,24 @@ void ScienceSensorsSystemPrivate::ReadData(
     return;
   }
 
+  // Reset all data
+  timeSpaceCoords.clear();
+  timeSpaceCoordsLatLon.clear();
+  timeSpaceIndex.clear();
+  temperatureArr.clear();
+  salinityArr.clear();
+  chlorophyllArr.clear();
+  eastCurrentArr.clear();
+  northCurrentArr.clear();
+
   // Lock modifications to world origin spherical association until finish
   // reading and transforming data
   std::lock_guard<std::mutex> lock(mtx);
 
   std::fstream fs;
   fs.open(this->dataPath, std::ios::in);
+
+  igndbg << "Reading data from [" << this->dataPath << "]" << std::endl;
 
   std::vector<std::string> fieldnames;
   std::string line, word, temp;
@@ -552,6 +574,10 @@ void ScienceSensorsSystem::Configure(
     ignmsg << "Loading science data from [" << this->dataPtr->dataPath << "]"
            << std::endl;
   }
+
+  this->dataPtr->node.Subscribe("/world/science_sensor/environment_data_path",
+                                &ScienceSensorsSystemPrivate::OnReloadData,
+                                this->dataPtr.get());
 }
 
 /////////////////////////////////////////////////
