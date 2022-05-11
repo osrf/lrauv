@@ -18,6 +18,7 @@ target_link_libraries(test_ahrs
 gtest_discover_tests(test_ahrs)
 
 foreach(_test
+    test_battery
     test_buoyancy_action
     test_drop_weight
     test_elevator_action

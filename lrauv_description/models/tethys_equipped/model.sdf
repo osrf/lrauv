@@ -353,7 +353,12 @@
         <resistance>0.003064</resistance>
         <!-- Power consumption: 14.4V * 2 A -->
         <power_load>28.8</power_load>
-        <power_draining_topic>/battery/discharge</power_draining_topic>
+        <!-- <power_draining_topic>/battery/discharge</power_draining_topic> -->
+        <!-- Recharging the battery -->
+        <!-- Charging time: 400/( (15 + 4) * 0.5 ) = 42.1 -->
+        <enable_recharge>true</enable_recharge>
+        <recharge_by_topic>true</recharge_by_topic>
+        <charging_time>42.1</charging_time>
       </plugin>
 
     </include>
