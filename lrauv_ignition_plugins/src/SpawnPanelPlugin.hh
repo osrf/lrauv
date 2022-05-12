@@ -61,6 +61,12 @@ class SpawnPanel : public ignition::gazebo::GuiSystem
 
   /// \brief Transport publisher
   private: ignition::transport::Node::Publisher pub;
+
+  /// \brief The names of all the models
+  private: std::unordered_set<std::string> modelNames;
+
+  /// \brief The acoustic address of the models
+  private: std::unordered_set<int> acousticIds;
 };
 
 }

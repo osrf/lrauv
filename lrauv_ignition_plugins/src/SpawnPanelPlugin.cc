@@ -61,16 +61,29 @@ void SpawnPanel::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
 void SpawnPanel::Spawn(
   double lattitude, double longitude, double depth, int commsId, QString name)
 {
-  ignition::msgs::StringMsg* strMsg = new ignition::msgs::StringMsg;
-  strMsg->set_data(name.toStdString());
+  if (this->acousticIds.count(commsId) > 0)
+  {
+    ignerr << "Comms ID [" << commsId << "] already exists.\n";
+    return;
+  }
+
+  auto vehName = name.toStdString();
+  if (this->modelNames.count(vehName) > 0)
+  {
+    ignerr << "Model name [" << vehName << "] already exists.\n";
+    return;
+  }
 
   lrauv_ignition_plugins::msgs::LRAUVInit msg;
   msg.set_initlat_(lattitude);
   msg.set_initlon_(longitude);
   msg.set_initz_(depth);
   msg.set_acommsaddress_(commsId);
-  msg.set_allocated_id_(strMsg);
+  msg.mutable_id_()->set_data(vehName);
   this->pub.Publish(msg);
+
+  this->acousticIds.insert(commsId);
+  this->modelNames.insert(vehName);
 }
 
 void SpawnPanel::Update(const ignition::gazebo::UpdateInfo &,
