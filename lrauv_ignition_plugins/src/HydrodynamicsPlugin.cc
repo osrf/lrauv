@@ -199,7 +199,7 @@ void HydrodynamicsPlugin::Configure(
   this->dataPtr->paramZw          = SdfParamDouble(_sdf, "zW"          , 20);
   this->dataPtr->paramZww         = SdfParamDouble(_sdf, "zWW"         , 0);
   this->dataPtr->paramKp          = SdfParamDouble(_sdf, "kP"          , 20);
-  this->dataPtr->paramKpp         = SdfParamDouble(_sdf, "kPP"         , 0);
+  this->dataPtr->paramKpp         = SdfParamDouble(_sdf, "kPP"         , 0);s
   this->dataPtr->paramMq          = SdfParamDouble(_sdf, "mQ"          , 20);
   this->dataPtr->paramMqq         = SdfParamDouble(_sdf, "mQQ"         , 0);
   this->dataPtr->paramNr          = SdfParamDouble(_sdf, "nR"          , 20);
@@ -226,7 +226,7 @@ void HydrodynamicsPlugin::Configure(
   AddAngularVelocityComponent(this->dataPtr->linkEntity, _ecm);
   AddWorldLinearVelocity(this->dataPtr->linkEntity, _ecm);
 
-  std::string ns {""};
+  std::string ns;
   std::string currentTopic {"/ocean_current"};
   if (_sdf->HasElement("namespace"))
   {

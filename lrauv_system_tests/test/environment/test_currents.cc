@@ -44,8 +44,7 @@ TEST(CurrentsTest, TestGlobalCurrent)
   vec.set_z(0.0);
   pub.Publish(vec);
   fixture.Step(2min);
-  // Eastward velocity at the surface due to wind
-  // NOTE(hidmic): reverse Y-axis velocity sign to match FSK
+
   const auto &observer = fixture.VehicleObserver();
   const auto &linearVelocities = observer.LinearVelocities();
 
