@@ -85,6 +85,11 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Returns a point cloud message populated with the latest sensor data
   public: ignition::msgs::PointCloudPacked PointCloudMsg();
 
+  public: float InterpolateInTime(
+    const ignition::math::Vector3d &_point,
+    const double simTimeSeconds,
+    const std::vector<std::vector<float>> &_dataArray);
+
   ///////////////////////////////
   // Constants for data manipulation
 
@@ -160,7 +165,7 @@ class tethys::ScienceSensorsSystemPrivate
   public: bool multipleTimeSlices {false};
 
   /// \brief Index of the latest time slice
-  public: int timeIdx {0};
+  public: std::size_t timeIdx {0};
 
   /// \brief Timestamps to index slices of data
   public: std::vector<float> timestamps;
@@ -300,6 +305,63 @@ void createSensor(ScienceSensorsSystem *_system,
 ScienceSensorsSystem::ScienceSensorsSystem()
   : dataPtr(std::make_unique<ScienceSensorsSystemPrivate>())
 {
+}
+
+/////////////////////////////////////////////////
+float ScienceSensorsSystemPrivate::InterpolateInTime(
+  const ignition::math::Vector3d &_point,
+  const double _simTimeSeconds,
+  const std::vector<std::vector<float>> &_dataArray)
+{
+  const auto& timeslice1 = this->timeSpaceIndex[this->timeIdx];
+  auto interpolatorsTime1 = timeslice1.GetInterpolators(_point);
+
+  auto nextTimeIdx = std::min(this->timeIdx + 1,
+    this->timestamps.size() - 1);
+  const auto& timeslice2 = this->timeSpaceIndex[nextTimeIdx];
+  auto interpolatorsTime2 = timeslice2.GetInterpolators(_point);
+
+  if (interpolatorsTime1.size() == 0) return std::nanf("");
+  if (!interpolatorsTime1[0].index.has_value()) return std::nanf("");
+
+  if (interpolatorsTime2.size() == 0) return std::nanf("");
+  if (!interpolatorsTime2[0].index.has_value()) return std::nanf("");
+
+  const auto data1 = timeslice1.EstimateValueUsingTrilinear(
+    interpolatorsTime1,
+    _point,
+    _dataArray[this->timeIdx]
+  );
+  const auto data2 = timeslice2.EstimateValueUsingTrilinear(
+    interpolatorsTime2,
+    _point,
+    _dataArray[nextTimeIdx]
+  );
+
+
+  auto prevTimeStamp = this->timestamps[this->timeIdx];
+  auto nextTimeStamp = this->timestamps[nextTimeIdx];
+
+  auto dist = nextTimeStamp - prevTimeStamp;
+  if (dist == 0)
+  {
+    if (data1.has_value())
+      return data1.value();
+    else
+      return std::nanf("");
+  }
+  else
+  {
+    if (data1.has_value() && data2.has_value())
+    {
+      return (data1.value() * (nextTimeStamp - _simTimeSeconds) +
+        data2.value() * (_simTimeSeconds - prevTimeStamp)) / dist;
+    }
+    else
+    {
+      return std::nanf("");
+    }
+  }
 }
 
 /////////////////////////////////////////////////
@@ -680,97 +742,42 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     auto sphericalDepthCorrected = ignition::math::Vector3d{spherical.X(), spherical.Y(),
       -spherical.Z()};
 
-    const auto& timeslice = this->dataPtr->timeSpaceIndex[this->dataPtr->timeIdx];
-    auto interpolators = timeslice.GetInterpolators(sphericalDepthCorrected);
-
-    IGN_PROFILE("ScienceSensorsSystem::Interpolation");
-    if (interpolators.size() == 0) return;
-    if (!interpolators[0].index.has_value()) return;
-
     if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
     {
-      const auto sal = timeslice.EstimateValueUsingTrilinear(
-        interpolators,
-        sphericalDepthCorrected,
-        this->dataPtr->salinityArr[this->dataPtr->timeIdx]
-      );
-
-      if (sal.has_value())
-        casted->SetData(sal.value());
-      else
-        casted->SetData(std::nanf(""));
+      casted->SetData(
+        this->dataPtr->InterpolateInTime(
+          sphericalDepthCorrected, simTimeSeconds, this->dataPtr->salinityArr));
     }
     else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
       sensor))
     {
-      const auto temp = timeslice.EstimateValueUsingTrilinear(
-          interpolators,
-          sphericalDepthCorrected,
-          this->dataPtr->temperatureArr[this->dataPtr->timeIdx]
-        );
+      const auto temp = this->dataPtr->InterpolateInTime(
+        sphericalDepthCorrected, simTimeSeconds, this->dataPtr->temperatureArr);
 
-      if (temp.has_value())
-      {
-        ignition::math::Temperature tempC;
-        tempC.SetCelsius(temp.value());
-        casted->SetData(tempC);
-      }
-      else
-      {
-        ignition::math::Temperature tempC;
-        tempC.SetCelsius(std::nanf(""));
-        casted->SetData(tempC);
-      }
+      ignition::math::Temperature tempC;
+      tempC.SetCelsius(temp);
+      casted->SetData(tempC);
     }
     else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
       sensor))
     {
-      /// Uncomment to debug
-      /// igndbg << "------------------" << std::endl;
-      /// igndbg << "Sensor position: " << sphericalDepthCorrected << std::endl;
-      /// igndbg << "Got" << interpolators.size() << " interpolators" << std::endl;
-      /// for (auto interp: interpolators)
-      /// {
-      ///   if (!interp.index.has_value()) continue;
-      ///   igndbg << "Chlorophyll sensor: " <<
-      ///     this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx][
-      ///       interp.index.value()] << "@" << interp.position << std::endl;
-      ///   igndbg << "My distance is " << interp.position.X() - sphericalDepthCorrected.X()
-      ///   << ", " << interp.position.Y() - sphericalDepthCorrected.Y() << std::endl;
-      /// }
-      const auto chlor = timeslice.EstimateValueUsingTrilinear(
-          interpolators,
-          sphericalDepthCorrected,
-          this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx]
-        );
-      if (chlor.has_value())
-        casted->SetData(chlor.value());
-      else
-        casted->SetData(std::nanf(""));
+      casted->SetData(
+        this->dataPtr->InterpolateInTime(
+          sphericalDepthCorrected, simTimeSeconds,
+          this->dataPtr->chlorophyllArr));
     }
     else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(
       sensor))
     {
-      const auto nCurr = timeslice.EstimateValueUsingTrilinear(
-          interpolators,
-          sphericalDepthCorrected,
-          this->dataPtr->northCurrentArr[this->dataPtr->timeIdx]
-        );
-      const auto eCurr = timeslice.EstimateValueUsingTrilinear(
-          interpolators,
-          sphericalDepthCorrected,
-          this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx]
-        );
-      if (nCurr.has_value() && eCurr.has_value())
-      {
-        ignition::math::Vector3d current(nCurr.value(), eCurr.value(), 0);
-        casted->SetData(current);
-      }
-      else
-      {
-        ignition::math::Vector3d current(std::nan(""), std::nan(""), 0);
-        casted->SetData(current);
-      }
+      const auto nCurr = this->dataPtr->InterpolateInTime(
+        sphericalDepthCorrected, simTimeSeconds, this->dataPtr->northCurrentArr);
+
+      const auto eCurr = this->dataPtr->InterpolateInTime(
+        sphericalDepthCorrected, simTimeSeconds, this->dataPtr->eastCurrentArr);
+
+
+      ignition::math::Vector3d current(nCurr, eCurr, 0);
+      casted->SetData(current);
     }
     else
     {
