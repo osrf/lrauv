@@ -359,6 +359,13 @@ for tile in tiles:
           <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
       </plugin>
+      <!-- Sensor Data Map -->
+      <plugin filename="WorldConfigPlugin" name="Environmental Configuration">
+        <ignition-gui>
+          <title>Environmental Configuration</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+      </plugin>
       <plugin filename="ReferenceAxis" name="Reference axis">
         <ignition-gui>
           <title>Reference axis</title>

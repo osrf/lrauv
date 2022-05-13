@@ -334,6 +334,14 @@
         <topic>/tethys/navsat</topic>
         <topic_picker>true</topic_picker>
       </plugin>
+
+      <!-- Sensor Data Map -->
+      <plugin filename="WorldConfigPlugin" name="Environmental Configuration">
+        <ignition-gui>
+          <title>Environmental Configuration</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+      </plugin>
     </gui>
 
     <light type="directional" name="sun">

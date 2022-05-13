@@ -181,6 +181,7 @@ add_lrauv_plugin(TimeAnalysisPlugin)
 add_lrauv_plugin(WorldCommPlugin
   PROTO
     lrauv_init)
+add_lrauv_plugin(WorldConfigPlugin GUI)
 
 #============================================================================
 # Install public headers
