@@ -30,6 +30,7 @@
 #include <ignition/math/SphericalCoordinates.hh>
 #include <ignition/math/VolumetricGridLookupField.hh>
 #include <ignition/msgs/Utility.hh>
+#include <ignition/msgs/stringmsg.pb.h>
 #include <ignition/plugin/Register.hh>
 #include <ignition/transport/Node.hh>
 
@@ -51,6 +52,17 @@ class tethys::ScienceSensorsSystemPrivate
 
   //////////////////////////////////
   // Functions for data manipulation
+
+  /// \brief Called when plugin is asked to reload file.
+  /// \param[in] _filepath Path to file to reload.
+  public: void OnReloadData(const ignition::msgs::StringMsg &_filepath)
+  {
+    igndbg << "Reloading file " << _filepath.data() << "\n";
+
+    // Trigger reload and reread data
+    this->sphericalCoordinatesInitialized = false;
+    this->dataPath = _filepath.data();
+  }
 
   /// \brief Reads csv file and populate various data fields
   /// \param[in] _ecm Immutable reference to the ECM
@@ -161,9 +173,6 @@ class tethys::ScienceSensorsSystemPrivate
   //////////////////////////////////
   // Variables for data manipulation
 
-  /// \brief Whether using more than one time slices of data
-  public: bool multipleTimeSlices {false};
-
   /// \brief Index of the latest time slice
   public: std::size_t timeIdx {0};
 
@@ -179,7 +188,7 @@ class tethys::ScienceSensorsSystemPrivate
   /// the visuallization.
   public: std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> timeSpaceCoords;
 
-  public: std::vector<std::vector<ignition::math::Vector3d>> 
+  public: std::vector<std::vector<ignition::math::Vector3d>>
     timeSpaceCoordsLatLon;
 
   /// \brief Spatial index of data.
@@ -380,6 +389,16 @@ void ScienceSensorsSystemPrivate::ReadData(
   // Lock modifications to world origin spherical association until finish
   // reading and transforming data
   std::lock_guard<std::mutex> lock(mtx);
+
+  // Reset all data
+  timeSpaceCoords.clear();
+  timeSpaceCoordsLatLon.clear();
+  timeSpaceIndex.clear();
+  temperatureArr.clear();
+  salinityArr.clear();
+  chlorophyllArr.clear();
+  eastCurrentArr.clear();
+  northCurrentArr.clear();
 
   std::fstream fs;
   fs.open(this->dataPath, std::ios::in);
@@ -614,6 +633,10 @@ void ScienceSensorsSystem::Configure(
     ignmsg << "Loading science data from [" << this->dataPtr->dataPath << "]"
            << std::endl;
   }
+
+  this->dataPtr->node.Subscribe("/world/science_sensor/environment_data_path",
+                                &ScienceSensorsSystemPrivate::OnReloadData,
+                                this->dataPtr.get());
 }
 
 /////////////////////////////////////////////////
@@ -697,21 +720,14 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     }
   }
 
-  double simTimeSeconds = std::chrono::duration_cast<std::chrono::seconds>(
+  double simTimeSeconds = std::chrono::duration<double>(
     _info.simTime).count();
 
-  // Update time index
-  if (this->dataPtr->multipleTimeSlices)
+  if(this->dataPtr->timeIdx + 1 < this->dataPtr->timestamps.size())
   {
-    // Only update if sim time exceeds the elapsed timestamp in data
-    if (!this->dataPtr->timestamps.empty() &&
-      simTimeSeconds >= this->dataPtr->timestamps[this->dataPtr->timeIdx])
+    if(simTimeSeconds >= this->dataPtr->timestamps[this->dataPtr->timeIdx + 1])
     {
-      // Increment for next point in time
       this->dataPtr->timeIdx++;
-
-      // Publish science data at the next timestamp
-      this->dataPtr->PublishData();
     }
   }
 
