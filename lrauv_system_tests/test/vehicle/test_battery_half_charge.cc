@@ -26,7 +26,7 @@
 
 #include <chrono>
 
-#include <lrauv_ignition_plugins/lrauv_command.pb.h>
+//#include <lrauv_ignition_plugins/lrauv_command.pb.h>
 
 #include "lrauv_system_tests/TestFixture.hh"
 
@@ -41,11 +41,13 @@ void recordBatteryMsgs(const msgs::BatteryState &_msg)
 
 //////////////////////////////////////////////////
 /// Test if the battery discharges with time with the specified
-/// disacharge power rate.
-TEST(BatteryTest, TestDischarge)
+/// disacharge power rate, when starting with half charge.
+/// Send recharge start/stop commands and verify the battery behaves
+/// accordingly.
+TEST(BatteryTest, TestDischargeHalfCharged)
 {
-  using TestFixture = lrauv_system_tests::VehicleCommandTestFixture;
-  TestFixture fixture("buoyant_tethys_at_depth.sdf", "tethys");
+  using TestFixture = lrauv_system_tests::TestFixtureWithVehicle;
+  TestFixture fixture("buoyant_tethys_half_battery.sdf", "tethys");
   uint64_t iterations = fixture.Step(100u);
   EXPECT_EQ(100u, iterations);
 
@@ -57,6 +59,10 @@ TEST(BatteryTest, TestDischarge)
 
   int n = batteryMsgs.size() - 1;
   double initialCharge = batteryMsgs[0].charge();
+  
+  /* Plugin started wiht 50% charge */
+  EXPECT_NEAR(initialCharge, 200, 0.2);
+
   double initialVoltage = batteryMsgs[0].voltage();
   double initialTime = batteryMsgs[0].header().stamp().sec() + 
     batteryMsgs[0].header().stamp().nsec()/1000000000.0;
@@ -66,11 +72,29 @@ TEST(BatteryTest, TestDischarge)
   double finalTime = batteryMsgs[n].header().stamp().sec() + 
     batteryMsgs[n].header().stamp().nsec()/1000000000.0;
 
-  EXPECT_NEAR(initialVoltage, finalVoltage, 0.1);
-
+  /* Check discharge rate when battery is 50% discharged */
   double dischargePower =  (finalVoltage + initialVoltage) * 0.5 *
     (finalCharge - initialCharge) * 3600 / (finalTime - initialTime);
   EXPECT_NEAR(dischargePower, -28.8, 0.5);
 
   batteryMsgs.clear();
+
+  /* Test battery recharge command */
+  /* Start charging and check if charge increases with time */
+  const unsigned int timeout{5000};
+  bool result;
+  msgs::Boolean req;
+  msgs::Empty rep;
+  EXPECT_TRUE(node.Request("/model/tethys/battery/linear_battery/recharge/start", req, timeout, rep, result));
+
+  fixture.Step(1000u);
+  n = batteryMsgs.size() - 1;
+  EXPECT_GT(batteryMsgs[n].charge(), finalCharge);
+  batteryMsgs.clear();
+
+  /* Stop charging, charge should decrease with time */
+  EXPECT_TRUE(node.Request("/model/tethys/battery/linear_battery/recharge/stop", req, timeout, rep, result));
+  fixture.Step(1000u);
+  n = batteryMsgs.size() - 1;
+  EXPECT_LT(batteryMsgs[n].charge(), batteryMsgs[0].charge());
 }
