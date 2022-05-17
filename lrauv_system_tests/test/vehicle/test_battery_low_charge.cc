@@ -54,8 +54,6 @@ TEST(BatteryTest, TestDischargeLowCharge)
   node.Subscribe("/model/tethys/battery/linear_battery/state",
       &recordBatteryMsgs);
 
-  // TODO : Make a mock system to observe angular velocity of propeller
-
   fixture.Step(1000u);
 
   /* Make sure the battery has drained */
