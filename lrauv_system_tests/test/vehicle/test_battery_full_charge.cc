@@ -26,8 +26,6 @@
 
 #include <chrono>
 
-//#include <lrauv_ignition_plugins/lrauv_command.pb.h>
-
 #include "lrauv_system_tests/TestFixture.hh"
 
 using namespace ignition;

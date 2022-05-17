@@ -26,6 +26,8 @@
 
 #include <chrono>
 
+#include <lrauv_ignition_plugins/lrauv_command.pb.h>
+
 #include "lrauv_system_tests/TestFixture.hh"
 
 using namespace ignition;
@@ -39,43 +41,35 @@ void recordBatteryMsgs(const msgs::BatteryState &_msg)
 
 //////////////////////////////////////////////////
 /// Test if the battery discharges with time with the specified
-/// disacharge power rate, when starting with half charge.
+/// disacharge power rate, when starting with low charge.
 /// Send recharge start/stop commands and verify the battery behaves
 /// accordingly.
-TEST(BatteryTest, TestDischargeHalfCharged)
+TEST(BatteryTest, TestDischargeLowCharge)
 {
-  using TestFixture = lrauv_system_tests::TestFixtureWithVehicle;
-  TestFixture fixture("buoyant_tethys_half_battery.sdf", "tethys");
+  using TestFixture = lrauv_system_tests::VehicleCommandTestFixture;
+  TestFixture fixture("buoyant_tethys_low_battery.sdf", "tethys");
   uint64_t iterations = fixture.Step(100u);
-  EXPECT_EQ(100u, iterations);
 
   transport::Node node;
   node.Subscribe("/model/tethys/battery/linear_battery/state",
       &recordBatteryMsgs);
 
+  // TODO : Make a mock system to observe angular velocity of propeller
+
   fixture.Step(1000u);
 
+  /* Make sure the battery has drained */
   int n = batteryMsgs.size() - 1;
   double initialCharge = batteryMsgs[0].charge();
-  
-  /* Plugin started wiht 50% charge */
-  EXPECT_NEAR(initialCharge, 200, 0.2);
-
   double initialVoltage = batteryMsgs[0].voltage();
-  double initialTime = batteryMsgs[0].header().stamp().sec() + 
-    batteryMsgs[0].header().stamp().nsec()/1000000000.0;
 
   double finalCharge = batteryMsgs[n].charge();
   double finalVoltage = batteryMsgs[n].voltage();
-  double finalTime = batteryMsgs[n].header().stamp().sec() + 
-    batteryMsgs[n].header().stamp().nsec()/1000000000.0;
 
-  /* Check discharge rate when battery is 50% discharged */
-  double dischargePower =  (finalVoltage + initialVoltage) * 0.5 *
-    (finalCharge - initialCharge) * 3600 / (finalTime - initialTime);
-  EXPECT_NEAR(dischargePower, -28.8, 0.5);
-
+  EXPECT_NEAR(finalCharge, 0, 1e-3);
+  EXPECT_NEAR(finalVoltage, 14.4, 0.1);
   batteryMsgs.clear();
+  /* The battery is now fully discharged */
 
   /* Test battery recharge command */
   /* Start charging and check if charge increases with time */
