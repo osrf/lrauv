@@ -55,7 +55,7 @@ TEST(BatteryTest, TestDischargeFullCharged)
   int n = batteryMsgs.size() - 1;
   double initialCharge = batteryMsgs[0].charge();
   
-  /* Plugin started wiht 50% charge */
+  /* Plugin started wiht 100% charge */
   EXPECT_NEAR(initialCharge, 400, 0.2);
 
   double initialVoltage = batteryMsgs[0].voltage();
