@@ -36,6 +36,7 @@ message DVLKinematicEstimate
   /// \brief Estimate mean
   Vector3d mean = 2;
 
-  /// \brief Estimate covariance
+  /// \brief Estimate covariance matrix.
+  /// A 3 x 3 row-major matrix using a flat contiguous layout.
   repeated double covariance = 3;
 }

@@ -34,7 +34,7 @@ message DVLTrackingTarget
   TargetType type = 1;
 
   /// \brief Target range (or distance)
-  DVLRangeEstimate range = 3;
+  optional DVLRangeEstimate range = 3;
 
   /// \brief Target position estimate
   optional DVLKinematicEstimate position = 2;

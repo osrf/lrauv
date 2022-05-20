@@ -29,17 +29,17 @@ message DVLBeamState
   int32 id = 1;
 
   /// \brief Beam velocity estimate
-  DVLKinematicEstimate velocity = 2;
+  optional DVLKinematicEstimate velocity = 2;
 
   /// \brief Beam range estimate
-  DVLRangeEstimate range;
+  optional DVLRangeEstimate range = 3;
 
   /// \brief Beam signal strength indicator
-  optional double rssi = 6;
+  optional double rssi = 4;
 
   /// \brief Measured background noise spectral density
-  optional double nsd = 7;
+  optional double nsd = 5;
 
   /// \brief Whether beam is locked or not
-  bool locked = 8;
+  bool locked = 6;
 }

@@ -39,8 +39,8 @@ message DVLVelocityTracking
 
   enum DVLType
   {
-    PISTON = 0;
-    PHASED_ARRAY = 1;
+    DVL_TYPE_PISTON = 0;
+    DVL_TYPE_PHASED_ARRAY = 1;
   };
   /// \brief Type of DVL
   DVLType type = 2;
@@ -49,11 +49,11 @@ message DVLVelocityTracking
   DVLTrackingTarget target = 3;
 
   /// \brief Estimated velocity
-  DVLKinematicEstimate velocity = 4;
+  optional DVLKinematicEstimate velocity = 4;
 
   /// \brief Tracking beams' state
-  repeated DVLBeamState beams = 6;
+  repeated DVLBeamState beams = 5;
 
   /// \brief Vendor-specific status (e.g. bitmask, error code)
-  int32 status = 14;
+  int32 status = 6;
 }
