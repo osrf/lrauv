@@ -30,13 +30,6 @@
 
 using namespace ignition;
 
-std::vector<msgs::BatteryState> batteryMsgs;
-
-void recordBatteryMsgs(const msgs::BatteryState &_msg)
-{
-  batteryMsgs.push_back(_msg);
-}
-
 //////////////////////////////////////////////////
 /// Test if the battery discharges with time with the specified
 /// disacharge power rate, when starting with full charge.
@@ -47,11 +40,12 @@ TEST(BatteryTest, TestDischargeFullCharged)
   uint64_t iterations = fixture.Step(100u);
 
   transport::Node node;
-  node.Subscribe("/model/tethys/battery/linear_battery/state",
-      &recordBatteryMsgs);
+  lrauv_system_tests::Subscription<msgs::BatteryState> batterySubscription;
+  batterySubscription.Subscribe(node, "/model/tethys/battery/linear_battery/state");
 
   fixture.Step(1000u);
 
+  auto batteryMsgs = batterySubscription.ReadMessages();
   int n = batteryMsgs.size() - 1;
   double initialCharge = batteryMsgs[0].charge();
   
