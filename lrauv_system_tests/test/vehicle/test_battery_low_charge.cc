@@ -41,7 +41,7 @@ void recordBatteryMsgs(const msgs::BatteryState &_msg)
 
 //////////////////////////////////////////////////
 /// Test if the battery discharges with time with the specified
-/// disacharge power rate, when starting with low charge.
+/// discharge power rate, when starting with low charge.
 /// Send recharge start/stop commands and verify the battery behaves
 /// accordingly.
 TEST(BatteryTest, TestDischargeLowCharge)

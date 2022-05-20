@@ -340,6 +340,9 @@
         <namespace>tethys</namespace>
       </plugin>
 
+      <!-- The consists of 62 batteries of NH2034HD34 Lithium Ion batteries. -->
+      <!-- Datasheet: https://github.com/osrf/lrauv/files/8614587/NH2034HD34_spec_v1.5.pdf -->
+      <!-- Reference comment : https://github.com/osrf/lrauv/issues/201#issuecomment-1116729239 -->
       <plugin filename="ignition-gazebo-linearbatteryplugin-system"
         name="ignition::gazebo::systems::LinearBatteryPlugin">
         <battery_name>linear_battery</battery_name>
@@ -351,11 +354,12 @@
         <capacity>400</capacity>
         <!-- 190mOhm / 62 -->
         <resistance>0.003064</resistance>
-        <!-- Power consumption: 14.4V * 2 A -->
+        <!-- Power consumption in Watts: 14.4V * 2 A -->
         <power_load>28.8</power_load>
-        <!-- <power_draining_topic>/battery/discharge</power_draining_topic> -->
         <!-- Recharging the battery -->
-        <!-- Charging time: 400/( (15 + 4) * 0.5 ) = 42.1 -->
+        <!-- Avg discharge current = (max + min) / 2 -->
+        <!--  = (15 + 4) / 2 = 9.5 A -->
+        <!-- Charging time: 400 Ah/( 9.5 A ) = 42.1 h -->
         <enable_recharge>true</enable_recharge>
         <recharge_by_topic>true</recharge_by_topic>
         <charging_time>42.1</charging_time>
