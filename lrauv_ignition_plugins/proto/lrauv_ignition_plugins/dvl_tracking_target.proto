@@ -20,8 +20,8 @@ package lrauv_ignition_plugins.msgs;
 option java_package = "lrauv_ignition_plugins.msgs";
 option java_outer_classname = "DVLProtos";
 
-import "lrauv_ignition_plugins/msgs/dvl_kinematic_estimate.proto";
-import "lrauv_ignition_plugins/msgs/dvl_range_estimate.proto";
+import "lrauv_ignition_plugins/dvl_kinematic_estimate.proto";
+import "lrauv_ignition_plugins/dvl_range_estimate.proto";
 
 message DVLTrackingTarget
 {
@@ -34,8 +34,8 @@ message DVLTrackingTarget
   TargetType type = 1;
 
   /// \brief Target range (or distance)
-  optional DVLRangeEstimate range = 3;
+  DVLRangeEstimate range = 3;
 
   /// \brief Target position estimate
-  optional DVLKinematicEstimate position = 2;
+  DVLKinematicEstimate position = 2;
 }

@@ -20,11 +20,26 @@ package lrauv_ignition_plugins.msgs;
 option java_package = "lrauv_ignition_plugins.msgs";
 option java_outer_classname = "DVLProtos";
 
-message DVLRangeEstimate
-{
-   /// \brief Estimate mean
-   double mean = 1;
+import "lrauv_ignition_plugins/dvl_kinematic_estimate.proto";
+import "lrauv_ignition_plugins/dvl_range_estimate.proto";
 
-   /// \brief Estimate variance
-   optional double variance = 2;
+message DVLBeamState
+{
+  /// \brief Beam ID
+  int32 id = 1;
+
+  /// \brief Beam velocity estimate
+  DVLKinematicEstimate velocity = 2;
+
+  /// \brief Beam range estimate
+  DVLRangeEstimate range = 3;
+
+  /// \brief Beam signal strength indicator
+  double rssi = 4;
+
+  /// \brief Measured background noise spectral density
+  double nsd = 5;
+
+  /// \brief Whether beam is locked or not
+  bool locked = 6;
 }
