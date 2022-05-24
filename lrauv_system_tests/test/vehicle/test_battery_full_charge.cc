@@ -45,25 +45,26 @@ TEST(BatteryTest, TestDischargeFullCharged)
 
   fixture.Step(1000u);
 
-  auto batteryMsgs = batterySubscription.ReadMessages();
-  int n = batteryMsgs.size() - 1;
-  double initialCharge = batteryMsgs[0].charge();
-  
+  EXPECT_GT(batterySubscription.MessageHistorySize(), 5);
+  int n = batterySubscription.MessageHistorySize() - 1;
+  auto initialMessage = batterySubscription.GetMessageByIndex(0);
+  double initialCharge = initialMessage.charge();
+  double initialVoltage = initialMessage.voltage();
+  double initialTime = initialMessage.header().stamp().sec() + 
+    initialMessage.header().stamp().nsec()/1000000000.0;
+
   /* Plugin started with 100% charge */
   EXPECT_NEAR(initialCharge, 400, 0.2);
 
-  double initialVoltage = batteryMsgs[0].voltage();
-  double initialTime = batteryMsgs[0].header().stamp().sec() + 
-    batteryMsgs[0].header().stamp().nsec()/1000000000.0;
-
-  double finalCharge = batteryMsgs[n].charge();
-  double finalVoltage = batteryMsgs[n].voltage();
-  double finalTime = batteryMsgs[n].header().stamp().sec() + 
-    batteryMsgs[n].header().stamp().nsec()/1000000000.0;
+  auto finalMessage = batterySubscription.GetMessageByIndex(n);
+  double finalCharge = finalMessage.charge();
+  double finalVoltage = finalMessage.voltage();
+  double finalTime = finalMessage.header().stamp().sec() + 
+    finalMessage.header().stamp().nsec()/1000000000.0;
 
   double dischargePower =  (finalVoltage + initialVoltage) * 0.5 *
     (finalCharge - initialCharge) * 3600 / (finalTime - initialTime);
   EXPECT_NEAR(dischargePower, -28.8, 0.5);
 
-  batteryMsgs.clear();
+  batterySubscription.ResetMessageHistory();
 }

@@ -32,13 +32,6 @@
 
 using namespace ignition;
 
-std::vector<msgs::BatteryState> batteryMsgs;
-
-void recordBatteryMsgs(const msgs::BatteryState &_msg)
-{
-  batteryMsgs.push_back(_msg);
-}
-
 //////////////////////////////////////////////////
 /// Test if the battery discharges with time with the specified
 /// discharge power rate, when starting with low charge.
@@ -51,22 +44,24 @@ TEST(BatteryTest, TestDischargeLowCharge)
   uint64_t iterations = fixture.Step(100u);
 
   transport::Node node;
-  node.Subscribe("/model/tethys/battery/linear_battery/state",
-      &recordBatteryMsgs);
+  lrauv_system_tests::Subscription<msgs::BatteryState> batterySubscription;
+  batterySubscription.Subscribe(node, "/model/tethys/battery/linear_battery/state");
 
   fixture.Step(1000u);
 
-  /* Make sure the battery has drained */
-  int n = batteryMsgs.size() - 1;
-  double initialCharge = batteryMsgs[0].charge();
-  double initialVoltage = batteryMsgs[0].voltage();
+  EXPECT_GT(batterySubscription.MessageHistorySize(), 5);
 
-  double finalCharge = batteryMsgs[n].charge();
-  double finalVoltage = batteryMsgs[n].voltage();
+  /* Make sure the battery has drained */
+  int n = batterySubscription.MessageHistorySize() - 1;
+  double initialCharge = batterySubscription.GetMessageByIndex(0).charge();
+  double initialVoltage = batterySubscription.GetMessageByIndex(0).voltage();
+
+  double finalCharge = batterySubscription.GetMessageByIndex(n).charge();
+  double finalVoltage = batterySubscription.GetMessageByIndex(n).voltage();
 
   EXPECT_NEAR(finalCharge, 0, 1e-3);
   EXPECT_NEAR(finalVoltage, 14.4, 0.1);
-  batteryMsgs.clear();
+  batterySubscription.ResetMessageHistory();
   /* The battery is now fully discharged */
 
   /* Test battery recharge command */
@@ -78,13 +73,16 @@ TEST(BatteryTest, TestDischargeLowCharge)
   EXPECT_TRUE(node.Request("/model/tethys/battery/linear_battery/recharge/start", req, timeout, rep, result));
 
   fixture.Step(1000u);
-  n = batteryMsgs.size() - 1;
-  EXPECT_GT(batteryMsgs[n].charge(), finalCharge);
-  batteryMsgs.clear();
+  EXPECT_GT(batterySubscription.MessageHistorySize(), 5);
+  n = batterySubscription.MessageHistorySize() - 1;
+  EXPECT_GT(batterySubscription.GetMessageByIndex(n).charge(), finalCharge);
+  batterySubscription.ResetMessageHistory();
 
   /* Stop charging, charge should decrease with time */
   EXPECT_TRUE(node.Request("/model/tethys/battery/linear_battery/recharge/stop", req, timeout, rep, result));
   fixture.Step(1000u);
-  n = batteryMsgs.size() - 1;
-  EXPECT_LT(batteryMsgs[n].charge(), batteryMsgs[0].charge());
+  EXPECT_GT(batterySubscription.MessageHistorySize(), 5);
+  n = batterySubscription.MessageHistorySize() - 1;
+  EXPECT_LT(batterySubscription.GetMessageByIndex(n).charge(),
+      batterySubscription.GetMessageByIndex(0).charge());
 }

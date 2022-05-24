@@ -30,13 +30,6 @@
 
 using namespace ignition;
 
-std::vector<msgs::BatteryState> batteryMsgs;
-
-void recordBatteryMsgs(const msgs::BatteryState &_msg)
-{
-  batteryMsgs.push_back(_msg);
-}
-
 //////////////////////////////////////////////////
 /// Test if the battery discharges with time with the specified
 /// disacharge power rate, when starting with half charge.
@@ -47,35 +40,36 @@ TEST(BatteryTest, TestDischargeHalfCharged)
   using TestFixture = lrauv_system_tests::TestFixtureWithVehicle;
   TestFixture fixture("buoyant_tethys_half_battery.sdf", "tethys");
   uint64_t iterations = fixture.Step(100u);
-  EXPECT_EQ(100u, iterations);
 
   transport::Node node;
-  node.Subscribe("/model/tethys/battery/linear_battery/state",
-      &recordBatteryMsgs);
+  lrauv_system_tests::Subscription<msgs::BatteryState> batterySubscription;
+  batterySubscription.Subscribe(node, "/model/tethys/battery/linear_battery/state");
 
   fixture.Step(1000u);
 
-  int n = batteryMsgs.size() - 1;
-  double initialCharge = batteryMsgs[0].charge();
+  EXPECT_GT(batterySubscription.MessageHistorySize(), 5);
+  int n = batterySubscription.MessageHistorySize() - 1;
+  auto initialMessage = batterySubscription.GetMessageByIndex(0);
+  double initialCharge = initialMessage.charge();
+  double initialVoltage = initialMessage.voltage();
+  double initialTime = initialMessage.header().stamp().sec() + 
+    initialMessage.header().stamp().nsec()/1000000000.0;
   
   /* Plugin started wiht 50% charge */
   EXPECT_NEAR(initialCharge, 200, 0.2);
 
-  double initialVoltage = batteryMsgs[0].voltage();
-  double initialTime = batteryMsgs[0].header().stamp().sec() + 
-    batteryMsgs[0].header().stamp().nsec()/1000000000.0;
-
-  double finalCharge = batteryMsgs[n].charge();
-  double finalVoltage = batteryMsgs[n].voltage();
-  double finalTime = batteryMsgs[n].header().stamp().sec() + 
-    batteryMsgs[n].header().stamp().nsec()/1000000000.0;
+  auto finalMessage = batterySubscription.GetMessageByIndex(n);
+  double finalCharge = finalMessage.charge();
+  double finalVoltage = finalMessage.voltage();
+  double finalTime = finalMessage.header().stamp().sec() + 
+    finalMessage.header().stamp().nsec()/1000000000.0;
 
   /* Check discharge rate when battery is 50% discharged */
   double dischargePower =  (finalVoltage + initialVoltage) * 0.5 *
     (finalCharge - initialCharge) * 3600 / (finalTime - initialTime);
   EXPECT_NEAR(dischargePower, -28.8, 0.5);
 
-  batteryMsgs.clear();
+  batterySubscription.ResetMessageHistory();
 
   /* Test battery recharge command */
   /* Start charging and check if charge increases with time */
@@ -86,13 +80,17 @@ TEST(BatteryTest, TestDischargeHalfCharged)
   EXPECT_TRUE(node.Request("/model/tethys/battery/linear_battery/recharge/start", req, timeout, rep, result));
 
   fixture.Step(1000u);
-  n = batteryMsgs.size() - 1;
-  EXPECT_GT(batteryMsgs[n].charge(), finalCharge);
-  batteryMsgs.clear();
+
+  EXPECT_GT(batterySubscription.MessageHistorySize(), 5);
+  n = batterySubscription.MessageHistorySize() - 1;
+  EXPECT_GT(batterySubscription.GetMessageByIndex(n).charge(), finalCharge);
+  batterySubscription.ResetMessageHistory();
 
   /* Stop charging, charge should decrease with time */
   EXPECT_TRUE(node.Request("/model/tethys/battery/linear_battery/recharge/stop", req, timeout, rep, result));
   fixture.Step(1000u);
-  n = batteryMsgs.size() - 1;
-  EXPECT_LT(batteryMsgs[n].charge(), batteryMsgs[0].charge());
+  EXPECT_GT(batterySubscription.MessageHistorySize(), 5);
+  n = batterySubscription.MessageHistorySize() - 1;
+  EXPECT_LT(batterySubscription.GetMessageByIndex(n).charge(),
+      batterySubscription.GetMessageByIndex(0).charge());
 }
