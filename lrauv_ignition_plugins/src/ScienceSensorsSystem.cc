@@ -60,13 +60,21 @@ class tethys::ScienceSensorsSystemPrivate
     igndbg << "Reloading file " << _filepath.data() << "\n";
 
     // Trigger reload and reread data
-    this->sphericalCoordinatesInitialized = false;
+    std::lock_guard<std::mutex> lock(this->dataMutex);
+    this->newDataAvailable = true;
     this->dataPath = _filepath.data();
   }
 
+  /// \brief mutex for updating data.
+  public: std::mutex dataMutex;
+
+  /// \brief Set to true when there is a new file to be read.
+  public: bool newDataAvailable{true};
+
   /// \brief Reads csv file and populate various data fields
   /// \param[in] _ecm Immutable reference to the ECM
-  public: void ReadData(const ignition::gazebo::EntityComponentManager &_ecm);
+  /// \return True if read was successful, false otherwise.
+  public: bool ReadData(const ignition::gazebo::EntityComponentManager &_ecm);
 
   //////////////////////////////
   // Functions for communication
@@ -97,10 +105,12 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Returns a point cloud message populated with the latest sensor data
   public: ignition::msgs::PointCloudPacked PointCloudMsg();
 
+  /// \brief Interpolate in time between two sensor data points
   public: float InterpolateInTime(
     const ignition::math::Vector3d &_point,
-    const double simTimeSeconds,
-    const std::vector<std::vector<float>> &_dataArray);
+    const double _simTimeSeconds,
+    const std::vector<std::vector<float>> &_dataArray,
+    const double _tol = 1e-10);
 
   ///////////////////////////////
   // Constants for data manipulation
@@ -320,27 +330,36 @@ ScienceSensorsSystem::ScienceSensorsSystem()
 float ScienceSensorsSystemPrivate::InterpolateInTime(
   const ignition::math::Vector3d &_point,
   const double _simTimeSeconds,
-  const std::vector<std::vector<float>> &_dataArray)
+  const std::vector<std::vector<float>> &_dataArray,
+  const double _tol)
 {
+  // Get spatial interpolators for current time
   const auto& timeslice1 = this->timeSpaceIndex[this->timeIdx];
   auto interpolatorsTime1 = timeslice1.GetInterpolators(_point);
 
-  auto nextTimeIdx = std::min(this->timeIdx + 1,
-    this->timestamps.size() - 1);
-  const auto& timeslice2 = this->timeSpaceIndex[nextTimeIdx];
-  auto interpolatorsTime2 = timeslice2.GetInterpolators(_point);
-
   if (interpolatorsTime1.size() == 0) return std::nanf("");
   if (!interpolatorsTime1[0].index.has_value()) return std::nanf("");
-
-  if (interpolatorsTime2.size() == 0) return std::nanf("");
-  if (!interpolatorsTime2[0].index.has_value()) return std::nanf("");
 
   const auto data1 = timeslice1.EstimateValueUsingTrilinear(
     interpolatorsTime1,
     _point,
     _dataArray[this->timeIdx]
   );
+
+  if (this->timeIdx + 1 >= this->timeSpaceIndex.size())
+  {
+    // If we reached the end of the dataset then return the last value
+    return data1.value_or(std::nanf(""));
+  }
+
+  // Get spatial interpolators for the next time
+  auto nextTimeIdx = this->timeIdx + 1;
+  const auto& timeslice2 = this->timeSpaceIndex[nextTimeIdx];
+  auto interpolatorsTime2 = timeslice2.GetInterpolators(_point);
+
+  if (interpolatorsTime2.size() == 0) return std::nanf("");
+  if (!interpolatorsTime2[0].index.has_value()) return std::nanf("");
+
   const auto data2 = timeslice2.EstimateValueUsingTrilinear(
     interpolatorsTime2,
     _point,
@@ -352,12 +371,9 @@ float ScienceSensorsSystemPrivate::InterpolateInTime(
   auto nextTimeStamp = this->timestamps[nextTimeIdx];
 
   auto dist = nextTimeStamp - prevTimeStamp;
-  if (dist == 0)
+  if (dist < _tol)
   {
-    if (data1.has_value())
-      return data1.value();
-    else
-      return std::nanf("");
+    return data1.value_or(std::nanf(""));
   }
   else
   {
@@ -374,7 +390,7 @@ float ScienceSensorsSystemPrivate::InterpolateInTime(
 }
 
 /////////////////////////////////////////////////
-void ScienceSensorsSystemPrivate::ReadData(
+bool ScienceSensorsSystemPrivate::ReadData(
     const ignition::gazebo::EntityComponentManager &_ecm)
 {
   IGN_PROFILE("ScienceSensorsSystemPrivate::ReadData");
@@ -383,7 +399,7 @@ void ScienceSensorsSystemPrivate::ReadData(
   {
     ignerr << "Trying to read data before spherical coordinates were "
            << "initialized." << std::endl;
-    return;
+    return false;
   }
 
   // Lock modifications to world origin spherical association until finish
@@ -402,6 +418,12 @@ void ScienceSensorsSystemPrivate::ReadData(
 
   std::fstream fs;
   fs.open(this->dataPath, std::ios::in);
+
+  if (!fs.is_open())
+  {
+    ignerr << "Failed to open file [" << this->dataPath << "]" << std::endl;
+    return false;
+  }
 
   std::vector<std::string> fieldnames;
   std::string line, word, temp;
@@ -590,6 +612,8 @@ void ScienceSensorsSystemPrivate::ReadData(
   // Make sure the number of timestamps in the 1D indexing array, and the
   // number of time slices of data, are the same.
   assert(this->timestamps.size() == this->timeSpaceCoords.size());
+
+  return true;
 }
 
 /////////////////////////////////////////////////
@@ -707,9 +731,10 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     if (this->dataPtr->world.SphericalCoordinates(_ecm))
     {
       this->dataPtr->sphericalCoordinatesInitialized = true;
-
       this->dataPtr->StartTransport();
+      std::lock_guard<std::mutex> lock(this->dataPtr->dataMutex);
       this->dataPtr->ReadData(_ecm);
+      this->dataPtr->newDataAvailable = false;
     }
     else
     {
@@ -717,6 +742,14 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       ignwarn << "Science sensor data won't be published because spherical "
               << "coordinates are unknown." << std::endl;
       return;
+    }
+  }
+  else{
+    std::lock_guard<std::mutex> lock(this->dataPtr->dataMutex);
+    if (this->dataPtr->newDataAvailable)
+    {
+      auto result = this->dataPtr->ReadData(_ecm);
+      this->dataPtr->newDataAvailable = !result;
     }
   }
 
