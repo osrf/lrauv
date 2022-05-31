@@ -25,31 +25,31 @@
 
 #include <chrono>
 
-#include <ignition/gazebo/Link.hh>
-#include <ignition/gazebo/System.hh>
-#include <ignition/math/Temperature.hh>
-#include <ignition/transport/Node.hh>
+#include <gz/sim/Link.hh>
+#include <gz/sim/System.hh>
+#include <gz/math/Temperature.hh>
+#include <gz/transport/Node.hh>
 
 #include "lrauv_ignition_plugins/lrauv_command.pb.h"
 
 namespace tethys
 {
   class TethysCommPlugin:
-    public ignition::gazebo::System,
-    public ignition::gazebo::ISystemConfigure,
-    public ignition::gazebo::ISystemPostUpdate
+    public gz::sim::System,
+    public gz::sim::ISystemConfigure,
+    public gz::sim::ISystemPostUpdate
   {
     // Documentation inherited
     public: void Configure(
-                const ignition::gazebo::Entity &_entity,
+                const gz::sim::Entity &_entity,
                 const std::shared_ptr<const sdf::Element> &_sdf,
-                ignition::gazebo::EntityComponentManager &_ecm,
-                ignition::gazebo::EventManager &_eventMgr) override;
+                gz::sim::EntityComponentManager &_ecm,
+                gz::sim::EventManager &_eventMgr) override;
 
     // Documentation inherited
     public: void PostUpdate(
-                const ignition::gazebo::UpdateInfo &_info,
-                const ignition::gazebo::EntityComponentManager &_ecm) override;
+                const gz::sim::UpdateInfo &_info,
+                const gz::sim::EntityComponentManager &_ecm) override;
 
     /// Callback function for command from LRAUV Main Vehicle Application
     /// \param[in] _msg Command message
@@ -59,34 +59,34 @@ namespace tethys
     /// Callback function for buoyancy bladder state
     /// \param[in] _msg Bladder volume
     public: void BuoyancyStateCallback(
-                const ignition::msgs::Double &_msg);
+                const gz::msgs::Double &_msg);
 
     /// Callback function for salinity sensor data.
     /// \param[in] _msg Sensor data
     public: void SalinityCallback(
-                const ignition::msgs::Float &_msg);
+                const gz::msgs::Float &_msg);
 
     /// Callback function for temperature sensor data.
     /// \param[in] _msg Sensor data
     public: void TemperatureCallback(
-                const ignition::msgs::Double &_msg);
+                const gz::msgs::Double &_msg);
 
     /// Callback function for chlorophyll sensor data.
     /// \param[in] _msg Sensor data
     public: void ChlorophyllCallback(
-                const ignition::msgs::Float &_msg);
+                const gz::msgs::Float &_msg);
 
     /// Callback function for current sensor data.
     /// \param[in] _msg Sensor data
     public: void CurrentCallback(
-                const ignition::msgs::Vector3d &_msg);
+                const gz::msgs::Vector3d &_msg);
 
     /// Parse SDF parameters and create components
     private: void SetupEntities(
-                const ignition::gazebo::Entity &_entity,
+                const gz::sim::Entity &_entity,
                 const std::shared_ptr<const sdf::Element> &_sdf,
-                ignition::gazebo::EntityComponentManager &_ecm,
-                ignition::gazebo::EventManager &_eventMgr);
+                gz::sim::EntityComponentManager &_ecm,
+                gz::sim::EventManager &_eventMgr);
 
     /// Set up control message topics
     /// \param[in] _ns Namespace to prepend to topic names
@@ -177,7 +177,7 @@ namespace tethys
     private: float latestSalinity{std::nanf("")};
 
     /// Latest temperature data received from sensor. NaN if not received.
-    private: ignition::math::Temperature latestTemperature{std::nanf("")};
+    private: gz::math::Temperature latestTemperature{std::nanf("")};
 
     /// Latest chlorophyll data received from sensor. NaN if not received.
     private: float latestChlorophyll{std::nanf("")};
@@ -186,7 +186,7 @@ namespace tethys
     private: double oceanDensity{1000};
 
     /// Latest current data received from sensor. NaN if not received.
-    private: ignition::math::Vector3d latestCurrent
+    private: gz::math::Vector3d latestCurrent
         {std::nan(""), std::nan(""), std::nan("")};
 
     /// TODO(mabelzhang) Remove when stable. Temporary timers for state message
@@ -195,52 +195,52 @@ namespace tethys
       std::chrono::steady_clock::duration::zero();
 
     /// Transport node for message passing
-    private: ignition::transport::Node node;
+    private: gz::transport::Node node;
 
     /// The model's entity
-    private: ignition::gazebo::Entity modelEntity;
+    private: gz::sim::Entity modelEntity;
 
     /// The model's base link
-    private: ignition::gazebo::Entity baseLink;
+    private: gz::sim::Entity baseLink;
 
     /// The thruster link
-    private: ignition::gazebo::Entity thrusterLink;
+    private: gz::sim::Entity thrusterLink;
 
     /// The thruster joint
-    private: ignition::gazebo::Entity thrusterJoint;
+    private: gz::sim::Entity thrusterJoint;
 
     /// The rudder joint
-    private: ignition::gazebo::Entity rudderJoint;
+    private: gz::sim::Entity rudderJoint;
 
     /// The elevator joint
-    private: ignition::gazebo::Entity elevatorJoint;
+    private: gz::sim::Entity elevatorJoint;
 
     /// The mass shifter joint
-    private: ignition::gazebo::Entity massShifterJoint;
+    private: gz::sim::Entity massShifterJoint;
 
     /// Publisher of robot state
-    private: ignition::transport::Node::Publisher statePub;
+    private: gz::transport::Node::Publisher statePub;
 
     /// Publisher of robot NavSat location
-    private: ignition::transport::Node::Publisher navSatPub;
+    private: gz::transport::Node::Publisher navSatPub;
 
     /// Publisher of thruster
-    private: ignition::transport::Node::Publisher thrusterPub;
+    private: gz::transport::Node::Publisher thrusterPub;
 
     /// Publisher of rudder position
-    private: ignition::transport::Node::Publisher rudderPub;
+    private: gz::transport::Node::Publisher rudderPub;
 
     /// Publisher of elevator position
-    private: ignition::transport::Node::Publisher elevatorPub;
+    private: gz::transport::Node::Publisher elevatorPub;
 
     /// Publisher of mass shifter position
-    private: ignition::transport::Node::Publisher massShifterPub;
+    private: gz::transport::Node::Publisher massShifterPub;
 
     /// Publisher of buoyancy engine
-    private: ignition::transport::Node::Publisher buoyancyEnginePub;
+    private: gz::transport::Node::Publisher buoyancyEnginePub;
 
     /// Publisher of drop weight release
-    private: ignition::transport::Node::Publisher dropWeightPub;
+    private: gz::transport::Node::Publisher dropWeightPub;
   };
 }
 

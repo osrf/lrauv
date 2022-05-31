@@ -36,9 +36,9 @@ TEST(CurrentsTest, TestGlobalCurrent)
 {
   TestFixtureWithVehicle fixture(
       "buoyant_tethys_at_depth.sdf", "tethys");
-  ignition::transport::Node node;
-  auto pub = node.Advertise<ignition::msgs::Vector3d>("/ocean_current");
-  ignition::msgs::Vector3d vec;
+  gz::transport::Node node;
+  auto pub = node.Advertise<gz::msgs::Vector3d>("/ocean_current");
+  gz::msgs::Vector3d vec;
   vec.set_x(0.0);
   vec.set_y(1.0);
   vec.set_z(0.0);

@@ -26,13 +26,13 @@
 #include <chrono>
 #include <string>
 
-#include <ignition/common/Console.hh>
-#include <ignition/common/Filesystem.hh>
-#include <ignition/gazebo/components/Physics.hh>
-#include <ignition/gazebo/TestFixture.hh>
-#include <ignition/gazebo/Util.hh>
-#include <ignition/gazebo/World.hh>
-#include <ignition/transport/Node.hh>
+#include <gz/common/Console.hh>
+#include <gz/common/Filesystem.hh>
+#include <gz/sim/components/Physics.hh>
+#include <gz/sim/TestFixture.hh>
+#include <gz/sim/Util.hh>
+#include <gz/sim/World.hh>
+#include <gz/transport/Node.hh>
 
 #include <lrauv_ignition_plugins/lrauv_command.pb.h>
 #include <lrauv_ignition_plugins/lrauv_state.pb.h>
@@ -55,10 +55,10 @@ class TestFixture
   /// \param[in] _worldName Base name of the world SDF,
   /// to be found among this package's ``worlds``.
   public: TestFixture(const std::string &_worldName)
-    : fixture(ignition::common::joinPaths(
+    : fixture(gz::common::joinPaths(
           PROJECT_SOURCE_PATH, "worlds", _worldName))
   {
-    ignition::common::Console::SetVerbosity(4);
+    gz::common::Console::SetVerbosity(4);
   }
 
   virtual ~TestFixture() = default;
@@ -67,34 +67,34 @@ class TestFixture
   public: void Pause() { this->paused = true; }
 
   /// Returns the underlying Ignition Gazebo server.
-  public: ignition::gazebo::Server *Simulator()
+  public: gz::sim::Server *Simulator()
   {
     if (!this->initialized)
     {
       this->fixture
           .OnConfigure(
-              [&](const ignition::gazebo::Entity &_entity,
+              [&](const gz::sim::Entity &_entity,
                   const std::shared_ptr<const sdf::Element> &_sdf,
-                  ignition::gazebo::EntityComponentManager &_ecm,
-                  ignition::gazebo::EventManager &_eventManager)
+                  gz::sim::EntityComponentManager &_ecm,
+                  gz::sim::EventManager &_eventManager)
               {
-                const ignition::gazebo::Entity worldEntity =
-                    ignition::gazebo::worldEntity(_ecm);
-                ignition::gazebo::World world(worldEntity);
+                const gz::sim::Entity worldEntity =
+                    gz::sim::worldEntity(_ecm);
+                gz::sim::World world(worldEntity);
                 auto physicsComponent = _ecm.Component<
-                  ignition::gazebo::components::Physics>(world.Entity());
+                  gz::sim::components::Physics>(world.Entity());
                 this->maxStepSize = physicsComponent->Data().MaxStepSize();
                 this->OnConfigure(_entity, _sdf, _ecm, _eventManager);
               })
           .OnPreUpdate(
-              [&](const ignition::gazebo::UpdateInfo &_info,
-                  ignition::gazebo::EntityComponentManager &_ecm)
+              [&](const gz::sim::UpdateInfo &_info,
+                  gz::sim::EntityComponentManager &_ecm)
               {
                 this->OnPreUpdate(_info, _ecm);
               })
           .OnPostUpdate(
-              [&](const ignition::gazebo::UpdateInfo &_info,
-                  const ignition::gazebo::EntityComponentManager &_ecm)
+              [&](const gz::sim::UpdateInfo &_info,
+                  const gz::sim::EntityComponentManager &_ecm)
               {
                 this->OnPostUpdate(_info, _ecm);
                 this->info = _info;
@@ -149,28 +149,28 @@ class TestFixture
   public: uint64_t Iterations() const { return this->info.iterations; }
 
   /// To be optionally overriden by subclasses.
-  /// \see ignition::gazebo::TestFixture
+  /// \see gz::sim::TestFixture
   protected: virtual void OnConfigure(
-      const ignition::gazebo::Entity &,
+      const gz::sim::Entity &,
       const std::shared_ptr<const sdf::Element> &,
-      ignition::gazebo::EntityComponentManager &,
-      ignition::gazebo::EventManager &)
+      gz::sim::EntityComponentManager &,
+      gz::sim::EventManager &)
   {
   }
 
   /// To be optionally overriden by subclasses.
-  /// \see ignition::gazebo::TestFixture
+  /// \see gz::sim::TestFixture
   protected: virtual void OnPreUpdate(
-    const ignition::gazebo::UpdateInfo &,
-    ignition::gazebo::EntityComponentManager &)
+    const gz::sim::UpdateInfo &,
+    gz::sim::EntityComponentManager &)
   {
   }
 
   /// To be optionally overriden by subclasses.
-  /// \see ignition::gazebo::TestFixture
+  /// \see gz::sim::TestFixture
   protected: virtual void OnPostUpdate(
-    const ignition::gazebo::UpdateInfo &,
-    const ignition::gazebo::EntityComponentManager &)
+    const gz::sim::UpdateInfo &,
+    const gz::sim::EntityComponentManager &)
   {
   }
 
@@ -180,9 +180,9 @@ class TestFixture
 
   private: double maxStepSize;
 
-  private: ignition::gazebo::UpdateInfo info;
+  private: gz::sim::UpdateInfo info;
 
-  private: ignition::gazebo::TestFixture fixture;
+  private: gz::sim::TestFixture fixture;
 };
 
 /// A test fixture with a single vehicle.
@@ -221,15 +221,15 @@ class TestFixtureWithVehicle : public TestFixture
   }
 
   protected: void OnPreUpdate(
-    const ignition::gazebo::UpdateInfo &,
-    ignition::gazebo::EntityComponentManager &_ecm) override
+    const gz::sim::UpdateInfo &,
+    gz::sim::EntityComponentManager &_ecm) override
   {
     this->vehicleManipulator.Update(_ecm);
   }
 
   protected: void OnPostUpdate(
-    const ignition::gazebo::UpdateInfo &_info,
-    const ignition::gazebo::EntityComponentManager &_ecm) override
+    const gz::sim::UpdateInfo &_info,
+    const gz::sim::EntityComponentManager &_ecm) override
   {
     this->vehicleObserver.Update(_info, _ecm);
   }
@@ -259,16 +259,16 @@ class VehicleCommandTestFixture : public TestFixtureWithVehicle
   }
 
   /// Returns a vehicle command publisher.
-  public: ignition::transport::Node::Publisher &CommandPublisher()
+  public: gz::transport::Node::Publisher &CommandPublisher()
   {
     return this->commandPublisher;
   }
 
-  protected: ignition::transport::Node &Node() { return this->node; }
+  protected: gz::transport::Node &Node() { return this->node; }
 
-  private: ignition::transport::Node node;
+  private: gz::transport::Node node;
 
-  private: ignition::transport::Node::Publisher commandPublisher;
+  private: gz::transport::Node::Publisher commandPublisher;
 };
 
 /// A test fixture with a single vehicle for vehicle state testing.

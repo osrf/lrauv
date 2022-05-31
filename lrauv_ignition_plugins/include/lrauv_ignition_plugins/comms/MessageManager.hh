@@ -25,7 +25,7 @@
 
 #include "CommsPacket.hh"
 
-#include <ignition/transport/Node.hh>
+#include <gz/transport/Node.hh>
 namespace tethys
 {
 //////////////////////////////////////////////////
@@ -39,7 +39,7 @@ class MessageManager
     this->externalPublisher.Publish(packet.ToExternalMsg());
   }
   ////////////////////////////////////////////////
-  public: ignition::transport::Node::Publisher externalPublisher;
+  public: gz::transport::Node::Publisher externalPublisher;
 };
 }
 #endif

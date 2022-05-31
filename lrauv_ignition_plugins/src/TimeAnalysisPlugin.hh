@@ -25,35 +25,35 @@
 
 #include <chrono>
 
-#include <ignition/gazebo/System.hh>
-#include <ignition/msgs/world_stats.pb.h>
-#include <ignition/transport/Node.hh>
+#include <gz/sim/System.hh>
+#include <gz/msgs/world_stats.pb.h>
+#include <gz/transport/Node.hh>
 
 namespace tethys
 {
   class TimeAnalysisPlugin:
-    public ignition::gazebo::System,
-    public ignition::gazebo::ISystemConfigure,
-    public ignition::gazebo::ISystemPostUpdate
+    public gz::sim::System,
+    public gz::sim::ISystemConfigure,
+    public gz::sim::ISystemPostUpdate
   {
     // Documentation inherited
     public: void Configure(
-                const ignition::gazebo::Entity &_entity,
+                const gz::sim::Entity &_entity,
                 const std::shared_ptr<const sdf::Element> &_sdf,
-                ignition::gazebo::EntityComponentManager &_ecm,
-                ignition::gazebo::EventManager &_eventMgr) override;
+                gz::sim::EntityComponentManager &_ecm,
+                gz::sim::EventManager &_eventMgr) override;
 
     // Documentation inherited
     public: void PostUpdate(
-                const ignition::gazebo::UpdateInfo &_info,
-                const ignition::gazebo::EntityComponentManager &_ecm) override;
+                const gz::sim::UpdateInfo &_info,
+                const gz::sim::EntityComponentManager &_ecm) override;
 
     /// Callback function for world stats containing real time factor
     /// \param[in] _msg world stats message
-    public: void RTFCallback(const ignition::msgs::WorldStatistics &_msg);
+    public: void RTFCallback(const gz::msgs::WorldStatistics &_msg);
 
     /// Transport node for message passing
-    private: ignition::transport::Node node;
+    private: gz::transport::Node node;
 
     /// Service name for setting physics time step and RTF
     private: std::string physicsCmdService{""};

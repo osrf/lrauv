@@ -23,11 +23,11 @@
 #ifndef TETHYS_CONTROLPANEL_HH_
 #define TETHYS_CONTROLPANEL_HH_
 
-#include <ignition/gui/Plugin.hh>
+#include <gz/gui/Plugin.hh>
 
-#include <ignition/transport/Node.hh>
+#include <gz/transport/Node.hh>
 
-#include <ignition/gazebo/gui/GuiSystem.hh>
+#include <gz/sim/gui/GuiSystem.hh>
 
 #include "lrauv_ignition_plugins/lrauv_init.pb.h"
 
@@ -35,7 +35,7 @@ namespace tethys
 {
 
 /// \brief Control Panel for controlling the tethys using the GUI.
-class SpawnPanel : public ignition::gazebo::GuiSystem
+class SpawnPanel : public gz::sim::GuiSystem
 {
   Q_OBJECT
 
@@ -53,14 +53,14 @@ class SpawnPanel : public ignition::gazebo::GuiSystem
     double lattitude, double longitude, double depth, int commsId, QString name);
 
   /// \brief Documentation inherited
-  public: void Update(const ignition::gazebo::UpdateInfo &,
-    ignition::gazebo::EntityComponentManager &_ecm);
+  public: void Update(const gz::sim::UpdateInfo &,
+    gz::sim::EntityComponentManager &_ecm);
 
   /// \brief Transport node
-  private: ignition::transport::Node node;
+  private: gz::transport::Node node;
 
   /// \brief Transport publisher
-  private: ignition::transport::Node::Publisher pub;
+  private: gz::transport::Node::Publisher pub;
 
   /// \brief The names of all the models
   private: std::unordered_set<std::string> modelNames;

@@ -8,7 +8,7 @@ namespace lrauv_system_tests
 {
 
 bool WaitForConnections(
-  const ignition::transport::Node::Publisher &_publisher,
+  const gz::transport::Node::Publisher &_publisher,
   const std::chrono::nanoseconds _timeout)
 {
   Timeout timeout{_timeout};

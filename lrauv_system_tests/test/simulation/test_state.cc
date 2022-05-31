@@ -24,7 +24,7 @@
 
 #include <chrono>
 
-#include <ignition/math/Angle.hh>
+#include <gz/math/Angle.hh>
 
 #include <lrauv_ignition_plugins/lrauv_command.pb.h>
 #include <lrauv_ignition_plugins/lrauv_state.pb.h>
@@ -46,9 +46,9 @@ class VehicleStateTest : public ::testing::Test
 
   protected: lrauv_system_tests::VehicleStateTestFixture fixture;
 
-  protected: const ignition::math::Angle initialLat{IGN_DTOR(35.5999984741211)};
+  protected: const gz::math::Angle initialLat{IGN_DTOR(35.5999984741211)};
 
-  protected: const ignition::math::Angle initialLon{IGN_DTOR(-121.779998779297)};
+  protected: const gz::math::Angle initialLon{IGN_DTOR(-121.779998779297)};
 };
 
 // Checks that don't change throughout the test

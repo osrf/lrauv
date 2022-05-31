@@ -25,10 +25,10 @@
 
 #include <chrono>
 
-#include <ignition/gazebo/Link.hh>
-#include <ignition/gazebo/System.hh>
-#include <ignition/math/Temperature.hh>
-#include <ignition/transport/Node.hh>
+#include <gz/sim/Link.hh>
+#include <gz/sim/System.hh>
+#include <gz/math/Temperature.hh>
+#include <gz/transport/Node.hh>
 
 #include "lrauv_ignition_plugins/lrauv_init.pb.h"
 
@@ -40,15 +40,15 @@ namespace tethys
   /// If the world origin's spherical coordinates aren't set from SDF, this
   /// plugin will set them to match the first vehicle spawned.
   class WorldCommPlugin:
-    public ignition::gazebo::System,
-    public ignition::gazebo::ISystemConfigure
+    public gz::sim::System,
+    public gz::sim::ISystemConfigure
   {
     // Documentation inherited
     public: void Configure(
-                const ignition::gazebo::Entity &_entity,
+                const gz::sim::Entity &_entity,
                 const std::shared_ptr<const sdf::Element> &_sdf,
-                ignition::gazebo::EntityComponentManager &_ecm,
-                ignition::gazebo::EventManager &_eventMgr) override;
+                gz::sim::EntityComponentManager &_ecm,
+                gz::sim::EventManager &_eventMgr) override;
 
     /// Callback function for initialization message from LRAUV Main Vehicle
     /// Application
@@ -65,14 +65,14 @@ namespace tethys
     /// Generic callback to handle service responses.
     /// \param[in] _rep Response
     /// \param[in] _result True if the service was handled correctly
-    private: void ServiceResponse(const ignition::msgs::Boolean &_rep,
+    private: void ServiceResponse(const gz::msgs::Boolean &_rep,
         const bool _result);
 
     /// Topic used to spawn robots
     private: std::string spawnTopic{"lrauv/init"};
 
     /// Transport node for message passing
-    private: ignition::transport::Node node;
+    private: gz::transport::Node node;
 
     /// Service to set spherical coordinates
     private: std::string setSphericalCoordsService;

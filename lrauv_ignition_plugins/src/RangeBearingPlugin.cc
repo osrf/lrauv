@@ -27,12 +27,12 @@
 
 #include <queue>
 
-#include <ignition/gazebo/components.hh>
-#include <ignition/gazebo/Link.hh>
-#include <ignition/gazebo/Model.hh>
-#include <ignition/gazebo/Util.hh>
-#include <ignition/plugin/Register.hh>
-#include <ignition/transport/Node.hh>
+#include <gz/sim/components.hh>
+#include <gz/sim/Link.hh>
+#include <gz/sim/Model.hh>
+#include <gz/sim/Util.hh>
+#include <gz/plugin/Register.hh>
+#include <gz/transport/Node.hh>
 
 #include <lrauv_ignition_plugins/comms/CommsClient.hh>
 
@@ -79,10 +79,10 @@ class RangeBearingPrivateData
     std::chrono::steady_clock::time_point> transmissionTime;
 
   /// \brief Transport node
-  public: ignition::transport::Node node;
+  public: gz::transport::Node node;
 
   /// \brief Publisher for results
-  public: ignition::transport::Node::Publisher pub;
+  public: gz::transport::Node::Publisher pub;
 
   /// \brief Processing duration
   public: std::chrono::steady_clock::duration processingDelay;
@@ -94,10 +94,10 @@ class RangeBearingPrivateData
   public: std::chrono::steady_clock::time_point timeNow;
 
   /// \brief Link and entity which this is bound to
-  public: ignition::gazebo::Entity linkEntity;
+  public: gz::sim::Entity linkEntity;
 
   /// \brief The current pose
-  public: ignition::math::Pose3d currentPose;
+  public: gz::math::Pose3d currentPose;
 
   /// \brief Speed of sound. Units: m/s
   public: double speedOfSound {15000};
@@ -177,9 +177,9 @@ void RangeBearingPrivateData::PublishResponse(
   auto range = (this->speedOfSound * duration.count()) / 2;
 
   // Get current pose
-  auto poseOffset = ignition::math::Matrix4d(this->currentPose);
+  auto poseOffset = gz::math::Matrix4d(this->currentPose);
   auto otherVehiclesPos =
-    ignition::math::Vector3d(
+    gz::math::Vector3d(
       resp.bearing().x(), resp.bearing().y(), resp.bearing().z());
   // Transform pose of other vehicle to local frame
   auto poseInLocalFrame = poseOffset.Inverse() * otherVehiclesPos;
@@ -190,12 +190,12 @@ void RangeBearingPrivateData::PublishResponse(
 
   // Elevation is given as a function of angle from XY plane of the vehicle 
   // with positive facing down.
-  auto negativeZAxis = ignition::math::Vector3d(0, 0, -1);
+  auto negativeZAxis = gz::math::Vector3d(0, 0, -1);
   auto elev =
     asin(negativeZAxis.Dot(poseInLocalFrame) / poseInLocalFrame.Length());
 
   // Azimuth is given by the angle from the X axis in vehicle frame.
-  auto xyProj = ignition::math::Vector2d(poseInLocalFrame.X(),
+  auto xyProj = gz::math::Vector2d(poseInLocalFrame.X(),
     poseInLocalFrame.Y());
   // TODO(arjo): This minus sign shouldn't be necessary.
   auto azimuth = (xyProj.Length() < 0.001) ? 0 : -atan2(xyProj.Y(), xyProj.X());
@@ -205,7 +205,7 @@ void RangeBearingPrivateData::PublishResponse(
   finalAnswer.set_range(range);
   finalAnswer.set_req_id(resp.req_id());
 
-  ignition::msgs::Vector3d* vec = new ignition::msgs::Vector3d;
+  gz::msgs::Vector3d* vec = new gz::msgs::Vector3d;
   vec->set_x(poseInLocalFrame.Length()); vec->set_y(elev); vec->set_z(azimuth);
   finalAnswer.set_allocated_bearing(vec);
   this->pub.Publish(finalAnswer);
@@ -220,10 +220,10 @@ RangeBearingPlugin::RangeBearingPlugin():
 
 ////////////////////////////////////////////////
 void RangeBearingPlugin::Configure(
-  const ignition::gazebo::Entity &_entity,
+  const gz::sim::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
-  ignition::gazebo::EntityComponentManager &_ecm,
-  ignition::gazebo::EventManager &/*_eventMgr*/)
+  gz::sim::EntityComponentManager &_ecm,
+  gz::sim::EventManager &/*_eventMgr*/)
 {
   if (!_sdf->HasElement("address"))
   {
@@ -254,16 +254,16 @@ void RangeBearingPlugin::Configure(
       "<link_name> - expected the link name of the receptor" << std::endl;
     return;
   }
-  auto vehicleModel = ignition::gazebo::Model(_entity);
+  auto vehicleModel = gz::sim::Model(_entity);
   auto linkName = _sdf->Get<std::string>("link_name");
   this->dataPtr->linkEntity = vehicleModel.LinkByName(_ecm, linkName);
-  if(this->dataPtr->linkEntity == ignition::gazebo::kNullEntity)
+  if(this->dataPtr->linkEntity == gz::sim::kNullEntity)
   {
     ignerr << "Link " << linkName << " was not found in "
       << vehicleModel.Name(_ecm) << std::endl;
     return;
   }
-  ignition::gazebo::enableComponent<ignition::gazebo::components::WorldPose>(
+  gz::sim::enableComponent<gz::sim::components::WorldPose>(
     _ecm, this->dataPtr->linkEntity);
 
   if (_sdf->HasElement("namespace"))
@@ -285,8 +285,8 @@ void RangeBearingPlugin::Configure(
 
 ////////////////////////////////////////////////
 void RangeBearingPlugin::PreUpdate(
-  const ignition::gazebo::UpdateInfo &_info,
-  ignition::gazebo::EntityComponentManager &_ecm)
+  const gz::sim::UpdateInfo &_info,
+  gz::sim::EntityComponentManager &_ecm)
 {
   using MsgType =
     lrauv_ignition_plugins::msgs::LRAUVAcousticMessage::MessageType;
@@ -294,7 +294,7 @@ void RangeBearingPlugin::PreUpdate(
   if(_info.paused)
     return;
 
-  ignition::gazebo::Link baseLink(this->dataPtr->linkEntity);
+  gz::sim::Link baseLink(this->dataPtr->linkEntity);
   auto pose = baseLink.WorldPose(_ecm);
 
   if (!pose.has_value())
@@ -322,7 +322,7 @@ void RangeBearingPlugin::PreUpdate(
     message.set_type(MsgType::LRAUVAcousticMessage_MessageType_RangeResponse);
 
     resp.set_req_id(ping.reqId);
-    ignition::msgs::Vector3d* vec = new ignition::msgs::Vector3d;
+    gz::msgs::Vector3d* vec = new gz::msgs::Vector3d;
 
     // We cheat a little here and send the pose of the vehicle itself.
     vec->set_x(pose->Pos().X());
@@ -342,6 +342,6 @@ void RangeBearingPlugin::PreUpdate(
 }
 
 IGNITION_ADD_PLUGIN(tethys::RangeBearingPlugin,
-  ignition::gazebo::System,
+  gz::sim::System,
   tethys::RangeBearingPlugin::ISystemConfigure,
   tethys::RangeBearingPlugin::ISystemPreUpdate)

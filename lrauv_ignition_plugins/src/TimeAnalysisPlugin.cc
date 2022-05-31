@@ -22,24 +22,24 @@
 
 #include <chrono>
 
-#include <ignition/gazebo/World.hh>
-#include <ignition/msgs/double.pb.h>
-#include <ignition/msgs/header.pb.h>
-#include <ignition/msgs/time.pb.h>
-#include <ignition/msgs/world_stats.pb.h>
-#include <ignition/plugin/Register.hh>
-#include <ignition/transport/Node.hh>
-#include <ignition/transport/TopicUtils.hh>
+#include <gz/sim/World.hh>
+#include <gz/msgs/double.pb.h>
+#include <gz/msgs/header.pb.h>
+#include <gz/msgs/time.pb.h>
+#include <gz/msgs/world_stats.pb.h>
+#include <gz/plugin/Register.hh>
+#include <gz/transport/Node.hh>
+#include <gz/transport/TopicUtils.hh>
 
 #include "TimeAnalysisPlugin.hh"
 
 using namespace tethys;
 
 void TimeAnalysisPlugin::Configure(
-  const ignition::gazebo::Entity &_entity,
+  const gz::sim::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &,
-  ignition::gazebo::EntityComponentManager &_ecm,
-  ignition::gazebo::EventManager &)
+  gz::sim::EntityComponentManager &_ecm,
+  gz::sim::EventManager &)
 {
   ignmsg << "TimeAnalysisPlugin::Configure" << std::endl;
 
@@ -53,7 +53,7 @@ void TimeAnalysisPlugin::Configure(
   }
 
   // Get world name
-  ignition::gazebo::World world(_entity);
+  gz::sim::World world(_entity);
   if (!world.Valid(_ecm))
   {
     ignerr << "Time analysis plugin must be attached to the world."
@@ -64,7 +64,7 @@ void TimeAnalysisPlugin::Configure(
   // Service for setting max step size and RTF dynamically
   this->physicsCmdService = "/world/" + world.Name(_ecm).value() +
       "/set_physics";
-  this->physicsCmdService = ignition::transport::TopicUtils::AsValidTopic(
+  this->physicsCmdService = gz::transport::TopicUtils::AsValidTopic(
     this->physicsCmdService);
   if (this->physicsCmdService.empty())
   {
@@ -76,15 +76,15 @@ void TimeAnalysisPlugin::Configure(
 }
 
 void TimeAnalysisPlugin::RTFCallback(
-  const ignition::msgs::WorldStatistics &_msg)
+  const gz::msgs::WorldStatistics &_msg)
 {
   // Store RTF
   this->rtf = _msg.real_time_factor();
 }
 
 void TimeAnalysisPlugin::PostUpdate(
-  const ignition::gazebo::UpdateInfo &_info,
-  const ignition::gazebo::EntityComponentManager &)
+  const gz::sim::UpdateInfo &_info,
+  const gz::sim::EntityComponentManager &)
 {
   // If paused or finished testing, do nothing
   // Use >, not >=, because if nextStepSizeIdx == array size, still need to run
@@ -113,15 +113,15 @@ void TimeAnalysisPlugin::PostUpdate(
     nextStepSizeIdx++;
     ignmsg << "Setting new max_step_size (dt) to " << nextStepSize << std::endl;
 
-    std::function<void(const ignition::msgs::Boolean &, const bool)> physCb =
-        [](const ignition::msgs::Boolean &/*_rep*/, const bool _result)
+    std::function<void(const gz::msgs::Boolean &, const bool)> physCb =
+        [](const gz::msgs::Boolean &/*_rep*/, const bool _result)
     {
       if (!_result)
         ignerr << "Error setting physics parameters" << std::endl;
     };
 
     // Set physics parameters dynamically
-    ignition::msgs::Physics req;
+    gz::msgs::Physics req;
     req.set_max_step_size(nextStepSize);
     req.set_real_time_factor(nextRealTimeFactor);
     this->node.Request(this->physicsCmdService, req, physCb);
@@ -145,6 +145,6 @@ void TimeAnalysisPlugin::PostUpdate(
 
 IGNITION_ADD_PLUGIN(
   tethys::TimeAnalysisPlugin,
-  ignition::gazebo::System,
+  gz::sim::System,
   tethys::TimeAnalysisPlugin::ISystemConfigure,
   tethys::TimeAnalysisPlugin::ISystemPostUpdate)

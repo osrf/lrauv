@@ -24,11 +24,11 @@
 #include <thread>
 #include <gtest/gtest.h>
 
-#include <ignition/gazebo/TestFixture.hh>
-#include <ignition/gazebo/Util.hh>
-#include <ignition/gazebo/World.hh>
-#include <ignition/math/SphericalCoordinates.hh>
-#include <ignition/transport/Node.hh>
+#include <gz/sim/TestFixture.hh>
+#include <gz/sim/Util.hh>
+#include <gz/sim/World.hh>
+#include <gz/math/SphericalCoordinates.hh>
+#include <gz/transport/Node.hh>
 
 #include <lrauv_ignition_plugins/lrauv_init.pb.h>
 
@@ -38,21 +38,21 @@ using namespace std::chrono_literals;
 
 std::atomic<bool> received_msg[4] = {false};
 
-void ChlorophyllVeh1Cb(const ignition::msgs::Float &_msg)
+void ChlorophyllVeh1Cb(const gz::msgs::Float &_msg)
 {
   // 0.22934943324714 is the value at this point. Allow some noise.
   EXPECT_NEAR(_msg.data(), 0.229, 0.001);
   received_msg[0] = true;
 }
 
-void ChlorophyllVeh2Cb(const ignition::msgs::Float &_msg)
+void ChlorophyllVeh2Cb(const gz::msgs::Float &_msg)
 {
   // 0.3935107401546 is the value at this point. Allow some noise.
   EXPECT_NEAR(_msg.data(), 0.393, 0.001);
   received_msg[1] = true;
 }
 
-void ChlorophyllVeh3Cb(const ignition::msgs::Float &_msg)
+void ChlorophyllVeh3Cb(const gz::msgs::Float &_msg)
 {
   // Nearest readings are:
   // Chlorophyll sensor: 0.935823@36.8 -122.72 40
@@ -65,7 +65,7 @@ void ChlorophyllVeh3Cb(const ignition::msgs::Float &_msg)
   received_msg[2] = true;
 }
 
-void ChlorophyllVeh4Cb(const ignition::msgs::Float &_msg)
+void ChlorophyllVeh4Cb(const gz::msgs::Float &_msg)
 {
   // Nearest readings are:
   // Chlorophyll sensor: 0.935823@36.8 -122.72 40
@@ -79,13 +79,13 @@ void ChlorophyllVeh4Cb(const ignition::msgs::Float &_msg)
 }
 
 void SpawnVehicle(
-  ignition::transport::Node::Publisher &_spawnPub,
+  gz::transport::Node::Publisher &_spawnPub,
   const std::string &_modelName,
   const double _lat, const double _lon, const double _depth,
   const int _acommsAddr)
 {
-  ignition::math::Angle lat1 = IGN_DTOR(_lat);
-  ignition::math::Angle lon1 = IGN_DTOR(_lon);
+  gz::math::Angle lat1 = IGN_DTOR(_lat);
+  gz::math::Angle lon1 = IGN_DTOR(_lon);
 
   lrauv_ignition_plugins::msgs::LRAUVInit spawnMsg;
   spawnMsg.mutable_id_()->set_data(_modelName);
@@ -101,11 +101,11 @@ void SpawnVehicle(
 //////////////////////////////////////////////////
 TEST(SensorTest, Sensor)
 {
-  ignition::common::Console::SetVerbosity(4);
+  gz::common::Console::SetVerbosity(4);
 
   // Setup fixture
-  auto fixture = std::make_unique<ignition::gazebo::TestFixture>(
-      ignition::common::joinPaths(
+  auto fixture = std::make_unique<gz::sim::TestFixture>(
+      gz::common::joinPaths(
       std::string(PROJECT_SOURCE_PATH), "worlds", "empty_environment.sdf"));
   unsigned int iterations{0u};
 
@@ -114,15 +114,15 @@ TEST(SensorTest, Sensor)
     {"vehicle1", "vehicle2", "vehicle3", "vehicle4"};
 
   fixture->OnPostUpdate(
-    [&](const ignition::gazebo::UpdateInfo &_info,
-    const ignition::gazebo::EntityComponentManager &_ecm)
+    [&](const gz::sim::UpdateInfo &_info,
+    const gz::sim::EntityComponentManager &_ecm)
     {
-      auto worldEntity = ignition::gazebo::worldEntity(_ecm);
-      ignition::gazebo::World world(worldEntity);
+      auto worldEntity = gz::sim::worldEntity(_ecm);
+      gz::sim::World world(worldEntity);
       int numVehiclesSpawned{0};
       for (auto v1 : vehicles)
       {
-        if (world.ModelByName(_ecm, v1) != ignition::gazebo::kNullEntity)
+        if (world.ModelByName(_ecm, v1) != gz::sim::kNullEntity)
         {
           numVehiclesSpawned++;
         }
@@ -140,7 +140,7 @@ TEST(SensorTest, Sensor)
   fixture->Server()->RunOnce();
   EXPECT_EQ(1, iterations);
   // Spawn first vehicle
-  ignition::transport::Node node;
+  gz::transport::Node node;
   auto spawnPub = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVInit>(
     "/lrauv/init");
 
