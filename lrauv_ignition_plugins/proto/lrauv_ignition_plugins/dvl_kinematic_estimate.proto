@@ -20,7 +20,7 @@ package lrauv_ignition_plugins.msgs;
 option java_package = "lrauv_ignition_plugins.msgs";
 option java_outer_classname = "DVLProtos";
 
-import "ignition/msgs/vector3d.proto";
+import "gz/msgs/vector3d.proto";
 
 message DVLKinematicEstimate
 {
@@ -34,7 +34,7 @@ message DVLKinematicEstimate
   ReferenceType reference = 1;
 
   /// \brief Estimate mean
-  ignition.msgs.Vector3d mean = 2;
+  gz.msgs.Vector3d mean = 2;
 
   /// \brief Estimate covariance matrix.
   /// A 3 x 3 row-major matrix using a flat contiguous layout.

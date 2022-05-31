@@ -27,7 +27,7 @@ option java_outer_classname = "DVLProtos";
 /// It relies on the principle of doppler shift of an echo to measure the velocity
 /// of the craft.
 
-import "ignition/msgs/header.proto";
+import "gz/msgs/header.proto";
 import "lrauv_ignition_plugins/dvl_beam_state.proto";
 import "lrauv_ignition_plugins/dvl_tracking_target.proto";
 import "lrauv_ignition_plugins/dvl_kinematic_estimate.proto";
@@ -35,7 +35,7 @@ import "lrauv_ignition_plugins/dvl_kinematic_estimate.proto";
 message DVLVelocityTracking
 {
   /// \brief Message header
-  ignition.msgs.Header header = 1;
+  gz.msgs.Header header = 1;
 
   enum DVLType
   {
