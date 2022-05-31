@@ -65,6 +65,4 @@ TEST(BatteryTest, TestDischargeFullCharged)
   double dischargePower =  (finalVoltage + initialVoltage) * 0.5 *
     (finalCharge - initialCharge) * 3600 / (finalTime - initialTime);
   EXPECT_NEAR(dischargePower, -28.8, 0.5);
-
-  batterySubscription.ResetMessageHistory();
 }
