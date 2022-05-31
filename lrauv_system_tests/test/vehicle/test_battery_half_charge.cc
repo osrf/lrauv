@@ -29,6 +29,7 @@
 #include "lrauv_system_tests/TestFixture.hh"
 
 using namespace ignition;
+using namespace std::literals::chrono_literals;
 
 //////////////////////////////////////////////////
 /// Test if the battery discharges with time with the specified
@@ -47,7 +48,7 @@ TEST(BatteryTest, TestDischargeHalfCharged)
 
   fixture.Step(1000u);
 
-  EXPECT_GT(batterySubscription.MessageHistorySize(), 5);
+  ASSERT_TRUE(batterySubscription.WaitForMessages(5, 10s));
   int n = batterySubscription.MessageHistorySize() - 1;
   auto initialMessage = batterySubscription.GetMessageByIndex(0);
   double initialCharge = initialMessage.charge();
