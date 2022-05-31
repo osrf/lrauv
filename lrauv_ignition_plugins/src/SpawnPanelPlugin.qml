@@ -86,7 +86,7 @@ GridLayout {
     text: "Comms ID"
     Layout.columnSpan: 1
   }
-  IgnSpinBox {
+  GzSpinBox {
     id: commsValue
     Layout.columnSpan: 4
     value: 0
