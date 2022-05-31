@@ -82,7 +82,7 @@ TEST(BatteryTest, TestDischargeHalfCharged)
 
   fixture.Step(1000u);
 
-  EXPECT_GT(batterySubscription.MessageHistorySize(), 5);
+  ASSERT_TRUE(batterySubscription.WaitForMessages(5, 10s));
   n = batterySubscription.MessageHistorySize() - 1;
   EXPECT_GT(batterySubscription.GetMessageByIndex(n).charge(), finalCharge);
   batterySubscription.ResetMessageHistory();
@@ -90,7 +90,7 @@ TEST(BatteryTest, TestDischargeHalfCharged)
   /* Stop charging, charge should decrease with time */
   EXPECT_TRUE(node.Request("/model/tethys/battery/linear_battery/recharge/stop", req, timeout, rep, result));
   fixture.Step(1000u);
-  EXPECT_GT(batterySubscription.MessageHistorySize(), 5);
+  ASSERT_TRUE(batterySubscription.WaitForMessages(5, 10s));
   n = batterySubscription.MessageHistorySize() - 1;
   EXPECT_LT(batterySubscription.GetMessageByIndex(n).charge(),
       batterySubscription.GetMessageByIndex(0).charge());
