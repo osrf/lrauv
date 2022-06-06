@@ -652,10 +652,10 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.add_values_(this->latestChlorophyll);
 
   // Battery data
-  stateMsg.set_batteryVoltage_(this->latestBatteryVoltage);
-  stateMsg.set_batteryCurrent_(this->latestBatteryCurrent);
-  stateMsg.set_batteryCharge_(this->latestBatteryCharge);
-  stateMsg.set_batteryPercentage_(this->latestBatteryPercentage);
+  stateMsg.set_batteryvoltage_(this->latestBatteryVoltage);
+  stateMsg.set_batterycurrent_(this->latestBatteryCurrent);
+  stateMsg.set_batterycharge_(this->latestBatteryCharge);
+  stateMsg.set_batterypercentage_(this->latestBatteryPercentage);
 
   // Set Ocean Density
   stateMsg.set_density_(this->oceanDensity);
@@ -702,10 +702,10 @@ void TethysCommPlugin::PostUpdate(
       << "\tSalinity (PSU): " << stateMsg.salinity_() << std::endl
       << "\tChlorophyll (ug/L): " << stateMsg.values_(0) << std::endl
       << "\tPressure (Pa): " << stateMsg.values_(1) << std::endl
-      << "\tBattery Voltage (V): " << stateMsg.batteryVoltage_() << std::endl
-      << "\tBattery Current (A): " << stateMsg.batteryCurrent_() << std::endl
-      << "\tBattery Charge (Ah): " << stateMsg.batteryCharge_() << std::endl
-      << "\tBattery Percentage (unitless): " << stateMsg.batteryPercentage_() << std::endl;
+      << "\tBattery Voltage (V): " << stateMsg.batteryvoltage_() << std::endl
+      << "\tBattery Current (A): " << stateMsg.batterycurrent_() << std::endl
+      << "\tBattery Charge (Ah): " << stateMsg.batterycharge_() << std::endl
+      << "\tBattery Percentage (unitless): " << stateMsg.batterypercentage_() << std::endl;
 
     this->prevPubPrintTime = _info.simTime;
   }
