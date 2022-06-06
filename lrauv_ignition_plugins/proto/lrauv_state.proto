@@ -178,5 +178,5 @@ message LRAUVState
   double batteryCharge_            = 35;
 
   /// |brief Percentage of battery remaining.
-  double batteryPerentage_         = 36;
+  double batteryPercentage_         = 36;
 }
