@@ -167,4 +167,16 @@ message LRAUVState
   // 0: Data collected from Chlorophyll sensor. Unit: ug / L
   // 1: Pressure calculated from current depth and latitude. Unit: Pa
   repeated float values_          = 32;
+
+  /// |brief Voltage of the battery.
+  double batteryVoltage_           = 33;
+
+  /// |brief Current supplied by the battery in A.
+  double batteryCurrent_           = 34;
+
+  /// |brief Current charge in the battery in Ah.
+  double batteryCharge_            = 35;
+
+  /// |brief Percentage of battery remaining.
+  double batteryPerentage_         = 36;
 }
