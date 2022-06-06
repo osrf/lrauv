@@ -28,6 +28,7 @@
 #include <ignition/gazebo/components/JointVelocity.hh>
 #include <ignition/gazebo/components/LinearVelocity.hh>
 #include <ignition/gazebo/components/Pose.hh>
+#include <ignition/msgs/battery_state.pb.h>
 #include <ignition/msgs/double.pb.h>
 #include <ignition/msgs/empty.pb.h>
 #include <ignition/msgs/header.pb.h>
@@ -350,6 +351,15 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
       << this->temperatureTopic << "]. " << std::endl;
   }
 
+  this->batteryTopic = ignition::transport::TopicUtils::AsValidTopic(
+    "/model/" + _ns + "/tethys/" + this->batteryTopic);
+  if (!this->node.Subscribe(this->batteryTopic,
+      &TethysCommPlugin::BatteryCallback, this))
+  {
+    ignerr << "Error subscribing to topic " << "["
+      << this->batteryTopic << "]. " << std::endl;
+  }
+
   this->chlorophyllTopic = ignition::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/" + this->chlorophyllTopic);
   if (!this->node.Subscribe(this->chlorophyllTopic,
@@ -487,6 +497,15 @@ void TethysCommPlugin::TemperatureCallback(
   const ignition::msgs::Double &_msg)
 {
   this->latestTemperature.SetCelsius(_msg.data());
+}
+
+void TethysCommPlugin::BatteryCallback(
+  const ignition::msgs::BatteryState &_msg)
+{
+  this->latestBatteryVoltage = _msg.voltage();
+  this->latestBatteryCurrent = _msg.current();
+  this->latestBatteryCharge = _msg.charge();
+  this->latestBatteryPercentage = _msg.percentage();
 }
 
 void TethysCommPlugin::ChlorophyllCallback(
@@ -632,6 +651,12 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.set_temperature_(this->latestTemperature.Celsius());
   stateMsg.add_values_(this->latestChlorophyll);
 
+  // Battery data
+  stateMsg.set_batteryVoltage_(this->latestBatteryVoltage);
+  stateMsg.set_batteryCurrent_(this->latestBatteryCurrent);
+  stateMsg.set_batteryCharge_(this->latestBatteryCharge);
+  stateMsg.set_batteryPercentage_(this->latestBatteryPercentage);
+
   // Set Ocean Density
   stateMsg.set_density_(this->oceanDensity);
 
@@ -676,7 +701,11 @@ void TethysCommPlugin::PostUpdate(
       << "\tTemperature (C): " << stateMsg.temperature_() << std::endl
       << "\tSalinity (PSU): " << stateMsg.salinity_() << std::endl
       << "\tChlorophyll (ug/L): " << stateMsg.values_(0) << std::endl
-      << "\tPressure (Pa): " << stateMsg.values_(1) << std::endl;
+      << "\tPressure (Pa): " << stateMsg.values_(1) << std::endl
+      << "\tBattery Voltage (V): " << stateMsg.batteryVoltage_() << std::endl
+      << "\tBattery Current (A): " << stateMsg.batteryCurrent_() << std::endl
+      << "\tBattery Charge (Ah): " << stateMsg.batteryCharge_() << std::endl
+      << "\tBattery Percentage (unitless): " << stateMsg.batteryPercentage_() << std::endl;
 
     this->prevPubPrintTime = _info.simTime;
   }
