@@ -352,7 +352,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   }
 
   this->batteryTopic = ignition::transport::TopicUtils::AsValidTopic(
-    "/model/" + _ns + "/tethys/" + this->batteryTopic);
+    "/model/" + _ns + "/" + this->batteryTopic);
   if (!this->node.Subscribe(this->batteryTopic,
       &TethysCommPlugin::BatteryCallback, this))
   {
