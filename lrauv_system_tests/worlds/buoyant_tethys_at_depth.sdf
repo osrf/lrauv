@@ -27,28 +27,28 @@
     </physics>
     <plugin
       filename="ignition-gazebo-physics-system"
-      name="ignition::gazebo::systems::Physics">
+      name="gz::sim::systems::Physics">
     </plugin>
     <plugin
       filename="ignition-gazebo-user-commands-system"
-      name="ignition::gazebo::systems::UserCommands">
+      name="gz::sim::systems::UserCommands">
     </plugin>
     <plugin
       filename="ignition-gazebo-scene-broadcaster-system"
-      name="ignition::gazebo::systems::SceneBroadcaster">
+      name="gz::sim::systems::SceneBroadcaster">
     </plugin>
 
     <plugin
       filename="ignition-gazebo-imu-system"
-      name="ignition::gazebo::systems::Imu">
+      name="gz::sim::systems::Imu">
     </plugin>
     <plugin
       filename="ignition-gazebo-magnetometer-system"
-      name="ignition::gazebo::systems::Magnetometer">
+      name="gz::sim::systems::Magnetometer">
     </plugin>
     <plugin
       filename="ignition-gazebo-buoyancy-system"
-      name="ignition::gazebo::systems::Buoyancy">
+      name="gz::sim::systems::Buoyancy">
       <!-- TODO: fix behaviour near surface, see https://github.com/osrf/lrauv/issues/102-->
         <graded_buoyancy>
         <default_density>1025</default_density>
@@ -64,7 +64,7 @@
       See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
     <!--<plugin
       filename="ignition-gazebo-particle-emitter2-system"
-      name="ignition::gazebo::systems::ParticleEmitter2">
+      name="gz::sim::systems::ParticleEmitter2">
     </plugin>-->
 
     <!-- Uncomment for time analysis -->

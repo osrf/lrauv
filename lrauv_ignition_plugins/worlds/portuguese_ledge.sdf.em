@@ -98,26 +98,26 @@ for tile in tiles:
     </physics>
     <plugin
       filename="ignition-gazebo-physics-system"
-      name="ignition::gazebo::systems::Physics">
+      name="gz::sim::systems::Physics">
     </plugin>
     <plugin
       filename="ignition-gazebo-user-commands-system"
-      name="ignition::gazebo::systems::UserCommands">
+      name="gz::sim::systems::UserCommands">
     </plugin>
     <plugin
       filename="ignition-gazebo-scene-broadcaster-system"
-      name="ignition::gazebo::systems::SceneBroadcaster">
+      name="gz::sim::systems::SceneBroadcaster">
     </plugin>
 
     <plugin
       filename="ignition-gazebo-buoyancy-system"
-      name="ignition::gazebo::systems::Buoyancy">
+      name="gz::sim::systems::Buoyancy">
       <uniform_fluid_density>1025</uniform_fluid_density>
     </plugin>
 
     <plugin
       filename="ignition-gazebo-particle-emitter2-system"
-      name="ignition::gazebo::systems::ParticleEmitter2">
+      name="gz::sim::systems::ParticleEmitter2">
     </plugin>
 
     <plugin
@@ -126,7 +126,7 @@ for tile in tiles:
       <init_topic>/lrauv/init</init_topic>
     </plugin>
 
-    <plugin name="ignition::gazebo" filename="dummy">
+    <plugin name="gz::sim" filename="dummy">
 
 @[for tile in tiles]@
       <level name="level_@(tile.index)">

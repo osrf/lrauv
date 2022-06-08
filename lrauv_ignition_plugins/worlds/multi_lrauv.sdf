@@ -19,28 +19,28 @@
     </physics>
     <plugin
       filename="ignition-gazebo-physics-system"
-      name="ignition::gazebo::systems::Physics">
+      name="gz::sim::systems::Physics">
     </plugin>
     <plugin
       filename="ignition-gazebo-user-commands-system"
-      name="ignition::gazebo::systems::UserCommands">
+      name="gz::sim::systems::UserCommands">
     </plugin>
     <plugin
       filename="ignition-gazebo-scene-broadcaster-system"
-      name="ignition::gazebo::systems::SceneBroadcaster">
+      name="gz::sim::systems::SceneBroadcaster">
     </plugin>
 
     <plugin
       filename="ignition-gazebo-imu-system"
-      name="ignition::gazebo::systems::Imu">
+      name="gz::sim::systems::Imu">
     </plugin>
     <plugin
       filename="ignition-gazebo-magnetometer-system"
-      name="ignition::gazebo::systems::Magnetometer">
+      name="gz::sim::systems::Magnetometer">
     </plugin>
     <plugin
       filename="ignition-gazebo-buoyancy-system"
-      name="ignition::gazebo::systems::Buoyancy">
+      name="gz::sim::systems::Buoyancy">
       <uniform_fluid_density>1025</uniform_fluid_density>
     </plugin>
 
@@ -49,7 +49,7 @@
       See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
     <plugin
       filename="ignition-gazebo-particle-emitter2-system"
-      name="ignition::gazebo::systems::ParticleEmitter2">
+      name="gz::sim::systems::ParticleEmitter2">
     </plugin>
 
     <!-- Uncomment for time analysis -->
@@ -131,7 +131,7 @@
         <sensor element_id="base_link::current_sensor" action="modify">
           <topic>/model/triton/current</topic>
         </sensor>
-        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
+        <plugin element_id="gz::sim::systems::Thruster" action="modify">
           <namespace>triton</namespace>
         </plugin>
         <plugin element_id="tethys::TethysCommPlugin" action="modify">
@@ -139,10 +139,10 @@
           <command_topic>triton/command_topic</command_topic>
           <state_topic>triton/state_topic</state_topic>
         </plugin>
-        <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
+        <plugin element_id="gz::sim::systems::BuoyancyEngine" action="modify">
           <namespace>triton</namespace>
         </plugin>
-        <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
+        <plugin element_id="gz::sim::systems::DetachableJoint" action="modify">
           <topic>/model/triton/drop_weight</topic>
         </plugin>
         <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
@@ -174,7 +174,7 @@
         <sensor element_id="base_link::current_sensor" action="modify">
           <topic>/model/daphne/current</topic>
         </sensor>
-        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
+        <plugin element_id="gz::sim::systems::Thruster" action="modify">
           <namespace>daphne</namespace>
         </plugin>
         <plugin element_id="tethys::TethysCommPlugin" action="modify">
@@ -182,10 +182,10 @@
           <command_topic>daphne/command_topic</command_topic>
           <state_topic>daphne/state_topic</state_topic>
         </plugin>
-        <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
+        <plugin element_id="gz::sim::systems::BuoyancyEngine" action="modify">
           <namespace>daphne</namespace>
         </plugin>
-        <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
+        <plugin element_id="gz::sim::systems::DetachableJoint" action="modify">
           <topic>/model/daphne/drop_weight</topic>
         </plugin>
         <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
