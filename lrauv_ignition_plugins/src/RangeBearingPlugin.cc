@@ -27,6 +27,7 @@
 
 #include <queue>
 
+#include <gz/math/Matrix4.hh>
 #include <gz/sim/components.hh>
 #include <gz/sim/Link.hh>
 #include <gz/sim/Model.hh>
