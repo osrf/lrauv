@@ -53,7 +53,7 @@ TEST(MissionTest, DepthVBS)
   // Launch mission
   auto controller = LRAUVController::Execute({
     "run RegressionTests/IgnitionTests/testDepthVBS.xml quitAtEnd"});
-  auto maxLinearVelocity = ignition::math::Vector3d::Zero;
+  auto maxLinearVelocity = gz::math::Vector3d::Zero;
   // Run until mission timeout (30min).
   for (size_t _ = 0; _ < 10; ++_)
   {

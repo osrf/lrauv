@@ -21,23 +21,23 @@
  */
 
 #include "SpawnPanelPlugin.hh"
-#include <ignition/common/Console.hh>
-#include <ignition/plugin/Register.hh>
+#include <gz/common/Console.hh>
+#include <gz/plugin/Register.hh>
 
-#include <ignition/gui/Application.hh>
-#include <ignition/gui/Conversions.hh>
-#include <ignition/gui/GuiEvents.hh>
-#include <ignition/gui/MainWindow.hh>
+#include <gz/gui/Application.hh>
+#include <gz/gui/Conversions.hh>
+#include <gz/gui/GuiEvents.hh>
+#include <gz/gui/MainWindow.hh>
 
-#include <ignition/gazebo/Util.hh>
-#include <ignition/gazebo/World.hh>
+#include <gz/sim/Util.hh>
+#include <gz/sim/World.hh>
 
 namespace tethys
 {
 
 SpawnPanel::SpawnPanel()
 {
-  ignition::gui::App()->Engine()->rootContext()->setContextProperty(
+  gz::gui::App()->Engine()->rootContext()->setContextProperty(
     "SpawnPanel", this);
 
   this->pub = this->node.Advertise<lrauv_ignition_plugins::msgs::LRAUVInit>(
@@ -54,8 +54,8 @@ void SpawnPanel::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
   if (this->title.empty())
     this->title = "Spawn LRAUV Panel";
 
-  ignition::gui::App()->findChild<
-    ignition::gui::MainWindow *>()->installEventFilter(this);
+  gz::gui::App()->findChild<
+    gz::gui::MainWindow *>()->installEventFilter(this);
 }
 
 void SpawnPanel::Spawn(
@@ -86,8 +86,8 @@ void SpawnPanel::Spawn(
   this->modelNames.insert(vehName);
 }
 
-void SpawnPanel::Update(const ignition::gazebo::UpdateInfo &,
-  ignition::gazebo::EntityComponentManager &_ecm)
+void SpawnPanel::Update(const gz::sim::UpdateInfo &,
+  gz::sim::EntityComponentManager &_ecm)
 {
 }
 
@@ -95,4 +95,4 @@ void SpawnPanel::Update(const ignition::gazebo::UpdateInfo &,
 
 // Register this plugin
 IGNITION_ADD_PLUGIN(tethys::SpawnPanel,
-                    ignition::gui::Plugin)
+                    gz::gui::Plugin)

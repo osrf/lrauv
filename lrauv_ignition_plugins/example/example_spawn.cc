@@ -31,7 +31,7 @@
 #include <chrono>
 #include <thread>
 
-#include <ignition/transport/Node.hh>
+#include <gz/transport/Node.hh>
 #include "lrauv_ignition_plugins/lrauv_init.pb.h"
 
 int main(int _argc, char **_argv)
@@ -54,7 +54,7 @@ int main(int _argc, char **_argv)
     longitude = atof(_argv[3]);
   }
 
-  ignition::transport::Node node;
+  gz::transport::Node node;
   auto spawnTopic = "/lrauv/init";
   auto spawnPub =
     node.Advertise<lrauv_ignition_plugins::msgs::LRAUVInit>(spawnTopic);

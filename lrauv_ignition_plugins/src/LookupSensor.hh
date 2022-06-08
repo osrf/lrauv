@@ -23,12 +23,12 @@
 #ifndef TETHYS_LOOKUPSENSOR_
 #define TETHYS_LOOKUPSENSOR_
 
-#include <ignition/common/Console.hh>
-#include <ignition/sensors/Noise.hh>
-#include <ignition/sensors/Sensor.hh>
-#include <ignition/sensors/SensorTypes.hh>
-#include <ignition/transport/Node.hh>
-#include <ignition/sensors/Util.hh>
+#include <gz/common/Console.hh>
+#include <gz/sensors/Noise.hh>
+#include <gz/sensors/Sensor.hh>
+#include <gz/sensors/SensorTypes.hh>
+#include <gz/transport/Node.hh>
+#include <gz/sensors/Util.hh>
 
 namespace tethys
 {
@@ -51,7 +51,7 @@ namespace tethys
 /// \tparam DataType Type of data that the sensor looks up, such as double.
 /// \tparam _typeStr The string representation of the sensor, such as "salinity"
 template <typename DataType, const char *_typeStr>
-class LookupSensor : public ignition::sensors::Sensor
+class LookupSensor : public gz::sensors::Sensor
 {
   /// \brief Load the sensor with SDF parameters.
   /// \param[in] _sdf SDF Sensor parameters.
@@ -72,13 +72,13 @@ class LookupSensor : public ignition::sensors::Sensor
   public: static constexpr char const *kTypeStr{_typeStr};
 
   /// \brief Noise that will be applied to the sensor data
-  protected: ignition::sensors::NoisePtr noise{nullptr};
+  protected: gz::sensors::NoisePtr noise{nullptr};
 
   /// \brief Node for communication
-  protected: ignition::transport::Node node;
+  protected: gz::transport::Node node;
 
   /// \brief Publishes sensor data
-  protected: ignition::transport::Node::Publisher pub;
+  protected: gz::transport::Node::Publisher pub;
 
   /// \brief Latest data
   protected: DataType data;
@@ -88,7 +88,7 @@ class LookupSensor : public ignition::sensors::Sensor
 template <typename DataType, const char *typeStr>
 bool LookupSensor<DataType, typeStr>::Load(const sdf::Sensor &_sdf)
 {
-  auto type = ignition::sensors::customType(_sdf);
+  auto type = gz::sensors::customType(_sdf);
   if (kTypeStr != type)
   {
     ignerr << "Trying to load [" << kTypeStr << "] sensor, but got type ["
@@ -97,20 +97,20 @@ bool LookupSensor<DataType, typeStr>::Load(const sdf::Sensor &_sdf)
   }
 
   // Load common sensor params
-  ignition::sensors::Sensor::Load(_sdf);
+  gz::sensors::Sensor::Load(_sdf);
 
   // Advertise topic where data will be published
-  if constexpr (std::is_same<DataType, ignition::math::Vector3d>::value)
+  if constexpr (std::is_same<DataType, gz::math::Vector3d>::value)
   {
-    this->pub = this->node.Advertise<ignition::msgs::Vector3d>(this->Topic());
+    this->pub = this->node.Advertise<gz::msgs::Vector3d>(this->Topic());
   }
   else if constexpr (std::is_same<DataType, float>::value)
   {
-    this->pub = this->node.Advertise<ignition::msgs::Float>(this->Topic());
+    this->pub = this->node.Advertise<gz::msgs::Float>(this->Topic());
   }
   else
   {
-    this->pub = this->node.Advertise<ignition::msgs::Double>(this->Topic());
+    this->pub = this->node.Advertise<gz::msgs::Double>(this->Topic());
   }
 
   std::string elementStr("ignition:" + std::string(kTypeStr));
@@ -132,7 +132,7 @@ bool LookupSensor<DataType, typeStr>::Load(const sdf::Sensor &_sdf)
 
   sdf::Noise noiseSdf;
   noiseSdf.Load(customElem->GetElement("noise"));
-  this->noise = ignition::sensors::NoiseFactory::NewNoiseModel(noiseSdf);
+  this->noise = gz::sensors::NoiseFactory::NewNoiseModel(noiseSdf);
   if (nullptr == this->noise)
   {
     ignerr << "Failed to load noise." << std::endl;
@@ -149,16 +149,16 @@ bool LookupSensor<DataType, typeStr>::Update(
 {
   // Using constexpr because we can't partially specialize the template
   // (i.e. specialize DataType but not typeStr)
-  if constexpr (std::is_same<DataType, ignition::math::Vector3d>::value)
+  if constexpr (std::is_same<DataType, gz::math::Vector3d>::value)
   {
-    ignition::msgs::Vector3d msg;
+    gz::msgs::Vector3d msg;
 
     msg.set_x(this->noise->Apply(this->data.X()));
     msg.set_y(this->noise->Apply(this->data.Y()));
     msg.set_z(this->noise->Apply(this->data.Z()));
 
     // Set header
-    *msg.mutable_header()->mutable_stamp() = ignition::msgs::Convert(_now);
+    *msg.mutable_header()->mutable_stamp() = gz::msgs::Convert(_now);
     auto frame = msg.mutable_header()->add_data();
     frame->set_key("frame_id");
     frame->add_value(this->Name());
@@ -169,12 +169,12 @@ bool LookupSensor<DataType, typeStr>::Update(
   }
   else if constexpr (std::is_same<DataType, float>::value)
   {
-    ignition::msgs::Float msg;
+    gz::msgs::Float msg;
 
     msg.set_data(this->noise->Apply(this->data));
 
     // Set header
-    *msg.mutable_header()->mutable_stamp() = ignition::msgs::Convert(_now);
+    *msg.mutable_header()->mutable_stamp() = gz::msgs::Convert(_now);
     auto frame = msg.mutable_header()->add_data();
     frame->set_key("frame_id");
     frame->add_value(this->Name());
@@ -185,9 +185,9 @@ bool LookupSensor<DataType, typeStr>::Update(
   }
   else
   {
-    ignition::msgs::Double msg;
+    gz::msgs::Double msg;
 
-    if constexpr (std::is_same<DataType, ignition::math::Temperature>::value)
+    if constexpr (std::is_same<DataType, gz::math::Temperature>::value)
     {
       msg.set_data(this->noise->Apply(this->data.Celsius()));
     }
@@ -197,7 +197,7 @@ bool LookupSensor<DataType, typeStr>::Update(
     }
 
     // Set header
-    *msg.mutable_header()->mutable_stamp() = ignition::msgs::Convert(_now);
+    *msg.mutable_header()->mutable_stamp() = gz::msgs::Convert(_now);
     auto frame = msg.mutable_header()->add_data();
     frame->set_key("frame_id");
     frame->add_value(this->Name());

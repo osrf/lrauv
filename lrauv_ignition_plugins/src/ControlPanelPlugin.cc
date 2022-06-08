@@ -21,20 +21,20 @@
  */
 
 #include "ControlPanelPlugin.hh"
-#include <ignition/common/Console.hh>
-#include <ignition/plugin/Register.hh>
+#include <gz/common/Console.hh>
+#include <gz/plugin/Register.hh>
 
-#include <ignition/gui/Application.hh>
-#include <ignition/gui/Conversions.hh>
-#include <ignition/gui/GuiEvents.hh>
-#include <ignition/gui/MainWindow.hh>
+#include <gz/gui/Application.hh>
+#include <gz/gui/Conversions.hh>
+#include <gz/gui/GuiEvents.hh>
+#include <gz/gui/MainWindow.hh>
 
 namespace tethys
 {
 
-ControlPanel::ControlPanel() : ignition::gui::Plugin()
+ControlPanel::ControlPanel() : gz::gui::Plugin()
 {
-  ignition::gui::App()->Engine()->rootContext()->setContextProperty(
+  gz::gui::App()->Engine()->rootContext()->setContextProperty(
     "ControlPanel", this);
 
   // Start neutral - these values should match the defaults on the QML
@@ -53,8 +53,8 @@ void ControlPanel::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
   if (this->title.empty())
     this->title = "Tethys Control Panel";
 
-  ignition::gui::App()->findChild<
-    ignition::gui::MainWindow *>()->installEventFilter(this);
+  gz::gui::App()->findChild<
+    gz::gui::MainWindow *>()->installEventFilter(this);
 }
 
 void ControlPanel::ReleaseDropWeight()
@@ -111,4 +111,4 @@ void ControlPanel::SetBuoyancyEngine(qreal _volume)
 
 // Register this plugin
 IGNITION_ADD_PLUGIN(tethys::ControlPanel,
-                    ignition::gui::Plugin)
+                    gz::gui::Plugin)

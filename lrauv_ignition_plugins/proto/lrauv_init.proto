@@ -29,17 +29,17 @@ option java_outer_classname = "LRAUVInitProtos";
 /// \interface LRAUVInit
 /// \brief Initialization information for a vehicle
 
-import "ignition/msgs/header.proto";
-import "ignition/msgs/stringmsg.proto";
+import "gz/msgs/header.proto";
+import "gz/msgs/stringmsg.proto";
 
 // Mirrors SimInitStruct
 message LRAUVInit
 {
   /// \brief Optional header data
-  ignition.msgs.Header header     = 1;
+  gz.msgs.Header header     = 1;
 
   /// \brief Unique ID identifying vehicle
-  ignition.msgs.StringMsg id_     = 2;
+  gz.msgs.StringMsg id_     = 2;
 
   /// \brief Initial latitude in degrees.
   double initLat_                 = 3;

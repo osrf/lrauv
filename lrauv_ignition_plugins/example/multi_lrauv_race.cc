@@ -31,8 +31,8 @@
 #include <chrono>
 #include <thread>
 
-#include <ignition/msgs.hh>
-#include <ignition/transport.hh>
+#include <gz/msgs.hh>
+#include <gz/transport.hh>
 #include "lrauv_ignition_plugins/lrauv_command.pb.h"
 
 // Fin joint limits from tethys model.sdf
@@ -59,17 +59,17 @@ int main(int argc, char** argv)
   ns.push_back("triton");
   ns.push_back("daphne");
 
-  ignition::transport::Node node;
+  gz::transport::Node node;
 
   std::vector<std::string> cmdTopics;
   cmdTopics.resize(ns.size(), "");
-  std::vector<ignition::transport::Node::Publisher> cmdPubs;
+  std::vector<gz::transport::Node::Publisher> cmdPubs;
   cmdPubs.resize(ns.size());
 
   // Set up topic names and publishers
   for (int i = 0; i < ns.size(); i++)
   {
-    cmdTopics[i] = ignition::transport::TopicUtils::AsValidTopic(
+    cmdTopics[i] = gz::transport::TopicUtils::AsValidTopic(
       ns[i] + "/command_topic");
     cmdPubs[i] = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(
       cmdTopics[i]);

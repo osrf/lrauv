@@ -192,19 +192,19 @@
       <!-- Joint controllers -->
       <plugin
         filename="ignition-gazebo-joint-position-controller-system"
-        name="ignition::gazebo::systems::JointPositionController">
+        name="gz::sim::systems::JointPositionController">
         <joint_name>horizontal_fins_joint</joint_name>
         <p_gain>0.1</p_gain>
       </plugin>
       <plugin
         filename="ignition-gazebo-joint-position-controller-system"
-        name="ignition::gazebo::systems::JointPositionController">
+        name="gz::sim::systems::JointPositionController">
         <joint_name>vertical_fins_joint</joint_name>
         <p_gain>0.1</p_gain>
       </plugin>
       <plugin
         filename="ignition-gazebo-thruster-system"
-        name="ignition::gazebo::systems::Thruster">
+        name="gz::sim::systems::Thruster">
         <namespace>tethys</namespace>
         <joint_name>propeller_joint</joint_name>
         <!-- Be sure to update TethysComm when updating these numbers -->
@@ -216,7 +216,7 @@
       </plugin>
       <plugin
         filename="ignition-gazebo-joint-position-controller-system"
-        name="ignition::gazebo::systems::JointPositionController">
+        name="gz::sim::systems::JointPositionController">
         <joint_name>battery_joint</joint_name>
         <use_velocity_commands>true</use_velocity_commands>
         <cmd_max>0.0007</cmd_max>
@@ -225,7 +225,7 @@
       <!-- Vertical fin -->
       <plugin
         filename="ignition-gazebo-lift-drag-system"
-        name="ignition::gazebo::systems::LiftDrag">
+        name="gz::sim::systems::LiftDrag">
         <air_density>1025</air_density>
         <cla>4.13</cla>
         <cla_stall>-1.1</cla_stall>
@@ -244,7 +244,7 @@
       <!-- Horizontal fin -->
       <plugin
         filename="ignition-gazebo-lift-drag-system"
-        name="ignition::gazebo::systems::LiftDrag">
+        name="gz::sim::systems::LiftDrag">
         <air_density>1025</air_density>
         <cla>4.13</cla>
         <cla_stall>-1.1</cla_stall>
@@ -296,7 +296,7 @@
       </plugin>
       <plugin
         filename="ignition-gazebo-buoyancy-engine-system"
-        name="ignition::gazebo::systems::BuoyancyEngine">
+        name="gz::sim::systems::BuoyancyEngine">
         <link_name>buoyancy_engine</link_name>
         <namespace>tethys</namespace>
         <fluid_density>1025</fluid_density>
@@ -312,7 +312,7 @@
       </plugin>
       <plugin
         filename="ignition-gazebo-detachable-joint-system"
-        name="ignition::gazebo::systems::DetachableJoint">
+        name="gz::sim::systems::DetachableJoint">
         <parent_link>base_link</parent_link>
         <child_model>__model__</child_model>
         <child_link>drop_weight</child_link>

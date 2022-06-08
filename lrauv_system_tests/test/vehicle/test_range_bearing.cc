@@ -45,7 +45,7 @@ TEST(RangeBearingTest, BearingIsCorrect)
   // to request an estimate.
   fixture.Step();
 
-  ignition::transport::Node node;
+  gz::transport::Node node;
   RangeBearingClient client(node, "tethys");
   {
     auto future = client.RequestRange(2);
