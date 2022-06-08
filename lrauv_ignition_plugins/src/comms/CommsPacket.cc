@@ -28,7 +28,7 @@ using namespace tethys;
 class tethys::CommsPacket::CommsPacketPrivateData
 {
 public:
-  ignition::math::Vector3d position;
+  gz::math::Vector3d position;
   uint32_t to;
   uint32_t from;
   CommsPacket::MsgType type;
@@ -55,7 +55,7 @@ CommsPacket::MsgType CommsPacket::Type() const
 }
 
 //////////////////////////////////////////////////
-ignition::math::Vector3d CommsPacket::Position() const
+gz::math::Vector3d CommsPacket::Position() const
 {
   return this->dataPtr->position;
 }
@@ -121,13 +121,13 @@ lrauv_ignition_plugins::msgs::LRAUVInternalComms
   msg.set_from(this->dataPtr->from);
   msg.set_to(this->dataPtr->to);
 
-  ignition::msgs::Vector3d* vector = new ignition::msgs::Vector3d;
+  gz::msgs::Vector3d* vector = new gz::msgs::Vector3d;
   vector->set_x(this->dataPtr->position.X());
   vector->set_y(this->dataPtr->position.Y());
   vector->set_z(this->dataPtr->position.Z());
   msg.set_allocated_position(vector);
 
-  ignition::msgs::Time* time = new ignition::msgs::Time;
+  gz::msgs::Time* time = new gz::msgs::Time;
   auto sec =
     std::chrono::duration_cast<std::chrono::seconds>(
       this->dataPtr->timeOfTx.time_since_epoch()
@@ -137,7 +137,7 @@ lrauv_ignition_plugins::msgs::LRAUVInternalComms
     this->dataPtr->timeOfTx.time_since_epoch().count()
     - (sec.count() * 1000000000L));
 
-  ignition::msgs::Header* header = new ignition::msgs::Header;
+  gz::msgs::Header* header = new gz::msgs::Header;
   header->set_allocated_stamp(time);
 
   msg.set_allocated_header(header);
@@ -164,7 +164,7 @@ lrauv_ignition_plugins::msgs::LRAUVInternalComms
 //////////////////////////////////////////////////
 CommsPacket CommsPacket::make(
   const lrauv_ignition_plugins::msgs::LRAUVAcousticMessage& datapayload,
-  const ignition::math::Vector3d position,
+  const gz::math::Vector3d position,
   const std::chrono::steady_clock::time_point timeOfTx)
 {
   CommsPacket packet;
@@ -208,7 +208,7 @@ CommsPacket CommsPacket::make(
   packet.dataPtr->from = datapayload.from();
   packet.dataPtr->data = datapayload.data();
 
-  ignition::math::Vector3d position;
+  gz::math::Vector3d position;
   position.X(datapayload.position().x());
   position.Y(datapayload.position().y());
   position.Z(datapayload.position().z());

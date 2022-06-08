@@ -22,14 +22,14 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/gazebo/components/Static.hh>
-#include <ignition/math/Pose3.hh>
-#include <ignition/math/Quaternion.hh>
-#include <ignition/math/Vector3.hh>
-#include <ignition/msgs/imu.pb.h>
-#include <ignition/msgs/magnetometer.pb.h>
-#include <ignition/msgs/Utility.hh>
-#include <ignition/transport/Node.hh>
+#include <gz/sim/components/Static.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/math/Quaternion.hh>
+#include <gz/math/Vector3.hh>
+#include <gz/msgs/imu.pb.h>
+#include <gz/msgs/magnetometer.pb.h>
+#include <gz/msgs/Utility.hh>
+#include <gz/transport/Node.hh>
 
 #include <chrono>
 #include <functional>
@@ -66,45 +66,45 @@ class AHRSTestFixture : public TestFixtureWithVehicle
 
   public: struct Measurement
   {
-    ignition::math::Vector3d angularVelocity;
-    ignition::math::Vector3d linearAcceleration;
-    ignition::math::Quaterniond orientation;
-    ignition::math::Vector3d magneticField;
+    gz::math::Vector3d angularVelocity;
+    gz::math::Vector3d linearAcceleration;
+    gz::math::Quaterniond orientation;
+    gz::math::Vector3d magneticField;
   };
 
   public: Measurement ReadLastMeasurement()
   {
-    const ignition::msgs::IMU imuMessage =
+    const gz::msgs::IMU imuMessage =
         this->imuSubscription.ReadLastMessage();
-    const ignition::msgs::Magnetometer magnetometerMessage =
+    const gz::msgs::Magnetometer magnetometerMessage =
         this->magnetometerSubscription.ReadLastMessage();
     return {
-      ignition::msgs::Convert(imuMessage.angular_velocity()),
-      ignition::msgs::Convert(imuMessage.linear_acceleration()),
-      ignition::msgs::Convert(imuMessage.orientation()),
-      ignition::msgs::Convert(magnetometerMessage.field_tesla())
+      gz::msgs::Convert(imuMessage.angular_velocity()),
+      gz::msgs::Convert(imuMessage.linear_acceleration()),
+      gz::msgs::Convert(imuMessage.orientation()),
+      gz::msgs::Convert(magnetometerMessage.field_tesla())
     };
   }
 
   protected: void OnConfigure(
-      const ignition::gazebo::Entity &,
+      const gz::sim::Entity &,
       const std::shared_ptr<const sdf::Element> &,
-      ignition::gazebo::EntityComponentManager &_ecm,
-      ignition::gazebo::EventManager &) override
+      gz::sim::EntityComponentManager &_ecm,
+      gz::sim::EventManager &) override
   {
-    ignition::gazebo::World world(
-        ignition::gazebo::worldEntity(_ecm));
-    ignition::gazebo::Entity vehicleEntity =
+    gz::sim::World world(
+        gz::sim::worldEntity(_ecm));
+    gz::sim::Entity vehicleEntity =
         world.ModelByName(_ecm, this->VehicleName());
-    using ignition::gazebo::components::Static;
+    using gz::sim::components::Static;
     _ecm.CreateComponent(vehicleEntity, Static(true));
   }
 
-  private: ignition::transport::Node node;
+  private: gz::transport::Node node;
 
-  private: Subscription<ignition::msgs::IMU> imuSubscription;
+  private: Subscription<gz::msgs::IMU> imuSubscription;
 
-  private: Subscription<ignition::msgs::Magnetometer> magnetometerSubscription;
+  private: Subscription<gz::msgs::Magnetometer> magnetometerSubscription;
 };
 
 // Acceleration due to gravity
@@ -120,8 +120,8 @@ static constexpr double magneticFieldTolerance{1e-8};
 static constexpr double orientationTolerance{1e-4};
 
 inline bool AreQuaternionsEqual(
-    const ignition::math::Quaterniond &_qa,
-    const ignition::math::Quaterniond &_qb,
+    const gz::math::Quaterniond &_qa,
+    const gz::math::Quaterniond &_qb,
     const double _tolerance)
 {
   // Use geodesic distance between quaternions
@@ -140,21 +140,21 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
 
   EXPECT_TRUE(
     measurement.angularVelocity.Equal(
-        ignition::math::Vector3d::Zero,
+        gz::math::Vector3d::Zero,
         angularVelocityTolerance))
       << "Last angular velocity measurement was "
       << measurement.angularVelocity;
 
   EXPECT_TRUE(
     measurement.linearAcceleration.Equal(
-        -ignition::math::Vector3d::UnitZ * g0,
+        -gz::math::Vector3d::UnitZ * g0,
         linearAccelerationTolerance))
       << "Last linear acceleration measurement was "
       << measurement.linearAcceleration;
 
   EXPECT_TRUE(
     measurement.magneticField.Equal(
-        ignition::math::Vector3d(Bn, Be, -Bu),
+        gz::math::Vector3d(Bn, Be, -Bu),
         magneticFieldTolerance))
       << "Last magnetic field measurement was "
       << measurement.magneticField;
@@ -162,7 +162,7 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
   EXPECT_TRUE(
       AreQuaternionsEqual(
           measurement.orientation,
-          ignition::math::Quaterniond::Identity,
+          gz::math::Quaterniond::Identity,
           orientationTolerance))
       << "Last orientation estimate was "
       << measurement.orientation;
@@ -176,21 +176,21 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
 
   EXPECT_TRUE(
     measurement.angularVelocity.Equal(
-        ignition::math::Vector3d::Zero,
+        gz::math::Vector3d::Zero,
         angularVelocityTolerance))
       << "Last angular velocity measurement was "
       << measurement.angularVelocity;
 
   EXPECT_TRUE(
     measurement.linearAcceleration.Equal(
-        -ignition::math::Vector3d::UnitZ * g0,
+        -gz::math::Vector3d::UnitZ * g0,
         linearAccelerationTolerance))
       << "Last linear acceleration measurement was "
       << measurement.linearAcceleration;
 
   EXPECT_TRUE(
     measurement.magneticField.Equal(
-        ignition::math::Vector3d(-Be, Bn, -Bu),
+        gz::math::Vector3d(-Be, Bn, -Bu),
         magneticFieldTolerance))
       << "Last magnetic field measurement was "
       << measurement.magneticField;
@@ -198,7 +198,7 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
   EXPECT_TRUE(
       AreQuaternionsEqual(
           measurement.orientation,
-          ignition::math::Quaterniond(
+          gz::math::Quaterniond(
               0., 0., IGN_DTOR(-90.)),
           orientationTolerance))
       << "Last orientation estimate was "
@@ -212,21 +212,21 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
 
   EXPECT_TRUE(
     measurement.angularVelocity.Equal(
-        ignition::math::Vector3d::Zero,
+        gz::math::Vector3d::Zero,
         angularVelocityTolerance))
       << "Last angular velocity measurement was "
       << measurement.angularVelocity;
 
   EXPECT_TRUE(
     measurement.linearAcceleration.Equal(
-        -ignition::math::Vector3d::UnitZ * g0,
+        -gz::math::Vector3d::UnitZ * g0,
         linearAccelerationTolerance))
       << "Last linear acceleration measurement was "
       << measurement.linearAcceleration;
 
   EXPECT_TRUE(
     measurement.magneticField.Equal(
-        ignition::math::Vector3d(-Bn, -Be, -Bu),
+        gz::math::Vector3d(-Bn, -Be, -Bu),
         magneticFieldTolerance))
       << "Last magnetic field measurement was "
       << measurement.magneticField;
@@ -234,7 +234,7 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
   EXPECT_TRUE(
       AreQuaternionsEqual(
           measurement.orientation,
-          ignition::math::Quaterniond(
+          gz::math::Quaterniond(
               0., 0., IGN_DTOR(-180.)),
           orientationTolerance))
       << "Last orientation estimate was "
@@ -248,21 +248,21 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
 
   EXPECT_TRUE(
     measurement.angularVelocity.Equal(
-        ignition::math::Vector3d::Zero,
+        gz::math::Vector3d::Zero,
         angularVelocityTolerance))
       << "Last angular velocity measurement was "
       << measurement.angularVelocity;
 
   EXPECT_TRUE(
     measurement.linearAcceleration.Equal(
-        -ignition::math::Vector3d::UnitZ * g0,
+        -gz::math::Vector3d::UnitZ * g0,
         linearAccelerationTolerance))
       << "Last linear acceleration measurement was "
       << measurement.linearAcceleration;
 
   EXPECT_TRUE(
     measurement.magneticField.Equal(
-        ignition::math::Vector3d(Be, -Bn, -Bu),
+        gz::math::Vector3d(Be, -Bn, -Bu),
         magneticFieldTolerance))
       << "Last magnetic field measurement was "
       << measurement.magneticField;
@@ -270,7 +270,7 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
   EXPECT_TRUE(
       AreQuaternionsEqual(
           measurement.orientation,
-          ignition::math::Quaterniond(
+          gz::math::Quaterniond(
               0., 0., IGN_DTOR(90.)),
           orientationTolerance))
       << "Last orientation estimate was "
@@ -284,21 +284,21 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
 
   EXPECT_TRUE(
     measurement.angularVelocity.Equal(
-        ignition::math::Vector3d::Zero,
+        gz::math::Vector3d::Zero,
         angularVelocityTolerance))
       << "Last angular velocity measurement was "
       << measurement.angularVelocity;
 
   EXPECT_TRUE(
     measurement.linearAcceleration.Equal(
-        ignition::math::Vector3d::UnitX * g0,
+        gz::math::Vector3d::UnitX * g0,
         linearAccelerationTolerance))
       << "Last linear acceleration measurement was "
       << measurement.linearAcceleration;
 
   EXPECT_TRUE(
     measurement.magneticField.Equal(
-        ignition::math::Vector3d(Bu, Be, Bn),
+        gz::math::Vector3d(Bu, Be, Bn),
         magneticFieldTolerance))
       << "Last magnetic field measurement was "
       << measurement.magneticField;
@@ -306,7 +306,7 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
   EXPECT_TRUE(
       AreQuaternionsEqual(
           measurement.orientation,
-          ignition::math::Quaterniond(
+          gz::math::Quaterniond(
               0., IGN_DTOR(90.), 0.),
           orientationTolerance))
       << "Last orientation estimate was "
@@ -320,21 +320,21 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
 
   EXPECT_TRUE(
     measurement.angularVelocity.Equal(
-        ignition::math::Vector3d::Zero,
+        gz::math::Vector3d::Zero,
         angularVelocityTolerance))
       << "Last angular velocity measurement was "
       << measurement.angularVelocity;
 
   EXPECT_TRUE(
     measurement.linearAcceleration.Equal(
-        -ignition::math::Vector3d::UnitX * g0,
+        -gz::math::Vector3d::UnitX * g0,
         linearAccelerationTolerance))
       << "Last linear acceleration measurement was "
       << measurement.linearAcceleration;
 
   EXPECT_TRUE(
     measurement.magneticField.Equal(
-        ignition::math::Vector3d(-Bu, Be, -Bn),
+        gz::math::Vector3d(-Bu, Be, -Bn),
         magneticFieldTolerance))
       << "Last magnetic field measurement was "
       << measurement.magneticField;
@@ -342,7 +342,7 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
   EXPECT_TRUE(
       AreQuaternionsEqual(
           measurement.orientation,
-          ignition::math::Quaterniond(
+          gz::math::Quaterniond(
               0., IGN_DTOR(-90.), 0.),
           orientationTolerance))
       << "Last orientation estimate was "
@@ -356,21 +356,21 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
 
   EXPECT_TRUE(
     measurement.angularVelocity.Equal(
-        ignition::math::Vector3d::Zero,
+        gz::math::Vector3d::Zero,
         angularVelocityTolerance))
       << "Last angular velocity measurement was "
       << measurement.angularVelocity;
 
   EXPECT_TRUE(
     measurement.linearAcceleration.Equal(
-        -ignition::math::Vector3d::UnitY * g0,
+        -gz::math::Vector3d::UnitY * g0,
         linearAccelerationTolerance))
       << "Last linear acceleration measurement was "
       << measurement.linearAcceleration;
 
   EXPECT_TRUE(
     measurement.magneticField.Equal(
-        ignition::math::Vector3d(Bn, -Bu, -Be),
+        gz::math::Vector3d(Bn, -Bu, -Be),
         magneticFieldTolerance))
       << "Last magnetic field measurement was "
       << measurement.magneticField;
@@ -378,7 +378,7 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
   EXPECT_TRUE(
       AreQuaternionsEqual(
           measurement.orientation,
-          ignition::math::Quaterniond(
+          gz::math::Quaterniond(
               IGN_DTOR(90.), 0., 0.),
           orientationTolerance))
       << "Last orientation estimate was "
@@ -392,21 +392,21 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
 
   EXPECT_TRUE(
     measurement.angularVelocity.Equal(
-        ignition::math::Vector3d::Zero,
+        gz::math::Vector3d::Zero,
         angularVelocityTolerance))
       << "Last angular velocity measurement was "
       << measurement.angularVelocity;
 
   EXPECT_TRUE(
     measurement.linearAcceleration.Equal(
-        ignition::math::Vector3d::UnitY * g0,
+        gz::math::Vector3d::UnitY * g0,
         linearAccelerationTolerance))
       << "Last linear acceleration measurement was "
       << measurement.linearAcceleration;
 
   EXPECT_TRUE(
     measurement.magneticField.Equal(
-        ignition::math::Vector3d(Bn, Bu, Be),
+        gz::math::Vector3d(Bn, Bu, Be),
         magneticFieldTolerance))
       << "Last magnetic field measurement was "
       << measurement.magneticField;
@@ -414,7 +414,7 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
   EXPECT_TRUE(
     AreQuaternionsEqual(
         measurement.orientation,
-        ignition::math::Quaterniond(
+        gz::math::Quaterniond(
             IGN_DTOR(-90.), 0., 0.),
         orientationTolerance))
       << "Last orientation estimate was "
@@ -428,21 +428,21 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
 
   EXPECT_TRUE(
     measurement.angularVelocity.Equal(
-        ignition::math::Vector3d::Zero,
+        gz::math::Vector3d::Zero,
         angularVelocityTolerance))
       << "Last angular velocity measurement was "
       << measurement.angularVelocity;
 
   EXPECT_TRUE(
     measurement.linearAcceleration.Equal(
-        ignition::math::Vector3d::UnitZ * g0,
+        gz::math::Vector3d::UnitZ * g0,
         linearAccelerationTolerance))
       << "Last linear acceleration measurement was "
       << measurement.linearAcceleration;
 
   EXPECT_TRUE(
     measurement.magneticField.Equal(
-        ignition::math::Vector3d(Bn, -Be, Bu),
+        gz::math::Vector3d(Bn, -Be, Bu),
         magneticFieldTolerance))
       << "Last magnetic field measurement was "
       << measurement.magneticField;
@@ -450,7 +450,7 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
   EXPECT_TRUE(
     AreQuaternionsEqual(
         measurement.orientation,
-        ignition::math::Quaterniond(
+        gz::math::Quaterniond(
             IGN_DTOR(180.), 0., 0.),
         orientationTolerance))
       << "Last orientation estimate was "

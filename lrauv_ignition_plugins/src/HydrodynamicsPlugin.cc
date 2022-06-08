@@ -24,6 +24,8 @@
 
 #include <Eigen/Eigen>
 
+#include <gz/msgs.hh>
+
 namespace tethys
 {
 
@@ -91,55 +93,70 @@ class HydrodynamicsPrivateData
   /// \brief Water density [kg/m^3].
   public: double waterDensity;
 
+  /// \brief Water current [m/s].
+  public: gz::math::Vector3d waterCurrent {0.0, 0.0, 0.0};
+
   public: Eigen::VectorXd prevState;
 
   public: Eigen::VectorXd prevStateDot;
 
+  /// \brief Update current during simulation
+  public: void UpdateCurrent(
+    const gz::msgs::Vector3d &_msg)
+  {
+    std::lock_guard<std::mutex> lock(this->mtx);
+    this->waterCurrent = gz::msgs::Convert(_msg);
+  }
+
   /// Link entity
-  public: ignition::gazebo::Entity linkEntity;
+  public: gz::sim::Entity linkEntity;
+
+  public: gz::transport::Node node;
+
+  public: std::mutex mtx;
 };
 
 
 void AddAngularVelocityComponent(
-  const ignition::gazebo::Entity &_entity,
-  ignition::gazebo::EntityComponentManager &_ecm)
+  const gz::sim::Entity &_entity,
+  gz::sim::EntityComponentManager &_ecm)
 {
-  if (!_ecm.Component<ignition::gazebo::components::AngularVelocity>(
+  if (!_ecm.Component<gz::sim::components::AngularVelocity>(
       _entity))
   {
     _ecm.CreateComponent(_entity,
-      ignition::gazebo::components::AngularVelocity());
+      gz::sim::components::AngularVelocity());
   }
     // Create an angular velocity component if one is not present.
-  if (!_ecm.Component<ignition::gazebo::components::WorldAngularVelocity>(
+  if (!_ecm.Component<gz::sim::components::WorldAngularVelocity>(
       _entity))
   {
     _ecm.CreateComponent(_entity,
-      ignition::gazebo::components::WorldAngularVelocity());
+      gz::sim::components::WorldAngularVelocity());
   }
 }
 
 void AddWorldPose (
-  const ignition::gazebo::Entity &_entity,
-  ignition::gazebo::EntityComponentManager &_ecm)
+  const gz::sim::Entity &_entity,
+  gz::sim::EntityComponentManager &_ecm)
 {
-  if (!_ecm.Component<ignition::gazebo::components::WorldPose>(
+  if (!_ecm.Component<gz::sim::components::WorldPose>(
       _entity))
   {
     _ecm.CreateComponent(_entity,
-      ignition::gazebo::components::WorldPose());
+      gz::sim::components::WorldPose());
   }
 }
 
 void AddWorldLinearVelocity(
-  const ignition::gazebo::Entity &_entity,
-  ignition::gazebo::EntityComponentManager &_ecm)
+  const gz::sim::Entity &_entity,
+  gz::sim::EntityComponentManager &_ecm)
 {
-  if (!_ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
+  if (!_ecm.Component<gz::sim::components::WorldLinearVelocity>(
       _entity))
   {
     _ecm.CreateComponent(_entity,
-      ignition::gazebo::components::WorldLinearVelocity());
+      gz::sim::components::WorldLinearVelocity());
   }
 }
 
@@ -162,10 +179,10 @@ HydrodynamicsPlugin::HydrodynamicsPlugin()
 }
 
 void HydrodynamicsPlugin::Configure(
-  const ignition::gazebo::Entity &_entity,
+  const gz::sim::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
-  ignition::gazebo::EntityComponentManager &_ecm,
-  ignition::gazebo::EventManager &/*_eventMgr*/
+  gz::sim::EntityComponentManager &_ecm,
+  gz::sim::EventManager &/*_eventMgr*/
 )
 {
   this->dataPtr->waterDensity     = SdfParamDouble(_sdf, "waterDensity", 997.7735);
@@ -191,11 +208,11 @@ void HydrodynamicsPlugin::Configure(
   _sdf->Get<bool>("enable_coriolis", this->dataPtr->enableCoriolis, true);
 
   // Create model object, to access convenient functions
-  auto model = ignition::gazebo::Model(_entity);
+  auto model = gz::sim::Model(_entity);
   auto link_name = _sdf->Get<std::string>("link_name");
   this->dataPtr->linkEntity = model.LinkByName(_ecm, link_name);
 
-  if (ignition::gazebo::kNullEntity == this->dataPtr->linkEntity)
+  if (gz::sim::kNullEntity == this->dataPtr->linkEntity)
   {
     ignerr << "Failed to find link named [" << link_name << "] in model ["
            << model.Name(_ecm) << "]. Plugin failed to initialize." << std::endl;
@@ -208,11 +225,31 @@ void HydrodynamicsPlugin::Configure(
   AddWorldPose(this->dataPtr->linkEntity, _ecm);
   AddAngularVelocityComponent(this->dataPtr->linkEntity, _ecm);
   AddWorldLinearVelocity(this->dataPtr->linkEntity, _ecm);
+
+  std::string ns;
+  std::string currentTopic {"/ocean_current"};
+  if (_sdf->HasElement("namespace"))
+  {
+    ns = _sdf->Get<std::string>("namespace");
+    currentTopic = gz::transport::TopicUtils::AsValidTopic(
+        "/model/" + ns + "/ocean_current");
+  }
+
+  this->dataPtr->node.Subscribe(
+    currentTopic,
+    &HydrodynamicsPrivateData::UpdateCurrent,
+    this->dataPtr.get());
+
+  if(_sdf->HasElement("default_current"))
+  {
+    this->dataPtr->waterCurrent =
+      _sdf->Get<gz::math::Vector3d>("default_current");
+  }
 }
 
 void HydrodynamicsPlugin::PreUpdate(
-      const ignition::gazebo::UpdateInfo &_info,
-      ignition::gazebo::EntityComponentManager &_ecm)
+      const gz::sim::UpdateInfo &_info,
+      gz::sim::EntityComponentManager &_ecm)
 {
   if(_info.paused)
     return;
@@ -230,10 +267,11 @@ void HydrodynamicsPlugin::PreUpdate(
   Eigen::MatrixXd Dmat     = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd Ma = Eigen::MatrixXd::Zero(6,6);
 
+  std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
   // Get vehicle state
-  ignition::gazebo::Link baseLink(this->dataPtr->linkEntity);
+  gz::sim::Link baseLink(this->dataPtr->linkEntity);
   auto linearVelocity =
-    _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(this->dataPtr->linkEntity);
+    _ecm.Component<gz::sim::components::WorldLinearVelocity>(this->dataPtr->linkEntity);
   auto rotationalVelocity = baseLink.WorldAngularVelocity(_ecm);
 
   if(!linearVelocity)
@@ -246,7 +284,8 @@ void HydrodynamicsPlugin::PreUpdate(
   auto pose = baseLink.WorldPose(_ecm);
   // Since we are transforming angular and linear velocity we only care about
   // rotation
-  auto localLinearVelocity = pose->Rot().Inverse() * linearVelocity->Data();
+  auto localLinearVelocity = pose->Rot().Inverse() *
+    (linearVelocity->Data() - this->dataPtr->waterCurrent);
   auto localRotationalVelocity = pose->Rot().Inverse() * *rotationalVelocity;
 
   state(0) = localLinearVelocity.X();
@@ -314,8 +353,8 @@ void HydrodynamicsPlugin::PreUpdate(
   if (this->dataPtr->enableCoriolis)
     kTotalWrench += kCmatVec;
 
-  ignition::math::Vector3d totalForce(-kTotalWrench(0),  -kTotalWrench(1), -kTotalWrench(2));
-  ignition::math::Vector3d totalTorque(-kTotalWrench(3),  -kTotalWrench(4), -kTotalWrench(5));
+  gz::math::Vector3d totalForce(-kTotalWrench(0),  -kTotalWrench(1), -kTotalWrench(2));
+  gz::math::Vector3d totalTorque(-kTotalWrench(3),  -kTotalWrench(4), -kTotalWrench(5));
 
   baseLink.AddWorldWrench(_ecm, pose->Rot()*(totalForce), pose->Rot()*totalTorque);
 }
@@ -324,6 +363,6 @@ void HydrodynamicsPlugin::PreUpdate(
 
 IGNITION_ADD_PLUGIN(
   tethys::HydrodynamicsPlugin,
-  ignition::gazebo::System,
+  gz::sim::System,
   tethys::HydrodynamicsPlugin::ISystemConfigure,
   tethys::HydrodynamicsPlugin::ISystemPreUpdate)

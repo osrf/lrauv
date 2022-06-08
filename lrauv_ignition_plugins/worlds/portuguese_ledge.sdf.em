@@ -98,26 +98,26 @@ for tile in tiles:
     </physics>
     <plugin
       filename="ignition-gazebo-physics-system"
-      name="ignition::gazebo::systems::Physics">
+      name="gz::sim::systems::Physics">
     </plugin>
     <plugin
       filename="ignition-gazebo-user-commands-system"
-      name="ignition::gazebo::systems::UserCommands">
+      name="gz::sim::systems::UserCommands">
     </plugin>
     <plugin
       filename="ignition-gazebo-scene-broadcaster-system"
-      name="ignition::gazebo::systems::SceneBroadcaster">
+      name="gz::sim::systems::SceneBroadcaster">
     </plugin>
 
     <plugin
       filename="ignition-gazebo-buoyancy-system"
-      name="ignition::gazebo::systems::Buoyancy">
+      name="gz::sim::systems::Buoyancy">
       <uniform_fluid_density>1025</uniform_fluid_density>
     </plugin>
 
     <plugin
       filename="ignition-gazebo-particle-emitter2-system"
-      name="ignition::gazebo::systems::ParticleEmitter2">
+      name="gz::sim::systems::ParticleEmitter2">
     </plugin>
 
     <plugin
@@ -126,11 +126,11 @@ for tile in tiles:
       <init_topic>/lrauv/init</init_topic>
     </plugin>
 
-    <plugin name="ignition::gazebo" filename="dummy">
+    <plugin name="gz::sim" filename="dummy">
 
 @[for tile in tiles]@
       <level name="level_@(tile.index)">
-        <pose>@(tile.pos_enu) 0 0 0</pose>
+        <pose>@(tile.pos_enu.x()) @(tile.pos_enu.y()) @(tile.pos_enu.z()) 0 0 0</pose>
         <geometry>
           <box>
             <size>1000 1000 1000</size>
@@ -359,6 +359,12 @@ for tile in tiles:
           <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
       </plugin>
+      <plugin filename="SpawnPanelPlugin" name="Spawn LRAUV Panel">
+        <ignition-gui>
+          <title>Spawn LRAUVs</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+      </plugin>
       <plugin filename="ReferenceAxis" name="Reference axis">
         <ignition-gui>
           <title>Reference axis</title>
@@ -399,7 +405,7 @@ for tile in tiles:
         <visual name="visual">
           <geometry>
             <heightmap>
-              <pos>@(tile.pos_enu)</pos>
+              <pos>@(tile.pos_enu.x()) @(tile.pos_enu.y()) @(tile.pos_enu.z()) 0 0 0</pos>
               <use_terrain_paging>true</use_terrain_paging>
               <texture>
                 <diffuse>@(fuel_model_url)/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>

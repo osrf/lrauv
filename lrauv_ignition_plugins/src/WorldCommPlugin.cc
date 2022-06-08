@@ -22,17 +22,17 @@
 
 #include <chrono>
 
-#include <ignition/gazebo/Util.hh>
-#include <ignition/gazebo/World.hh>
-#include <ignition/gazebo/components/AngularVelocity.hh>
-#include <ignition/gazebo/components/JointPosition.hh>
-#include <ignition/gazebo/components/JointVelocity.hh>
-#include <ignition/gazebo/components/LinearVelocity.hh>
-#include <ignition/gazebo/components/Pose.hh>
-#include <ignition/msgs/entity_factory.pb.h>
-#include <ignition/msgs/spherical_coordinates.pb.h>
-#include <ignition/plugin/Register.hh>
-#include <ignition/transport/TopicUtils.hh>
+#include <gz/sim/Util.hh>
+#include <gz/sim/World.hh>
+#include <gz/sim/components/AngularVelocity.hh>
+#include <gz/sim/components/JointPosition.hh>
+#include <gz/sim/components/JointVelocity.hh>
+#include <gz/sim/components/LinearVelocity.hh>
+#include <gz/sim/components/Pose.hh>
+#include <gz/msgs/entity_factory.pb.h>
+#include <gz/msgs/spherical_coordinates.pb.h>
+#include <gz/plugin/Register.hh>
+#include <gz/transport/TopicUtils.hh>
 
 #include "lrauv_ignition_plugins/lrauv_init.pb.h"
 
@@ -42,10 +42,10 @@ using namespace tethys;
 
 /////////////////////////////////////////////////
 void WorldCommPlugin::Configure(
-  const ignition::gazebo::Entity &_entity,
+  const gz::sim::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
-  ignition::gazebo::EntityComponentManager &_ecm,
-  ignition::gazebo::EventManager &_eventMgr)
+  gz::sim::EntityComponentManager &_ecm,
+  gz::sim::EventManager &_eventMgr)
 {
   // Parse SDF parameters
   if (_sdf->HasElement("spawn_topic"))
@@ -65,10 +65,10 @@ void WorldCommPlugin::Configure(
          << std::endl;
 
   std::string worldName;
-  auto worldEntity = ignition::gazebo::worldEntity(_entity, _ecm);
-  if (ignition::gazebo::kNullEntity != worldEntity)
+  auto worldEntity = gz::sim::worldEntity(_entity, _ecm);
+  if (gz::sim::kNullEntity != worldEntity)
   {
-    ignition::gazebo::World world(worldEntity);
+    gz::sim::World world(worldEntity);
     auto worldNameOpt = world.Name(_ecm);
     if (worldNameOpt)
     {
@@ -93,7 +93,7 @@ void WorldCommPlugin::Configure(
 
   // Valid world name for services
   auto topicWorldName =
-      ignition::transport::TopicUtils::AsValidTopic(worldName);
+      gz::transport::TopicUtils::AsValidTopic(worldName);
   if (topicWorldName.empty())
   {
     ignerr << "Invalid world name ["
@@ -111,11 +111,11 @@ void WorldCommPlugin::Configure(
   // through SDF, or through this plugin. This assumption is broken if a user
   // sets it manually.
   this->hasWorldLatLon =
-      ignition::gazebo::sphericalCoordinates(worldEntity, _ecm).has_value();
+      gz::sim::sphericalCoordinates(worldEntity, _ecm).has_value();
 }
 
 /////////////////////////////////////////////////
-void WorldCommPlugin::ServiceResponse(const ignition::msgs::Boolean &_rep,
+void WorldCommPlugin::ServiceResponse(const gz::msgs::Boolean &_rep,
   const bool _result)
 {
   if (!_result || !_rep.data())
@@ -147,8 +147,8 @@ void WorldCommPlugin::SpawnCallback(
            << std::endl;
 
     // Set spherical coordinates
-    ignition::msgs::SphericalCoordinates scReq;
-    scReq.set_surface_model(ignition::msgs::SphericalCoordinates::EARTH_WGS84);
+    gz::msgs::SphericalCoordinates scReq;
+    scReq.set_surface_model(gz::msgs::SphericalCoordinates::EARTH_WGS84);
     scReq.set_latitude_deg(lat);
     scReq.set_longitude_deg(lon);
     scReq.set_elevation(ele);
@@ -170,16 +170,16 @@ void WorldCommPlugin::SpawnCallback(
   }
 
   // Create vehicle
-  ignition::msgs::EntityFactory factoryReq;
+  gz::msgs::EntityFactory factoryReq;
   factoryReq.set_sdf(this->TethysSdfString(_msg));
 
   auto coords = factoryReq.mutable_spherical_coordinates();
-  coords->set_surface_model(ignition::msgs::SphericalCoordinates::EARTH_WGS84);
+  coords->set_surface_model(gz::msgs::SphericalCoordinates::EARTH_WGS84);
   coords->set_latitude_deg(lat);
   coords->set_longitude_deg(lon);
   coords->set_elevation(ele);
-  ignition::msgs::Set(factoryReq.mutable_pose()->mutable_orientation(),
-      ignition::math::Quaterniond(
+  gz::msgs::Set(factoryReq.mutable_pose()->mutable_orientation(),
+      gz::math::Quaterniond(
       _msg.initroll_(), _msg.initpitch_(), _msg.initheading_()));
 
   // RPH command is in NED
@@ -192,7 +192,7 @@ void WorldCommPlugin::SpawnCallback(
   // Y == P: about N
   // Z == Y: about U
 
-  auto rotENU = ignition::math::Quaterniond::EulerToQuaternion(
+  auto rotENU = gz::math::Quaterniond::EulerToQuaternion(
       // East: NED's pitch
       _msg.initpitch_(),
       // North: NED's roll
@@ -203,9 +203,9 @@ void WorldCommPlugin::SpawnCallback(
   // The robot model is facing its own -X, so with zero ENU orientation it faces
   // West. We add an extra 90 degree yaw so zero means North, to conform with
   // NED.
-  auto rotRobot = ignition::math::Quaterniond(0.0, 0.0, -IGN_PI * 0.5) * rotENU;
+  auto rotRobot = gz::math::Quaterniond(0.0, 0.0, -IGN_PI * 0.5) * rotENU;
 
-  ignition::msgs::Set(factoryReq.mutable_pose()->mutable_orientation(), rotRobot);
+  gz::msgs::Set(factoryReq.mutable_pose()->mutable_orientation(), rotRobot);
 
   // TODO(chapulina) Check what's up with all the errors
   if (!this->node.Request(this->createService, factoryReq,
@@ -217,7 +217,7 @@ void WorldCommPlugin::SpawnCallback(
   else
   {
     // Make spawned model a performer
-    ignition::msgs::StringMsg performerReq;
+    gz::msgs::StringMsg performerReq;
     performerReq.set_data(_msg.id_().data());
     if (!this->node.Request(this->performerService, performerReq,
         &WorldCommPlugin::ServiceResponse, this))
@@ -278,7 +278,7 @@ std::string WorldCommPlugin::TethysSdfString(const lrauv_ignition_plugins::msgs:
           <topic>/)" + _id + R"(/ahrs/magnetometer</topic>
         </sensor>
 
-        <plugin element_id="ignition::gazebo::systems::Thruster" action="modify">
+        <plugin element_id="gz::sim::systems::Thruster" action="modify">
           <namespace>)" + _id + R"(</namespace>
         </plugin>
 
@@ -288,11 +288,11 @@ std::string WorldCommPlugin::TethysSdfString(const lrauv_ignition_plugins::msgs:
           <state_topic>)" + _id + R"(/state_topic</state_topic>
         </plugin>
 
-        <plugin element_id="ignition::gazebo::systems::BuoyancyEngine" action="modify">
+        <plugin element_id="gz::sim::systems::BuoyancyEngine" action="modify">
           <namespace>)" + _id + R"(</namespace>
         </plugin>
 
-        <plugin element_id="ignition::gazebo::systems::DetachableJoint" action="modify">
+        <plugin element_id="gz::sim::systems::DetachableJoint" action="modify">
           <topic>/model/)" + _id + R"(/drop_weight</topic>
         </plugin>
 
@@ -315,5 +315,5 @@ std::string WorldCommPlugin::TethysSdfString(const lrauv_ignition_plugins::msgs:
 
 IGNITION_ADD_PLUGIN(
   tethys::WorldCommPlugin,
-  ignition::gazebo::System,
+  gz::sim::System,
   tethys::WorldCommPlugin::ISystemConfigure)

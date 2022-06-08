@@ -26,7 +26,7 @@
 #include <chrono>
 #include <memory>
 
-#include <ignition/math/Vector3.hh>
+#include <gz/math/Vector3.hh>
 
 #include "lrauv_ignition_plugins/lrauv_acoustic_message.pb.h"
 #include "lrauv_ignition_plugins/lrauv_internal_comms.pb.h"
@@ -51,7 +51,7 @@ class CommsPacket
   public: MsgType Type() const;
 
   /// \brief The position from which the transmission is made
-  public: ignition::math::Vector3d Position() const;
+  public: gz::math::Vector3d Position() const;
 
   /// \brief Time of transmission
   public: std::chrono::steady_clock::time_point TimeOfTransmission() const;
@@ -82,7 +82,7 @@ class CommsPacket
   /// \param[in] _timeOfTx - time at which message is transmitted.
   public: static CommsPacket make(
     const lrauv_ignition_plugins::msgs::LRAUVAcousticMessage &_datapayload,
-    const ignition::math::Vector3d _position,
+    const gz::math::Vector3d _position,
     const std::chrono::steady_clock::time_point _timeOfTx
     );
 

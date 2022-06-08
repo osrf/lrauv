@@ -27,7 +27,7 @@
 #include <mutex>
 #include <string>
 
-#include <ignition/transport/Node.hh>
+#include <gz/transport/Node.hh>
 
 namespace lrauv_system_tests
 {
@@ -46,7 +46,7 @@ class Subscription
   /// message history buffer. Buffer grows indefinitely
   /// by default.
   public: void Subscribe(
-      ignition::transport::Node &_node,
+      gz::transport::Node &_node,
       const std::string &_topicName,
       size_t _messageHistoryDepth = 0u)
   {

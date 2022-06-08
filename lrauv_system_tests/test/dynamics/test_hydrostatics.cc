@@ -22,12 +22,12 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/gazebo/TestFixture.hh>
-#include <ignition/gazebo/Util.hh>
-#include <ignition/gazebo/World.hh>
-#include <ignition/math/Angle.hh>
-#include <ignition/math/Pose3.hh>
-#include <ignition/math/Quaternion.hh>
+#include <gz/sim/TestFixture.hh>
+#include <gz/sim/Util.hh>
+#include <gz/sim/World.hh>
+#include <gz/math/Angle.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/math/Quaternion.hh>
 
 #include "lrauv_system_tests/TestFixture.hh"
 
@@ -46,7 +46,7 @@ TEST(HydrostaticStability, NeutralBuoyancy)
   auto &observer = fixture.VehicleObserver();
   const auto &poses = observer.Poses();
   ASSERT_EQ(10000u, poses.size());
-  const ignition::math::Pose3d identity;
+  const gz::math::Pose3d identity;
   EXPECT_EQ(poses[0], identity);
   for (size_t i = 1; i < poses.size(); ++i)
   {

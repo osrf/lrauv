@@ -27,51 +27,34 @@
 
 #include <gz/transport/Node.hh>
 
-#include "lrauv_ignition_plugins/lrauv_command.pb.h"
+#include <gz/sim/gui/GuiSystem.hh>
+
+#include "lrauv_ignition_plugins/lrauv_init.pb.h"
 
 namespace tethys
 {
 
 /// \brief Control Panel for controlling the tethys using the GUI.
-class ControlPanel : public gz::gui::Plugin
+class SpawnPanel : public gz::sim::GuiSystem
 {
   Q_OBJECT
 
   /// \brief Constructor
-  public: ControlPanel();
+  public: SpawnPanel();
 
   /// \brief Destructor
-  public: ~ControlPanel();
+  public: ~SpawnPanel();
 
   /// \brief Documentation inherited
   public: void LoadConfig(const tinyxml2::XMLElement *_pluginElem) override;
 
   /// \brief Releases the drop weight
-  public: Q_INVOKABLE void ReleaseDropWeight();
+  public: Q_INVOKABLE void Spawn(
+    double lattitude, double longitude, double depth, int commsId, QString name);
 
-  /// \brief Sets the vehicle name that you want to control
-  /// \param[in] _name The name of the vehicle in question.
-  public: Q_INVOKABLE void SetVehicle(QString _name);
-
-  /// \brief Sets the rudder rotation
-  /// \param[in] _rudderAngle The rudder angle set point, in radians
-  public: Q_INVOKABLE void SetRudder(qreal _rudderAngle);
-
-  /// \brief Sets the elevator rotation
-  /// \param[in] _elevatorAngle The elevator angle set point, in radians
-  public: Q_INVOKABLE void SetElevator(qreal _elevatorAngle);
-
-  /// \brief Sets the mass shifter position
-  /// \param[in] _pitchmassPosition The mass shifter position, in meters
-  public: Q_INVOKABLE void SetPitchMass(qreal _pitchmassPosition);
-
-  /// \brief Sets the thruster thrust
-  /// \param[in] _rudderAngle The thruster angular velocity, in rad/s
-  public: Q_INVOKABLE void SetThruster(qreal _thrust);
-
-  /// \brief Sets the buoyancy engine
-  /// \param[in] _volume The buoyancy engine's volume, in cubic meters
-  public: Q_INVOKABLE void SetBuoyancyEngine(qreal _volume);
+  /// \brief Documentation inherited
+  public: void Update(const gz::sim::UpdateInfo &,
+    gz::sim::EntityComponentManager &_ecm);
 
   /// \brief Transport node
   private: gz::transport::Node node;
@@ -79,8 +62,11 @@ class ControlPanel : public gz::gui::Plugin
   /// \brief Transport publisher
   private: gz::transport::Node::Publisher pub;
 
-  /// \brief LRAUVCommand for the last state
-  private: lrauv_ignition_plugins::msgs::LRAUVCommand lastCommand;
+  /// \brief The names of all the models
+  private: std::unordered_set<std::string> modelNames;
+
+  /// \brief The acoustic address of the models
+  private: std::unordered_set<int> acousticIds;
 };
 
 }

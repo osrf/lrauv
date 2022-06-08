@@ -2,10 +2,10 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/gazebo/Link.hh>
-#include <ignition/gazebo/Model.hh>
-#include <ignition/gazebo/Util.hh>
-#include <ignition/gazebo/World.hh>
+#include <gz/sim/Link.hh>
+#include <gz/sim/Model.hh>
+#include <gz/sim/Util.hh>
+#include <gz/sim/World.hh>
 
 namespace lrauv_system_tests
 {
@@ -24,40 +24,40 @@ void ModelObserver::LimitTo(
 }
 
 void ModelObserver::Update(
-  const ignition::gazebo::UpdateInfo &_info,
-  const ignition::gazebo::EntityComponentManager &_ecm)
+  const gz::sim::UpdateInfo &_info,
+  const gz::sim::EntityComponentManager &_ecm)
 {
-  const ignition::gazebo::Entity worldEntity =
-      ignition::gazebo::worldEntity(_ecm);
-  ignition::gazebo::World world(worldEntity);
+  const gz::sim::Entity worldEntity =
+      gz::sim::worldEntity(_ecm);
+  gz::sim::World world(worldEntity);
 
-  const ignition::gazebo::Entity modelEntity =
+  const gz::sim::Entity modelEntity =
       world.ModelByName(_ecm, this->modelName);
-  if (ignition::gazebo::kNullEntity != modelEntity)
+  if (gz::sim::kNullEntity != modelEntity)
   {
     this->times.push_back(_info.simTime);
 
     this->poses.push_back(
-        ignition::gazebo::worldPose(modelEntity, _ecm));
+        gz::sim::worldPose(modelEntity, _ecm));
 
     auto coordinates =
-        ignition::gazebo::sphericalCoordinates(modelEntity, _ecm);
+        gz::sim::sphericalCoordinates(modelEntity, _ecm);
     this->sphericalCoordinates.push_back(
-        coordinates.value_or(ignition::math::Vector3d::NaN));
+        coordinates.value_or(gz::math::Vector3d::NaN));
 
-    ignition::gazebo::Model model(modelEntity);
-    const ignition::gazebo::Entity linkEntity =
+    gz::sim::Model model(modelEntity);
+    const gz::sim::Entity linkEntity =
         model.LinkByName(_ecm, this->baseLinkName);
-    ASSERT_NE(ignition::gazebo::kNullEntity, linkEntity);
-    ignition::gazebo::Link link(linkEntity);
+    ASSERT_NE(gz::sim::kNullEntity, linkEntity);
+    gz::sim::Link link(linkEntity);
 
     auto linearVelocity = link.WorldLinearVelocity(_ecm);
     this->linearVelocities.push_back(
-        linearVelocity.value_or(ignition::math::Vector3d::NaN));
+        linearVelocity.value_or(gz::math::Vector3d::NaN));
 
     auto angularVelocity = link.WorldAngularVelocity(_ecm);
     this->angularVelocities.push_back(
-        angularVelocity.value_or(ignition::math::Vector3d::NaN));
+        angularVelocity.value_or(gz::math::Vector3d::NaN));
 
     if (this->windowSize != std::chrono::steady_clock::duration::zero())
     {
@@ -79,25 +79,25 @@ ModelObserver::Times() const
   return this->times;
 }
 
-const std::deque<ignition::math::Pose3d> &
+const std::deque<gz::math::Pose3d> &
 ModelObserver::Poses() const
 {
   return this->poses;
 }
 
-const std::deque<ignition::math::Vector3d> &
+const std::deque<gz::math::Vector3d> &
 ModelObserver::SphericalCoordinates() const
 {
   return this->sphericalCoordinates;
 }
 
-const std::deque<ignition::math::Vector3d> &
+const std::deque<gz::math::Vector3d> &
 ModelObserver::LinearVelocities() const
 {
   return this->linearVelocities;
 }
 
-const std::deque<ignition::math::Vector3d> &
+const std::deque<gz::math::Vector3d> &
 ModelObserver::AngularVelocities() const
 {
   return this->angularVelocities;

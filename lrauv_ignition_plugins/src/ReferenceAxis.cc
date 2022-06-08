@@ -22,22 +22,22 @@
 
 #include "ReferenceAxis.hh"
 
-#include <ignition/common/Console.hh>
+#include <gz/common/Console.hh>
 
-#include <ignition/plugin/Register.hh>
+#include <gz/plugin/Register.hh>
 
-#include <ignition/rendering/AxisVisual.hh>
-#include <ignition/rendering/Camera.hh>
-#include <ignition/rendering/Text.hh>
-#include <ignition/rendering/RenderingIface.hh>
-#include <ignition/rendering/Scene.hh>
+#include <gz/rendering/AxisVisual.hh>
+#include <gz/rendering/Camera.hh>
+#include <gz/rendering/Text.hh>
+#include <gz/rendering/RenderingIface.hh>
+#include <gz/rendering/Scene.hh>
 
-#include <ignition/math/Vector3.hh>
-#include <ignition/math/Pose3.hh>
+#include <gz/math/Vector3.hh>
+#include <gz/math/Pose3.hh>
 
-#include <ignition/gui/Application.hh>
-#include <ignition/gui/GuiEvents.hh>
-#include <ignition/gui/MainWindow.hh>
+#include <gz/gui/Application.hh>
+#include <gz/gui/GuiEvents.hh>
+#include <gz/gui/MainWindow.hh>
 
 namespace tethys
 {
@@ -51,19 +51,19 @@ namespace tethys
     public: void Initialize();
 
     /// \brief Pointer to the camera being recorded
-    public: ignition::rendering::CameraPtr camera{nullptr};
+    public: gz::rendering::CameraPtr camera{nullptr};
 
     /// \brief Pointer to the 3D scene
-    public: ignition::rendering::ScenePtr scene{nullptr};
+    public: gz::rendering::ScenePtr scene{nullptr};
 
     /// \brief ENU visual
-    public: ignition::rendering::VisualPtr enuVis{nullptr};
+    public: gz::rendering::VisualPtr enuVis{nullptr};
 
     /// \brief NED visual
-    public: ignition::rendering::VisualPtr nedVis{nullptr};
+    public: gz::rendering::VisualPtr nedVis{nullptr};
 
     /// \brief FSK visuals. The key is the model name, the value is the visual.
-    public: std::map<std::string, ignition::rendering::VisualPtr> fskVisuals;
+    public: std::map<std::string, gz::rendering::VisualPtr> fskVisuals;
   };
 }
 
@@ -71,7 +71,7 @@ using namespace tethys;
 
 /////////////////////////////////////////////////
 ReferenceAxis::ReferenceAxis()
-  : ignition::gui::Plugin(),
+  : gz::gui::Plugin(),
     dataPtr(std::make_unique<ReferenceAxisPrivate>())
 {
 }
@@ -98,14 +98,14 @@ void ReferenceAxis::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
     }
   }
 
-  ignition::gui::App()->findChild<
-    ignition::gui::MainWindow *>()->installEventFilter(this);
+  gz::gui::App()->findChild<
+    gz::gui::MainWindow *>()->installEventFilter(this);
 }
 
 /////////////////////////////////////////////////
 bool ReferenceAxis::eventFilter(QObject *_obj, QEvent *_event)
 {
-  if (_event->type() == ignition::gui::events::PreRender::kType)
+  if (_event->type() == gz::gui::events::PreRender::kType)
   {
     this->dataPtr->OnPreRender();
   }
@@ -120,13 +120,13 @@ void ReferenceAxisPrivate::Initialize()
   if (this->scene)
     return;
 
-  this->scene = ignition::rendering::sceneFromFirstRenderEngine();
+  this->scene = gz::rendering::sceneFromFirstRenderEngine();
   if (!this->scene)
     return;
 
   for (unsigned int i = 0; i < this->scene->NodeCount(); ++i)
   {
-    auto cam = std::dynamic_pointer_cast<ignition::rendering::Camera>(
+    auto cam = std::dynamic_pointer_cast<gz::rendering::Camera>(
       this->scene->NodeByIndex(i));
     if (cam && cam->HasUserData("user-camera") &&
         std::get<bool>(cam->UserData("user-camera")))
@@ -194,8 +194,8 @@ void ReferenceAxisPrivate::OnPreRender()
       textGeom->SetTextString("ENU");
       textGeom->SetShowOnTop(true);
       textGeom->SetCharHeight(0.1);
-      textGeom->SetTextAlignment(ignition::rendering::TextHorizontalAlign::RIGHT,
-                                 ignition::rendering::TextVerticalAlign::BOTTOM);
+      textGeom->SetTextAlignment(gz::rendering::TextHorizontalAlign::RIGHT,
+                                 gz::rendering::TextVerticalAlign::BOTTOM);
 
       auto textVis = this->scene->CreateVisual();
       textVis->AddGeometry(textGeom);
@@ -210,7 +210,7 @@ void ReferenceAxisPrivate::OnPreRender()
 
   // Set pose to be in front of camera
   double yPos = yOffset + (widthMeters - initialWidthMeters) * 0.5;
-  auto enuPlacement = ignition::math::Pose3d(xPos, yPos, 1.25, 0.0, 0.0, 0.0);
+  auto enuPlacement = gz::math::Pose3d(xPos, yPos, 1.25, 0.0, 0.0, 0.0);
   auto enuPos = (this->camera->WorldPose() * enuPlacement).Pos();
   this->enuVis->SetLocalPosition(enuPos);
 
@@ -230,8 +230,8 @@ void ReferenceAxisPrivate::OnPreRender()
       textGeom->SetTextString("NED");
       textGeom->SetShowOnTop(true);
       textGeom->SetCharHeight(0.1);
-      textGeom->SetTextAlignment(ignition::rendering::TextHorizontalAlign::LEFT,
-                                 ignition::rendering::TextVerticalAlign::TOP);
+      textGeom->SetTextAlignment(gz::rendering::TextHorizontalAlign::LEFT,
+                                 gz::rendering::TextVerticalAlign::TOP);
 
       auto textVis = this->scene->CreateVisual();
       textVis->AddGeometry(textGeom);
@@ -245,7 +245,7 @@ void ReferenceAxisPrivate::OnPreRender()
   // TODO(chapulina) Let user choose Y offset
   yOffset = -1.0;
   yPos = yOffset + (initialWidthMeters - widthMeters) * 0.5;
-  auto nedPlacement = ignition::math::Pose3d(xPos, yPos, 1.35, 0.0, 0.0, 0.0);
+  auto nedPlacement = gz::math::Pose3d(xPos, yPos, 1.35, 0.0, 0.0, 0.0);
   auto nedPos = (this->camera->WorldPose() * nedPlacement).Pos();
   this->nedVis->SetLocalPosition(nedPos);
 
@@ -275,8 +275,8 @@ void ReferenceAxisPrivate::OnPreRender()
       textGeom->SetTextString("FSK");
       textGeom->SetShowOnTop(true);
       textGeom->SetCharHeight(0.4);
-      textGeom->SetTextAlignment(ignition::rendering::TextHorizontalAlign::LEFT,
-                                 ignition::rendering::TextVerticalAlign::TOP);
+      textGeom->SetTextAlignment(gz::rendering::TextHorizontalAlign::LEFT,
+                                 gz::rendering::TextVerticalAlign::TOP);
 
       auto textVis = this->scene->CreateVisual();
       textVis->AddGeometry(textGeom);
@@ -289,4 +289,4 @@ void ReferenceAxisPrivate::OnPreRender()
 
 // Register this plugin
 IGNITION_ADD_PLUGIN(tethys::ReferenceAxis,
-                    ignition::gui::Plugin)
+                    gz::gui::Plugin)
