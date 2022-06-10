@@ -27,10 +27,10 @@
 #include <string>
 #include <deque>
 
-#include <ignition/gazebo/EntityComponentManager.hh>
+#include <gz/sim/EntityComponentManager.hh>
 
-#include <ignition/math/Pose3.hh>
-#include <ignition/math/Vector3.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/math/Vector3.hh>
 
 namespace lrauv_system_tests
 {
@@ -55,26 +55,26 @@ class ModelObserver
   /// \note To be called on world post-update.
   /// \param[in] _info Info for the current iteration.
   /// \param[in] _ecm Entity component manager to be queried.
-  public: void Update(const ignition::gazebo::UpdateInfo &_info,
-                      const ignition::gazebo::EntityComponentManager &_ecm);
+  public: void Update(const gz::sim::UpdateInfo &_info,
+                      const gz::sim::EntityComponentManager &_ecm);
 
   /// Returns simulation times at which the model was observed.
   public: const std::deque<std::chrono::steady_clock::duration> &Times() const;
 
   /// Returns model world poses seen.
-  public: const std::deque<ignition::math::Pose3d> &Poses() const;
+  public: const std::deque<gz::math::Pose3d> &Poses() const;
 
   /// Returns model spherical coordinates seen.
   public:
-  const std::deque<ignition::math::Vector3d> &SphericalCoordinates() const;
+  const std::deque<gz::math::Vector3d> &SphericalCoordinates() const;
 
   /// Returns model linear velocities seen.
   public:
-  const std::deque<ignition::math::Vector3d> &LinearVelocities() const;
+  const std::deque<gz::math::Vector3d> &LinearVelocities() const;
 
   /// Returns model angular velocities seen.
   public:
-  const std::deque<ignition::math::Vector3d> &AngularVelocities() const;
+  const std::deque<gz::math::Vector3d> &AngularVelocities() const;
 
   private: std::string modelName;
 
@@ -85,13 +85,13 @@ class ModelObserver
 
   private: std::deque<std::chrono::steady_clock::duration> times;
 
-  private: std::deque<ignition::math::Pose3d> poses;
+  private: std::deque<gz::math::Pose3d> poses;
 
-  private: std::deque<ignition::math::Vector3d> sphericalCoordinates;
+  private: std::deque<gz::math::Vector3d> sphericalCoordinates;
 
-  private: std::deque<ignition::math::Vector3d> linearVelocities;
+  private: std::deque<gz::math::Vector3d> linearVelocities;
 
-  private: std::deque<ignition::math::Vector3d> angularVelocities;
+  private: std::deque<gz::math::Vector3d> angularVelocities;
 };
 
 }

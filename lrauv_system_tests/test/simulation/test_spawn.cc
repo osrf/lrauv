@@ -29,9 +29,9 @@
 #include <utility>
 #include <vector>
 
-#include <ignition/math/Angle.hh>
-#include <ignition/math/SphericalCoordinates.hh>
-#include <ignition/transport/Node.hh>
+#include <gz/math/Angle.hh>
+#include <gz/math/SphericalCoordinates.hh>
+#include <gz/transport/Node.hh>
 
 #include <lrauv_ignition_plugins/lrauv_init.pb.h>
 
@@ -57,8 +57,8 @@ class DynamicTestFixture : public TestFixture
   }
 
   protected: void OnPostUpdate(
-    const ignition::gazebo::UpdateInfo &_info,
-    const ignition::gazebo::EntityComponentManager &_ecm) override
+    const gz::sim::UpdateInfo &_info,
+    const gz::sim::EntityComponentManager &_ecm) override
   {
     for (auto &observer : this->vehicleObservers)
     {
@@ -86,15 +86,15 @@ TEST(VehicleSpawnTest, Spawn)
   EXPECT_EQ(0, observer2.SphericalCoordinates().size());
 
   // Spawn first vehicle
-  ignition::transport::Node node;
+  gz::transport::Node node;
   using lrauv_ignition_plugins::msgs::LRAUVInit;
-  ignition::transport::Node::Publisher spawnPublisher =
+  gz::transport::Node::Publisher spawnPublisher =
       node.Advertise<LRAUVInit>("/lrauv/init");
   ASSERT_TRUE(WaitForConnections(spawnPublisher, 5s));
 
   // No specific orientation, vehicle will face North
-  const ignition::math::Angle lat1 = IGN_DTOR(20.0);
-  const ignition::math::Angle lon1 = IGN_DTOR(20.0);
+  const gz::math::Angle lat1 = IGN_DTOR(20.0);
+  const gz::math::Angle lon1 = IGN_DTOR(20.0);
   {
     lrauv_ignition_plugins::msgs::LRAUVInit spawnMessage;
     spawnMessage.mutable_id_()->set_data("vehicle1");
@@ -118,9 +118,9 @@ TEST(VehicleSpawnTest, Spawn)
 
   // Spawn vehicle facing South
   // Orientation is in NED, so 180 degrees yaw is South
-  const ignition::math::Angle lat2 = IGN_DTOR(20.1);
-  const ignition::math::Angle lon2 = IGN_DTOR(20.1);
-  const ignition::math::Angle yaw2 = IGN_DTOR(180);
+  const gz::math::Angle lat2 = IGN_DTOR(20.1);
+  const gz::math::Angle lon2 = IGN_DTOR(20.1);
+  const gz::math::Angle yaw2 = IGN_DTOR(180);
   const double depth2 = 10.0;
   {
     lrauv_ignition_plugins::msgs::LRAUVInit spawnMessage;
@@ -181,13 +181,13 @@ TEST(VehicleSpawnTest, Spawn)
   // Higher tolerance for lat/lon because of the conversions
   constexpr double latLonTol{2e-2};
 
-  ignition::math::SphericalCoordinates sc;
+  gz::math::SphericalCoordinates sc;
   sc.SetLatitudeReference(lat1);
   sc.SetLongitudeReference(lon1);
-  ignition::math::Vector3d expectedPos2 = sc.PositionTransform(
+  gz::math::Vector3d expectedPos2 = sc.PositionTransform(
       {lat2.Radian(), lon2.Radian(), 0.0},
-      ignition::math::SphericalCoordinates::SPHERICAL,
-      ignition::math::SphericalCoordinates::LOCAL2);
+      gz::math::SphericalCoordinates::SPHERICAL,
+      gz::math::SphericalCoordinates::LOCAL2);
   const auto &lastPose2 = observer2.Poses().back();
   EXPECT_NEAR(expectedPos2.X(), lastPose2.Pos().X(), latLonTol);
   EXPECT_NEAR(expectedPos2.Y(), lastPose2.Pos().Y(), latLonTol);

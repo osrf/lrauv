@@ -33,8 +33,8 @@
 #include <chrono>
 #include <thread>
 
-#include <ignition/msgs.hh>
-#include <ignition/transport.hh>
+#include <gz/msgs.hh>
+#include <gz/transport.hh>
 #include "lrauv_ignition_plugins/lrauv_command.pb.h"
 
 int main(int _argc, char **_argv)
@@ -51,7 +51,7 @@ int main(int _argc, char **_argv)
     omega = atof(_argv[2]);
   }
 
-  ignition::transport::Node node;
+  gz::transport::Node node;
   auto commandTopic = "/" + vehicleName + "/command_topic";
   auto commandPub =
     node.Advertise<lrauv_ignition_plugins::msgs::LRAUVCommand>(commandTopic);

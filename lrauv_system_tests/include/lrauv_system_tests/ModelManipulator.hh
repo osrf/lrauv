@@ -26,10 +26,10 @@
 #include <optional>
 #include <string>
 
-#include <ignition/gazebo/EntityComponentManager.hh>
+#include <gz/sim/EntityComponentManager.hh>
 
-#include <ignition/math/Pose3.hh>
-#include <ignition/math/Quaternion.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/math/Quaternion.hh>
 
 namespace lrauv_system_tests {
 
@@ -43,15 +43,15 @@ class ModelManipulator
   /// Update simulation state as necessary.
   /// \note To be called on world pre-update.
   /// \param[in] _ecm Entity component manager to update.
-  public: void Update(ignition::gazebo::EntityComponentManager &_ecm);
+  public: void Update(gz::sim::EntityComponentManager &_ecm);
 
   /// Set model orientation in simulation.
   /// \param[in] _orientation Model orientation in the world frame.
-  public: void SetOrientation(const ignition::math::Quaterniond &_orientation);
+  public: void SetOrientation(const gz::math::Quaterniond &_orientation);
 
   private: std::string modelName;
 
-  private: std::optional<ignition::math::Pose3d> poseRequest;
+  private: std::optional<gz::math::Pose3d> poseRequest;
 };
 
 }

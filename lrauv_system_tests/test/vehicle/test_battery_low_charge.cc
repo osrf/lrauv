@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/msgs/battery_state.pb.h>
+#include <gz/msgs/battery_state.pb.h>
 
 #include <chrono>
 
@@ -30,7 +30,7 @@
 
 #include "lrauv_system_tests/TestFixture.hh"
 
-using namespace ignition;
+using namespace gz;
 using namespace std::literals::chrono_literals;
 
 //////////////////////////////////////////////////

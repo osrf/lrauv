@@ -25,9 +25,9 @@
 
 #include <memory>
 
-#include "ignition/msgs/pointcloud_packed.pb.h"
+#include "gz/msgs/pointcloud_packed.pb.h"
 
-#include <ignition/gui/Plugin.hh>
+#include <gz/gui/Plugin.hh>
 
 namespace tethys
 {
@@ -41,7 +41,7 @@ namespace tethys
   ///
   /// For each frame, red-green-blue axes are spawned. When using Ogre 1, a
   /// floating text with the frame name is also spawned.
-  class ReferenceAxis : public ignition::gui::Plugin
+  class ReferenceAxis : public gz::gui::Plugin
   {
     Q_OBJECT
 

@@ -173,6 +173,9 @@ add_lrauv_plugin(ScienceSensorsSystem
   PRIVATE_LINK_LIBS
     ignition-sensors${IGN_SENSORS_VER}::ignition-sensors${IGN_SENSORS_VER}
     ${PCL_LIBRARIES})
+add_lrauv_plugin(SpawnPanelPlugin GUI
+  PROTO
+    lrauv_init)
 add_lrauv_plugin(TethysCommPlugin
   PROTO
     lrauv_command
@@ -260,6 +263,10 @@ add_custom_command(
 add_custom_target(world_gen_target ALL
   DEPENDS world_gen_cmd
 )
+
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME}.sdf
+  DESTINATION share/${PROJECT_NAME}/worlds)
 
 #============================================================================
 # Resources

@@ -21,28 +21,28 @@
     </physics>
     <plugin
       filename="ignition-gazebo-physics-system"
-      name="ignition::gazebo::systems::Physics">
+      name="gz::sim::systems::Physics">
     </plugin>
     <plugin
       filename="ignition-gazebo-user-commands-system"
-      name="ignition::gazebo::systems::UserCommands">
+      name="gz::sim::systems::UserCommands">
     </plugin>
     <plugin
       filename="ignition-gazebo-scene-broadcaster-system"
-      name="ignition::gazebo::systems::SceneBroadcaster">
+      name="gz::sim::systems::SceneBroadcaster">
     </plugin>
 
     <plugin
       filename="ignition-gazebo-imu-system"
-      name="ignition::gazebo::systems::Imu">
+      name="gz::sim::systems::Imu">
     </plugin>
     <plugin
       filename="ignition-gazebo-magnetometer-system"
-      name="ignition::gazebo::systems::Magnetometer">
+      name="gz::sim::systems::Magnetometer">
     </plugin>
     <plugin
       filename="ignition-gazebo-buoyancy-system"
-      name="ignition::gazebo::systems::Buoyancy">
+      name="gz::sim::systems::Buoyancy">
       <graded_buoyancy>
         <default_density>1025</default_density>
         <density_change>
@@ -57,7 +57,7 @@
       See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
     <!--<plugin
       filename="ignition-gazebo-particle-emitter2-system"
-      name="ignition::gazebo::systems::ParticleEmitter2">
+      name="gz::sim::systems::ParticleEmitter2">
     </plugin>-->
 
     <!-- Uncomment for time analysis -->
@@ -372,8 +372,8 @@
       <uri>tethys_equipped</uri>
       <experimental:params>
         <plugin filename="ignition-gazebo-linearbatteryplugin-system"
-          element_id="ignition::gazebo::systems::LinearBatteryPlugin"
-          name="ignition::gazebo::systems::LinearBatteryPlugin" action="modify">
+          element_id="gz::sim::systems::LinearBatteryPlugin"
+          name="gz::sim::systems::LinearBatteryPlugin" action="modify">
           <initial_charge>0.01</initial_charge>
         </plugin>
       </experimental:params>

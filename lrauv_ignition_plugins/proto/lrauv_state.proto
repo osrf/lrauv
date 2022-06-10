@@ -29,8 +29,8 @@ option java_outer_classname = "LRAUVStateProtos";
 /// \interface LRAUVState
 /// \brief Aggregated information about the LRAUV and the world
 
-import "ignition/msgs/header.proto";
-import "ignition/msgs/vector3d.proto";
+import "gz/msgs/header.proto";
+import "gz/msgs/vector3d.proto";
 
 // Mirrors SimResultStruct
 //
@@ -58,7 +58,7 @@ message LRAUVState
 {
   /// \brief Optional header data
   /// Stamped with simulation time.
-  ignition.msgs.Header header     = 1;
+  gz.msgs.Header header     = 1;
 
   /// \brief Not populated
   int32 errorPad_                 = 2;
@@ -103,7 +103,7 @@ message LRAUVState
   float depth_                    = 12;
 
   /// \brief Duplicate of posRPH_
-  ignition.msgs.Vector3d rph_     = 13;
+  gz.msgs.Vector3d rph_     = 13;
 
   /// \brief Magnitude of vehicle's linear velocity in the world frame.
   /// It's always positive. Unit: m/s
@@ -119,25 +119,25 @@ message LRAUVState
   float netBuoy_                  = 17;
 
   /// \brief Not populated
-  ignition.msgs.Vector3d force_   = 18;
+  gz.msgs.Vector3d force_   = 18;
 
   /// \brief Vehicle's position in "world frame" (see above) Unit: meters
-  ignition.msgs.Vector3d pos_     = 19;
+  gz.msgs.Vector3d pos_     = 19;
 
   /// \brief Vehicle's orientation in "world frame" (see above) Unit: rad
-  ignition.msgs.Vector3d posRPH_  = 20;
+  gz.msgs.Vector3d posRPH_  = 20;
 
   /// \brief Vehicle's instantaneous linear velocity in "world frame"
   /// (see above). Units: m / s
-  ignition.msgs.Vector3d posDot_  = 21;
+  gz.msgs.Vector3d posDot_  = 21;
 
   /// \brief Vehicle's instantaneous linear velocity in "vehicle frame" (see above).
   /// Units: m / s
-  ignition.msgs.Vector3d rateUVW_ = 22;
+  gz.msgs.Vector3d rateUVW_ = 22;
 
   /// \brief Vehicle's instantaneous angular velocity in "vehicle frame" (see above).
   /// Units: rad / s
-  ignition.msgs.Vector3d ratePQR_ = 23;
+  gz.msgs.Vector3d ratePQR_ = 23;
 
   /// \brief Northward sea water velocity collected from current sensor. Unit: m/s.
   float northCurrent_             = 24;

@@ -1,0 +1,5 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="SpawnPanelPlugin/">
+  <file>SpawnPanelPlugin.qml</file>
+</qresource>
+</RCC>

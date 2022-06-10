@@ -28,8 +28,8 @@
 #include <string>
 #include <unordered_map>
 
-#include <ignition/common/Console.hh>
-#include <ignition/transport/Node.hh>
+#include <gz/common/Console.hh>
+#include <gz/transport/Node.hh>
 
 namespace lrauv_system_tests
 {
@@ -43,7 +43,7 @@ class Client
   /// Constructor.
   /// \param[in] _node Node to be used for topic advertisement and subscription.
   /// \param[in] _ns Namespace for the ``requests`` and ``responses`` topics.
-  public: Client(ignition::transport::Node &_node, const std::string& _ns)
+  public: Client(gz::transport::Node &_node, const std::string& _ns)
     : requestsCounter(2)
   {
     const std::string responseTopicName = _ns + "/responses";
@@ -89,9 +89,9 @@ class Client
     this->responsePromises.erase(it);
   }
 
-  private: ignition::transport::Node node;
+  private: gz::transport::Node node;
 
-  private: ignition::transport::Node::Publisher requestsPublisher;
+  private: gz::transport::Node::Publisher requestsPublisher;
 
   private: std::unordered_map<
     uint32_t, std::promise<ResponseMessageT>> responsePromises;

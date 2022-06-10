@@ -9,8 +9,8 @@
 #include <cstring>
 #include <system_error>
 
-#include <ignition/common/Console.hh>
-#include <ignition/common/StringUtils.hh>
+#include <gz/common/Console.hh>
+#include <gz/common/StringUtils.hh>
 
 #include "TestConstants.hh"
 
@@ -106,7 +106,7 @@ LRAUVController::Execute(const std::vector<std::string> &_commands)
     cmd.push_back("-x");
     cmd.push_back(command);
   }
-  const std::string cmd_string = ignition::common::Join(cmd, " ");
+  const std::string cmd_string = gz::common::Join(cmd, " ");
   igndbg << "Running command [" << cmd_string << "]" << std::endl;
   FILE * stdout = nullptr;
   std::vector<char *> argv = BorrowAsArgv(cmd);
