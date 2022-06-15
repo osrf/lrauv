@@ -24,6 +24,7 @@
 
 #include <gz/msgs/pointcloud_packed.pb.h>
 
+
 #include <gz/common/Profiler.hh>
 #include <gz/common/SystemPaths.hh>
 #include <gz/sim/World.hh>
@@ -32,7 +33,6 @@
 #include <gz/msgs/Utility.hh>
 #include <gz/plugin/Register.hh>
 #include <gz/transport/Node.hh>
-
 #include <pcl/conversions.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/passthrough.h>
@@ -52,9 +52,27 @@ class tethys::ScienceSensorsSystemPrivate
   //////////////////////////////////
   // Functions for data manipulation
 
+  /// \brief Called when plugin is asked to reload file.
+  /// \param[in] _filepath Path to file to reload.
+  public: void OnReloadData(const gz::msgs::StringMsg &_filepath)
+  {
+    igndbg << "Reloading file " << _filepath.data() << "\n";
+
+    // Trigger reload and reread data
+    std::lock_guard<std::mutex> lock(this->dataMutex);
+    this->newDataAvailable = true;
+    this->dataPath = _filepath.data();
+  }
+
+  /// \brief mutex for updating data.
+  public: std::mutex dataMutex;
+
+  /// \brief Set to true when there is a new file to be read.
+  public: std::atomic<bool> newDataAvailable{true};
+
   /// \brief Reads csv file and populate various data fields
   /// \param[in] _ecm Immutable reference to the ECM
-  public: void ReadData(const gz::sim::EntityComponentManager &_ecm);
+  public: bool ReadData(const gz::sim::EntityComponentManager &_ecm);
 
   //////////////////////////////
   // Functions for communication
@@ -84,6 +102,13 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Returns a point cloud message populated with the latest sensor data
   public: gz::msgs::PointCloudPacked PointCloudMsg();
+
+  /// \brief Interpolate in time between two sensor data points
+  public: float InterpolateInTime(
+    const gz::math::Vector3d &_point,
+    const double _simTimeSeconds,
+    const std::vector<std::vector<float>> &_dataArray,
+    const double _tol = 1e-10);
 
   ///////////////////////////////
   // Constants for data manipulation
@@ -150,17 +175,11 @@ class tethys::ScienceSensorsSystemPrivate
   /// only shifted once.
   public: bool sphericalCoordinatesInitialized{false};
 
-  /// \brief Mutex for writing to world origin association to lat/long
-  public: std::mutex mtx;
-
   //////////////////////////////////
   // Variables for data manipulation
 
-  /// \brief Whether using more than one time slices of data
-  public: bool multipleTimeSlices {false};
-
   /// \brief Index of the latest time slice
-  public: int timeIdx {0};
+  public: std::size_t timeIdx {0};
 
   /// \brief Timestamps to index slices of data
   public: std::vector<float> timestamps;
@@ -173,6 +192,7 @@ class tethys::ScienceSensorsSystemPrivate
   /// TODO(arjo): remove dependence on PCL. We literally are only using it for
   /// the visuallization.
   public: std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> timeSpaceCoords;
+
 
   public: std::vector<std::vector<gz::math::Vector3d>>
     timeSpaceCoordsLatLon;
@@ -303,7 +323,70 @@ ScienceSensorsSystem::ScienceSensorsSystem()
 }
 
 /////////////////////////////////////////////////
-void ScienceSensorsSystemPrivate::ReadData(
+float ScienceSensorsSystemPrivate::InterpolateInTime(
+  const gz::math::Vector3d &_point,
+  const double _simTimeSeconds,
+  const std::vector<std::vector<float>> &_dataArray,
+  const double _tol)
+{
+  // Get spatial interpolators for current time
+  const auto& timeslice1 = this->timeSpaceIndex[this->timeIdx];
+  auto interpolatorsTime1 = timeslice1.GetInterpolators(_point);
+
+  if (interpolatorsTime1.size() == 0) return std::nanf("");
+  if (!interpolatorsTime1[0].index.has_value()) return std::nanf("");
+
+  const auto data1 = timeslice1.EstimateValueUsingTrilinear(
+    interpolatorsTime1,
+    _point,
+    _dataArray[this->timeIdx]
+  );
+
+  if (this->timeIdx + 1 >= this->timeSpaceIndex.size())
+  {
+    // If we reached the end of the dataset then return the last value
+    return data1.value_or(std::nanf(""));
+  }
+
+  // Get spatial interpolators for the next time
+  auto nextTimeIdx = this->timeIdx + 1;
+  const auto& timeslice2 = this->timeSpaceIndex[nextTimeIdx];
+  auto interpolatorsTime2 = timeslice2.GetInterpolators(_point);
+
+  if (interpolatorsTime2.size() == 0) return std::nanf("");
+  if (!interpolatorsTime2[0].index.has_value()) return std::nanf("");
+
+  const auto data2 = timeslice2.EstimateValueUsingTrilinear(
+    interpolatorsTime2,
+    _point,
+    _dataArray[nextTimeIdx]
+  );
+
+
+  auto prevTimeStamp = this->timestamps[this->timeIdx];
+  auto nextTimeStamp = this->timestamps[nextTimeIdx];
+
+  auto dist = nextTimeStamp - prevTimeStamp;
+  if (dist < _tol)
+  {
+    return data1.value_or(std::nanf(""));
+  }
+  else
+  {
+    if (data1.has_value() && data2.has_value())
+    {
+      return (data1.value() * (nextTimeStamp - _simTimeSeconds) +
+        data2.value() * (_simTimeSeconds - prevTimeStamp)) / dist;
+    }
+    else
+    {
+      return std::nanf("");
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+bool ScienceSensorsSystemPrivate::ReadData(
     const gz::sim::EntityComponentManager &_ecm)
 {
   IGN_PROFILE("ScienceSensorsSystemPrivate::ReadData");
@@ -312,15 +395,27 @@ void ScienceSensorsSystemPrivate::ReadData(
   {
     ignerr << "Trying to read data before spherical coordinates were "
            << "initialized." << std::endl;
-    return;
+    return false;
   }
 
-  // Lock modifications to world origin spherical association until finish
-  // reading and transforming data
-  std::lock_guard<std::mutex> lock(mtx);
+  // Reset all data
+  timeSpaceCoords.clear();
+  timeSpaceCoordsLatLon.clear();
+  timeSpaceIndex.clear();
+  temperatureArr.clear();
+  salinityArr.clear();
+  chlorophyllArr.clear();
+  eastCurrentArr.clear();
+  northCurrentArr.clear();
 
   std::fstream fs;
   fs.open(this->dataPath, std::ios::in);
+
+  if (!fs.is_open())
+  {
+    ignerr << "Failed to open file [" << this->dataPath << "]" << std::endl;
+    return false;
+  }
 
   std::vector<std::string> fieldnames;
   std::string line, word, temp;
@@ -509,6 +604,8 @@ void ScienceSensorsSystemPrivate::ReadData(
   // Make sure the number of timestamps in the 1D indexing array, and the
   // number of time slices of data, are the same.
   assert(this->timestamps.size() == this->timeSpaceCoords.size());
+
+  return true;
 }
 
 /////////////////////////////////////////////////
@@ -552,6 +649,10 @@ void ScienceSensorsSystem::Configure(
     ignmsg << "Loading science data from [" << this->dataPtr->dataPath << "]"
            << std::endl;
   }
+
+  this->dataPtr->node.Subscribe("/world/science_sensor/environment_data_path",
+                                &ScienceSensorsSystemPrivate::OnReloadData,
+                                this->dataPtr.get());
 }
 
 /////////////////////////////////////////////////
@@ -622,9 +723,10 @@ void ScienceSensorsSystem::PostUpdate(const gz::sim::UpdateInfo &_info,
     if (this->dataPtr->world.SphericalCoordinates(_ecm))
     {
       this->dataPtr->sphericalCoordinatesInitialized = true;
-
       this->dataPtr->StartTransport();
+      std::lock_guard<std::mutex> lock(this->dataPtr->dataMutex);
       this->dataPtr->ReadData(_ecm);
+      this->dataPtr->newDataAvailable = false;
     }
     else
     {
@@ -634,22 +736,23 @@ void ScienceSensorsSystem::PostUpdate(const gz::sim::UpdateInfo &_info,
       return;
     }
   }
+  else{
+    if (this->dataPtr->newDataAvailable.load())
+    {
+      std::lock_guard<std::mutex> lock(this->dataPtr->dataMutex);
+      auto result = this->dataPtr->ReadData(_ecm);
+      this->dataPtr->newDataAvailable = !result;
+    }
+  }
 
-  double simTimeSeconds = std::chrono::duration_cast<std::chrono::seconds>(
+  double simTimeSeconds = std::chrono::duration<double>(
     _info.simTime).count();
 
-  // Update time index
-  if (this->dataPtr->multipleTimeSlices)
+  if(this->dataPtr->timeIdx + 1 < this->dataPtr->timestamps.size())
   {
-    // Only update if sim time exceeds the elapsed timestamp in data
-    if (!this->dataPtr->timestamps.empty() &&
-      simTimeSeconds >= this->dataPtr->timestamps[this->dataPtr->timeIdx])
+    if(simTimeSeconds >= this->dataPtr->timestamps[this->dataPtr->timeIdx + 1])
     {
-      // Increment for next point in time
       this->dataPtr->timeIdx++;
-
-      // Publish science data at the next timestamp
-      this->dataPtr->PublishData();
     }
   }
 
@@ -680,97 +783,42 @@ void ScienceSensorsSystem::PostUpdate(const gz::sim::UpdateInfo &_info,
     auto sphericalDepthCorrected = gz::math::Vector3d{spherical.X(), spherical.Y(),
       -spherical.Z()};
 
-    const auto& timeslice = this->dataPtr->timeSpaceIndex[this->dataPtr->timeIdx];
-    auto interpolators = timeslice.GetInterpolators(sphericalDepthCorrected);
-
-    IGN_PROFILE("ScienceSensorsSystem::Interpolation");
-    if (interpolators.size() == 0) return;
-    if (!interpolators[0].index.has_value()) return;
-
     if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
     {
-      const auto sal = timeslice.EstimateValueUsingTrilinear(
-        interpolators,
-        sphericalDepthCorrected,
-        this->dataPtr->salinityArr[this->dataPtr->timeIdx]
-      );
-
-      if (sal.has_value())
-        casted->SetData(sal.value());
-      else
-        casted->SetData(std::nanf(""));
+      casted->SetData(
+        this->dataPtr->InterpolateInTime(
+          sphericalDepthCorrected, simTimeSeconds, this->dataPtr->salinityArr));
     }
     else if (auto casted = std::dynamic_pointer_cast<TemperatureSensor>(
       sensor))
     {
-      const auto temp = timeslice.EstimateValueUsingTrilinear(
-          interpolators,
-          sphericalDepthCorrected,
-          this->dataPtr->temperatureArr[this->dataPtr->timeIdx]
-        );
+      const auto temp = this->dataPtr->InterpolateInTime(
+        sphericalDepthCorrected, simTimeSeconds, this->dataPtr->temperatureArr);
 
-      if (temp.has_value())
-      {
-        gz::math::Temperature tempC;
-        tempC.SetCelsius(temp.value());
-        casted->SetData(tempC);
-      }
-      else
-      {
-        gz::math::Temperature tempC;
-        tempC.SetCelsius(std::nanf(""));
-        casted->SetData(tempC);
-      }
+      gz::math::Temperature tempC;
+      tempC.SetCelsius(temp);
+      casted->SetData(tempC);
     }
     else if (auto casted = std::dynamic_pointer_cast<ChlorophyllSensor>(
       sensor))
     {
-      /// Uncomment to debug
-      /// igndbg << "------------------" << std::endl;
-      /// igndbg << "Sensor position: " << sphericalDepthCorrected << std::endl;
-      /// igndbg << "Got" << interpolators.size() << " interpolators" << std::endl;
-      /// for (auto interp: interpolators)
-      /// {
-      ///   if (!interp.index.has_value()) continue;
-      ///   igndbg << "Chlorophyll sensor: " <<
-      ///     this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx][
-      ///       interp.index.value()] << "@" << interp.position << std::endl;
-      ///   igndbg << "My distance is " << interp.position.X() - sphericalDepthCorrected.X()
-      ///   << ", " << interp.position.Y() - sphericalDepthCorrected.Y() << std::endl;
-      /// }
-      const auto chlor = timeslice.EstimateValueUsingTrilinear(
-          interpolators,
-          sphericalDepthCorrected,
-          this->dataPtr->chlorophyllArr[this->dataPtr->timeIdx]
-        );
-      if (chlor.has_value())
-        casted->SetData(chlor.value());
-      else
-        casted->SetData(std::nanf(""));
+      casted->SetData(
+        this->dataPtr->InterpolateInTime(
+          sphericalDepthCorrected, simTimeSeconds,
+          this->dataPtr->chlorophyllArr));
     }
     else if (auto casted = std::dynamic_pointer_cast<CurrentSensor>(
       sensor))
     {
-      const auto nCurr = timeslice.EstimateValueUsingTrilinear(
-          interpolators,
-          sphericalDepthCorrected,
-          this->dataPtr->northCurrentArr[this->dataPtr->timeIdx]
-        );
-      const auto eCurr = timeslice.EstimateValueUsingTrilinear(
-          interpolators,
-          sphericalDepthCorrected,
-          this->dataPtr->eastCurrentArr[this->dataPtr->timeIdx]
-        );
-      if (nCurr.has_value() && eCurr.has_value())
-      {
-        gz::math::Vector3d current(nCurr.value(), eCurr.value(), 0);
-        casted->SetData(current);
-      }
-      else
-      {
-        gz::math::Vector3d current(std::nan(""), std::nan(""), 0);
-        casted->SetData(current);
-      }
+      const auto nCurr = this->dataPtr->InterpolateInTime(
+        sphericalDepthCorrected, simTimeSeconds, this->dataPtr->northCurrentArr);
+
+      const auto eCurr = this->dataPtr->InterpolateInTime(
+        sphericalDepthCorrected, simTimeSeconds, this->dataPtr->eastCurrentArr);
+
+
+      gz::math::Vector3d current(nCurr, eCurr, 0);
+      casted->SetData(current);
     }
     else
     {

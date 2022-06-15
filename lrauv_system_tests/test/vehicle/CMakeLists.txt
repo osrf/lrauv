@@ -27,6 +27,7 @@ foreach(_test
     test_mass_shifter
     test_propeller_action
     test_rudder_action
+    test_sensor_timeinterpolation
     test_sensor)
   add_executable(${_test} ${_test}.cc)
   target_link_libraries(${_test}

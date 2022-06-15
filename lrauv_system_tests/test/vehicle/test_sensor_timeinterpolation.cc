@@ -36,48 +36,30 @@
 
 using namespace std::chrono_literals;
 
-std::atomic<bool> received_msg[4] = {false};
+std::atomic<std::chrono::steady_clock::duration> duration;
 
-void ChlorophyllVeh1Cb(const gz::msgs::Float &_msg)
+///////////////////////////////////////////////
+void TemperatureVeh1Cb(const gz::msgs::Double &_msg)
 {
-  // 0.22934943324714 is the value at this point. Allow some noise.
-  EXPECT_NEAR(_msg.data(), 0.229, 0.001);
-  received_msg[0] = true;
+  auto timeNow = std::chrono::duration<double>(duration.load()).count();
+  auto temperature = _msg.data();
+
+  if (timeNow < 10)
+  {
+    // At time 0 according to the csv file the temperature is 5.
+    // Using linear interpolation the temparature at timeNow will be
+    // (10 * timeNow + (10-timeNow) * 5) / 10
+    EXPECT_NEAR(temperature, (10 * timeNow + (10-timeNow) * 5) / 10, 0.1);
+  }
+  else
+  {
+    // At time 10 according to the csv file temperature is 10.
+    // Since theres no more data we will just keep the temperature as is.
+    EXPECT_NEAR(temperature, 10.0, 0.1);
+  }
 }
 
-void ChlorophyllVeh2Cb(const gz::msgs::Float &_msg)
-{
-  // 0.3935107401546 is the value at this point. Allow some noise.
-  EXPECT_NEAR(_msg.data(), 0.393, 0.001);
-  received_msg[1] = true;
-}
-
-void ChlorophyllVeh3Cb(const gz::msgs::Float &_msg)
-{
-  // Nearest readings are:
-  // Chlorophyll sensor: 0.935823@36.8 -122.72 40
-  // Chlorophyll sensor: 0.229349@36.8 -122.72 50
-  // Chlorophyll sensor: 0.576666@36.8 -122.7 40
-  // Chlorophyll sensor: 0.946913@36.8 -122.7 50
-  // Therefore value should lie between 0.94 and 0.229
-  EXPECT_GT(_msg.data(), 0.229);
-  EXPECT_LT(_msg.data(), 0.95);
-  received_msg[2] = true;
-}
-
-void ChlorophyllVeh4Cb(const gz::msgs::Float &_msg)
-{
-  // Nearest readings are:
-  // Chlorophyll sensor: 0.935823@36.8 -122.72 40
-  //Chlorophyll sensor: 0.229349@36.8 -122.72 50
-  //Chlorophyll sensor: 0.576666@36.8 -122.7 40
-  //Chlorophyll sensor: 0.946913@36.8 -122.7 50
-  // Therefore value should lie between 0.95 and 0.229
-  EXPECT_GT(_msg.data(), 0.229);
-  EXPECT_LT(_msg.data(), 0.95);
-  received_msg[3] = true;
-}
-
+///////////////////////////////////////////////
 void SpawnVehicle(
   gz::transport::Node::Publisher &_spawnPub,
   const std::string &_modelName,
@@ -95,11 +77,10 @@ void SpawnVehicle(
   spawnMsg.set_acommsaddress_(_acommsAddr);
 
   _spawnPub.Publish(spawnMsg);
-
 }
 
 //////////////////////////////////////////////////
-TEST(SensorTest, PositionInterpolation)
+TEST(SensorTest, TimeInterpolation)
 {
   gz::common::Console::SetVerbosity(4);
 
@@ -111,7 +92,7 @@ TEST(SensorTest, PositionInterpolation)
 
   bool spawnedAllVehicles = {false};
   static const std::string vehicles[] =
-    {"vehicle1", "vehicle2", "vehicle3", "vehicle4"};
+    {"vehicle1"};
 
   fixture->OnPostUpdate(
     [&](const gz::sim::UpdateInfo &_info,
@@ -128,24 +109,39 @@ TEST(SensorTest, PositionInterpolation)
         }
       }
 
-      if (numVehiclesSpawned == 4)
+      if (numVehiclesSpawned == 1)
       {
         spawnedAllVehicles = true;
       }
       iterations++;
+      duration = _info.simTime;
     });
   fixture->Finalize();
 
   // Check that vehicles don't exist
   fixture->Server()->RunOnce();
   EXPECT_EQ(1, iterations);
-  // Spawn first vehicle
-  gz::transport::Node node;
-  auto spawnPub = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVInit>(
-    "/lrauv/init");
 
   int sleep{0};
   int maxSleep{30};
+
+  // Change the dataconfig
+  igndbg << "Switching file" <<std::endl;
+  gz::transport::Node node;
+  auto configPub = node.Advertise<gz::msgs::StringMsg>(
+    "/world/science_sensor/environment_data_path");
+  gz::msgs::StringMsg configMsg;
+  configMsg.set_data(gz::common::joinPaths(
+      std::string(PROJECT_SOURCE_PATH), "data", "minimal_time_varying.csv"));
+  for (; !configPub.HasConnections() && sleep < maxSleep; ++sleep)
+  {
+    std::this_thread::sleep_for(100ms);
+  }
+  configPub.Publish(configMsg);
+
+  // Spawn first vehicle
+  auto spawnPub = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVInit>(
+    "/lrauv/init");
   for (; !spawnPub.HasConnections() && sleep < maxSleep; ++sleep)
   {
     std::this_thread::sleep_for(100ms);
@@ -155,23 +151,8 @@ TEST(SensorTest, PositionInterpolation)
 
   // On a depth coplanar to a piece of data
   SpawnVehicle(
-    spawnPub, "vehicle1", 36.7999992370605, -122.720001220703, 50, 0);
-  node.Subscribe("/model/vehicle1/chlorophyll", &ChlorophyllVeh1Cb);
-
-  // At the surface should still have reading
-  SpawnVehicle(
-    spawnPub, "vehicle2", 36.7999992370605, -122.720001220703, 0, 0);
-  node.Subscribe("/model/vehicle2/chlorophyll", &ChlorophyllVeh2Cb);
-
-  // In the middle of two slices, still in a plane
-  SpawnVehicle(
-    spawnPub, "vehicle3", 36.7999992370605, -122.720001220703, 45, 0);
-  node.Subscribe("/model/vehicle3/chlorophyll", &ChlorophyllVeh3Cb);
-
-  // In the middle of a quadrant
-  SpawnVehicle(
-    spawnPub, "vehicle4", 36.7999992370605, -122.7, 48, 0);
-  node.Subscribe("/model/vehicle4/chlorophyll", &ChlorophyllVeh4Cb);
+    spawnPub, "vehicle1", 0.000005, 0.000005, 5, 0);
+  node.Subscribe("/model/vehicle1/temperature", &TemperatureVeh1Cb);
 
   // Check that vehicle was spawned
   int expectedIterations = iterations;
@@ -186,10 +167,5 @@ TEST(SensorTest, PositionInterpolation)
   }
   EXPECT_TRUE(spawnedAllVehicles);
 
-  fixture->Server()->Run(true, 10, false);
-
-  for (auto &msg: received_msg)
-  {
-    EXPECT_TRUE(msg.load());
-  }
+  fixture->Server()->Run(true, 1000, false);
 }
