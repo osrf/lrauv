@@ -88,6 +88,7 @@
             element_id="base_link" action="add"
             name="teledyne_pathfinder_dvl"
             type="custom" ignition:type="dvl">
+          <pose degrees="true">0 0 0 0 0 180</pose>
           <always_on>1</always_on>
           <update_rate>1</update_rate>
           <topic>/tethys/dvl/velocity</topic>
@@ -114,16 +115,17 @@
                 <tilt>30</tilt>
               </beam>
               <resolution>0.01</resolution>
+              <visualize>false</visualize>
             </arrangement>
-            <visualize>true</visualize>
+            <visualize>false</visualize>
             <noise type="gaussian">
               <!-- +/- 0.5 cm/s precision within 2 stddevs -->
               <stddev>0.0025</stddev>
             </noise>
             <!-- Approximate maximum range @ ~14.4v -->
             <maximum_range>80.</maximum_range>
-            <!-- Reversed ENU to SFM -->
-            <reference_frame>0 0 0 0 0 1.570796</reference_frame>
+            <!-- ENU to SFM -->
+            <reference_frame>0 0 0 0 0 -1.570796</reference_frame>
           </ignition:dvl>
         </sensor>
         <!--

@@ -361,6 +361,8 @@ DopplerVelocityLog::DopplerVelocityLog()
 //////////////////////////////////////////////////
 DopplerVelocityLog::~DopplerVelocityLog()
 {
+  this->dataPtr->depthConnection.reset();
+  this->dataPtr->sceneChangeConnection.reset();
 }
 
 //////////////////////////////////////////////////
@@ -651,8 +653,8 @@ bool DopplerVelocityLog::CreateRenderingSensors()
   constexpr double epsilon = std::numeric_limits<double>::epsilon();
   const std::chrono::steady_clock::duration lifetime =
       std::chrono::duration_cast<std::chrono::seconds>(
-          std::chrono::duration<double>(this->UpdateRate() > epsilon ?
-                                        1. / this->UpdateRate() : 0.001));
+          1.1 * std::chrono::duration<double>(this->UpdateRate() > epsilon ?
+                                              1. / this->UpdateRate() : 0.001));
 
   this->dataPtr->visualizeBeamLobes =
       arrangementElement->Get<bool>("visualize", false).first;
@@ -949,7 +951,7 @@ bool DopplerVelocityLog::Update(const std::chrono::steady_clock::duration &)
   }
 
   const gz::math::Pose3d beamsFramePose =
-      this->dataPtr->beamsFrameTransform * this->Pose();
+      this->Pose() * this->dataPtr->beamsFrameTransform;
   this->dataPtr->depthSensor->SetLocalPose(beamsFramePose);
   this->dataPtr->imageSensor->SetLocalPose(beamsFramePose);
 
@@ -969,12 +971,6 @@ void DopplerVelocityLog::PostUpdate(const std::chrono::steady_clock::duration &_
     // Nothing to publish
     return;
   }
-
-  // Used to populate visual aids
-  const std::string parentName =
-      this->dataPtr->depthSensor->Parent()->Name();
-  const gz::math::Pose3d beamsFramePose =
-      this->dataPtr->beamsFrameTransform * this->Pose();
 
   // Populate and publish velocity tracking estimates
   DVLVelocityTracking trackingMessage;
@@ -1027,36 +1023,46 @@ void DopplerVelocityLog::PostUpdate(const std::chrono::steady_clock::duration &_
         const auto scale = length * gz::math::Vector3d::One;
         auto * lobeConeMarkerMessage =
             this->dataPtr->beamLobesMessage.mutable_marker(2 * i);
-        lobeConeMarkerMessage->set_parent(parentName);
+        lobeConeMarkerMessage->set_parent(
+            this->dataPtr->depthSensor->Parent()->Name());
         gz::msgs::Set(lobeConeMarkerMessage->mutable_scale(), scale);
         gz::msgs::Set(lobeConeMarkerMessage->mutable_pose(),
-                      beamsFramePose * beam.Transform());
+                      this->dataPtr->depthSensor->LocalPose() *
+                      beam.Transform());
         auto * lobeCapMarkerMessage =
             this->dataPtr->beamLobesMessage.mutable_marker(2 * i + 1);
-        lobeCapMarkerMessage->set_parent(parentName);
+        lobeCapMarkerMessage->set_parent(
+            this->dataPtr->depthSensor->Parent()->Name());
         gz::msgs::Set(lobeCapMarkerMessage->mutable_scale(), scale);
         gz::msgs::Set(lobeCapMarkerMessage->mutable_pose(),
-                      beamsFramePose * beam.Transform());
+                      this->dataPtr->depthSensor->LocalPose() *
+                      beam.Transform());
       }
 
       if (this->dataPtr->visualizeBeamReflections)
       {
-        gz::math::Pose3d transform;
-        transform.Rot().SetFrom2Axes(
+        gz::math::Pose3d orientation;
+        orientation.Rot().SetFrom2Axes(
             beam.Axis(), beamTarget->pose.Pos());
         const auto scale = beamRange * gz::math::Vector3d::One;
         auto * refConeMarkerMessage =
             this->dataPtr->beamReflectionsMessage.mutable_marker(2 * i);
-        refConeMarkerMessage->set_parent(parentName);
+        refConeMarkerMessage->set_parent(
+            this->dataPtr->depthSensor->Parent()->Name());
         gz::msgs::Set(refConeMarkerMessage->mutable_scale(), scale);
-        gz::msgs::Set(refConeMarkerMessage->mutable_pose(),
-                      beamsFramePose * transform * beam.Transform());
+        gz::msgs::Set(
+            refConeMarkerMessage->mutable_pose(),
+            this->dataPtr->depthSensor->LocalPose() *
+            orientation * beam.Transform());
         auto * refCapMarkerMessage =
             this->dataPtr->beamReflectionsMessage.mutable_marker(2 * i + 1);
-        refCapMarkerMessage->set_parent(parentName);
+        refCapMarkerMessage->set_parent(
+            this->dataPtr->depthSensor->Parent()->Name());
         gz::msgs::Set(refCapMarkerMessage->mutable_scale(), scale);
-        gz::msgs::Set(refCapMarkerMessage->mutable_pose(),
-                      beamsFramePose * transform * beam.Transform());
+        gz::msgs::Set(
+            refCapMarkerMessage->mutable_pose(),
+            this->dataPtr->depthSensor->LocalPose() *
+            orientation * beam.Transform());
       }
 
       // Use shortest beam range as target range
