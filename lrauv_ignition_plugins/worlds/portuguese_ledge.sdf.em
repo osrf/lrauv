@@ -359,6 +359,13 @@ for tile in tiles:
           <property type="string" key="state">docked_collapsed</property>
         </ignition-gui>
       </plugin>
+      <!-- Sensor Data Map -->
+      <plugin filename="WorldConfigPlugin" name="Environmental Configuration">
+        <ignition-gui>
+          <title>Environmental Configuration</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </ignition-gui>
+      </plugin>
       <plugin filename="SpawnPanelPlugin" name="Spawn LRAUV Panel">
         <ignition-gui>
           <title>Spawn LRAUVs</title>
