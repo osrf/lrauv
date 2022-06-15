@@ -96,6 +96,9 @@ class DopplerVelocityLogSystemPrivate
   /// \brief Callback invoked in the rendering thread after a rendering update
   public: void OnPostRender();
 
+  /// \brief Callback invoked in the rendering thread before stopping
+  public: void OnRenderTeardown();
+
   /// \brief Overload to handle sensor creation requests.
   public: void Handle(const requests::CreateSensor &request);
 
@@ -135,6 +138,9 @@ class DopplerVelocityLogSystemPrivate
 
   /// \brief Connection to the post-render event.
   public: gz::common::ConnectionPtr postRenderConn;
+
+  /// \brief Connection to the render teardown event.
+  public: gz::common::ConnectionPtr renderTeardownConn;
 
   /// \brief Pointer to the event manager
   public: gz::sim::EventManager *eventMgr = nullptr;
@@ -200,6 +206,9 @@ void DopplerVelocityLogSystemPrivate::DoConfigure(
       _eventMgr.Connect<gz::sim::events::PostRender>(
           std::bind(&DopplerVelocityLogSystemPrivate::OnPostRender, this));
 
+  this->renderTeardownConn =
+      _eventMgr.Connect<gz::sim::events::RenderTeardown>(
+          std::bind(&DopplerVelocityLogSystemPrivate::OnRenderTeardown, this));
 
   this->eventMgr = &_eventMgr;
 }
@@ -514,6 +523,31 @@ void DopplerVelocityLogSystemPrivate::OnPostRender()
     sensor->PostUpdate(this->simTime);
   }
   this->updatedSensorIds.clear();
+}
+
+//////////////////////////////////////////////////
+void DopplerVelocityLogSystemPrivate::OnRenderTeardown()
+{
+  IGN_PROFILE("DopplerVelocityLogSystemPrivate::OnRenderTeardown");
+  for (const auto & [entityId, sensorId] : this->sensorIdPerEntity)
+  {
+    auto *sensor = dynamic_cast<DopplerVelocityLog *>(
+        this->sensorManager.Sensor(sensorId));
+    if (sensor)
+    {
+      for (auto renderingSensor : sensor->RenderingSensors())
+      {
+        renderingSensor->RemoveParent();
+      }
+      this->sensorManager.Remove(sensorId);
+    }
+    else
+    {
+      ignerr << "Internal error, missing DVL sensor for entity "
+             << "[" << entityId << "]" << std::endl;
+    }
+  }
+  this->sensorIdPerEntity.clear();
 }
 
 //////////////////////////////////////////////////
