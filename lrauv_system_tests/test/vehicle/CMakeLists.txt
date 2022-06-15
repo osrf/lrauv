@@ -17,6 +17,14 @@ target_link_libraries(test_ahrs
   )
 gtest_discover_tests(test_ahrs)
 
+add_executable(test_dvl test_dvl.cc)
+target_link_libraries(test_dvl
+  PUBLIC gtest_main
+  PRIVATE
+    ${PROJECT_NAME}_support ${IGN_GAZEBO_TARGET}
+    lrauv_ignition_plugins::dvl_velocity_tracking)
+gtest_discover_tests(test_dvl)
+
 foreach(_test
     test_battery_full_charge
     test_battery_half_charge
