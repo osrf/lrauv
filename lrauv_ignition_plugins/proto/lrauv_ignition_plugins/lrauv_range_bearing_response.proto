@@ -26,7 +26,7 @@ option java_package = "lrauv_ignition_plugins.msgs";
 option java_outer_classname = "LRAUVRangeBearingResponse";
 
 
-import "ignition/msgs/vector3d.proto";
+import "gz/msgs/vector3d.proto";
 
 message LRAUVRangeBearingResponse
 {
@@ -35,7 +35,7 @@ message LRAUVRangeBearingResponse
 
   /// \brief Bearing in terms of (r, elevation, azimuth). This is based
   /// on ground truth and not calculated using time-of-flight
-  ignition.msgs.Vector3d bearing = 2;
+  gz.msgs.Vector3d bearing = 2;
 
   /// \brief Time-Of-Flight reading. This is good for studying errors arising
   /// due to movement. But at high dt this may be prone to error.

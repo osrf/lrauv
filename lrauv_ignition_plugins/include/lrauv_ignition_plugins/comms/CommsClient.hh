@@ -25,7 +25,7 @@
 
 #include <functional>
 
-#include <ignition/transport/Node.hh>
+#include <gz/transport/Node.hh>
 
 #include "CommsPacket.hh"
 #include "TopicDefinitions.hh"
@@ -82,10 +82,10 @@ private: void ReceivedPacket(const CommsMsg& _msg)
 private: uint32_t address;
 
 /// \brief Ignition Node
-private: ignition::transport::Node node;
+private: gz::transport::Node node;
 
 /// \brief Publisher for interfacing with AcousticCommsPlugin
-private: ignition::transport::Node::Publisher transmitter;
+private: gz::transport::Node::Publisher transmitter;
 
 /// \brief Callback
 private: Callback callback;

@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <random>
 
-#include <ignition/plugin/Register.hh>
+#include <gz/plugin/Register.hh>
 
 #include <lrauv_ignition_plugins/comms/CommsModel.hh>
 #include <lrauv_ignition_plugins/comms/CommsPacket.hh>
@@ -59,9 +59,9 @@ class SimpleAcousticModel : public ICommsModel
   ///////////////////////////////////////////
   /// \brief Documentation inherited from tethys::ICommsModel
   public: void Configure(
-    const ignition::gazebo::Entity &_entity,
+    const gz::sim::Entity &_entity,
     const std::shared_ptr<const sdf::Element> &_sdf,
-    ignition::gazebo::EntityComponentManager &_ecms) override
+    gz::sim::EntityComponentManager &_ecms) override
   {
     this->address = _sdf->Get<uint32_t>("address");
     this->maxRange = _sdf->Get<uint32_t>("max_range");
@@ -92,10 +92,10 @@ class SimpleAcousticModel : public ICommsModel
   ///////////////////////////////////////////
   /// \brief Documentation inherited from tethys::ICommsModel
   public: void Step(
-    const ignition::gazebo::UpdateInfo &_info,
-    ignition::gazebo::EntityComponentManager &_ecm,
+    const gz::sim::UpdateInfo &_info,
+    gz::sim::EntityComponentManager &_ecm,
     MessageManager &_messageMgr,
-    const ignition::math::Pose3d &_pose) override
+    const gz::math::Pose3d &_pose) override
   {
     this->packets.erase(std::remove_if(
       this->packets.begin(), this->packets.end(), 

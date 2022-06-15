@@ -20,20 +20,20 @@
     </physics>
     <plugin
       filename="ignition-gazebo-physics-system"
-      name="ignition::gazebo::systems::Physics">
+      name="gz::sim::systems::Physics">
     </plugin>
     <plugin
       filename="ignition-gazebo-user-commands-system"
-      name="ignition::gazebo::systems::UserCommands">
+      name="gz::sim::systems::UserCommands">
     </plugin>
     <plugin
       filename="ignition-gazebo-scene-broadcaster-system"
-      name="ignition::gazebo::systems::SceneBroadcaster">
+      name="gz::sim::systems::SceneBroadcaster">
     </plugin>
 
     <plugin
       filename="ignition-gazebo-buoyancy-system"
-      name="ignition::gazebo::systems::Buoyancy">
+      name="gz::sim::systems::Buoyancy">
       <uniform_fluid_density>1025</uniform_fluid_density>
     </plugin>
 
@@ -42,7 +42,7 @@
       <uri>tethys</uri>
       <plugin
         filename="ignition-gazebo-detachable-joint-system"
-        name="ignition::gazebo::systems::DetachableJoint">
+        name="gz::sim::systems::DetachableJoint">
         <parent_link>base_link</parent_link>
         <child_model>__model__</child_model>
         <child_link>drop_weight</child_link>
@@ -50,7 +50,7 @@
       </plugin>
       <plugin
         filename="ignition-gazebo-joint-position-controller-system"
-        name="ignition::gazebo::systems::JointPositionController">
+        name="gz::sim::systems::JointPositionController">
         <joint_name>battery_joint</joint_name>
         <use_velocity_commands>true</use_velocity_commands>
         <cmd_max>0.0007</cmd_max>

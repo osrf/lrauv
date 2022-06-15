@@ -27,7 +27,7 @@
 #include <mutex>
 #include <string>
 
-#include <ignition/transport/Node.hh>
+#include <gz/transport/Node.hh>
 
 namespace lrauv_system_tests
 {
@@ -46,7 +46,7 @@ class Subscription
   /// message history buffer. Buffer grows indefinitely
   /// by default.
   public: void Subscribe(
-      ignition::transport::Node &_node,
+      gz::transport::Node &_node,
       const std::string &_topicName,
       size_t _messageHistoryDepth = 0u)
   {
@@ -84,6 +84,32 @@ class Subscription
   {
     std::lock_guard<std::mutex> lock(this->mutex);
     return std::move(this->messageHistory);
+  }
+
+  /// Current number of messages stored.
+  /// \return number of messages stored in the
+  /// messageHistory container.
+  public: int MessageHistorySize()
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
+    return this->messageHistory.size();
+  }
+
+  /// Read the message according to the index.
+  /// \return message in the messageHistory container
+  /// based on its index.
+  public: MessageT GetMessageByIndex(int _index)
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
+    return this->messageHistory[_index];
+  }
+
+  /// Reset the messageHistory container by clearing
+  /// existing messages.
+  public: void ResetMessageHistory()
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
+    this->messageHistory.clear();
   }
 
   /// Read last message received.

@@ -30,15 +30,15 @@ option java_outer_classname = "LRAUVInternalCommsProtos";
 /// \brief A protobuf message used internally for simulating point to
 /// point acoustic communication.
 
-import "ignition/msgs/header.proto";
-import "ignition/msgs/vector3d.proto";
+import "gz/msgs/header.proto";
+import "gz/msgs/vector3d.proto";
 
 // Mirrors SimRunStruct
 message LRAUVInternalComms
 {
   /// \brief Optional header data
-  ignition.msgs.Header header  = 1;
-  ignition.msgs.Vector3d position  = 2;
+  gz.msgs.Header header  = 1;
+  gz.msgs.Vector3d position  = 2;
   int32 to = 3;
   int32 from = 4;
   enum MessageType {

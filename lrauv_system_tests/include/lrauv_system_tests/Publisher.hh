@@ -25,7 +25,7 @@
 
 #include <chrono>
 
-#include <ignition/transport/Node.hh>
+#include <gz/transport/Node.hh>
 
 namespace lrauv_system_tests
 {
@@ -35,7 +35,7 @@ namespace lrauv_system_tests
 /// \param[in] _timeout Maximum time to wait for connections.
 /// \return true if `_publisher` has connections, false otherwise.
 bool WaitForConnections(
-  const ignition::transport::Node::Publisher &_publisher,
+  const gz::transport::Node::Publisher &_publisher,
   const std::chrono::nanoseconds _timeout);
 
 }

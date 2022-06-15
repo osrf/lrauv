@@ -23,9 +23,9 @@
 #ifndef TETHYS_CONTROLPANEL_HH_
 #define TETHYS_CONTROLPANEL_HH_
 
-#include <ignition/gui/Plugin.hh>
+#include <gz/gui/Plugin.hh>
 
-#include <ignition/transport/Node.hh>
+#include <gz/transport/Node.hh>
 
 #include "lrauv_ignition_plugins/lrauv_command.pb.h"
 
@@ -33,7 +33,7 @@ namespace tethys
 {
 
 /// \brief Control Panel for controlling the tethys using the GUI.
-class ControlPanel : public ignition::gui::Plugin
+class ControlPanel : public gz::gui::Plugin
 {
   Q_OBJECT
 
@@ -74,10 +74,10 @@ class ControlPanel : public ignition::gui::Plugin
   public: Q_INVOKABLE void SetBuoyancyEngine(qreal _volume);
 
   /// \brief Transport node
-  private: ignition::transport::Node node;
+  private: gz::transport::Node node;
 
   /// \brief Transport publisher
-  private: ignition::transport::Node::Publisher pub;
+  private: gz::transport::Node::Publisher pub;
 
   /// \brief LRAUVCommand for the last state
   private: lrauv_ignition_plugins::msgs::LRAUVCommand lastCommand;
