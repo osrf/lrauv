@@ -24,11 +24,11 @@
 #include <thread>
 #include <gtest/gtest.h>
 
-#include <ignition/gazebo/TestFixture.hh>
-#include <ignition/gazebo/Util.hh>
-#include <ignition/gazebo/World.hh>
-#include <ignition/math/SphericalCoordinates.hh>
-#include <ignition/transport/Node.hh>
+#include <gz/sim/TestFixture.hh>
+#include <gz/sim/Util.hh>
+#include <gz/sim/World.hh>
+#include <gz/math/SphericalCoordinates.hh>
+#include <gz/transport/Node.hh>
 
 #include <lrauv_ignition_plugins/lrauv_init.pb.h>
 
@@ -39,7 +39,7 @@ using namespace std::chrono_literals;
 std::atomic<std::chrono::steady_clock::duration> duration;
 
 ///////////////////////////////////////////////
-void TemperatureVeh1Cb(const ignition::msgs::Double &_msg)
+void TemperatureVeh1Cb(const gz::msgs::Double &_msg)
 {
   auto timeNow = std::chrono::duration<double>(duration.load()).count();
   auto temperature = _msg.data();
@@ -61,13 +61,13 @@ void TemperatureVeh1Cb(const ignition::msgs::Double &_msg)
 
 ///////////////////////////////////////////////
 void SpawnVehicle(
-  ignition::transport::Node::Publisher &_spawnPub,
+  gz::transport::Node::Publisher &_spawnPub,
   const std::string &_modelName,
   const double _lat, const double _lon, const double _depth,
   const int _acommsAddr)
 {
-  ignition::math::Angle lat1 = IGN_DTOR(_lat);
-  ignition::math::Angle lon1 = IGN_DTOR(_lon);
+  gz::math::Angle lat1 = IGN_DTOR(_lat);
+  gz::math::Angle lon1 = IGN_DTOR(_lon);
 
   lrauv_ignition_plugins::msgs::LRAUVInit spawnMsg;
   spawnMsg.mutable_id_()->set_data(_modelName);
@@ -82,11 +82,11 @@ void SpawnVehicle(
 //////////////////////////////////////////////////
 TEST(SensorTest, TimeInterpolation)
 {
-  ignition::common::Console::SetVerbosity(4);
+  gz::common::Console::SetVerbosity(4);
 
   // Setup fixture
-  auto fixture = std::make_unique<ignition::gazebo::TestFixture>(
-      ignition::common::joinPaths(
+  auto fixture = std::make_unique<gz::sim::TestFixture>(
+      gz::common::joinPaths(
       std::string(PROJECT_SOURCE_PATH), "worlds", "empty_environment.sdf"));
   unsigned int iterations{0u};
 
@@ -95,15 +95,15 @@ TEST(SensorTest, TimeInterpolation)
     {"vehicle1"};
 
   fixture->OnPostUpdate(
-    [&](const ignition::gazebo::UpdateInfo &_info,
-    const ignition::gazebo::EntityComponentManager &_ecm)
+    [&](const gz::sim::UpdateInfo &_info,
+    const gz::sim::EntityComponentManager &_ecm)
     {
-      auto worldEntity = ignition::gazebo::worldEntity(_ecm);
-      ignition::gazebo::World world(worldEntity);
+      auto worldEntity = gz::sim::worldEntity(_ecm);
+      gz::sim::World world(worldEntity);
       int numVehiclesSpawned{0};
       for (auto v1 : vehicles)
       {
-        if (world.ModelByName(_ecm, v1) != ignition::gazebo::kNullEntity)
+        if (world.ModelByName(_ecm, v1) != gz::sim::kNullEntity)
         {
           numVehiclesSpawned++;
         }
@@ -127,11 +127,11 @@ TEST(SensorTest, TimeInterpolation)
 
   // Change the dataconfig
   igndbg << "Switching file" <<std::endl;
-  ignition::transport::Node node;
-  auto configPub = node.Advertise<ignition::msgs::StringMsg>(
+  gz::transport::Node node;
+  auto configPub = node.Advertise<gz::msgs::StringMsg>(
     "/world/science_sensor/environment_data_path");
-  ignition::msgs::StringMsg configMsg;
-  configMsg.set_data(ignition::common::joinPaths(
+  gz::msgs::StringMsg configMsg;
+  configMsg.set_data(gz::common::joinPaths(
       std::string(PROJECT_SOURCE_PATH), "data", "minimal_time_varying.csv"));
   for (; !configPub.HasConnections() && sleep < maxSleep; ++sleep)
   {

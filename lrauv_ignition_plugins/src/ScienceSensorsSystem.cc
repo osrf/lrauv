@@ -68,7 +68,7 @@ class tethys::ScienceSensorsSystemPrivate
   public: std::mutex dataMutex;
 
   /// \brief Set to true when there is a new file to be read.
-  public: bool newDataAvailable{true};
+  public: std::atomic<bool> newDataAvailable{true};
 
   /// \brief Reads csv file and populate various data fields
   /// \param[in] _ecm Immutable reference to the ECM
@@ -174,9 +174,6 @@ class tethys::ScienceSensorsSystemPrivate
   /// runtime when the first vehicle is spawned. Assume the coordinates are
   /// only shifted once.
   public: bool sphericalCoordinatesInitialized{false};
-
-  /// \brief Mutex for writing to world origin association to lat/long
-  public: std::mutex mtx;
 
   //////////////////////////////////
   // Variables for data manipulation
@@ -400,10 +397,6 @@ bool ScienceSensorsSystemPrivate::ReadData(
            << "initialized." << std::endl;
     return false;
   }
-
-  // Lock modifications to world origin spherical association until finish
-  // reading and transforming data
-  std::lock_guard<std::mutex> lock(mtx);
 
   // Reset all data
   timeSpaceCoords.clear();
@@ -744,9 +737,9 @@ void ScienceSensorsSystem::PostUpdate(const gz::sim::UpdateInfo &_info,
     }
   }
   else{
-    std::lock_guard<std::mutex> lock(this->dataPtr->dataMutex);
-    if (this->dataPtr->newDataAvailable)
+    if (this->dataPtr->newDataAvailable.load())
     {
+      std::lock_guard<std::mutex> lock(this->dataPtr->dataMutex);
       auto result = this->dataPtr->ReadData(_ecm);
       this->dataPtr->newDataAvailable = !result;
     }
