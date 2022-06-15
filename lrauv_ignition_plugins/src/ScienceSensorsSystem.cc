@@ -22,18 +22,17 @@
 
 #include <mutex>
 
-#include <ignition/msgs/pointcloud_packed.pb.h>
+#include <gz/msgs/pointcloud_packed.pb.h>
 
-#include <ignition/common/Profiler.hh>
-#include <ignition/common/SystemPaths.hh>
-#include <ignition/gazebo/World.hh>
-#include <ignition/math/SphericalCoordinates.hh>
-#include <ignition/math/VolumetricGridLookupField.hh>
-#include <ignition/msgs/Utility.hh>
-#include <ignition/msgs/stringmsg.pb.h>
-#include <ignition/plugin/Register.hh>
-#include <ignition/transport/Node.hh>
 
+#include <gz/common/Profiler.hh>
+#include <gz/common/SystemPaths.hh>
+#include <gz/sim/World.hh>
+#include <gz/math/SphericalCoordinates.hh>
+#include <gz/math/VolumetricGridLookupField.hh>
+#include <gz/msgs/Utility.hh>
+#include <gz/plugin/Register.hh>
+#include <gz/transport/Node.hh>
 #include <pcl/conversions.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/passthrough.h>
@@ -55,18 +54,25 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Called when plugin is asked to reload file.
   /// \param[in] _filepath Path to file to reload.
-  public: void OnReloadData(const ignition::msgs::StringMsg &_filepath)
+  public: void OnReloadData(const gz::msgs::StringMsg &_filepath)
   {
     igndbg << "Reloading file " << _filepath.data() << "\n";
 
     // Trigger reload and reread data
-    this->sphericalCoordinatesInitialized = false;
+    std::lock_guard<std::mutex> lock(this->dataMutex);
+    this->newDataAvailable = true;
     this->dataPath = _filepath.data();
   }
 
+  /// \brief mutex for updating data.
+  public: std::mutex dataMutex;
+
+  /// \brief Set to true when there is a new file to be read.
+  public: std::atomic<bool> newDataAvailable{true};
+
   /// \brief Reads csv file and populate various data fields
   /// \param[in] _ecm Immutable reference to the ECM
-  public: void ReadData(const ignition::gazebo::EntityComponentManager &_ecm);
+  public: bool ReadData(const gz::sim::EntityComponentManager &_ecm);
 
   //////////////////////////////
   // Functions for communication
@@ -77,30 +83,32 @@ class tethys::ScienceSensorsSystemPrivate
   /// \brief Service callback for a point cloud with the latest position data.
   /// \param[in] _res Point cloud to return
   /// \return True
-  public: bool PointCloudService(ignition::msgs::PointCloudPacked &_res);
+  public: bool PointCloudService(gz::msgs::PointCloudPacked &_res);
 
   /// \brief Service callback for a float vector with the latest temperature data.
   /// \param[in] _res Float vector to return
   /// \return True
-  public: bool TemperatureService(ignition::msgs::Float_V &_res);
+  public: bool TemperatureService(gz::msgs::Float_V &_res);
 
   /// \brief Service callback for a float vector with the latest chlorophyll data.
   /// \param[in] _res Float vector to return
   /// \return True
-  public: bool ChlorophyllService(ignition::msgs::Float_V &_res);
+  public: bool ChlorophyllService(gz::msgs::Float_V &_res);
 
   /// \brief Service callback for a float vector with the latest salinity data.
   /// \param[in] _res Float vector to return
   /// \return True
-  public: bool SalinityService(ignition::msgs::Float_V &_res);
+  public: bool SalinityService(gz::msgs::Float_V &_res);
 
   /// \brief Returns a point cloud message populated with the latest sensor data
-  public: ignition::msgs::PointCloudPacked PointCloudMsg();
+  public: gz::msgs::PointCloudPacked PointCloudMsg();
 
+  /// \brief Interpolate in time between two sensor data points
   public: float InterpolateInTime(
-    const ignition::math::Vector3d &_point,
-    const double simTimeSeconds,
-    const std::vector<std::vector<float>> &_dataArray);
+    const gz::math::Vector3d &_point,
+    const double _simTimeSeconds,
+    const std::vector<std::vector<float>> &_dataArray,
+    const double _tol = 1e-10);
 
   ///////////////////////////////
   // Constants for data manipulation
@@ -144,7 +152,7 @@ class tethys::ScienceSensorsSystemPrivate
 
   /// \brief Coordinates where sensor location was last interpolated.
   /// Helps to determine whether sensor location needs to be updated
-  public: ignition::math::Vector3d lastSensorPosENU = {
+  public: gz::math::Vector3d lastSensorPosENU = {
     std::numeric_limits<double>::max(),
     std::numeric_limits<double>::max(),
     std::numeric_limits<double>::max()};
@@ -167,9 +175,6 @@ class tethys::ScienceSensorsSystemPrivate
   /// only shifted once.
   public: bool sphericalCoordinatesInitialized{false};
 
-  /// \brief Mutex for writing to world origin association to lat/long
-  public: std::mutex mtx;
-
   //////////////////////////////////
   // Variables for data manipulation
 
@@ -188,12 +193,13 @@ class tethys::ScienceSensorsSystemPrivate
   /// the visuallization.
   public: std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> timeSpaceCoords;
 
-  public: std::vector<std::vector<ignition::math::Vector3d>>
+
+  public: std::vector<std::vector<gz::math::Vector3d>>
     timeSpaceCoordsLatLon;
 
   /// \brief Spatial index of data.
   /// Vector size: number of time slices. Indices correspond to those of
-  public: std::vector<ignition::math::VolumetricGridLookupField<double>>
+  public: std::vector<gz::math::VolumetricGridLookupField<double>>
     timeSpaceIndex;
 
   /// \brief Science data.
@@ -218,34 +224,34 @@ class tethys::ScienceSensorsSystemPrivate
   // Variables for communication
 
   /// \brief World object to access world properties.
-  public: ignition::gazebo::World world;
+  public: gz::sim::World world;
 
   /// \brief Node for communication
-  public: ignition::transport::Node node;
+  public: gz::transport::Node node;
 
   /// \brief Publisher for point clouds representing positions for science data
-  public: ignition::transport::Node::Publisher cloudPub;
+  public: gz::transport::Node::Publisher cloudPub;
 
   /// \brief Name used for both the point cloud topic and service
   public: std::string cloudTopic {"/science_data"};
 
   /// \brief Publisher for temperature
-  public: ignition::transport::Node::Publisher tempPub;
+  public: gz::transport::Node::Publisher tempPub;
 
   /// \brief Publisher for chlorophyll
-  public: ignition::transport::Node::Publisher chlorPub;
+  public: gz::transport::Node::Publisher chlorPub;
 
   /// \brief Publisher for salinity
-  public: ignition::transport::Node::Publisher salPub;
+  public: gz::transport::Node::Publisher salPub;
 
   /// \brief Temperature message
-  public: ignition::msgs::Float_V tempMsg;
+  public: gz::msgs::Float_V tempMsg;
 
   /// \brief Chlorophyll message
-  public: ignition::msgs::Float_V chlorMsg;
+  public: gz::msgs::Float_V chlorMsg;
 
   /// \brief Salinity message
-  public: ignition::msgs::Float_V salMsg;
+  public: gz::msgs::Float_V salMsg;
 
   /// \brief Publish a few more times for visualization plugin to get them
   public: int repeatPubTimes = 1;
@@ -261,19 +267,19 @@ class tethys::ScienceSensorsSystemPrivate
 /// \param[in] _parent Parent entity component
 template<typename SensorType>
 void createSensor(ScienceSensorsSystem *_system,
-    ignition::gazebo::EntityComponentManager &_ecm,
-    const ignition::gazebo::Entity &_entity,
-    const ignition::gazebo::components::CustomSensor *_custom,
-    const ignition::gazebo::components::ParentEntity *_parent)
+    gz::sim::EntityComponentManager &_ecm,
+    const gz::sim::Entity &_entity,
+    const gz::sim::components::CustomSensor *_custom,
+    const gz::sim::components::ParentEntity *_parent)
 {
-  auto type = ignition::sensors::customType(_custom->Data());
+  auto type = gz::sensors::customType(_custom->Data());
   if (SensorType::kTypeStr != type)
   {
     return;
   }
   // Get sensor's scoped name without the world
-  auto sensorScopedName = ignition::gazebo::removeParentScope(
-      ignition::gazebo::scopedName(_entity, _ecm, "::", false), "::");
+  auto sensorScopedName = gz::sim::removeParentScope(
+      gz::sim::scopedName(_entity, _ecm, "::", false), "::");
   sdf::Sensor data = _custom->Data();
   data.SetName(sensorScopedName);
 
@@ -284,7 +290,7 @@ void createSensor(ScienceSensorsSystem *_system,
     data.SetTopic(topic);
   }
 
-  ignition::sensors::SensorFactory sensorFactory;
+  gz::sensors::SensorFactory sensorFactory;
   auto sensor = sensorFactory.CreateSensor<SensorType>(data);
   if (nullptr == sensor)
   {
@@ -294,13 +300,13 @@ void createSensor(ScienceSensorsSystem *_system,
   }
 
   // Set sensor parent
-  auto parentName = _ecm.Component<ignition::gazebo::components::Name>(
+  auto parentName = _ecm.Component<gz::sim::components::Name>(
       _parent->Data())->Data();
   sensor->SetParent(parentName);
 
   // Set topic on Gazebo
   _ecm.CreateComponent(_entity,
-      ignition::gazebo::components::SensorTopic(sensor->Topic()));
+      gz::sim::components::SensorTopic(sensor->Topic()));
 
   // Keep track of this sensor
   _system->entitySensorMap.insert(std::make_pair(_entity,
@@ -318,29 +324,38 @@ ScienceSensorsSystem::ScienceSensorsSystem()
 
 /////////////////////////////////////////////////
 float ScienceSensorsSystemPrivate::InterpolateInTime(
-  const ignition::math::Vector3d &_point,
+  const gz::math::Vector3d &_point,
   const double _simTimeSeconds,
-  const std::vector<std::vector<float>> &_dataArray)
+  const std::vector<std::vector<float>> &_dataArray,
+  const double _tol)
 {
+  // Get spatial interpolators for current time
   const auto& timeslice1 = this->timeSpaceIndex[this->timeIdx];
   auto interpolatorsTime1 = timeslice1.GetInterpolators(_point);
 
-  auto nextTimeIdx = std::min(this->timeIdx + 1,
-    this->timestamps.size() - 1);
-  const auto& timeslice2 = this->timeSpaceIndex[nextTimeIdx];
-  auto interpolatorsTime2 = timeslice2.GetInterpolators(_point);
-
   if (interpolatorsTime1.size() == 0) return std::nanf("");
   if (!interpolatorsTime1[0].index.has_value()) return std::nanf("");
-
-  if (interpolatorsTime2.size() == 0) return std::nanf("");
-  if (!interpolatorsTime2[0].index.has_value()) return std::nanf("");
 
   const auto data1 = timeslice1.EstimateValueUsingTrilinear(
     interpolatorsTime1,
     _point,
     _dataArray[this->timeIdx]
   );
+
+  if (this->timeIdx + 1 >= this->timeSpaceIndex.size())
+  {
+    // If we reached the end of the dataset then return the last value
+    return data1.value_or(std::nanf(""));
+  }
+
+  // Get spatial interpolators for the next time
+  auto nextTimeIdx = this->timeIdx + 1;
+  const auto& timeslice2 = this->timeSpaceIndex[nextTimeIdx];
+  auto interpolatorsTime2 = timeslice2.GetInterpolators(_point);
+
+  if (interpolatorsTime2.size() == 0) return std::nanf("");
+  if (!interpolatorsTime2[0].index.has_value()) return std::nanf("");
+
   const auto data2 = timeslice2.EstimateValueUsingTrilinear(
     interpolatorsTime2,
     _point,
@@ -352,12 +367,9 @@ float ScienceSensorsSystemPrivate::InterpolateInTime(
   auto nextTimeStamp = this->timestamps[nextTimeIdx];
 
   auto dist = nextTimeStamp - prevTimeStamp;
-  if (dist == 0)
+  if (dist < _tol)
   {
-    if (data1.has_value())
-      return data1.value();
-    else
-      return std::nanf("");
+    return data1.value_or(std::nanf(""));
   }
   else
   {
@@ -374,8 +386,8 @@ float ScienceSensorsSystemPrivate::InterpolateInTime(
 }
 
 /////////////////////////////////////////////////
-void ScienceSensorsSystemPrivate::ReadData(
-    const ignition::gazebo::EntityComponentManager &_ecm)
+bool ScienceSensorsSystemPrivate::ReadData(
+    const gz::sim::EntityComponentManager &_ecm)
 {
   IGN_PROFILE("ScienceSensorsSystemPrivate::ReadData");
 
@@ -383,12 +395,8 @@ void ScienceSensorsSystemPrivate::ReadData(
   {
     ignerr << "Trying to read data before spherical coordinates were "
            << "initialized." << std::endl;
-    return;
+    return false;
   }
-
-  // Lock modifications to world origin spherical association until finish
-  // reading and transforming data
-  std::lock_guard<std::mutex> lock(mtx);
 
   // Reset all data
   timeSpaceCoords.clear();
@@ -402,6 +410,12 @@ void ScienceSensorsSystemPrivate::ReadData(
 
   std::fstream fs;
   fs.open(this->dataPath, std::ios::in);
+
+  if (!fs.is_open())
+  {
+    ignerr << "Failed to open file [" << this->dataPath << "]" << std::endl;
+    return false;
+  }
 
   std::vector<std::string> fieldnames;
   std::string line, word, temp;
@@ -590,6 +604,8 @@ void ScienceSensorsSystemPrivate::ReadData(
   // Make sure the number of timestamps in the 1D indexing array, and the
   // number of time slices of data, are the same.
   assert(this->timestamps.size() == this->timeSpaceCoords.size());
+
+  return true;
 }
 
 /////////////////////////////////////////////////
@@ -607,19 +623,19 @@ void ScienceSensorsSystemPrivate::PublishData()
 
 /////////////////////////////////////////////////
 void ScienceSensorsSystem::Configure(
-  const ignition::gazebo::Entity &_entity,
+  const gz::sim::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
-  ignition::gazebo::EntityComponentManager &_ecm,
-  ignition::gazebo::EventManager &_eventMgr)
+  gz::sim::EntityComponentManager &_ecm,
+  gz::sim::EventManager &_eventMgr)
 {
-  this->dataPtr->world = ignition::gazebo::World(_entity);
+  this->dataPtr->world = gz::sim::World(_entity);
 
   if (_sdf->HasElement("data_path"))
   {
     this->dataPtr->dataPath = _sdf->Get<std::string>("data_path");
   }
 
-  ignition::common::SystemPaths sysPaths;
+  gz::common::SystemPaths sysPaths;
   std::string fullPath = sysPaths.FindFile(this->dataPtr->dataPath);
   if (fullPath.empty())
   {
@@ -644,7 +660,7 @@ void ScienceSensorsSystemPrivate::StartTransport()
 {
   // Advertise cloud as a service for requests on-demand, and a topic for updates
   this->cloudPub = this->node.Advertise<
-      ignition::msgs::PointCloudPacked>(this->cloudTopic);
+      gz::msgs::PointCloudPacked>(this->cloudTopic);
 
   this->node.Advertise(this->cloudTopic,
       &ScienceSensorsSystemPrivate::PointCloudService, this);
@@ -652,33 +668,33 @@ void ScienceSensorsSystemPrivate::StartTransport()
   // Advertise science data, also as service and topics
   std::string temperatureTopic{"/temperature"};
   this->tempPub = this->node.Advertise<
-      ignition::msgs::Float_V>(temperatureTopic);
+      gz::msgs::Float_V>(temperatureTopic);
   this->node.Advertise(temperatureTopic,
       &ScienceSensorsSystemPrivate::TemperatureService, this);
 
   std::string chlorophyllTopic{"/chloropyll"};
   this->chlorPub = this->node.Advertise<
-      ignition::msgs::Float_V>(chlorophyllTopic);
+      gz::msgs::Float_V>(chlorophyllTopic);
   this->node.Advertise(chlorophyllTopic,
       &ScienceSensorsSystemPrivate::ChlorophyllService, this);
 
   std::string salinityTopic{"/salinity"};
   this->salPub = this->node.Advertise<
-      ignition::msgs::Float_V>(salinityTopic);
+      gz::msgs::Float_V>(salinityTopic);
   this->node.Advertise(salinityTopic,
       &ScienceSensorsSystemPrivate::SalinityService, this);
 }
 
 /////////////////////////////////////////////////
 void ScienceSensorsSystem::PreUpdate(
-  const ignition::gazebo::UpdateInfo &,
-  ignition::gazebo::EntityComponentManager &_ecm)
+  const gz::sim::UpdateInfo &,
+  gz::sim::EntityComponentManager &_ecm)
 {
-  _ecm.EachNew<ignition::gazebo::components::CustomSensor,
-               ignition::gazebo::components::ParentEntity>(
-    [&](const ignition::gazebo::Entity &_entity,
-        const ignition::gazebo::components::CustomSensor *_custom,
-        const ignition::gazebo::components::ParentEntity *_parent)->bool
+  _ecm.EachNew<gz::sim::components::CustomSensor,
+               gz::sim::components::ParentEntity>(
+    [&](const gz::sim::Entity &_entity,
+        const gz::sim::components::CustomSensor *_custom,
+        const gz::sim::components::ParentEntity *_parent)->bool
       {
         createSensor<SalinitySensor>(this, _ecm, _entity, _custom, _parent);
         createSensor<TemperatureSensor>(this, _ecm, _entity, _custom, _parent);
@@ -689,8 +705,8 @@ void ScienceSensorsSystem::PreUpdate(
 }
 
 /////////////////////////////////////////////////
-void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
-  const ignition::gazebo::EntityComponentManager &_ecm)
+void ScienceSensorsSystem::PostUpdate(const gz::sim::UpdateInfo &_info,
+  const gz::sim::EntityComponentManager &_ecm)
 {
   IGN_PROFILE_THREAD_NAME("ScienceSensorsSystem PostUpdate");
   IGN_PROFILE("ScienceSensorsSystem::PostUpdate");
@@ -707,9 +723,10 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     if (this->dataPtr->world.SphericalCoordinates(_ecm))
     {
       this->dataPtr->sphericalCoordinatesInitialized = true;
-
       this->dataPtr->StartTransport();
+      std::lock_guard<std::mutex> lock(this->dataPtr->dataMutex);
       this->dataPtr->ReadData(_ecm);
+      this->dataPtr->newDataAvailable = false;
     }
     else
     {
@@ -717,6 +734,14 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       ignwarn << "Science sensor data won't be published because spherical "
               << "coordinates are unknown." << std::endl;
       return;
+    }
+  }
+  else{
+    if (this->dataPtr->newDataAvailable.load())
+    {
+      std::lock_guard<std::mutex> lock(this->dataPtr->dataMutex);
+      auto result = this->dataPtr->ReadData(_ecm);
+      this->dataPtr->newDataAvailable = !result;
     }
   }
 
@@ -745,7 +770,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   }
 
   // Sensor position to interpolate for
-  ignition::math::Vector3d sensorPosENU;
+  gz::math::Vector3d sensorPosENU;
 
 
   // For each sensor, interpolate using existing data at neighboring positions,
@@ -753,9 +778,9 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
   for (auto &[entity, sensor] : this->entitySensorMap)
   {
     IGN_PROFILE("ScienceSensorsSystem::LookupInterpolators");
-    auto sensorPosENU = ignition::gazebo::worldPose(entity, _ecm).Pos();
-    auto spherical = ignition::gazebo::sphericalCoordinates(entity, _ecm).value();
-    auto sphericalDepthCorrected = ignition::math::Vector3d{spherical.X(), spherical.Y(),
+    auto sensorPosENU = gz::sim::worldPose(entity, _ecm).Pos();
+    auto spherical = gz::sim::sphericalCoordinates(entity, _ecm).value();
+    auto sphericalDepthCorrected = gz::math::Vector3d{spherical.X(), spherical.Y(),
       -spherical.Z()};
 
     if (auto casted = std::dynamic_pointer_cast<SalinitySensor>(sensor))
@@ -770,7 +795,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
       const auto temp = this->dataPtr->InterpolateInTime(
         sphericalDepthCorrected, simTimeSeconds, this->dataPtr->temperatureArr);
 
-      ignition::math::Temperature tempC;
+      gz::math::Temperature tempC;
       tempC.SetCelsius(temp);
       casted->SetData(tempC);
     }
@@ -792,7 +817,7 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         sphericalDepthCorrected, simTimeSeconds, this->dataPtr->eastCurrentArr);
 
 
-      ignition::math::Vector3d current(nCurr, eCurr, 0);
+      gz::math::Vector3d current(nCurr, eCurr, 0);
       casted->SetData(current);
     }
     else
@@ -807,13 +832,13 @@ void ScienceSensorsSystem::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
 
 //////////////////////////////////////////////////
 void ScienceSensorsSystem::RemoveSensorEntities(
-    const ignition::gazebo::EntityComponentManager &_ecm)
+    const gz::sim::EntityComponentManager &_ecm)
 {
   IGN_PROFILE("ScienceSensorsSystem::RemoveSensorEntities");
 
-  _ecm.EachRemoved<ignition::gazebo::components::CustomSensor>(
-    [&](const ignition::gazebo::Entity &_entity,
-        const ignition::gazebo::components::CustomSensor *)->bool
+  _ecm.EachRemoved<gz::sim::components::CustomSensor>(
+    [&](const gz::sim::Entity &_entity,
+        const gz::sim::components::CustomSensor *)->bool
       {
         auto sensorId = this->entitySensorMap.find(_entity);
         if (sensorId == this->entitySensorMap.end())
@@ -833,7 +858,7 @@ void ScienceSensorsSystem::RemoveSensorEntities(
 
 //////////////////////////////////////////////////
 bool ScienceSensorsSystemPrivate::PointCloudService(
-    ignition::msgs::PointCloudPacked &_res)
+    gz::msgs::PointCloudPacked &_res)
 {
   _res = this->PointCloudMsg();
   return true;
@@ -841,7 +866,7 @@ bool ScienceSensorsSystemPrivate::PointCloudService(
 
 //////////////////////////////////////////////////
 bool ScienceSensorsSystemPrivate::TemperatureService(
-    ignition::msgs::Float_V &_res)
+    gz::msgs::Float_V &_res)
 {
   _res = this->tempMsg;
   return true;
@@ -849,7 +874,7 @@ bool ScienceSensorsSystemPrivate::TemperatureService(
 
 //////////////////////////////////////////////////
 bool ScienceSensorsSystemPrivate::ChlorophyllService(
-    ignition::msgs::Float_V &_res)
+    gz::msgs::Float_V &_res)
 {
   _res = this->chlorMsg;
   return true;
@@ -857,18 +882,18 @@ bool ScienceSensorsSystemPrivate::ChlorophyllService(
 
 //////////////////////////////////////////////////
 bool ScienceSensorsSystemPrivate::SalinityService(
-    ignition::msgs::Float_V &_res)
+    gz::msgs::Float_V &_res)
 {
   _res = this->salMsg;
   return true;
 }
 
 //////////////////////////////////////////////////
-ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
+gz::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
 {
   IGN_PROFILE("ScienceSensorsSystemPrivate::PointCloudMsg");
 
-  ignition::msgs::PointCloudPacked msg;
+  gz::msgs::PointCloudPacked msg;
 
   if (this->timeIdx < 0 || this->timeIdx >= this->timestamps.size())
   {
@@ -877,9 +902,9 @@ ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
     return msg;
   }
 
-  ignition::msgs::InitPointCloudPacked(msg, "world", true,
+  gz::msgs::InitPointCloudPacked(msg, "world", true,
     {
-      {"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32},
+      {"xyz", gz::msgs::PointCloudPacked::Field::FLOAT32},
     });
 
   msg.mutable_header()->mutable_stamp()->set_sec(this->timestamps[this->timeIdx]);
@@ -910,7 +935,7 @@ ignition::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
 
 IGNITION_ADD_PLUGIN(
   tethys::ScienceSensorsSystem,
-  ignition::gazebo::System,
+  gz::sim::System,
   tethys::ScienceSensorsSystem::ISystemConfigure,
   tethys::ScienceSensorsSystem::ISystemPreUpdate,
   tethys::ScienceSensorsSystem::ISystemPostUpdate)

@@ -22,20 +22,20 @@
 
 #include <chrono>
 
-#include <ignition/gazebo/Util.hh>
-#include <ignition/gazebo/components/AngularVelocity.hh>
-#include <ignition/gazebo/components/JointPosition.hh>
-#include <ignition/gazebo/components/JointVelocity.hh>
-#include <ignition/gazebo/components/LinearVelocity.hh>
-#include <ignition/gazebo/components/Pose.hh>
-#include <ignition/msgs/double.pb.h>
-#include <ignition/msgs/empty.pb.h>
-#include <ignition/msgs/header.pb.h>
-#include <ignition/msgs/navsat.pb.h>
-#include <ignition/msgs/time.pb.h>
-#include <ignition/msgs/vector3d.pb.h>
-#include <ignition/plugin/Register.hh>
-#include <ignition/transport/TopicUtils.hh>
+#include <gz/sim/Util.hh>
+#include <gz/sim/components/AngularVelocity.hh>
+#include <gz/sim/components/JointPosition.hh>
+#include <gz/sim/components/JointVelocity.hh>
+#include <gz/sim/components/LinearVelocity.hh>
+#include <gz/sim/components/Pose.hh>
+#include <gz/msgs/double.pb.h>
+#include <gz/msgs/empty.pb.h>
+#include <gz/msgs/header.pb.h>
+#include <gz/msgs/navsat.pb.h>
+#include <gz/msgs/time.pb.h>
+#include <gz/msgs/vector3d.pb.h>
+#include <gz/plugin/Register.hh>
+#include <gz/transport/TopicUtils.hh>
 
 #include "lrauv_ignition_plugins/lrauv_command.pb.h"
 #include "lrauv_ignition_plugins/lrauv_state.pb.h"
@@ -96,72 +96,72 @@ double pressureFromDepthLatitude(double _depth, double _lat)
 }
 
 void AddAngularVelocityComponent(
-  const ignition::gazebo::Entity &_entity,
-  ignition::gazebo::EntityComponentManager &_ecm)
+  const gz::sim::Entity &_entity,
+  gz::sim::EntityComponentManager &_ecm)
 {
-  if (!_ecm.Component<ignition::gazebo::components::AngularVelocity>(
+  if (!_ecm.Component<gz::sim::components::AngularVelocity>(
       _entity))
   {
     _ecm.CreateComponent(_entity,
-      ignition::gazebo::components::AngularVelocity());
+      gz::sim::components::AngularVelocity());
   }
 
   // Create an angular velocity component if one is not present.
-  if (!_ecm.Component<ignition::gazebo::components::WorldAngularVelocity>(
+  if (!_ecm.Component<gz::sim::components::WorldAngularVelocity>(
       _entity))
   {
     _ecm.CreateComponent(_entity,
-      ignition::gazebo::components::WorldAngularVelocity());
+      gz::sim::components::WorldAngularVelocity());
   }
 }
 
 void AddWorldPose (
-  const ignition::gazebo::Entity &_entity,
-  ignition::gazebo::EntityComponentManager &_ecm)
+  const gz::sim::Entity &_entity,
+  gz::sim::EntityComponentManager &_ecm)
 {
-  if (!_ecm.Component<ignition::gazebo::components::WorldPose>(
+  if (!_ecm.Component<gz::sim::components::WorldPose>(
       _entity))
   {
     _ecm.CreateComponent(_entity,
-      ignition::gazebo::components::WorldPose());
+      gz::sim::components::WorldPose());
   }
 }
 
 void AddJointPosition(
-  const ignition::gazebo::Entity &_entity,
-  ignition::gazebo::EntityComponentManager &_ecm)
+  const gz::sim::Entity &_entity,
+  gz::sim::EntityComponentManager &_ecm)
 {
   auto jointPosComp =
-      _ecm.Component<ignition::gazebo::components::JointPosition>(_entity);
+      _ecm.Component<gz::sim::components::JointPosition>(_entity);
   if (jointPosComp == nullptr)
   {
     _ecm.CreateComponent(
-      _entity, ignition::gazebo::components::JointPosition());
+      _entity, gz::sim::components::JointPosition());
   }
 }
 
 void AddJointVelocity(
-  const ignition::gazebo::Entity &_entity,
-  ignition::gazebo::EntityComponentManager &_ecm)
+  const gz::sim::Entity &_entity,
+  gz::sim::EntityComponentManager &_ecm)
 {
   auto jointPosComp =
-      _ecm.Component<ignition::gazebo::components::JointVelocity>(_entity);
+      _ecm.Component<gz::sim::components::JointVelocity>(_entity);
   if (jointPosComp == nullptr)
   {
     _ecm.CreateComponent(
-      _entity, ignition::gazebo::components::JointVelocity());
+      _entity, gz::sim::components::JointVelocity());
   }
 }
 
 void AddWorldLinearVelocity(
-  const ignition::gazebo::Entity &_entity,
-  ignition::gazebo::EntityComponentManager &_ecm)
+  const gz::sim::Entity &_entity,
+  gz::sim::EntityComponentManager &_ecm)
 {
-  if (!_ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
+  if (!_ecm.Component<gz::sim::components::WorldLinearVelocity>(
       _entity))
   {
     _ecm.CreateComponent(_entity,
-      ignition::gazebo::components::WorldLinearVelocity());
+      gz::sim::components::WorldLinearVelocity());
   }
 }
 
@@ -174,7 +174,7 @@ void AddWorldLinearVelocity(
 ///     X: Forward
 ///     Y: Starboard / Right
 ///     Z: Up
-ignition::math::Vector3d SFUToFSK(const ignition::math::Vector3d &_sfu)
+gz::math::Vector3d SFUToFSK(const gz::math::Vector3d &_sfu)
 {
   return {_sfu.Y(), _sfu.X(), -_sfu.Z()};
 }
@@ -182,23 +182,23 @@ ignition::math::Vector3d SFUToFSK(const ignition::math::Vector3d &_sfu)
 /// \brief Convert a pose in ENU to NED.
 /// \param[in] _enu A pose in ENU (Gazebo's world frame)
 /// \return A pose in NED (what the controller expects)
-ignition::math::Pose3d ENUToNED(const ignition::math::Pose3d &_enu)
+gz::math::Pose3d ENUToNED(const gz::math::Pose3d &_enu)
 {
   return {_enu.Y(), _enu.X(), -_enu.Z(),
           _enu.Pitch(), _enu.Roll(), -_enu.Yaw()};
 }
 
 // Convert a vector in ENU to NED.
-ignition::math::Vector3d ENUToNED(const ignition::math::Vector3d &_enu)
+gz::math::Vector3d ENUToNED(const gz::math::Vector3d &_enu)
 {
   return {_enu.Y(), _enu.X(), -_enu.Z()};
 }
 
 void TethysCommPlugin::Configure(
-  const ignition::gazebo::Entity &_entity,
+  const gz::sim::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
-  ignition::gazebo::EntityComponentManager &_ecm,
-  ignition::gazebo::EventManager &_eventMgr)
+  gz::sim::EntityComponentManager &_ecm,
+  gz::sim::EventManager &_eventMgr)
 {
   // Get namespace
   if (_sdf->HasElement("namespace"))
@@ -248,7 +248,7 @@ void TethysCommPlugin::Configure(
 
   std::string navSatTopic = this->ns + "/navsat";
   this->navSatPub =
-    this->node.Advertise<ignition::msgs::NavSat>(navSatTopic);
+    this->node.Advertise<gz::msgs::NavSat>(navSatTopic);
   if (!this->navSatPub)
   {
     ignerr << "Error advertising topic [" << navSatTopic << "]" << std::endl;
@@ -260,40 +260,40 @@ void TethysCommPlugin::Configure(
 
 void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
 {
-  this->thrusterTopic = ignition::transport::TopicUtils::AsValidTopic(
+  this->thrusterTopic = gz::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/joint/" + this->thrusterTopic);
   this->thrusterPub =
-    this->node.Advertise<ignition::msgs::Double>(this->thrusterTopic);
+    this->node.Advertise<gz::msgs::Double>(this->thrusterTopic);
   if (!this->thrusterPub)
   {
     ignerr << "Error advertising topic [" << this->thrusterTopic << "]"
       << std::endl;
   }
 
-  this->rudderTopic = ignition::transport::TopicUtils::AsValidTopic(
+  this->rudderTopic = gz::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/joint/" + this->rudderTopic);
   this->rudderPub =
-    this->node.Advertise<ignition::msgs::Double>(this->rudderTopic);
+    this->node.Advertise<gz::msgs::Double>(this->rudderTopic);
   if (!this->rudderPub)
   {
     ignerr << "Error advertising topic [" << this->rudderTopic << "]"
       << std::endl;
   }
 
-  this->elevatorTopic = ignition::transport::TopicUtils::AsValidTopic(
+  this->elevatorTopic = gz::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/joint/" + this->elevatorTopic);
   this->elevatorPub =
-    this->node.Advertise<ignition::msgs::Double>(this->elevatorTopic);
+    this->node.Advertise<gz::msgs::Double>(this->elevatorTopic);
   if (!this->elevatorPub)
   {
     ignerr << "Error advertising topic [" << this->elevatorTopic << "]"
       << std::endl;
   }
 
-  this->massShifterTopic = ignition::transport::TopicUtils::AsValidTopic(
+  this->massShifterTopic = gz::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/joint/" + this->massShifterTopic);
   this->massShifterPub =
-    this->node.Advertise<ignition::msgs::Double>(this->massShifterTopic);
+    this->node.Advertise<gz::msgs::Double>(this->massShifterTopic);
   if (!this->massShifterPub)
   {
     ignerr << "Error advertising topic [" << this->massShifterTopic << "]"
@@ -301,10 +301,10 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   }
 
   // Publisher for command to buoyancy engine plugin
-  this->buoyancyEngineCmdTopic = ignition::transport::TopicUtils::AsValidTopic(
+  this->buoyancyEngineCmdTopic = gz::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/" + this->buoyancyEngineCmdTopic);
   this->buoyancyEnginePub =
-    this->node.Advertise<ignition::msgs::Double>(this->buoyancyEngineCmdTopic);
+    this->node.Advertise<gz::msgs::Double>(this->buoyancyEngineCmdTopic);
   if (!this->buoyancyEnginePub)
   {
     ignerr << "Error advertising topic [" << this->buoyancyEngineCmdTopic << "]"
@@ -312,7 +312,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   }
 
   // Subscribe to requests for buoyancy state
-  this->buoyancyEngineStateTopic = ignition::transport::TopicUtils::AsValidTopic(
+  this->buoyancyEngineStateTopic = gz::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/" + this->buoyancyEngineStateTopic);
   if (!this->node.Subscribe(this->buoyancyEngineStateTopic,
       &TethysCommPlugin::BuoyancyStateCallback, this))
@@ -321,10 +321,10 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
       << this->buoyancyEngineStateTopic << "]. " << std::endl;
   }
 
-  this->dropWeightTopic = ignition::transport::TopicUtils::AsValidTopic("/model/" +
+  this->dropWeightTopic = gz::transport::TopicUtils::AsValidTopic("/model/" +
     _ns + "/" + this->dropWeightTopic);
   this->dropWeightPub =
-    this->node.Advertise<ignition::msgs::Empty>(this->dropWeightTopic);
+    this->node.Advertise<gz::msgs::Empty>(this->dropWeightTopic);
   if(!this->dropWeightPub)
   {
     ignerr << "Error advertising topic [" << this->dropWeightTopic << "]"
@@ -332,7 +332,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   }
 
   // Subscribe to sensor data
-  this->salinityTopic = ignition::transport::TopicUtils::AsValidTopic(
+  this->salinityTopic = gz::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/" + this->salinityTopic);
   if (!this->node.Subscribe(this->salinityTopic,
       &TethysCommPlugin::SalinityCallback, this))
@@ -341,7 +341,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
       << this->salinityTopic << "]. " << std::endl;
   }
 
-  this->temperatureTopic = ignition::transport::TopicUtils::AsValidTopic(
+  this->temperatureTopic = gz::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/" + this->temperatureTopic);
   if (!this->node.Subscribe(this->temperatureTopic,
       &TethysCommPlugin::TemperatureCallback, this))
@@ -350,7 +350,16 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
       << this->temperatureTopic << "]. " << std::endl;
   }
 
-  this->chlorophyllTopic = ignition::transport::TopicUtils::AsValidTopic(
+  this->batteryTopic = gz::transport::TopicUtils::AsValidTopic(
+    "/model/" + _ns + "/" + this->batteryTopic);
+  if (!this->node.Subscribe(this->batteryTopic,
+      &TethysCommPlugin::BatteryCallback, this))
+  {
+    ignerr << "Error subscribing to topic " << "["
+      << this->batteryTopic << "]. " << std::endl;
+  }
+
+  this->chlorophyllTopic = gz::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/" + this->chlorophyllTopic);
   if (!this->node.Subscribe(this->chlorophyllTopic,
       &TethysCommPlugin::ChlorophyllCallback, this))
@@ -359,7 +368,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
       << this->chlorophyllTopic << "]. " << std::endl;
   }
 
-  this->currentTopic = ignition::transport::TopicUtils::AsValidTopic(
+  this->currentTopic = gz::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/" + this->currentTopic);
   if (!this->node.Subscribe(this->currentTopic,
       &TethysCommPlugin::CurrentCallback, this))
@@ -370,10 +379,10 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
 }
 
 void TethysCommPlugin::SetupEntities(
-  const ignition::gazebo::Entity &_entity,
+  const gz::sim::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
-  ignition::gazebo::EntityComponentManager &_ecm,
-  ignition::gazebo::EventManager &_eventMgr)
+  gz::sim::EntityComponentManager &_ecm,
+  gz::sim::EventManager &_eventMgr)
 {
   if (_sdf->HasElement("model_link"))
   {
@@ -402,7 +411,7 @@ void TethysCommPlugin::SetupEntities(
 
   this->modelEntity = _entity;
 
-  auto model = ignition::gazebo::Model(_entity);
+  auto model = gz::sim::Model(_entity);
 
   this->baseLink = model.LinkByName(_ecm, this->baseLinkName);
 
@@ -421,8 +430,8 @@ void TethysCommPlugin::SetupEntities(
   AddJointVelocity(this->thrusterJoint, _ecm);
   AddWorldLinearVelocity(this->baseLink, _ecm);
 
-  ignition::gazebo::enableComponent
-      <ignition::gazebo::components::WorldAngularVelocity>(_ecm,
+  gz::sim::enableComponent
+      <gz::sim::components::WorldAngularVelocity>(_ecm,
       this->baseLink);
 }
 
@@ -436,28 +445,28 @@ void TethysCommPlugin::CommandCallback(
   }
 
   // Rudder
-  ignition::msgs::Double rudderAngMsg;
+  gz::msgs::Double rudderAngMsg;
   rudderAngMsg.set_data(_msg.rudderangleaction_());
   this->rudderPub.Publish(rudderAngMsg);
 
   // Elevator
-  ignition::msgs::Double elevatorAngMsg;
+  gz::msgs::Double elevatorAngMsg;
   elevatorAngMsg.set_data(_msg.elevatorangleaction_());
   this->elevatorPub.Publish(elevatorAngMsg);
 
   // Thruster
-  ignition::msgs::Double thrusterMsg;
+  gz::msgs::Double thrusterMsg;
   auto angVel = _msg.propomegaaction_();
   thrusterMsg.set_data(angVel);
   this->thrusterPub.Publish(thrusterMsg);
 
   // Mass shifter
-  ignition::msgs::Double massShifterMsg;
+  gz::msgs::Double massShifterMsg;
   massShifterMsg.set_data(_msg.masspositionaction_());
   this->massShifterPub.Publish(massShifterMsg);
 
   // Buoyancy Engine
-  ignition::msgs::Double buoyancyEngineMsg;
+  gz::msgs::Double buoyancyEngineMsg;
   buoyancyEngineMsg.set_data(_msg.buoyancyaction_());
   this->buoyancyEnginePub.Publish(buoyancyEngineMsg);
 
@@ -466,44 +475,53 @@ void TethysCommPlugin::CommandCallback(
   // Indicator is true (1) for dropweight OK in place, false (0) for dropped
   if (!dropweight)
   {
-    ignition::msgs::Empty dropWeightCmd;
+    gz::msgs::Empty dropWeightCmd;
     this->dropWeightPub.Publish(dropWeightCmd);
   }
 }
 
 void TethysCommPlugin::BuoyancyStateCallback(
-  const ignition::msgs::Double &_msg)
+  const gz::msgs::Double &_msg)
 {
   this->buoyancyBladderVolume = _msg.data();
 }
 
 void TethysCommPlugin::SalinityCallback(
-  const ignition::msgs::Float &_msg)
+  const gz::msgs::Float &_msg)
 {
   this->latestSalinity = _msg.data();
 }
 
 void TethysCommPlugin::TemperatureCallback(
-  const ignition::msgs::Double &_msg)
+  const gz::msgs::Double &_msg)
 {
   this->latestTemperature.SetCelsius(_msg.data());
 }
 
+void TethysCommPlugin::BatteryCallback(
+  const gz::msgs::BatteryState &_msg)
+{
+  this->latestBatteryVoltage = _msg.voltage();
+  this->latestBatteryCurrent = _msg.current();
+  this->latestBatteryCharge = _msg.charge();
+  this->latestBatteryPercentage = _msg.percentage();
+}
+
 void TethysCommPlugin::ChlorophyllCallback(
-  const ignition::msgs::Float &_msg)
+  const gz::msgs::Float &_msg)
 {
   this->latestChlorophyll = _msg.data();
 }
 
 void TethysCommPlugin::CurrentCallback(
-  const ignition::msgs::Vector3d &_msg)
+  const gz::msgs::Vector3d &_msg)
 {
-  this->latestCurrent = ignition::msgs::Convert(_msg);
+  this->latestCurrent = gz::msgs::Convert(_msg);
 }
 
 void TethysCommPlugin::PostUpdate(
-  const ignition::gazebo::UpdateInfo &_info,
-  const ignition::gazebo::EntityComponentManager &_ecm)
+  const gz::sim::UpdateInfo &_info,
+  const gz::sim::EntityComponentManager &_ecm)
 {
   if (_info.paused)
     return;
@@ -522,7 +540,7 @@ void TethysCommPlugin::PostUpdate(
   ///////////////////////////////////
   // Actuators
   auto propAngVelComp =
-    _ecm.Component<ignition::gazebo::components::JointVelocity>(thrusterJoint);
+    _ecm.Component<gz::sim::components::JointVelocity>(thrusterJoint);
   if (propAngVelComp->Data().size() != 1)
   {
     ignerr << "Propeller joint has wrong size\n";
@@ -532,7 +550,7 @@ void TethysCommPlugin::PostUpdate(
 
   // Rudder joint position
   auto rudderPosComp =
-    _ecm.Component<ignition::gazebo::components::JointPosition>(rudderJoint);
+    _ecm.Component<gz::sim::components::JointPosition>(rudderJoint);
   if (rudderPosComp->Data().size() != 1)
   {
     ignerr << "Rudder joint has wrong size\n";
@@ -542,7 +560,7 @@ void TethysCommPlugin::PostUpdate(
 
   // Elevator joint position
   auto elevatorPosComp =
-    _ecm.Component<ignition::gazebo::components::JointPosition>(elevatorJoint);
+    _ecm.Component<gz::sim::components::JointPosition>(elevatorJoint);
   if (elevatorPosComp->Data().size() != 1)
   {
     ignerr << "Elavator joint has wrong size\n";
@@ -552,7 +570,7 @@ void TethysCommPlugin::PostUpdate(
 
   // Mass shifter joint position
   auto massShifterPosComp =
-    _ecm.Component<ignition::gazebo::components::JointPosition>(
+    _ecm.Component<gz::sim::components::JointPosition>(
     massShifterJoint);
   if (massShifterPosComp->Data().size() != 1)
   {
@@ -569,23 +587,23 @@ void TethysCommPlugin::PostUpdate(
   // Position
 
   // Gazebo is using ENU, controller expects NED
-  auto modelPoseENU = ignition::gazebo::worldPose(this->modelEntity, _ecm);
+  auto modelPoseENU = gz::sim::worldPose(this->modelEntity, _ecm);
   auto modelPoseNED = ENUToNED(modelPoseENU);
 
   stateMsg.set_depth_(-modelPoseENU.Pos().Z());
 
-  ignition::msgs::Set(stateMsg.mutable_pos_(), modelPoseNED.Pos());
-  ignition::msgs::Set(stateMsg.mutable_rph_(), modelPoseNED.Rot().Euler());
-  ignition::msgs::Set(stateMsg.mutable_posrph_(), modelPoseNED.Rot().Euler());
+  gz::msgs::Set(stateMsg.mutable_pos_(), modelPoseNED.Pos());
+  gz::msgs::Set(stateMsg.mutable_rph_(), modelPoseNED.Rot().Euler());
+  gz::msgs::Set(stateMsg.mutable_posrph_(), modelPoseNED.Rot().Euler());
 
-  auto latlon = ignition::gazebo::sphericalCoordinates(this->modelEntity, _ecm);
+  auto latlon = gz::sim::sphericalCoordinates(this->modelEntity, _ecm);
   if (latlon)
   {
     stateMsg.set_latitudedeg_(latlon.value().X());
     stateMsg.set_longitudedeg_(latlon.value().Y());
 
     // Publish NavSat message to see position on NavSat GUI map
-    ignition::msgs::NavSat navSatMsg;
+    gz::msgs::NavSat navSatMsg;
     navSatMsg.set_latitude_deg(latlon.value().X());
     navSatMsg.set_longitude_deg(latlon.value().Y());
     this->navSatPub.Publish(navSatMsg);
@@ -596,14 +614,14 @@ void TethysCommPlugin::PostUpdate(
 
   // Speed
   auto linVelComp =
-    _ecm.Component<ignition::gazebo::components::WorldLinearVelocity>(
+    _ecm.Component<gz::sim::components::WorldLinearVelocity>(
     this->baseLink);
   auto linVelENU = linVelComp->Data();
   stateMsg.set_speed_(linVelENU.Length());
 
   // Velocity in NED world frame
   auto linVelNED = ENUToNED(linVelENU);
-  ignition::msgs::Set(stateMsg.mutable_posdot_(), linVelNED);
+  gz::msgs::Set(stateMsg.mutable_posdot_(), linVelNED);
 
   // Water velocity in FSK vehicle frame
   // TODO(arjo): include currents in water velocity?
@@ -612,11 +630,11 @@ void TethysCommPlugin::PostUpdate(
 
   // Model frame is oriented "SFU", convert it to FSK
   auto linVelFSK = SFUToFSK(linVelSFU);
-  ignition::msgs::Set(stateMsg.mutable_rateuvw_(), linVelFSK);
+  gz::msgs::Set(stateMsg.mutable_rateuvw_(), linVelFSK);
 
   // Angular velocity in FSK
   auto angVelComp =
-    _ecm.Component<ignition::gazebo::components::WorldAngularVelocity>(
+    _ecm.Component<gz::sim::components::WorldAngularVelocity>(
     this->baseLink);
   auto angVelENU = angVelComp->Data();
 
@@ -625,12 +643,18 @@ void TethysCommPlugin::PostUpdate(
 
   // Model frame is oriented "SFU", convert it to FSK
   auto angVelFSK = SFUToFSK(angVelSFU);
-  ignition::msgs::Set(stateMsg.mutable_ratepqr_(), angVelFSK);
+  gz::msgs::Set(stateMsg.mutable_ratepqr_(), angVelFSK);
 
   // Sensor data
   stateMsg.set_salinity_(this->latestSalinity);
   stateMsg.set_temperature_(this->latestTemperature.Celsius());
   stateMsg.add_values_(this->latestChlorophyll);
+
+  // Battery data
+  stateMsg.set_batteryvoltage_(this->latestBatteryVoltage);
+  stateMsg.set_batterycurrent_(this->latestBatteryCurrent);
+  stateMsg.set_batterycharge_(this->latestBatteryCharge);
+  stateMsg.set_batterypercentage_(this->latestBatteryPercentage);
 
   // Set Ocean Density
   stateMsg.set_density_(this->oceanDensity);
@@ -676,7 +700,11 @@ void TethysCommPlugin::PostUpdate(
       << "\tTemperature (C): " << stateMsg.temperature_() << std::endl
       << "\tSalinity (PSU): " << stateMsg.salinity_() << std::endl
       << "\tChlorophyll (ug/L): " << stateMsg.values_(0) << std::endl
-      << "\tPressure (Pa): " << stateMsg.values_(1) << std::endl;
+      << "\tPressure (Pa): " << stateMsg.values_(1) << std::endl
+      << "\tBattery Voltage (V): " << stateMsg.batteryvoltage_() << std::endl
+      << "\tBattery Current (A): " << stateMsg.batterycurrent_() << std::endl
+      << "\tBattery Charge (Ah): " << stateMsg.batterycharge_() << std::endl
+      << "\tBattery Percentage (unitless): " << stateMsg.batterypercentage_() << std::endl;
 
     this->prevPubPrintTime = _info.simTime;
   }
@@ -684,6 +712,6 @@ void TethysCommPlugin::PostUpdate(
 
 IGNITION_ADD_PLUGIN(
   tethys::TethysCommPlugin,
-  ignition::gazebo::System,
+  gz::sim::System,
   tethys::TethysCommPlugin::ISystemConfigure,
   tethys::TethysCommPlugin::ISystemPostUpdate)

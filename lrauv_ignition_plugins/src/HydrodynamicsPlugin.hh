@@ -20,14 +20,14 @@
  * Research Institute (MBARI) and the David and Lucile Packard Foundation
  */
 
-#include <ignition/gazebo/Model.hh>
-#include <ignition/gazebo/Util.hh>
-#include <ignition/gazebo/System.hh>
-#include <ignition/gazebo/Link.hh>
-#include <ignition/gazebo/components.hh>
-#include <ignition/plugin/Register.hh>
-#include <ignition/transport/Node.hh>
-#include <ignition/msgs.hh>
+#include <gz/sim/Model.hh>
+#include <gz/sim/Util.hh>
+#include <gz/sim/System.hh>
+#include <gz/sim/Link.hh>
+#include <gz/sim/components.hh>
+#include <gz/plugin/Register.hh>
+#include <gz/transport/Node.hh>
+#include <gz/msgs.hh>
 #include <mutex>
 #include <string>
 
@@ -39,24 +39,24 @@ namespace tethys
   /// It is shamelessly based off Brian Bingham's plugin for VRX
   /// which in turn is based of fossen's equations.
   class HydrodynamicsPlugin:
-    public ignition::gazebo::System,
-    public ignition::gazebo::ISystemConfigure,
-    public ignition::gazebo::ISystemPreUpdate
+    public gz::sim::System,
+    public gz::sim::ISystemConfigure,
+    public gz::sim::ISystemPreUpdate
   {
   public: HydrodynamicsPlugin();
 
   public: ~HydrodynamicsPlugin() = default;
 
   public: void Configure(
-      const ignition::gazebo::Entity &_entity,
+      const gz::sim::Entity &_entity,
       const std::shared_ptr<const sdf::Element> &_sdf,
-      ignition::gazebo::EntityComponentManager &_ecm,
-      ignition::gazebo::EventManager &/*_eventMgr*/
+      gz::sim::EntityComponentManager &_ecm,
+      gz::sim::EventManager &/*_eventMgr*/
       );
 
   public: void PreUpdate(
-      const ignition::gazebo::UpdateInfo &_info,
-      ignition::gazebo::EntityComponentManager &_ecm);
+      const gz::sim::UpdateInfo &_info,
+      gz::sim::EntityComponentManager &_ecm);
 
   private: std::unique_ptr<HydrodynamicsPrivateData> dataPtr;
   };

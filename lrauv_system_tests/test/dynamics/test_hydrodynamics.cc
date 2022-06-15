@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/transport/Node.hh>
+#include <gz/transport/Node.hh>
 
 #include <chrono>
 #include <thread>
@@ -42,7 +42,7 @@ class HydrodynamicsTestFixture : public TestFixture
     for (size_t i = 0; i < 4; ++i)
     {
       this->thrustPublishers.push_back(
-          this->node.Advertise<ignition::msgs::Double>(
+          this->node.Advertise<gz::msgs::Double>(
               "/model/tethys" + std::to_string(i + 1) +
               "/joint/propeller_joint/cmd_vel"));
       this->vehicleObservers.push_back(ModelObserver(
@@ -51,7 +51,7 @@ class HydrodynamicsTestFixture : public TestFixture
     }
   }
 
-  public: std::vector<ignition::transport::Node::Publisher> &ThrustPublishers()
+  public: std::vector<gz::transport::Node::Publisher> &ThrustPublishers()
   {
     return this->thrustPublishers;
   }
@@ -62,8 +62,8 @@ class HydrodynamicsTestFixture : public TestFixture
   }
 
   protected: void OnPostUpdate(
-     const ignition::gazebo::UpdateInfo &_info,
-     const ignition::gazebo::EntityComponentManager &_ecm) override
+     const gz::sim::UpdateInfo &_info,
+     const gz::sim::EntityComponentManager &_ecm) override
   {
     for (auto &observer : this->vehicleObservers)
     {
@@ -71,9 +71,9 @@ class HydrodynamicsTestFixture : public TestFixture
     }
   }
 
-  private: ignition::transport::Node node;
+  private: gz::transport::Node node;
 
-  private: std::vector<ignition::transport::Node::Publisher> thrustPublishers;
+  private: std::vector<gz::transport::Node::Publisher> thrustPublishers;
 
   private: std::vector<ModelObserver> vehicleObservers;
 };
@@ -104,7 +104,7 @@ TEST(HydrodynamicsTest, DampForwardThrust)
   // Step once for simulation to be setup
   fixture.Step();
 
-  ignition::msgs::Double thrustCommand;
+  gz::msgs::Double thrustCommand;
   // Vehicle is supposed to move at around 1 m/s with a 300 RPM thrust.
   // 300 RPM = 300 * 2 pi / 60 = 10 pi rad/s
   thrustCommand.set_data(10. * IGN_PI);

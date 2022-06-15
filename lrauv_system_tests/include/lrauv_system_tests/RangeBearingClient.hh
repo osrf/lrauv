@@ -51,7 +51,7 @@ class RangeBearingClient : public Client<
   /// \param[in] _address Range bearing server address (typically, the name of
   /// the vehicle).
   public: RangeBearingClient(
-      ignition::transport::Node &_node,
+      gz::transport::Node &_node,
       const std::string& _address)
     : Client(_node, "/" + _address + "/range_bearing")
   {

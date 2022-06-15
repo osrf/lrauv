@@ -24,15 +24,15 @@
 
 #include <unordered_map>
 
-#include <ignition/gazebo/components.hh>
-#include <ignition/gazebo/Link.hh>
-#include <ignition/gazebo/Model.hh>
-#include <ignition/gazebo/Util.hh>
-#include <ignition/math/Vector3.hh>
-#include <ignition/plugin/Loader.hh>
-#include <ignition/plugin/Register.hh>
-#include <ignition/plugin/SpecializedPluginPtr.hh>
-#include <ignition/transport/Node.hh>
+#include <gz/sim/components.hh>
+#include <gz/sim/Link.hh>
+#include <gz/sim/Model.hh>
+#include <gz/sim/Util.hh>
+#include <gz/math/Vector3.hh>
+#include <gz/plugin/Loader.hh>
+#include <gz/plugin/Register.hh>
+#include <gz/plugin/SpecializedPluginPtr.hh>
+#include <gz/transport/Node.hh>
 
 #include <lrauv_ignition_plugins/comms/CommsModel.hh>
 #include <lrauv_ignition_plugins/comms/CommsPacket.hh>
@@ -71,10 +71,10 @@ class AcousticCommsPrivateData
   public: bool broadcast = true;
 
   /// \brief Node which handles comms
-  public: ignition::transport::Node node;
+  public: gz::transport::Node node;
 
   /// \brief Publishers which handle the communication
-  public: std::unordered_map<uint32_t, ignition::transport::Node::Publisher>
+  public: std::unordered_map<uint32_t, gz::transport::Node::Publisher>
     publishers;
 
   /// \brief Shared pointer to communications type
@@ -84,7 +84,7 @@ class AcousticCommsPrivateData
   public: MessageManager externalCommsPublisher;
 
   /// \brief Current position
-  public: ignition::math::Vector3d currentPosition;
+  public: gz::math::Vector3d currentPosition;
 
   /// \brief Current time
   public: std::chrono::steady_clock::time_point currentTime;
@@ -94,10 +94,10 @@ class AcousticCommsPrivateData
     timestep = std::nullopt;
 
   /// \brief Entity to which the transponder is bound to.
-  public: ignition::gazebo::Entity linkEntity;
+  public: gz::sim::Entity linkEntity;
 
   /// \brief Plugin pointer
-  public: ignition::plugin::SpecializedPluginPtr<ICommsModel> ModelPluginPtr;
+  public: gz::plugin::SpecializedPluginPtr<ICommsModel> ModelPluginPtr;
 
   /// \brief mutex
   public: std::mutex mtx;
@@ -153,12 +153,12 @@ AcousticCommsPlugin::AcousticCommsPlugin()
 
 //////////////////////////////////////////////////
 void AcousticCommsPlugin::Configure(
-  const ignition::gazebo::Entity &_entity,
+  const gz::sim::Entity &_entity,
   const std::shared_ptr<const sdf::Element> &_sdf,
-  ignition::gazebo::EntityComponentManager &_ecm,
-  ignition::gazebo::EventManager &/*_eventMgr*/)
+  gz::sim::EntityComponentManager &_ecm,
+  gz::sim::EventManager &/*_eventMgr*/)
 {
-  auto model = ignition::gazebo::Model(_entity);
+  auto model = gz::sim::Model(_entity);
 
   if (!_sdf->HasElement("address"))
   {
@@ -197,23 +197,23 @@ void AcousticCommsPlugin::Configure(
         static_cast<long>(timestep * 1e9));
   }
 
-  auto vehicleModel = ignition::gazebo::Model(_entity);
+  auto vehicleModel = gz::sim::Model(_entity);
   auto linkName = _sdf->Get<std::string>("link_name");
   this->dataPtr->linkEntity = vehicleModel.LinkByName(_ecm, linkName);
-  if(this->dataPtr->linkEntity == ignition::gazebo::kNullEntity)
+  if(this->dataPtr->linkEntity == gz::sim::kNullEntity)
   {
     ignerr << "Link " << linkName << " was not found in "
       << vehicleModel.Name(_ecm) << std::endl;
     return;
   }
-  ignition::gazebo::enableComponent<ignition::gazebo::components::WorldPose>(
+  gz::sim::enableComponent<gz::sim::components::WorldPose>(
     _ecm, this->dataPtr->linkEntity);
   
   // Create an object that can search the system paths for the plugin libraries.
-  ignition::common::SystemPaths paths;
+  gz::common::SystemPaths paths;
 
   // Create a plugin loader
-  ignition::plugin::Loader loader;
+  gz::plugin::Loader loader;
 
   // Add the build directory path for the plugin libraries so the SystemPaths
   // object will know to search through it.
@@ -300,13 +300,13 @@ void AcousticCommsPlugin::Configure(
 
 //////////////////////////////////////////////////
 void AcousticCommsPlugin::PreUpdate(
-  const ignition::gazebo::UpdateInfo &_info,
-  ignition::gazebo::EntityComponentManager &_ecm)
+  const gz::sim::UpdateInfo &_info,
+  gz::sim::EntityComponentManager &_ecm)
 {
   if (_info.paused)
     return;
 
-  ignition::gazebo::Link baseLink(this->dataPtr->linkEntity);
+  gz::sim::Link baseLink(this->dataPtr->linkEntity);
   auto pose = baseLink.WorldPose(_ecm);
   
   if (!pose.has_value())
@@ -343,7 +343,7 @@ void AcousticCommsPlugin::PreUpdate(
     
     while (this->dataPtr->currentTime < endTime)
     {
-      ignition::gazebo::UpdateInfo info(_info);
+      gz::sim::UpdateInfo info(_info);
       info.dt = std::min(this->dataPtr->timestep.value(), _info.dt);
       info.simTime = this->dataPtr->currentTime.time_since_epoch();
       this->dataPtr->commsModel->Step(info, _ecm, 
@@ -357,6 +357,6 @@ void AcousticCommsPlugin::PreUpdate(
 
 IGNITION_ADD_PLUGIN(
   tethys::AcousticCommsPlugin,
-  ignition::gazebo::System,
+  gz::sim::System,
   tethys::AcousticCommsPlugin::ISystemConfigure,
   tethys::AcousticCommsPlugin::ISystemPreUpdate)

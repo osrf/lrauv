@@ -23,7 +23,7 @@
 #ifndef TETHYS_ACOUSTICCOMMS_ENGINE_
 #define TETHYS_ACOUSTICCOMMS_ENGINE_
 
-#include <ignition/gazebo/System.hh>
+#include <gz/sim/System.hh>
 
 namespace tethys
 {
@@ -71,24 +71,24 @@ class AcousticCommsPrivateData;
 /// ```
 /// All other parameters are forwarded to the specific communication model.
 class AcousticCommsPlugin:
-  public ignition::gazebo::System,
-  public ignition::gazebo::ISystemConfigure,
-  public ignition::gazebo::ISystemPreUpdate
+  public gz::sim::System,
+  public gz::sim::ISystemConfigure,
+  public gz::sim::ISystemPreUpdate
 {
   public: AcousticCommsPlugin();
 
   /// Inherits documentation from parent class
   public: void Configure(
-      const ignition::gazebo::Entity &_entity,
+      const gz::sim::Entity &_entity,
       const std::shared_ptr<const sdf::Element> &_sdf,
-      ignition::gazebo::EntityComponentManager &_ecm,
-      ignition::gazebo::EventManager &/*_eventMgr*/
+      gz::sim::EntityComponentManager &_ecm,
+      gz::sim::EventManager &/*_eventMgr*/
   );
 
   /// Inherits documentation from parent class
   public: void PreUpdate(
-      const ignition::gazebo::UpdateInfo &_info,
-      ignition::gazebo::EntityComponentManager &_ecm);
+      const gz::sim::UpdateInfo &_info,
+      gz::sim::EntityComponentManager &_ecm);
 
   /// Inherits documentation from parent class
   private: std::unique_ptr<AcousticCommsPrivateData> dataPtr;

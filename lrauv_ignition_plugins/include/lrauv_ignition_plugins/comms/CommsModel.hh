@@ -23,8 +23,8 @@
 #ifndef __LRAUV_IGNITION_PLUGINS_COMMS_COMMSMODEL_HH__
 #define __LRAUV_IGNITION_PLUGINS_COMMS_COMMSMODEL_HH__
 
-#include <ignition/gazebo/EntityComponentManager.hh>
-#include <ignition/gazebo/System.hh>
+#include <gz/sim/EntityComponentManager.hh>
+#include <gz/sim/System.hh>
 
 #include "CommsPacket.hh"
 #include "MessageManager.hh"
@@ -40,11 +40,11 @@ class ICommsModel
   /// \brief This method is called during setup.
   /// \param[in] _entity - The model you are bound to.
   /// \param[in] _sdf - The SDF description of the plugin.
-  /// \param[in] _ecm - Ignition's Entity Component Manager.
+  /// \param[in] _ecm - Gazebo's Entity Component Manager.
   public: virtual void Configure(
-    const ignition::gazebo::Entity &_entity,
+    const gz::sim::Entity &_entity,
     const std::shared_ptr<const sdf::Element> &_sdf,
-    ignition::gazebo::EntityComponentManager &_ecm) = 0;
+    gz::sim::EntityComponentManager &_ecm) = 0;
 
   /// \brief This method is called when the message bus delivers a message.
   /// You should override this method to determine when a message is coming in.
@@ -54,14 +54,14 @@ class ICommsModel
   /// \brief This method is called when there is a timestep in the simulator
   /// override this to update your data structures as needed.
   /// \param[in] _info - Simulator information about the current timestep.
-  /// \param[in] _ecm - Ignition's ECM.
+  /// \param[in] _ecm - Gazebo's Entity Component Manager.
   /// \param[in] _messageMgr - Use this to mark the message as arrived.
   /// \param[in] _pose - The current pose of the receiving model.
   public: virtual void Step(
-    const ignition::gazebo::UpdateInfo &_info,
-    ignition::gazebo::EntityComponentManager &_ecm,
+    const gz::sim::UpdateInfo &_info,
+    gz::sim::EntityComponentManager &_ecm,
     MessageManager &_messageMgr,
-    const ignition::math::Pose3d &_pose) = 0;
+    const gz::math::Pose3d &_pose) = 0;
   
   /// \brief Destructor
   public: virtual ~ICommsModel() = default;

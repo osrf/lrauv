@@ -60,7 +60,7 @@ GridLayout {
     text: "Rudder (rad)"
     Layout.columnSpan: 1
   }
-  IgnSpinBox {
+  GzSpinBox {
     id: rudderSpin
     Layout.columnSpan: 1
     value: rudderValue
@@ -105,7 +105,7 @@ GridLayout {
     text: "Elevator (rad)"
     Layout.columnSpan: 1
   }
-  IgnSpinBox {
+  GzSpinBox {
     id: elevatorSpin
     Layout.columnSpan: 1
     value: elevatorValue
@@ -150,7 +150,7 @@ GridLayout {
     text: "Mass shifter (m)"
     Layout.columnSpan: 1
   }
-  IgnSpinBox {
+  GzSpinBox {
     id: massSpin
     Layout.columnSpan: 1
     value: massValue
@@ -195,7 +195,7 @@ GridLayout {
     text: "Thruster (rad/s)"
     Layout.columnSpan: 1
   }
-  IgnSpinBox {
+  GzSpinBox {
     id: thrusterSpin
     Layout.columnSpan: 1
     value: thrusterValue
@@ -240,7 +240,7 @@ GridLayout {
     text: "Buoyancy engine (cc)"
     Layout.columnSpan: 1
   }
-  IgnSpinBox {
+  GzSpinBox {
     id: buoyancySpin
     Layout.columnSpan: 1
     value: buoyancyValue

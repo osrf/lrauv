@@ -55,7 +55,7 @@ TEST(AcousticComms, PacketConversions)
   message.set_data("test");
 
   const auto now = std::chrono::steady_clock::now();
-  const auto vector = ignition::math::Vector3d(0, 0, 1);
+  const auto vector = gz::math::Vector3d(0, 0, 1);
   const auto packet = CommsPacket::make(message, vector, now);
   const auto encoded = packet.ToInternalMsg();
   const auto packet2 = CommsPacket::make(encoded);

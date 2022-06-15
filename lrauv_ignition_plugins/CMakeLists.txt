@@ -173,6 +173,9 @@ add_lrauv_plugin(ScienceSensorsSystem
   PRIVATE_LINK_LIBS
     ignition-sensors${IGN_SENSORS_VER}::ignition-sensors${IGN_SENSORS_VER}
     ${PCL_LIBRARIES})
+add_lrauv_plugin(SpawnPanelPlugin GUI
+  PROTO
+    lrauv_init)
 add_lrauv_plugin(TethysCommPlugin
   PROTO
     lrauv_command
