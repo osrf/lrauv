@@ -71,6 +71,11 @@ namespace tethys
     public: void TemperatureCallback(
                 const gz::msgs::Double &_msg);
 
+    /// Callback function for battery data.
+    /// \param[in] _msg Battery data
+    public: void BatteryCallback(
+                const gz::msgs::BatteryState &_msg);
+
     /// Callback function for chlorophyll sensor data.
     /// \param[in] _msg Sensor data
     public: void ChlorophyllCallback(
@@ -140,6 +145,10 @@ namespace tethys
     private: std::string temperatureTopic
       {"temperature"};
 
+    /// Topic to subscribe to battery data
+    private: std::string batteryTopic
+      {"battery/linear_battery/state"};
+
     /// Topic to subscribe to chlorophyll data
     private: std::string chlorophyllTopic
       {"chlorophyll"};
@@ -178,6 +187,18 @@ namespace tethys
 
     /// Latest temperature data received from sensor. NaN if not received.
     private: gz::math::Temperature latestTemperature{std::nanf("")};
+
+    /// Latest battery voltage data received, Nan if not received.
+    private: double latestBatteryVoltage{std::nanf("")};
+
+    /// Latest battery current data received, Nan if not received.
+    private: double latestBatteryCurrent{std::nanf("")};
+
+    /// Latest battery charge data received, Nan if not received.
+    private: double latestBatteryCharge{std::nanf("")};
+
+    /// Latest battery percentage data received, Nan if not received.
+    private: double latestBatteryPercentage{std::nanf("")};
 
     /// Latest chlorophyll data received from sensor. NaN if not received.
     private: float latestChlorophyll{std::nanf("")};

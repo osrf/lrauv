@@ -86,6 +86,32 @@ class Subscription
     return std::move(this->messageHistory);
   }
 
+  /// Current number of messages stored.
+  /// \return number of messages stored in the
+  /// messageHistory container.
+  public: int MessageHistorySize()
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
+    return this->messageHistory.size();
+  }
+
+  /// Read the message according to the index.
+  /// \return message in the messageHistory container
+  /// based on its index.
+  public: MessageT GetMessageByIndex(int _index)
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
+    return this->messageHistory[_index];
+  }
+
+  /// Reset the messageHistory container by clearing
+  /// existing messages.
+  public: void ResetMessageHistory()
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
+    this->messageHistory.clear();
+  }
+
   /// Read last message received.
   /// \note This is a destructive operation.
   /// \throws std::runtime_error if there is

@@ -18,6 +18,9 @@ target_link_libraries(test_ahrs
 gtest_discover_tests(test_ahrs)
 
 foreach(_test
+    test_battery_full_charge
+    test_battery_half_charge
+    test_battery_low_charge
     test_buoyancy_action
     test_drop_weight
     test_elevator_action

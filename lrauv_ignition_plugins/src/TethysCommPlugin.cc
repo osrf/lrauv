@@ -350,6 +350,15 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
       << this->temperatureTopic << "]. " << std::endl;
   }
 
+  this->batteryTopic = gz::transport::TopicUtils::AsValidTopic(
+    "/model/" + _ns + "/" + this->batteryTopic);
+  if (!this->node.Subscribe(this->batteryTopic,
+      &TethysCommPlugin::BatteryCallback, this))
+  {
+    ignerr << "Error subscribing to topic " << "["
+      << this->batteryTopic << "]. " << std::endl;
+  }
+
   this->chlorophyllTopic = gz::transport::TopicUtils::AsValidTopic(
     "/model/" + _ns + "/" + this->chlorophyllTopic);
   if (!this->node.Subscribe(this->chlorophyllTopic,
@@ -487,6 +496,15 @@ void TethysCommPlugin::TemperatureCallback(
   const gz::msgs::Double &_msg)
 {
   this->latestTemperature.SetCelsius(_msg.data());
+}
+
+void TethysCommPlugin::BatteryCallback(
+  const gz::msgs::BatteryState &_msg)
+{
+  this->latestBatteryVoltage = _msg.voltage();
+  this->latestBatteryCurrent = _msg.current();
+  this->latestBatteryCharge = _msg.charge();
+  this->latestBatteryPercentage = _msg.percentage();
 }
 
 void TethysCommPlugin::ChlorophyllCallback(
@@ -632,6 +650,12 @@ void TethysCommPlugin::PostUpdate(
   stateMsg.set_temperature_(this->latestTemperature.Celsius());
   stateMsg.add_values_(this->latestChlorophyll);
 
+  // Battery data
+  stateMsg.set_batteryvoltage_(this->latestBatteryVoltage);
+  stateMsg.set_batterycurrent_(this->latestBatteryCurrent);
+  stateMsg.set_batterycharge_(this->latestBatteryCharge);
+  stateMsg.set_batterypercentage_(this->latestBatteryPercentage);
+
   // Set Ocean Density
   stateMsg.set_density_(this->oceanDensity);
 
@@ -676,7 +700,11 @@ void TethysCommPlugin::PostUpdate(
       << "\tTemperature (C): " << stateMsg.temperature_() << std::endl
       << "\tSalinity (PSU): " << stateMsg.salinity_() << std::endl
       << "\tChlorophyll (ug/L): " << stateMsg.values_(0) << std::endl
-      << "\tPressure (Pa): " << stateMsg.values_(1) << std::endl;
+      << "\tPressure (Pa): " << stateMsg.values_(1) << std::endl
+      << "\tBattery Voltage (V): " << stateMsg.batteryvoltage_() << std::endl
+      << "\tBattery Current (A): " << stateMsg.batterycurrent_() << std::endl
+      << "\tBattery Charge (Ah): " << stateMsg.batterycharge_() << std::endl
+      << "\tBattery Percentage (unitless): " << stateMsg.batterypercentage_() << std::endl;
 
     this->prevPubPrintTime = _info.simTime;
   }
