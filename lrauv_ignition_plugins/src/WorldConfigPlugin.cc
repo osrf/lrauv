@@ -57,7 +57,7 @@ void WorldConfig::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
 
 void WorldConfig::SetFilePath(QUrl _filePath)
 {
-  igndbg << "setting file path "<< _filePath.path().toStdString() << std::endl;
+  igndbg << "setting file path " << _filePath.path().toStdString() << std::endl;
 
   gz::msgs::StringMsg msg;
   msg.set_data(_filePath.path().toStdString());
