@@ -23,15 +23,15 @@
 #ifndef TETHYS_CONTROLPANEL_HH_
 #define TETHYS_CONTROLPANEL_HH_
 
-#include <ignition/gui/Plugin.hh>
+#include <gz/gui/Plugin.hh>
 
-#include <ignition/transport/Node.hh>
+#include <gz/transport/Node.hh>
 
 namespace tethys
 {
 
 /// \brief Control Panel for controlling the tethys using the GUI.
-class WorldConfig : public ignition::gui::Plugin
+class WorldConfig : public gz::gui::Plugin
 {
   Q_OBJECT
 
@@ -49,10 +49,10 @@ class WorldConfig : public ignition::gui::Plugin
   public: Q_INVOKABLE void SetFilePath(QUrl _filePath);
 
   /// \brief Transport node
-  private: ignition::transport::Node node;
+  private: gz::transport::Node node;
 
   /// \brief Transport publisher
-  private: ignition::transport::Node::Publisher pub;
+  private: gz::transport::Node::Publisher pub;
 };
 
 }

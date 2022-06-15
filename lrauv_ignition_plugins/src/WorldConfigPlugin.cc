@@ -21,23 +21,23 @@
  */
 
 #include "WorldConfigPlugin.hh"
-#include <ignition/common/Console.hh>
-#include <ignition/plugin/Register.hh>
+#include <gz/common/Console.hh>
+#include <gz/plugin/Register.hh>
 
-#include <ignition/gui/Application.hh>
-#include <ignition/gui/Conversions.hh>
-#include <ignition/gui/GuiEvents.hh>
-#include <ignition/gui/MainWindow.hh>
+#include <gz/gui/Application.hh>
+#include <gz/gui/Conversions.hh>
+#include <gz/gui/GuiEvents.hh>
+#include <gz/gui/MainWindow.hh>
 
 namespace tethys
 {
 
-WorldConfig::WorldConfig() : ignition::gui::Plugin()
+WorldConfig::WorldConfig() : gz::gui::Plugin()
 {
-  ignition::gui::App()->Engine()->rootContext()->setContextProperty(
+  gz::gui::App()->Engine()->rootContext()->setContextProperty(
     "WorldConfig", this);
   this->pub =
-    this->node.Advertise<ignition::msgs::StringMsg>(
+    this->node.Advertise<gz::msgs::StringMsg>(
       "/world/science_sensor/environment_data_path");
 }
 
@@ -51,15 +51,15 @@ void WorldConfig::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
   if (this->title.empty())
     this->title = "World Configuration";
 
-  ignition::gui::App()->findChild<
-    ignition::gui::MainWindow *>()->installEventFilter(this);
+  gz::gui::App()->findChild<
+    gz::gui::MainWindow *>()->installEventFilter(this);
 }
 
 void WorldConfig::SetFilePath(QUrl _filePath)
 {
-  igndbg << "setting file path "<< _filePath.path().toStdString() <<"\n";
+  igndbg << "setting file path "<< _filePath.path().toStdString() << std::endl;
 
-  ignition::msgs::StringMsg msg;
+  gz::msgs::StringMsg msg;
   msg.set_data(_filePath.path().toStdString());
   this->pub.Publish(msg);
 }
@@ -67,4 +67,4 @@ void WorldConfig::SetFilePath(QUrl _filePath)
 }
 // Register this plugin
 IGNITION_ADD_PLUGIN(tethys::WorldConfig,
-                    ignition::gui::Plugin)
+                    gz::gui::Plugin)
