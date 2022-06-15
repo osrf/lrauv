@@ -433,7 +433,7 @@ for tile in tiles:
 @[end for]@
 
     <include>
-      <pose>0 0 -20 0 0 0</pose>
+      <pose>0 0 -75 0 0 0</pose>
       <uri>tethys_equipped</uri>
     </include>
 

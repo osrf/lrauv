@@ -91,7 +91,6 @@
           <always_on>1</always_on>
           <update_rate>1</update_rate>
           <topic>/tethys/dvl/velocity</topic>
-          <visualize>1</visualize>
           <ignition:dvl>
             <arrangement degrees="true">
               <beam id="1">
@@ -116,6 +115,7 @@
               </beam>
               <resolution>0.01</resolution>
             </arrangement>
+            <visualize>true</visualize>
             <noise type="gaussian">
               <!-- +/- 0.5 cm/s precision within 2 stddevs -->
               <stddev>0.0025</stddev>

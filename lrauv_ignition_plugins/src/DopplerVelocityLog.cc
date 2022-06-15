@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Open Source Robotics Foundation
+ * Copyright (C) 2022 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -284,18 +284,22 @@ class DopplerVelocityLogPrivate
   /// \brief State of all entities in the world.
   public: WorldKinematicState worldState;
 
-  /// \brief Depth sensor (i.e. a GPU raytracing sensor)
+  /// \brief Depth sensor (i.e. a GPU raytracing sensor).
   public: gz::rendering::GpuRaysPtr depthSensor;
 
-  /// \brief Image sensor (i.e. a camera sensor) to aid ray querys
+  /// \brief Image sensor (i.e. a camera sensor) to aid ray querys.
   public: gz::rendering::CameraPtr imageSensor;
 
+  /// \brief Depth sensor resolution at 1 m distance, in meters.
+  public: double resolution;
+
+  /// \brief Depth sensor intrinsic constants
   public: struct {
-    gz::math::Vector2d offset;
-    gz::math::Vector2d step;
+    gz::math::Vector2d offset; ///<! Azimuth and elevation offsets
+    gz::math::Vector2d step;  ///<! Azimuth and elevation steps
   } depthSensorIntrinsics;
 
-  /// \brief Connection from depth camera with new depth data
+  /// \brief Connection from depth camera with new depth data.
   public: gz::common::ConnectionPtr depthConnection;
 
   /// \brief Connection to the Manager's scene change event.
@@ -338,8 +342,14 @@ class DopplerVelocityLogPrivate
   /// \brief DVL acoustic beams' lobe markers
   public: gz::msgs::Marker_V beamLobesMessage;
 
-  /// \brief Whether to show sensor visual aids
-  public: bool visualize = false;
+  /// \brief Whether to show beam visual aids
+  public: bool visualizeBeamLobes = false;
+
+    /// \brief DVL acoustic beams' reflection markers
+  public: gz::msgs::Marker_V beamReflectionsMessage;
+
+  /// \brief Whether to show beam visual aids
+  public: bool visualizeBeamReflections = false;
 };
 
 //////////////////////////////////////////////////
@@ -404,15 +414,6 @@ bool DopplerVelocityLog::Load(const sdf::Sensor &_sdf)
            << "[" << this->Topic() << "] for sensor "
            << "[" << this->Name() << "]" << std::endl;
     return false;
-  }
-
-  this->dataPtr->visualize =
-      elem->Get<bool>("visualize", false).first;
-  if (this->dataPtr->visualize)
-  {
-    ignmsg << "Enabling visual aids for "
-           << "[" << this->Name() << "] sensor."
-           << std::endl;
   }
 
   // Setup sensors
@@ -541,16 +542,17 @@ bool DopplerVelocityLog::CreateRenderingSensors()
 
   // Configure depth sensor to cover the beams footprint
   // with configured resolution
-  const auto resolution  =
+  this->dataPtr->resolution  =
       arrangementElement->Get<double>("resolution", 0.01).first;
-  ignmsg << "Setting beams' resolution to " << resolution << " m "
-         << "at a 1 m distance for [" << this->Name() << "] sensor."
+  ignmsg << "Setting beams' resolution to " << this->dataPtr->resolution
+         << " m at a 1 m distance for [" << this->Name() << "] sensor."
          << std::endl;
 
   this->dataPtr->depthSensor->SetAngleMin(beamsSphericalFootprint.XMin());
   this->dataPtr->depthSensor->SetAngleMax(beamsSphericalFootprint.XMax());
   auto horizontalRayCount = static_cast<unsigned int>(
-      std::ceil(beamsSphericalFootprint.XSize() / resolution));
+      std::ceil(beamsSphericalFootprint.XSize() /
+                this->dataPtr->resolution));
   if (horizontalRayCount % 2 == 0) ++horizontalRayCount;  // ensure odd
   this->dataPtr->depthSensor->SetRayCount(horizontalRayCount);
 
@@ -559,7 +561,8 @@ bool DopplerVelocityLog::CreateRenderingSensors()
   this->dataPtr->depthSensor->SetVerticalAngleMax(
       beamsSphericalFootprint.YMax());
   auto verticalRayCount = static_cast<unsigned int>(
-      std::ceil(beamsSphericalFootprint.YSize() / resolution));
+      std::ceil(beamsSphericalFootprint.YSize() /
+                this->dataPtr->resolution));
   if (verticalRayCount % 2 == 0) ++verticalRayCount;  // ensure odd
   this->dataPtr->depthSensor->SetVerticalRayCount(verticalRayCount);
 
@@ -645,45 +648,148 @@ bool DopplerVelocityLog::CreateRenderingSensors()
         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
         std::placeholders::_4, std::placeholders::_5));
 
-  if (this->dataPtr->visualize)
+  constexpr double epsilon = std::numeric_limits<double>::epsilon();
+  const std::chrono::steady_clock::duration lifetime =
+      std::chrono::duration_cast<std::chrono::seconds>(
+          std::chrono::duration<double>(this->UpdateRate() > epsilon ?
+                                        1. / this->UpdateRate() : 0.001));
+
+  this->dataPtr->visualizeBeamLobes =
+      arrangementElement->Get<bool>("visualize", false).first;
+  if (this->dataPtr->visualizeBeamLobes)
   {
+    ignmsg << "Enabling beam lobes' visual aids for "
+           << "[" << this->Name() << "] sensor." << std::endl;
+
     for (const AcousticBeam & beam : this->dataPtr->beams)
     {
-      auto * lobeMarkerMessage =
-          this->dataPtr->beamLobesMessage.add_marker();
-      lobeMarkerMessage->set_id(beam.Id());
-      lobeMarkerMessage->set_ns(this->Name() + "::lobes");
-      lobeMarkerMessage->set_action(gz::msgs::Marker::ADD_MODIFY);
-      lobeMarkerMessage->set_type(gz::msgs::Marker::TRIANGLE_FAN);
-      lobeMarkerMessage->set_visibility(gz::msgs::Marker::GUI);
-      gz::msgs::Set(
-          lobeMarkerMessage->mutable_scale(), gz::math::Vector3d::One);
-      lobeMarkerMessage->set_parent(this->Parent());
-      auto * materialMessage = lobeMarkerMessage->mutable_material();
-      gz::msgs::Set(
-          materialMessage->mutable_ambient(),
-          gz::math::Color(1., 0., 0., 0.3));
-      gz::msgs::Set(
-          materialMessage->mutable_diffuse(),
-          gz::math::Color(1., 0., 0., 0.3));
       const double angularResolution =
-          resolution / beam.NormalizedRadius();
-      const int numTriangles = static_cast<int>(
-          std::ceil(2. * IGN_PI / angularResolution));
-      gz::msgs::Set(
-          lobeMarkerMessage->add_point(), gz::math::Vector3d::Zero);
-      for (size_t i = 0; i < numTriangles; ++i)
+          this->dataPtr->resolution / beam.NormalizedRadius();
+      const int lobeNumTriangles =
+          static_cast<int>(std::ceil(2. * IGN_PI / angularResolution));
+
+      auto * lobeConeMarkerMessage = this->dataPtr->beamLobesMessage.add_marker();
+      lobeConeMarkerMessage->set_id(2 * beam.Id());
+      lobeConeMarkerMessage->set_ns(this->Name() + "::lobes");
+      lobeConeMarkerMessage->set_action(gz::msgs::Marker::ADD_MODIFY);
+      lobeConeMarkerMessage->set_type(gz::msgs::Marker::TRIANGLE_FAN);
+      lobeConeMarkerMessage->set_visibility(gz::msgs::Marker::GUI);
+      *lobeConeMarkerMessage->mutable_lifetime() = gz::msgs::Convert(lifetime);
+      auto * lobeConeMaterialMessage = lobeConeMarkerMessage->mutable_material();
+      constexpr gz::math::Color lobeConeColor(1., 0., 0., 0.35);
+      gz::msgs::Set(lobeConeMaterialMessage->mutable_ambient(), lobeConeColor);
+      gz::msgs::Set(lobeConeMaterialMessage->mutable_diffuse(), lobeConeColor);
+      gz::msgs::Set(lobeConeMaterialMessage->mutable_emissive(), lobeConeColor);
+      gz::msgs::Set(lobeConeMarkerMessage->add_point(), gz::math::Vector3d::Zero);
+      for (size_t i = 0; i < lobeNumTriangles; ++i)
       {
         gz::msgs::Set(
-            lobeMarkerMessage->add_point(), gz::math::Vector3d{
+            lobeConeMarkerMessage->add_point(), gz::math::Vector3d{
+              1.,
+              -beam.NormalizedRadius() * std::cos(i * angularResolution),
+              beam.NormalizedRadius() * std::sin(i * angularResolution)
+            });
+      }
+      gz::msgs::Set(
+          lobeConeMarkerMessage->add_point(),
+          gz::math::Vector3d{1., -beam.NormalizedRadius(), 0.});
+
+      auto * lobeCapMarkerMessage =
+          this->dataPtr->beamLobesMessage.add_marker();
+      lobeCapMarkerMessage->set_id(2 * beam.Id() + 1);
+      lobeCapMarkerMessage->set_ns(this->Name() + "::lobes");
+      lobeCapMarkerMessage->set_action(gz::msgs::Marker::ADD_MODIFY);
+      lobeCapMarkerMessage->set_type(gz::msgs::Marker::TRIANGLE_FAN);
+      lobeCapMarkerMessage->set_visibility(gz::msgs::Marker::GUI);
+      *lobeCapMarkerMessage->mutable_lifetime() = gz::msgs::Convert(lifetime);
+      auto * lobeCapMaterialMessage = lobeCapMarkerMessage->mutable_material();
+      constexpr gz::math::Color lobeCapColor(1., 0., 0., 0.65);
+      gz::msgs::Set(lobeCapMaterialMessage->mutable_ambient(), lobeCapColor);
+      gz::msgs::Set(lobeCapMaterialMessage->mutable_diffuse(), lobeCapColor);
+      gz::msgs::Set(lobeCapMaterialMessage->mutable_emissive(), lobeCapColor);
+      gz::msgs::Set(
+          lobeCapMarkerMessage->add_point(), gz::math::Vector3d{1., 0., 0.});
+      for (size_t i = 0; i < lobeNumTriangles; ++i)
+      {
+        gz::msgs::Set(
+            lobeCapMarkerMessage->add_point(), gz::math::Vector3d{
               1.,
               beam.NormalizedRadius() * std::cos(i * angularResolution),
               beam.NormalizedRadius() * std::sin(i * angularResolution)
             });
       }
       gz::msgs::Set(
-          lobeMarkerMessage->add_point(),
+          lobeCapMarkerMessage->add_point(),
           gz::math::Vector3d{1., beam.NormalizedRadius(), 0.});
+    }
+  }
+
+  this->dataPtr->visualizeBeamReflections =
+      this->dataPtr->sensorSdf->Get<bool>("visualize", false).first;
+  if (this->dataPtr->visualizeBeamReflections)
+  {
+    ignmsg << "Enabling beam reflections' visual aids for "
+           << "[" << this->Name() << "] sensor." << std::endl;
+
+    for (const AcousticBeam & beam : this->dataPtr->beams)
+    {
+      auto * refConeMarkerMessage =
+          this->dataPtr->beamReflectionsMessage.add_marker();
+      refConeMarkerMessage->set_id(2 * beam.Id());
+      refConeMarkerMessage->set_ns(this->Name() + "::reflections");
+      refConeMarkerMessage->set_action(gz::msgs::Marker::ADD_MODIFY);
+      refConeMarkerMessage->set_type(gz::msgs::Marker::TRIANGLE_FAN);
+      refConeMarkerMessage->set_visibility(gz::msgs::Marker::GUI);
+      *refConeMarkerMessage->mutable_lifetime() = gz::msgs::Convert(lifetime);
+      auto * refConeMaterialMessage = refConeMarkerMessage->mutable_material();
+      constexpr gz::math::Color refConeColor(0., 1., 0.);
+      gz::msgs::Set(refConeMaterialMessage->mutable_ambient(), refConeColor);
+      gz::msgs::Set(refConeMaterialMessage->mutable_diffuse(), refConeColor);
+      gz::msgs::Set(refConeMaterialMessage->mutable_emissive(), refConeColor);
+
+      gz::msgs::Set(
+          refConeMarkerMessage->add_point(), gz::math::Vector3d::Zero);
+      for (size_t i = 0; i < 4; ++i)
+      {
+        gz::msgs::Set(
+            refConeMarkerMessage->add_point(), gz::math::Vector3d{
+              1.,
+              -this->dataPtr->resolution * std::cos(i * M_PI / 2.),
+              this->dataPtr->resolution * std::sin(i * M_PI / 2.)
+            });
+      }
+      gz::msgs::Set(
+          refConeMarkerMessage->add_point(),
+          gz::math::Vector3d{1., -this->dataPtr->resolution, 0.});
+
+      auto * refCapMarkerMessage =
+          this->dataPtr->beamReflectionsMessage.add_marker();
+      refCapMarkerMessage->set_id(2 * beam.Id() + 1);
+      refCapMarkerMessage->set_ns(this->Name() + "::reflections");
+      refCapMarkerMessage->set_action(gz::msgs::Marker::ADD_MODIFY);
+      refCapMarkerMessage->set_type(gz::msgs::Marker::TRIANGLE_FAN);
+      refCapMarkerMessage->set_visibility(gz::msgs::Marker::GUI);
+      *refCapMarkerMessage->mutable_lifetime() = gz::msgs::Convert(lifetime);
+      auto * refCapMaterialMessage = refCapMarkerMessage->mutable_material();
+      constexpr gz::math::Color refCapColor(0., 1., 0.);
+      gz::msgs::Set(refCapMaterialMessage->mutable_ambient(), refCapColor);
+      gz::msgs::Set(refCapMaterialMessage->mutable_diffuse(), refCapColor);
+      gz::msgs::Set(refCapMaterialMessage->mutable_emissive(), refCapColor);
+
+      gz::msgs::Set(
+          refCapMarkerMessage->add_point(), gz::math::Vector3d{1., 0., 0.});
+      for (size_t i = 0; i < 4; ++i)
+      {
+        gz::msgs::Set(
+            refCapMarkerMessage->add_point(), gz::math::Vector3d{
+              1.,
+              this->dataPtr->resolution * std::cos(i * M_PI / 2.),
+              this->dataPtr->resolution * std::sin(i * M_PI / 2.)
+            });
+      }
+      gz::msgs::Set(
+          refCapMarkerMessage->add_point(),
+          gz::math::Vector3d{1., this->dataPtr->resolution, 0.});
     }
   }
 
@@ -846,17 +952,6 @@ bool DopplerVelocityLog::Update(const std::chrono::steady_clock::duration &)
       this->dataPtr->beamsFrameTransform * this->Pose();
   this->dataPtr->depthSensor->SetLocalPose(beamsFramePose);
   this->dataPtr->imageSensor->SetLocalPose(beamsFramePose);
-  if (this->dataPtr->visualize)
-  {
-    for (size_t i = 0; i < this->dataPtr->beams.size(); ++i)
-    {
-      const AcousticBeam & beam = this->dataPtr->beams[i];
-      auto * lobeMarkerMessage =
-          this->dataPtr->beamLobesMessage.mutable_marker(i);
-      gz::msgs::Set(lobeMarkerMessage->mutable_pose(),
-                    beam.Transform() * beamsFramePose);
-    }
-  }
 
   // Generate sensor data
   this->Render();
@@ -869,26 +964,17 @@ void DopplerVelocityLog::PostUpdate(const std::chrono::steady_clock::duration &_
 {
   IGN_PROFILE("DopplerVelocityLog::PostUpdate");
 
-  // TODO(hidmic): use shader to fetch target entity id
-  for (auto & beamTarget : this->dataPtr->beamTargets)
+  if (!this->dataPtr->generatingData)
   {
-    const gz::math::Vector2i pixel =
-        this->dataPtr->imageSensor->Project(beamTarget->pose.Pos());
-    auto visual = this->dataPtr->imageSensor->VisualAt(pixel);
-    if (visual)
-    {
-      if (visual->HasUserData("gazebo-entity"))
-      {
-        auto user_data = visual->UserData("gazebo-entity");
-        beamTarget->entity = std::get<uint64_t>(user_data);
-      }
-      else
-      {
-        ignwarn << "No entity associated to [" << visual->Name() << "] visual."
-                << " Assuming it is static w.r.t. the world." << std::endl;
-      }
-    }
+    // Nothing to publish
+    return;
   }
+
+  // Used to populate visual aids
+  const std::string parentName =
+      this->dataPtr->depthSensor->Parent()->Name();
+  const gz::math::Pose3d beamsFramePose =
+      this->dataPtr->beamsFrameTransform * this->Pose();
 
   // Populate and publish velocity tracking estimates
   DVLVelocityTracking trackingMessage;
@@ -909,24 +995,68 @@ void DopplerVelocityLog::PostUpdate(const std::chrono::steady_clock::duration &_
     auto * beamMessage = trackingMessage.add_beams();
     beamMessage->set_id(beam.Id());
 
-    const std::optional<Target> & beamTarget = this->dataPtr->beamTargets[i];
+    auto & beamTarget = this->dataPtr->beamTargets[i];
     if (beamTarget)
     {
+      // TODO(hidmic): use shader to fetch target entity id
+      const gz::math::Vector2i pixel =
+          this->dataPtr->imageSensor->Project(beamTarget->pose.Pos());
+      auto visual = this->dataPtr->imageSensor->VisualAt(pixel);
+      if (visual)
+      {
+        if (visual->HasUserData("gazebo-entity"))
+        {
+          auto user_data = visual->UserData("gazebo-entity");
+          beamTarget->entity = std::get<uint64_t>(user_data);
+        }
+        else
+        {
+          igndbg << "No entity associated to [" << visual->Name() << "] visual."
+                 << " Assuming it is static w.r.t. the world." << std::endl;
+        }
+      }
+
       const double beamRange = beamTarget->pose.Pos().Length();
       auto * beamRangeMessage = beamMessage->mutable_range();
       beamRangeMessage->set_mean(beamRange);
 
-      if (this->dataPtr->visualize)
+      if (this->dataPtr->visualizeBeamLobes)
       {
-        auto * lobeMarkerMessage =
-            this->dataPtr->beamLobesMessage.mutable_marker(i);
-        gz::msgs::Set(
-            lobeMarkerMessage->mutable_scale(),
-            gz::math::Vector3d{
-              beamRange,
-              beamRange * beam.NormalizedRadius(),
-              beamRange * beam.NormalizedRadius()
-            });
+        const double length =
+            beamTarget->pose.Pos().Dot(beam.Axis());
+        const auto scale = length * gz::math::Vector3d::One;
+        auto * lobeConeMarkerMessage =
+            this->dataPtr->beamLobesMessage.mutable_marker(2 * i);
+        lobeConeMarkerMessage->set_parent(parentName);
+        gz::msgs::Set(lobeConeMarkerMessage->mutable_scale(), scale);
+        gz::msgs::Set(lobeConeMarkerMessage->mutable_pose(),
+                      beamsFramePose * beam.Transform());
+        auto * lobeCapMarkerMessage =
+            this->dataPtr->beamLobesMessage.mutable_marker(2 * i + 1);
+        lobeCapMarkerMessage->set_parent(parentName);
+        gz::msgs::Set(lobeCapMarkerMessage->mutable_scale(), scale);
+        gz::msgs::Set(lobeCapMarkerMessage->mutable_pose(),
+                      beamsFramePose * beam.Transform());
+      }
+
+      if (this->dataPtr->visualizeBeamReflections)
+      {
+        gz::math::Pose3d transform;
+        transform.Rot().SetFrom2Axes(
+            beam.Axis(), beamTarget->pose.Pos());
+        const auto scale = beamRange * gz::math::Vector3d::One;
+        auto * refConeMarkerMessage =
+            this->dataPtr->beamReflectionsMessage.mutable_marker(2 * i);
+        refConeMarkerMessage->set_parent(parentName);
+        gz::msgs::Set(refConeMarkerMessage->mutable_scale(), scale);
+        gz::msgs::Set(refConeMarkerMessage->mutable_pose(),
+                      beamsFramePose * transform * beam.Transform());
+        auto * refCapMarkerMessage =
+            this->dataPtr->beamReflectionsMessage.mutable_marker(2 * i + 1);
+        refCapMarkerMessage->set_parent(parentName);
+        gz::msgs::Set(refCapMarkerMessage->mutable_scale(), scale);
+        gz::msgs::Set(refCapMarkerMessage->mutable_pose(),
+                      beamsFramePose * transform * beam.Transform());
       }
 
       // Use shortest beam range as target range
@@ -973,14 +1103,35 @@ void DopplerVelocityLog::PostUpdate(const std::chrono::steady_clock::duration &_
       ++numBeamsLocked;
     }
     beamMessage->set_locked(beamTarget.has_value());
-    if (this->dataPtr->visualize)
+    if (this->dataPtr->visualizeBeamLobes)
     {
-      auto * lobeMarkerMessage =
-          this->dataPtr->beamLobesMessage.mutable_marker(i);
-      lobeMarkerMessage->set_action(
+      const auto action =
           beamTarget.has_value() ?
           gz::msgs::Marker::ADD_MODIFY :
-          gz::msgs::Marker::DELETE_MARKER);
+          gz::msgs::Marker::DELETE_MARKER;
+      auto * lobeConeMarkerMessage =
+          this->dataPtr->beamLobesMessage
+          .mutable_marker(2 * i);
+      lobeConeMarkerMessage->set_action(action);
+      auto * lobeCapMarkerMessage =
+          this->dataPtr->beamLobesMessage
+          .mutable_marker(2 * i + 1);
+      lobeCapMarkerMessage->set_action(action);
+    }
+    if (this->dataPtr->visualizeBeamReflections)
+    {
+      const auto action =
+          beamTarget.has_value() ?
+          gz::msgs::Marker::ADD_MODIFY :
+          gz::msgs::Marker::DELETE_MARKER;
+      auto * reflectionConeMarkerMessage =
+          this->dataPtr->beamReflectionsMessage
+          .mutable_marker(2 * i);
+      reflectionConeMarkerMessage->set_action(action);
+      auto * reflectionCapMarkerMessage =
+          this->dataPtr->beamReflectionsMessage
+          .mutable_marker(2 * i + 1);
+      reflectionCapMarkerMessage->set_action(action);
     }
   }
   if (numBeamsLocked >= 3)
@@ -1010,13 +1161,46 @@ void DopplerVelocityLog::PostUpdate(const std::chrono::steady_clock::duration &_
 
   this->dataPtr->pub.Publish(trackingMessage);
 
-  if (this->dataPtr->visualize)
+  if (this->dataPtr->visualizeBeamLobes)
   {
     headerMessage = this->dataPtr->beamLobesMessage.mutable_header();
     *headerMessage->mutable_stamp() = gz::msgs::Convert(_now);
     this->AddSequence(headerMessage, "doppler_velocity_log_beam_lobes");
-    this->dataPtr->node.Request(
-        "/marker_array", this->dataPtr->beamLobesMessage);
+
+    bool result;
+    gz::msgs::Boolean reply;
+    constexpr unsigned int timeout_ms = 1000u;
+    bool outcome = this->dataPtr->node.Request(
+        "/marker_array",
+        this->dataPtr->beamLobesMessage,
+        timeout_ms, reply, result);
+    if (!outcome || !result || !reply.data())
+    {
+      ignwarn << "Failed to render beam lobes' visual "
+              << "aids for [" << this->Name() << "] sensor."
+              << std::endl;
+    }
+  }
+
+  if (this->dataPtr->visualizeBeamReflections)
+  {
+    headerMessage = this->dataPtr->beamReflectionsMessage.mutable_header();
+    *headerMessage->mutable_stamp() = gz::msgs::Convert(_now);
+    this->AddSequence(headerMessage, "doppler_velocity_log_beam_reflections");
+
+    bool result;
+    gz::msgs::Boolean reply;
+    constexpr unsigned int timeout_ms = 1000u;
+    bool outcome = this->dataPtr->node.Request(
+        "/marker_array",
+        this->dataPtr->beamReflectionsMessage,
+        timeout_ms, reply, result);
+    if (!outcome || !result || !reply.data())
+    {
+      ignwarn << "Failed to render beam reflections' visual "
+              << "aids for [" << this->Name() << "] sensor."
+              << std::endl;
+    }
   }
 }
 
