@@ -21,13 +21,17 @@
  */
 
 /**
+ * Subscribe to DVL velocity tracking estimates.
+ *
+ * An ``ign topic -e`` command equivalent that can subscribe
+ * and print DVL velocity tracking messages to console.
+ *
  * Usage:
  *   $ LRAUV_example_dvl_velocity <vehicle_name>
  */
 
+#include <iostream>
 #include <string>
-
-#include <google/protobuf/util/json_util.h>
 
 #include <gz/msgs.hh>
 #include <gz/transport.hh>
@@ -36,9 +40,7 @@
 
 void callback(const lrauv_ignition_plugins::msgs::DVLVelocityTracking &_msg)
 {
-  std::string json;
-  google::protobuf::util::MessageToJsonString(_msg, &json);
-  std::cout << json << std::endl;
+  std::cout << "---" << std::endl << _msg.DebugString();
 }
 
 int main(int _argc, char **_argv)
