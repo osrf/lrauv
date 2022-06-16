@@ -30,7 +30,6 @@ class DopplerVelocityLogSystem :
   public gz::sim::System,
   public gz::sim::ISystemConfigure,
   public gz::sim::ISystemPreUpdate,
-  public gz::sim::ISystemUpdate,
   public gz::sim::ISystemPostUpdate
 {
   public: DopplerVelocityLogSystem();
@@ -47,11 +46,6 @@ class DopplerVelocityLogSystem :
 
   /// Inherits documentation from parent class
   public: void PreUpdate(
-      const gz::sim::UpdateInfo &_info,
-      gz::sim::EntityComponentManager &_ecm) override;
-
-  /// Inherits documentation from parent class
-  public: void Update(
       const gz::sim::UpdateInfo &_info,
       gz::sim::EntityComponentManager &_ecm) override;
 

@@ -273,9 +273,9 @@ void DopplerVelocityLogSystemPrivate::DoPreUpdate(
 }
 
 //////////////////////////////////////////////////
-void DopplerVelocityLogSystemPrivate::DoUpdate(
-  const gz::sim::UpdateInfo &,
-  gz::sim::EntityComponentManager &_ecm)
+void DopplerVelocityLogSystemPrivate::DoPostUpdate(
+  const gz::sim::UpdateInfo &_info,
+  const gz::sim::EntityComponentManager &_ecm)
 {
   _ecm.Each<gz::sim::components::WorldPose,
             gz::sim::components::WorldLinearVelocity,
@@ -290,13 +290,7 @@ void DopplerVelocityLogSystemPrivate::DoUpdate(
         this->worldState[_entity].angularVelocity = _angularVelocity->Data();
         return true;
       });
-}
 
-//////////////////////////////////////////////////
-void DopplerVelocityLogSystemPrivate::DoPostUpdate(
-  const gz::sim::UpdateInfo &_info,
-  const gz::sim::EntityComponentManager &_ecm)
-{
   _ecm.EachRemoved<gz::sim::components::CustomSensor>(
     [&](const gz::sim::Entity &_entity,
         const gz::sim::components::CustomSensor *)
@@ -582,15 +576,6 @@ void DopplerVelocityLogSystem::PreUpdate(
 }
 
 //////////////////////////////////////////////////
-void DopplerVelocityLogSystem::Update(
-  const gz::sim::UpdateInfo &_info,
-  gz::sim::EntityComponentManager &_ecm)
-{
-  IGN_PROFILE("DopplerVelocityLogSystem::Update");
-  this->dataPtr->DoUpdate(_info, _ecm);
-}
-
-//////////////////////////////////////////////////
 void DopplerVelocityLogSystem::PostUpdate(
   const gz::sim::UpdateInfo &_info,
   const gz::sim::EntityComponentManager &_ecm)
@@ -606,7 +591,6 @@ IGNITION_ADD_PLUGIN(tethys::DopplerVelocityLogSystem,
   gz::sim::System,
   gz::sim::ISystemConfigure,
   gz::sim::ISystemPreUpdate,
-  gz::sim::ISystemUpdate,
   gz::sim::ISystemPostUpdate
 )
 
