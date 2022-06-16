@@ -27,8 +27,9 @@ message DVLTrackingTarget
 {
   enum TargetType
   {
-    DVL_TARGET_BOTTOM = 0;
-    DVL_TARGET_WATER_MASS = 1;
+    DVL_TARGET_UNSPECIFIED = 0;
+    DVL_TARGET_BOTTOM = 1;
+    DVL_TARGET_WATER_MASS = 2;
   };
   /// \brief Type of target used for tracking
   TargetType type = 1;
