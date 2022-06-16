@@ -63,7 +63,9 @@ class DopplerVelocityLogPrivate;
 ///         <tilt></tilt>
 ///       </beam>
 ///       <resolution></resolution>
+///       <visualize></visualize>
 ///     </arrangement>
+///     <visualize></visualize>
 ///     <noise type="gaussian">
 ///       <stddev></stddev>
 ///     </noise>
@@ -94,8 +96,15 @@ class DopplerVelocityLogPrivate;
 /// if left unspecified.
 /// - `<arrangement><resolution>` sets the resolution of the beam
 /// arrangement at a 1 m distance. Defaults to 1 cm if left unspecified.
+/// - `<arrangement><visualize>` enables visual aids to evaluate
+/// acoustic beam arrangements. Beam lobes' are rendered and adjusted
+/// in size to match range measurements.
+/// - `<visualize>` enables visual aids to validate acoustic beam
+/// ranging. Beam shortest reflection paths are depicted.
 /// - `<noise>` sets the noise model for range measurements.
 /// Defaults to none if left unspecified
+/// - `<type>` sets the sensor type, either 'piston' or 'phased_array'.
+/// Defaults to unspecified.
 /// - `<minimum_range>` sets a lower bound for range measurements.
 /// Defaults to 1 cm if left unspecified.
 /// - `<maximum_range>` sets an upper bound for range measurements.
