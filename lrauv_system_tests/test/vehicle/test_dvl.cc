@@ -43,11 +43,35 @@ using namespace lrauv_system_tests;
 using namespace std::literals::chrono_literals;
 
 //////////////////////////////////////////////////
-TEST(DVLTest, BottomTrackingWorks)
+TEST(DVLTest, NoTracking)
+{
+  VehicleCommandTestFixture fixture("bottomless_pit.sdf", "tethys");
+
+  using DVLVelocityTracking =
+      lrauv_ignition_plugins::msgs::DVLVelocityTracking;
+  Subscription<DVLVelocityTracking> velocitySubscription;
+  velocitySubscription.Subscribe(fixture.Node(), "/tethys/dvl/velocity", 1);
+
+  fixture.Step(10s);
+
+  ASSERT_TRUE(velocitySubscription.WaitForMessages(10, 10s));
+
+  const DVLVelocityTracking message = velocitySubscription.ReadLastMessage();
+  EXPECT_FALSE(message.has_target());
+  EXPECT_FALSE(message.has_velocity());
+  for (int i = 0; i < message.beams_size(); ++i)
+  {
+    EXPECT_FALSE(message.beams(i).locked())
+        << "Beam #" << message.beams(i).id() << " is locked";
+  }
+}
+
+//////////////////////////////////////////////////
+TEST(DVLTest, BottomTracking)
 {
   constexpr double kTolerance{1e-2};
 
-  VehicleCommandTestFixture fixture("sea_bottom_world.sdf", "tethys");
+  VehicleCommandTestFixture fixture("flat_seabed.sdf", "tethys");
 
   using DVLVelocityTracking =
       lrauv_ignition_plugins::msgs::DVLVelocityTracking;

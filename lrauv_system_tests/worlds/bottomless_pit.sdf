@@ -24,14 +24,6 @@
       name="gz::sim::systems::Physics">
     </plugin>
     <plugin
-      filename="ignition-gazebo-user-commands-system"
-      name="gz::sim::systems::UserCommands">
-    </plugin>
-    <plugin
-      filename="ignition-gazebo-scene-broadcaster-system"
-      name="gz::sim::systems::SceneBroadcaster">
-    </plugin>
-    <plugin
       filename="ignition-gazebo-sensors-system"
       name="ignition::gazebo::systems::Sensors">
     </plugin>
@@ -39,7 +31,6 @@
       filename="DopplerVelocityLogSystem"
       name="tethys::DopplerVelocityLogSystem">
     </plugin>
-
     <plugin
       filename="ignition-gazebo-buoyancy-system"
       name="gz::sim::systems::Buoyancy">
@@ -308,35 +299,6 @@
             </plane>
           </geometry>
           <transparency>1.0</transparency>
-        </visual>
-      </link>
-    </model>
-
-    <model name="sea_bottom">
-      <static>true</static>
-      <pose>0 0 -100 0 0 0</pose>
-      <link name="link">
-        <collision name="collision">
-          <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <!-- 300 km x 300 km -->
-              <size>300000 300000</size>
-            </plane>
-          </geometry>
-        </collision>
-        <visual name="visual">
-          <material>
-            <ambient>0.5 0.5 0.5</ambient>
-            <diffuse>0.5 0.5 0.5</diffuse>
-          </material>
-          <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <!-- 300 km x 300 km -->
-              <size>300000 300000</size>
-            </plane>
-          </geometry>
         </visual>
       </link>
     </model>
