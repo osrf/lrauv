@@ -118,6 +118,7 @@
               <visualize>false</visualize>
             </arrangement>
             <visualize>false</visualize>
+            <type>phased_array</type>
             <noise type="gaussian">
               <!-- +/- 0.5 cm/s precision within 2 stddevs -->
               <stddev>0.0025</stddev>
