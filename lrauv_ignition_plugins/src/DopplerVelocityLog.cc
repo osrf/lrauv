@@ -1156,10 +1156,10 @@ void DopplerVelocityLog::PostUpdate(const std::chrono::steady_clock::duration &_
         this->dataPtr->referenceFrameTransform.Rot().Inverse() *
         velocityInSensorFrame);
   }
-  auto * targetMessage = trackingMessage.mutable_target();
-  targetMessage->set_type(DVLTrackingTarget::DVL_TARGET_BOTTOM);
   if (numBeamsLocked > 0)
   {
+    auto * targetMessage = trackingMessage.mutable_target();
+    targetMessage->set_type(DVLTrackingTarget::DVL_TARGET_BOTTOM);
     auto * rangeMessage = targetMessage->mutable_range();
     rangeMessage->set_mean(targetRange);
   }
