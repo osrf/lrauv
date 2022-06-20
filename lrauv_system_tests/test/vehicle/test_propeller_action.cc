@@ -44,7 +44,7 @@ TEST(PropellerActionTest, ForwardThrust)
   // angular velocity. Vehicle is supposed to move at around
   // 1 m/s with 300 RPM. 300 RPM = 300 * 2 pi / 60 = 10 pi rad/s
   lrauv_ignition_plugins::msgs::LRAUVCommand command;
-  command.set_propomegaaction_(10. * IGN_PI);
+  command.set_propomegaaction_(10. * GZ_PI);
 
   // Neutral buoyancy
   command.set_dropweightstate_(true);

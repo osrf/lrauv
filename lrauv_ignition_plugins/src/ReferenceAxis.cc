@@ -219,7 +219,7 @@ void ReferenceAxisPrivate::OnPreRender()
   {
     this->nedVis = this->scene->CreateAxisVisual();
     this->scene->RootVisual()->AddChild(this->nedVis);
-    this->nedVis->SetLocalRotation(IGN_PI, 0, IGN_PI * 0.5);
+    this->nedVis->SetLocalRotation(GZ_PI, 0, GZ_PI * 0.5);
     this->nedVis->SetLocalScale(0.25, 0.25, 0.25);
 
     // Ogre2 doesn't support text yet
@@ -265,7 +265,7 @@ void ReferenceAxisPrivate::OnPreRender()
     vehicleVis->AddChild(fskVis);
     // TODO(chapulina) This rotation won't be needed if we update the model
     // https://github.com/osrf/lrauv/issues/80
-    fskVis->SetLocalRotation(IGN_PI, 0, IGN_PI * 0.5);
+    fskVis->SetLocalRotation(GZ_PI, 0, GZ_PI * 0.5);
 
     // Ogre2 doesn't support text yet
     auto textGeom = this->scene->CreateText();
@@ -288,5 +288,5 @@ void ReferenceAxisPrivate::OnPreRender()
 }
 
 // Register this plugin
-IGNITION_ADD_PLUGIN(tethys::ReferenceAxis,
+GZ_ADD_PLUGIN(tethys::ReferenceAxis,
                     gz::gui::Plugin)

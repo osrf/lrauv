@@ -342,7 +342,7 @@ void RangeBearingPlugin::PreUpdate(
 
 }
 
-IGNITION_ADD_PLUGIN(tethys::RangeBearingPlugin,
+GZ_ADD_PLUGIN(tethys::RangeBearingPlugin,
   gz::sim::System,
   tethys::RangeBearingPlugin::ISystemConfigure,
   tethys::RangeBearingPlugin::ISystemPreUpdate)

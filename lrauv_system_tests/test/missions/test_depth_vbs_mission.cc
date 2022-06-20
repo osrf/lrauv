@@ -66,8 +66,8 @@ TEST(MissionTest, DepthVBS)
       if (times[i] > 3min)  // Initialization is complete
       {
         // Vehicle should not go vertical when tilting nose
-        EXPECT_LT(poses[i].Rot().Euler().X(), IGN_DTOR(10));
-        EXPECT_GT(poses[i].Rot().Euler().X(), IGN_DTOR(-10));
+        EXPECT_LT(poses[i].Rot().Euler().X(), GZ_DTOR(10));
+        EXPECT_GT(poses[i].Rot().Euler().X(), GZ_DTOR(-10));
       }
 
       // Vehicle should not exceed 20m depth

@@ -46,9 +46,9 @@ class VehicleStateTest : public ::testing::Test
 
   protected: lrauv_system_tests::VehicleStateTestFixture fixture;
 
-  protected: const gz::math::Angle initialLat{IGN_DTOR(35.5999984741211)};
+  protected: const gz::math::Angle initialLat{GZ_DTOR(35.5999984741211)};
 
-  protected: const gz::math::Angle initialLon{IGN_DTOR(-121.779998779297)};
+  protected: const gz::math::Angle initialLon{GZ_DTOR(-121.779998779297)};
 };
 
 // Checks that don't change throughout the test
@@ -124,7 +124,7 @@ TEST_F(VehicleStateTest, ThrustState)
   // Propel vehicle forward by giving the propeller a positive
   // angular velocity. Vehicle is supposed to move at around
   // 1 m/s with 300 RPM. 300 RPM = 300 * 2 pi / 60 = 10 pi rad/s
-  command.set_propomegaaction_(10 * IGN_PI);
+  command.set_propomegaaction_(10 * GZ_PI);
 
   // Neutral buoyancy
   command.set_buoyancyaction_(0.0005);
@@ -153,7 +153,7 @@ TEST_F(VehicleStateTest, ThrustState)
   CheckInvariants(latestState);
 
   // Actuators
-  EXPECT_NEAR(10.0 * IGN_PI, latestState.propomega_(), 1e-6);
+  EXPECT_NEAR(10.0 * GZ_PI, latestState.propomega_(), 1e-6);
   EXPECT_NEAR(0.0, latestState.rudderangle_(), 1e-3);
   EXPECT_NEAR(0.0005, latestState.buoyancyposition_(), 1e-6);
 
@@ -196,7 +196,7 @@ TEST_F(VehicleStateTest, ThrustAndTurnState)
   // Propel vehicle forward by giving the propeller a positive
   // angular velocity. Vehicle is supposed to move at around
   // 1 m/s with 300 RPM. 300 RPM = 300 * 2 pi / 60 = 10 pi rad/s
-  command.set_propomegaaction_(10 * IGN_PI);
+  command.set_propomegaaction_(10 * GZ_PI);
 
   // Neutral buoyancy
   command.set_buoyancyaction_(0.0005);
@@ -236,7 +236,7 @@ TEST_F(VehicleStateTest, ThrustAndTurnState)
   CheckInvariants(latestState);
 
   // Actuators
-  EXPECT_NEAR(10.0 * IGN_PI, latestState.propomega_(), 1e-3);
+  EXPECT_NEAR(10.0 * GZ_PI, latestState.propomega_(), 1e-3);
   EXPECT_NEAR(-0.5, latestState.rudderangle_(), 0.06);
   EXPECT_NEAR(0.0005, latestState.buoyancyposition_(), 1e-6);
 
