@@ -254,11 +254,15 @@ configure_file(
 #============================================================================
 # World generation
 set(WORLD_NAME "portuguese_ledge")
+set(WORLD_NAME_EMPTY "empty_environment_with_tiles")
 add_custom_command(
   OUTPUT world_gen_cmd
   COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/worlds/empy_expander.py
   ${CMAKE_CURRENT_SOURCE_DIR}/worlds/${WORLD_NAME}.sdf.em
   ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME}.sdf
+  COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/worlds/empy_expander.py
+  ${CMAKE_CURRENT_SOURCE_DIR}/worlds/${WORLD_NAME_EMPTY}.sdf.em
+  ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME_EMPTY}.sdf
 )
 
 add_custom_target(world_gen_target ALL
@@ -267,6 +271,7 @@ add_custom_target(world_gen_target ALL
 
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME}.sdf
+  ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME_EMPTY}.sdf
   DESTINATION share/${PROJECT_NAME}/worlds)
 
 #============================================================================
