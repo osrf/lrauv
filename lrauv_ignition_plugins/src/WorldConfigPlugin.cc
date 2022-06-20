@@ -66,5 +66,5 @@ void WorldConfig::SetFilePath(QUrl _filePath)
 
 }
 // Register this plugin
-IGNITION_ADD_PLUGIN(tethys::WorldConfig,
+GZ_ADD_PLUGIN(tethys::WorldConfig,
                     gz::gui::Plugin)

@@ -355,7 +355,7 @@ void AcousticCommsPlugin::PreUpdate(
 
 }
 
-IGNITION_ADD_PLUGIN(
+GZ_ADD_PLUGIN(
   tethys::AcousticCommsPlugin,
   gz::sim::System,
   tethys::AcousticCommsPlugin::ISystemConfigure,

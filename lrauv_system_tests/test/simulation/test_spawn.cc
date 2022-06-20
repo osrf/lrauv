@@ -93,8 +93,8 @@ TEST(VehicleSpawnTest, Spawn)
   ASSERT_TRUE(WaitForConnections(spawnPublisher, 5s));
 
   // No specific orientation, vehicle will face North
-  const gz::math::Angle lat1 = IGN_DTOR(20.0);
-  const gz::math::Angle lon1 = IGN_DTOR(20.0);
+  const gz::math::Angle lat1 = GZ_DTOR(20.0);
+  const gz::math::Angle lon1 = GZ_DTOR(20.0);
   {
     lrauv_ignition_plugins::msgs::LRAUVInit spawnMessage;
     spawnMessage.mutable_id_()->set_data("vehicle1");
@@ -118,9 +118,9 @@ TEST(VehicleSpawnTest, Spawn)
 
   // Spawn vehicle facing South
   // Orientation is in NED, so 180 degrees yaw is South
-  const gz::math::Angle lat2 = IGN_DTOR(20.1);
-  const gz::math::Angle lon2 = IGN_DTOR(20.1);
-  const gz::math::Angle yaw2 = IGN_DTOR(180);
+  const gz::math::Angle lat2 = GZ_DTOR(20.1);
+  const gz::math::Angle lon2 = GZ_DTOR(20.1);
+  const gz::math::Angle yaw2 = GZ_DTOR(180);
   const double depth2 = 10.0;
   {
     lrauv_ignition_plugins::msgs::LRAUVInit spawnMessage;
@@ -171,7 +171,7 @@ TEST(VehicleSpawnTest, Spawn)
   // Facing North (-90 rotation from default West orientation)
   EXPECT_NEAR(0.0, lastPose1.Rot().Roll(), tightTol);
   EXPECT_NEAR(0.0, lastPose1.Rot().Pitch(), tightTol);
-  EXPECT_NEAR(-IGN_PI*0.5, lastPose1.Rot().Yaw(), tightTol);
+  EXPECT_NEAR(-GZ_PI*0.5, lastPose1.Rot().Yaw(), tightTol);
 
   const auto &lastLatLon1 = observer1.SphericalCoordinates().back();
   EXPECT_NEAR(lat1.Degree(), lastLatLon1.X(), tightTol);
@@ -202,5 +202,5 @@ TEST(VehicleSpawnTest, Spawn)
   // it has a 90 degree yaw in ENU
   EXPECT_NEAR(0.0, lastPose2.Rot().Roll(), tightTol);
   EXPECT_NEAR(0.0, lastPose2.Rot().Pitch(), tightTol);
-  EXPECT_NEAR(IGN_DTOR(90), lastPose2.Rot().Yaw(), tightTol);
+  EXPECT_NEAR(GZ_DTOR(90), lastPose2.Rot().Yaw(), tightTol);
 }

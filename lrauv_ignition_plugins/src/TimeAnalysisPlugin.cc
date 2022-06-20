@@ -143,7 +143,7 @@ void TimeAnalysisPlugin::PostUpdate(
   }
 }
 
-IGNITION_ADD_PLUGIN(
+GZ_ADD_PLUGIN(
   tethys::TimeAnalysisPlugin,
   gz::sim::System,
   tethys::TimeAnalysisPlugin::ISystemConfigure,
