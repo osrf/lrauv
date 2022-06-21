@@ -69,8 +69,6 @@ TEST(DVLTest, NoTracking)
 //////////////////////////////////////////////////
 TEST(DVLTest, BottomTracking)
 {
-  constexpr double kTolerance{1e-2};
-
   VehicleCommandTestFixture fixture("flat_seabed.sdf", "tethys");
 
   using DVLVelocityTracking =
@@ -107,17 +105,24 @@ TEST(DVLTest, BottomTracking)
 
   using DVLTrackingTarget = lrauv_ignition_plugins::msgs::DVLTrackingTarget;
   const DVLVelocityTracking message = velocitySubscription.ReadLastMessage();
+  // Account for slight roll and limited resolution
+  constexpr double kRangeTolerance{0.2};
+  // Assume zero roll and arbitrary resolution
+  constexpr double expectedBeamRange = 20. / std::cos(IGN_PI / 6.);
   ASSERT_TRUE(message.has_target());
   EXPECT_EQ(message.target().type(), DVLTrackingTarget::DVL_TARGET_BOTTOM);
-  EXPECT_NEAR(message.target().range().mean(), 20., kTolerance);
+  EXPECT_NEAR(message.target().range().mean(),
+              expectedBeamRange, kRangeTolerance);
   for (int i = 0; i < message.beams_size(); ++i)
   {
     EXPECT_EQ(message.beams(i).id(), i + 1);
     EXPECT_TRUE(message.beams(i).locked())
         << "Beam #" << message.beams(i).id() << " not locked";
-    EXPECT_NEAR(message.beams(i).range().mean(), 20., kTolerance)
+    EXPECT_NEAR(message.beams(i).range().mean(),
+                expectedBeamRange, kRangeTolerance)
         << "Beam #" << message.beams(i).id() << " range is off";
   }
+  constexpr double kVelocityTolerance{1e-2};  // account for noise
   ASSERT_TRUE(message.has_velocity());
   const gz::math::Vector3d linearVelocityEstimate =
       gz::msgs::Convert(message.velocity().mean());
@@ -131,11 +136,11 @@ TEST(DVLTest, BottomTracking)
       sensorRotation.RotateVectorReverse(linearVelocities.back());
   EXPECT_NEAR(linearVelocityEstimate.X(),
               expectedLinearVelocityEstimate.X(),
-              kTolerance);
+              kVelocityTolerance);
   EXPECT_NEAR(linearVelocityEstimate.Y(),
               expectedLinearVelocityEstimate.Y(),
-              kTolerance);
+              kVelocityTolerance);
   EXPECT_NEAR(linearVelocityEstimate.Z(),
               expectedLinearVelocityEstimate.Z(),
-              kTolerance);
+              kVelocityTolerance);
 }
