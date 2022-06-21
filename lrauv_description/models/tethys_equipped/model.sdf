@@ -95,22 +95,22 @@
           <ignition:dvl>
             <arrangement degrees="true">
               <beam id="1">
-                <aperture>90</aperture>
+                <aperture>2.1</aperture>
                 <rotation>45</rotation>
                 <tilt>30</tilt>
               </beam>
               <beam>
-                <aperture>90</aperture>
+                <aperture>2.1</aperture>
                 <rotation>135</rotation>
                 <tilt>30</tilt>
               </beam>
               <beam>
-                <aperture>90</aperture>
+                <aperture>2.1</aperture>
                 <rotation>-45</rotation>
                 <tilt>30</tilt>
               </beam>
               <beam>
-                <aperture>90</aperture>
+                <aperture>2.1</aperture>
                 <rotation>-135</rotation>
                 <tilt>30</tilt>
               </beam>
