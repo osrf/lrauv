@@ -9,13 +9,13 @@ function(add_lrauv_message MESSAGE)
   add_library(${MESSAGE} SHARED ${PROJECT_NAME}/${MESSAGE}.proto)
   target_link_libraries(${MESSAGE}
     protobuf::libprotobuf
-    ignition-msgs${IGN_MSGS_VER}::ignition-msgs${IGN_MSGS_VER})
+    gz-msgs${IGN_MSGS_VER}::gz-msgs${IGN_MSGS_VER})
   file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/proto)
   protobuf_generate(
     TARGET ${MESSAGE}
     LANGUAGE cpp
     IMPORT_DIRS
-      ${ignition-msgs${IGN_MSGS_VER}_INCLUDE_DIRS}
+      ${gz-msgs${IGN_MSGS_VER}_INCLUDE_DIRS}
       ${CMAKE_BINARY_DIR}/proto
     PROTOC_OUT_DIR ${CMAKE_BINARY_DIR}/proto
   )
