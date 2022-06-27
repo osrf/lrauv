@@ -8,8 +8,8 @@ add_subdirectory(models/)
 add_library(acoustic_comms_support SHARED CommsPacket.cc)
 
 target_link_libraries(acoustic_comms_support PUBLIC
-  gz-plugin${IGN_PLUGIN_VER}::gz-plugin${IGN_PLUGIN_VER}
-  gz-sim${IGN_GAZEBO_VER}::gz-sim${IGN_GAZEBO_VER}
+  gz-plugin${GZ_PLUGIN_VER}::gz-plugin${GZ_PLUGIN_VER}
+  gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
   lrauv_acoustic_message
   lrauv_internal_comms
 )
