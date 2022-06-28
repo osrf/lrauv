@@ -28,9 +28,9 @@ def mk_tiles(map_path: str, utm_zone: int, out_path: str, tile_size: int, overla
     """
     Generates digital elevation map (DEM) tiles from parent DEM using Generic Mapping Tool (GMT).
 
-    To install GMT,see: https://www.generic-mapping-tools.org
+    To install GMT, see: https://www.generic-mapping-tools.org
 
-    Tiles are generated with size of tile_size x tile_size, and with "overlap"
+    Tiles are generated with size of `tile_size` x `tile_size`, and with `overlap`
     meters shared with adjacent tiles on each edge.
 
     Tile boundaries will be computed starting at the bottom/right corner of
@@ -39,8 +39,8 @@ def mk_tiles(map_path: str, utm_zone: int, out_path: str, tile_size: int, overla
     :param map_path: file path to full-resolution DEM
     :param utm_zone: full-res DEM UTM zone
     :param out_path: output path for tile files
-    :param tile_size: meters, each tile will have are of tile_size x tile_size
-    :param overlap: meters, tiles will have "overlap" meters shared with adjacent tiles on each edge
+    :param tile_size: meters, each tile will have an area of `tile_size` x `tile_size`
+    :param overlap: meters, tiles will have `overlap` meters shared with adjacent tiles on each edge
     :return: void
     """
     unique_size = tile_size - 2 * overlap
@@ -53,7 +53,7 @@ def mk_tiles(map_path: str, utm_zone: int, out_path: str, tile_size: int, overla
     y = nc_fid.variables['y'][:]
     z = nc_fid.variables['z'][:]
 
-    # Find DEM boundary limits (to nearest 100)
+    # Find DEM boundary limits (to nearest 100 m)
     x_lim = [np.ceil(min(x) / 100) * 100, np.floor(max(x) / 100) * 100]
     y_lim = [np.ceil(min(y) / 100) * 100, np.floor(max(y) / 100) * 100]
 
@@ -107,8 +107,10 @@ def mk_tiles(map_path: str, utm_zone: int, out_path: str, tile_size: int, overla
                              f'{x_tile_centers[i]}, {y_tile_centers[i]}, '
                              f'{lat_tile_centers[i]}, {lon_tile_centers[i]}\n')
 
-        print(gmt_cmd)
-        subprocess.run([gmt_cmd], shell=True)
+        # Invoke gmt to generate tile
+        print(f'\nGenerating tile {i} with command: "{gmt_cmd}"')
+        subprocess.check_output([gmt_cmd], shell=True)
+        # TODO: handle subprocess.CalledProcessError?
 
     tilesCenterFID.close()
 
