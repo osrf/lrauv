@@ -17,6 +17,7 @@
 # Development of this module has been funded by the Monterey Bay Aquarium
 # Research Institute (MBARI) and the David and Lucile Packard Foundation
 
+import os
 import subprocess
 
 import netCDF4 as nc
@@ -86,7 +87,7 @@ def mk_tiles(map_path: str, utm_zone: int, out_path: str, tile_size: int, overla
     lon_tile_centers, lat_tile_centers = P(x_tile_centers, y_tile_centers, inverse=True)
 
     # Log tile centers
-    tilesCenterFID = open(out_path + 'tile_centers.csv', 'w')
+    tilesCenterFID = open(os.path.join(out_path, 'tile_centers.csv'), 'w')
     tilesCenterFID.write('Tile, UTM_zone, Eastings, Northings, Lat, Lon\n')
 
     # Build gmt argument strings and loop through
@@ -96,7 +97,7 @@ def mk_tiles(map_path: str, utm_zone: int, out_path: str, tile_size: int, overla
 
         # Assemble grdcut argument string
         tile_name = 'PortugueseLedgeTile{}_UTM'.format(i)
-        tile_path = '{}{}.grd '.format(out_path, tile_name)
+        tile_path = '{}.grd '.format(os.path.join(out_path, tile_name))
         gcut_out_path = '-G{} '.format(tile_path)
         gcut_bounds = '-R{}/{}/{}/{}'.format(left_bound[i], right_bound[i], lower_bound[i], upper_bound[i])
 
