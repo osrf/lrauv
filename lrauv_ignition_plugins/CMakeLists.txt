@@ -20,32 +20,31 @@ endif()
 
 #============================================================================
 # Find dependencies
-find_package(ignition-cmake3 REQUIRED)
+find_package(gz-cmake3 REQUIRED)
 
-find_package(ignition-gazebo7 REQUIRED COMPONENTS gui)
-set(IGN_GAZEBO_VER ${ignition-gazebo7_VERSION_MAJOR})
+find_package(gz-sim7 REQUIRED COMPONENTS gui)
+set(GZ_SIM_VER ${gz-sim7_VERSION_MAJOR})
 
-find_package(ignition-gui7 REQUIRED)
-set(IGN_GUI_VER ${ignition-gui7_VERSION_MAJOR})
+find_package(gz-gui7 REQUIRED)
+set(GZ_GUI_VER ${gz-gui7_VERSION_MAJOR})
 
-find_package(ignition-rendering7 REQUIRED)
-set(IGN_RENDERING_VER ${ignition-rendering7_VERSION_MAJOR})
+find_package(gz-rendering7 REQUIRED)
+set(GZ_RENDERING_VER ${gz-rendering7_VERSION_MAJOR})
 
-find_package(ignition-sensors7 REQUIRED)
-set(IGN_SENSORS_VER ${ignition-sensors7_VERSION_MAJOR})
+find_package(gz-sensors7 REQUIRED)
+set(GZ_SENSORS_VER ${gz-sensors7_VERSION_MAJOR})
 
-find_package(ignition-msgs9 REQUIRED)
-set(IGN_MSGS_VER ${ignition-msgs9_VERSION_MAJOR})
-set(IGNITION_MSGS ignition-msgs${IGN_MSGS_VER}::ignition-msgs${IGN_MSGS_VER})
+find_package(gz-msgs9 REQUIRED)
+set(GZ_MSGS_VER ${gz-msgs9_VERSION_MAJOR})
 
-find_package(ignition-plugin2 REQUIRED COMPONENTS register)
-set(IGN_PLUGIN_VER ${ignition-plugin2_VERSION_MAJOR})
+find_package(gz-plugin2 REQUIRED COMPONENTS register)
+set(GZ_PLUGIN_VER ${gz-plugin2_VERSION_MAJOR})
 
-find_package(ignition-utils2 REQUIRED)
-set(IGN_UTILS_VER ${ignition-utils2_VERSION_MAJOR})
+find_package(gz-utils2 REQUIRED)
+set(GZ_UTILS_VER ${gz-utils2_VERSION_MAJOR})
 
-find_package(ignition-common5 REQUIRED COMPONENTS profiler)
-set(IGN_COMMON_VER ${ignition-common5_VERSION_MAJOR})
+find_package(gz-common5 REQUIRED COMPONENTS profiler)
+set(GZ_COMMON_VER ${gz-common5_VERSION_MAJOR})
 
 find_package (Eigen3 3.3 REQUIRED)
 
@@ -102,9 +101,9 @@ function(add_lrauv_plugin PLUGIN)
   set_property(TARGET ${PLUGIN} PROPERTY CXX_STANDARD 17)
   target_link_libraries(${PLUGIN}
     PUBLIC
-      ignition-common${IGN_COMMON_VER}::profiler
-      ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-      ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+      gz-common${GZ_COMMON_VER}::profiler
+      gz-plugin${GZ_PLUGIN_VER}::gz-plugin${GZ_PLUGIN_VER}
+      gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
     PRIVATE
       ${add_lrauv_plugin_PRIVATE_LINK_LIBS}
   )
@@ -127,7 +126,7 @@ function(add_lrauv_plugin PLUGIN)
       PUBLIC
         TINYXML2::TINYXML2
       PRIVATE
-        ignition-gui${IGN_GUI_VER}::ignition-gui${IGN_GUI_VER}
+        gz-gui${GZ_GUI_VER}::gz-gui${GZ_GUI_VER}
     )
 
     target_include_directories(${PLUGIN}
@@ -138,7 +137,7 @@ function(add_lrauv_plugin PLUGIN)
   if (add_lrauv_plugin_RENDERING)
     target_link_libraries(${PLUGIN}
       PRIVATE
-        ignition-rendering${IGN_RENDERING_VER}::ignition-rendering${IGN_RENDERING_VER}
+        gz-rendering${GZ_RENDERING_VER}::gz-rendering${GZ_RENDERING_VER}
     )
   endif()
 
@@ -171,7 +170,7 @@ add_lrauv_plugin(ReferenceAxis GUI RENDERING)
 add_lrauv_plugin(ScienceSensorsSystem
   PCL
   PRIVATE_LINK_LIBS
-    ignition-sensors${IGN_SENSORS_VER}::ignition-sensors${IGN_SENSORS_VER}
+    gz-sensors${GZ_SENSORS_VER}::gz-sensors${GZ_SENSORS_VER}
     ${PCL_LIBRARIES})
 add_lrauv_plugin(SpawnPanelPlugin GUI
   PROTO
@@ -212,7 +211,7 @@ foreach(EXAMPLE
   add_executable(${EXAMPLE_EXEC} example/${EXAMPLE}.cc)
   set_property(TARGET ${EXAMPLE_EXEC} PROPERTY CXX_STANDARD 17)
   target_link_libraries(${EXAMPLE_EXEC} PRIVATE
-    ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+    gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
     lrauv_acoustic_message lrauv_command lrauv_init lrauv_internal_comms
     lrauv_range_bearing_request lrauv_range_bearing_response lrauv_state)
 

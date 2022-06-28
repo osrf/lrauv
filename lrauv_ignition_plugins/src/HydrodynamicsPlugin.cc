@@ -22,7 +22,7 @@
 
 #include "HydrodynamicsPlugin.hh"
 
-#include <Eigen/Eigen>
+#include <eigen3/Eigen/Eigen>
 
 #include <gz/msgs.hh>
 
