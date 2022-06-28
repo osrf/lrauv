@@ -31,9 +31,9 @@ set(IGN_GUI_VER ${ignition-gui7_VERSION_MAJOR})
 find_package(ignition-rendering7 REQUIRED)
 set(IGN_RENDERING_VER ${ignition-rendering7_VERSION_MAJOR})
 
-find_package(ignition-sensors7 REQUIRED)
-set(IGN_SENSORS_VER ${ignition-sensors7_VERSION_MAJOR})
-set(IGN_SENSORS ignition-sensors${IGN_SENSORS_VER}::ignition-sensors${IGN_SENSORS_VER})
+find_package(gz-sensors7 REQUIRED)
+set(GZ_SENSORS_VER ${gz-sensors7_VERSION_MAJOR})
+set(GZ_SENSORS gz-sensors${GZ_SENSORS_VER}::gz-sensors${GZ_SENSORS_VER})
 
 find_package(ignition-msgs9 REQUIRED)
 set(IGN_MSGS_VER ${ignition-msgs9_VERSION_MAJOR})
@@ -170,10 +170,10 @@ add_lrauv_plugin(DopplerVelocityLog
     dvl_range_estimate
     dvl_tracking_target
     dvl_velocity_tracking)
-target_link_libraries(DopplerVelocityLog PUBLIC ${IGN_SENSORS}-rendering)
+target_link_libraries(DopplerVelocityLog PUBLIC ${GZ_SENSORS}-rendering)
 add_lrauv_plugin(DopplerVelocityLogSystem RENDERING)
 target_link_libraries(DopplerVelocityLogSystem PUBLIC
-  DopplerVelocityLog ${IGN_SENSORS}-rendering)
+  DopplerVelocityLog ${GZ_SENSORS}-rendering)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(RangeBearingPlugin
   PROTO
@@ -186,7 +186,7 @@ add_lrauv_plugin(ReferenceAxis GUI RENDERING)
 add_lrauv_plugin(ScienceSensorsSystem
   PCL
   PRIVATE_LINK_LIBS
-    ${IGN_SENSORS}
+    ${GZ_SENSORS}
     ${PCL_LIBRARIES})
 add_lrauv_plugin(SpawnPanelPlugin GUI
   PROTO

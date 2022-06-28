@@ -20,8 +20,8 @@
 #include <vector>
 
 // TODO(hidmic): implement SVD in ignition?
-#include <Eigen/Core>
-#include <Eigen/SVD>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/SVD>
 
 #include <gz/common/Console.hh>
 #include <gz/common/Event.hh>
@@ -469,7 +469,7 @@ bool DopplerVelocityLog::CreateRenderingSensors()
   }
   const bool useDegrees =
       arrangementElement->Get("degrees", false).first;
-  const gz::math::Angle angleUnit = useDegrees ? IGN_DTOR(1.) : 1.;
+  const gz::math::Angle angleUnit = useDegrees ? GZ_DTOR(1.) : 1.;
 
   sdf::ElementPtr beamElement = arrangementElement->GetElement("beam");
   while (beamElement)
@@ -595,7 +595,7 @@ bool DopplerVelocityLog::CreateRenderingSensors()
          << " m for [" << this->Name() << "] sensor." << std::endl;
   this->dataPtr->depthSensor->SetFarClipPlane(maximumRange);
 
-  this->dataPtr->depthSensor->SetVisibilityMask(~IGN_VISIBILITY_GUI);
+  this->dataPtr->depthSensor->SetVisibilityMask(~GZ_VISIBILITY_GUI);
   this->dataPtr->depthSensor->SetClamp(false);
 
   if (this->dataPtr->sensorSdf->HasElement("noise"))
@@ -636,7 +636,7 @@ bool DopplerVelocityLog::CreateRenderingSensors()
   this->dataPtr->imageSensor->SetAspectRatio(
       beamsSphericalFootprint.XSize() / beamsSphericalFootprint.YSize());
   this->dataPtr->imageSensor->SetHFOV(beamsSphericalFootprint.XSize());
-  this->dataPtr->imageSensor->SetVisibilityMask(~IGN_VISIBILITY_GUI);
+  this->dataPtr->imageSensor->SetVisibilityMask(~GZ_VISIBILITY_GUI);
 
   this->AddSensor(this->dataPtr->imageSensor);
 
@@ -668,7 +668,7 @@ bool DopplerVelocityLog::CreateRenderingSensors()
       const double angularResolution =
           this->dataPtr->resolution / beam.NormalizedRadius();
       const int lobeNumTriangles =
-          static_cast<int>(std::ceil(2. * IGN_PI / angularResolution));
+          static_cast<int>(std::ceil(2. * GZ_PI / angularResolution));
 
       auto * lobeConeMarkerMessage = this->dataPtr->beamLobesMessage.add_marker();
       lobeConeMarkerMessage->set_id(2 * beam.Id());
@@ -919,7 +919,7 @@ void DopplerVelocityLog::SetEntity(gz::sim::Entity _entityId)
 //////////////////////////////////////////////////
 bool DopplerVelocityLog::Update(const std::chrono::steady_clock::duration &)
 {
-  IGN_PROFILE("DopplerVelocityLog::Update");
+  GZ_PROFILE("DopplerVelocityLog::Update");
   if (!this->dataPtr->initialized ||
       this->dataPtr->entityId == gz::sim::kNullEntity)
   {
@@ -964,7 +964,7 @@ bool DopplerVelocityLog::Update(const std::chrono::steady_clock::duration &)
 //////////////////////////////////////////////////
 void DopplerVelocityLog::PostUpdate(const std::chrono::steady_clock::duration &_now)
 {
-  IGN_PROFILE("DopplerVelocityLog::PostUpdate");
+  GZ_PROFILE("DopplerVelocityLog::PostUpdate");
 
   if (!this->dataPtr->generatingData)
   {

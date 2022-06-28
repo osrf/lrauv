@@ -84,7 +84,7 @@ TEST(DVLTest, BottomTracking)
   // angular velocity. Vehicle is supposed to move at around
   // 1 m/s with 300 RPM. 300 RPM = 300 * 2 pi / 60 = 10 pi rad/s
   lrauv_ignition_plugins::msgs::LRAUVCommand command;
-  command.set_propomegaaction_(10. * IGN_PI);
+  command.set_propomegaaction_(10. * GZ_PI);
 
   // Rotate rudder clockwise when looking from the top,
   // which causes the vehicle to move in a counter-clockwise arch
@@ -108,7 +108,7 @@ TEST(DVLTest, BottomTracking)
   // Account for slight roll and limited resolution
   constexpr double kRangeTolerance{0.2};
   // Assume zero roll and arbitrary resolution
-  constexpr double expectedBeamRange = 20. / std::cos(IGN_PI / 6.);
+  constexpr double expectedBeamRange = 20. / std::cos(GZ_PI / 6.);
   ASSERT_TRUE(message.has_target());
   EXPECT_EQ(message.target().type(), DVLTrackingTarget::DVL_TARGET_BOTTOM);
   EXPECT_NEAR(message.target().range().mean(),

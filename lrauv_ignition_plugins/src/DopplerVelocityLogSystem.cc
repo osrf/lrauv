@@ -447,7 +447,7 @@ void DopplerVelocityLogSystemPrivate::Handle(
 //////////////////////////////////////////////////
 void DopplerVelocityLogSystemPrivate::OnPreRender()
 {
-  IGN_PROFILE("DopplerVelocityLogSystemPrivate::OnPreRender");
+  GZ_PROFILE("DopplerVelocityLogSystemPrivate::OnPreRender");
   if (!this->scene)
   {
     this->scene = gz::rendering::sceneFromFirstRenderEngine();
@@ -475,7 +475,7 @@ void DopplerVelocityLogSystemPrivate::OnPreRender()
 //////////////////////////////////////////////////
 void DopplerVelocityLogSystemPrivate::OnRender()
 {
-  IGN_PROFILE("DopplerVelocityLogSystemPrivate::OnRender");
+  GZ_PROFILE("DopplerVelocityLogSystemPrivate::OnRender");
   if (!this->scene->IsInitialized() ||
       this->scene->SensorCount() == 0)
   {
@@ -508,7 +508,7 @@ void DopplerVelocityLogSystemPrivate::OnRender()
 //////////////////////////////////////////////////
 void DopplerVelocityLogSystemPrivate::OnPostRender()
 {
-  IGN_PROFILE("DopplerVelocityLogSystemPrivate::OnPostRender");
+  GZ_PROFILE("DopplerVelocityLogSystemPrivate::OnPostRender");
   for (const auto & sensorId : this->updatedSensorIds)
   {
     auto *sensor =
@@ -522,7 +522,7 @@ void DopplerVelocityLogSystemPrivate::OnPostRender()
 //////////////////////////////////////////////////
 void DopplerVelocityLogSystemPrivate::OnRenderTeardown()
 {
-  IGN_PROFILE("DopplerVelocityLogSystemPrivate::OnRenderTeardown");
+  GZ_PROFILE("DopplerVelocityLogSystemPrivate::OnRenderTeardown");
   for (const auto & [entityId, sensorId] : this->sensorIdPerEntity)
   {
     auto *sensor = dynamic_cast<DopplerVelocityLog *>(
@@ -562,7 +562,7 @@ void DopplerVelocityLogSystem::Configure(
     gz::sim::EntityComponentManager &_ecm,
     gz::sim::EventManager &_eventMgr)
 {
-  IGN_PROFILE("DopplerVelocityLogSystem::Configure");
+  GZ_PROFILE("DopplerVelocityLogSystem::Configure");
   this->dataPtr->DoConfigure(_entity, _sdf, _ecm, _eventMgr);
 }
 
@@ -571,7 +571,7 @@ void DopplerVelocityLogSystem::PreUpdate(
   const gz::sim::UpdateInfo &_info,
   gz::sim::EntityComponentManager &_ecm)
 {
-  IGN_PROFILE("DopplerVelocityLogSystem::PreUpdate");
+  GZ_PROFILE("DopplerVelocityLogSystem::PreUpdate");
   this->dataPtr->DoPreUpdate(_info, _ecm);
 }
 
@@ -580,19 +580,19 @@ void DopplerVelocityLogSystem::PostUpdate(
   const gz::sim::UpdateInfo &_info,
   const gz::sim::EntityComponentManager &_ecm)
 {
-  IGN_PROFILE("DopplerVelocityLogSystem::PostUpdate");
+  GZ_PROFILE("DopplerVelocityLogSystem::PostUpdate");
   this->dataPtr->DoPostUpdate(_info, _ecm);
 
 }
 
 }  // namespace tethys
 
-IGNITION_ADD_PLUGIN(tethys::DopplerVelocityLogSystem,
+GZ_ADD_PLUGIN(tethys::DopplerVelocityLogSystem,
   gz::sim::System,
   gz::sim::ISystemConfigure,
   gz::sim::ISystemPreUpdate,
   gz::sim::ISystemPostUpdate
 )
 
-IGNITION_ADD_PLUGIN_ALIAS(tethys::DopplerVelocityLogSystem,
-                          "tethys::DopplerVelocityLogSystem")
+GZ_ADD_PLUGIN_ALIAS(tethys::DopplerVelocityLogSystem,
+                    "tethys::DopplerVelocityLogSystem")
