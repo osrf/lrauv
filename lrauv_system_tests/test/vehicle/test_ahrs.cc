@@ -114,8 +114,8 @@ static constexpr double Be{5.5645e-6};    // T
 static constexpr double Bn{22.8758e-6};   // T
 static constexpr double Bu{-42.3884e-6};  // T
 
-static constexpr double angularVelocityTolerance{1e-4};
-static constexpr double linearAccelerationTolerance{1e-4};
+static constexpr double angularVelocityTolerance{3e-2};
+static constexpr double linearAccelerationTolerance{3e-2};
 static constexpr double magneticFieldTolerance{1e-8};
 static constexpr double orientationTolerance{1e-4};
 
@@ -169,7 +169,7 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
 
   // Make vehicle face west
   auto &manipulator = fixture.VehicleManipulator();
-  manipulator.SetOrientation({0., 0., IGN_DTOR(90.)});
+  manipulator.SetOrientation({0., 0., GZ_DTOR(90.)});
 
   EXPECT_LT(0, fixture.Step(200ms));
   measurement = fixture.ReadLastMeasurement();
@@ -199,13 +199,13 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
       AreQuaternionsEqual(
           measurement.orientation,
           gz::math::Quaterniond(
-              0., 0., IGN_DTOR(-90.)),
+              0., 0., GZ_DTOR(-90.)),
           orientationTolerance))
       << "Last orientation estimate was "
       << measurement.orientation;
 
   // Make vehicle face south
-  manipulator.SetOrientation({0., 0., IGN_DTOR(180.)});
+  manipulator.SetOrientation({0., 0., GZ_DTOR(180.)});
 
   EXPECT_LT(0, fixture.Step(200ms));
   measurement = fixture.ReadLastMeasurement();
@@ -235,13 +235,13 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
       AreQuaternionsEqual(
           measurement.orientation,
           gz::math::Quaterniond(
-              0., 0., IGN_DTOR(-180.)),
+              0., 0., GZ_DTOR(-180.)),
           orientationTolerance))
       << "Last orientation estimate was "
       << measurement.orientation;
 
   // Make vehicle face east
-  manipulator.SetOrientation({0., 0., IGN_DTOR(-90.)});
+  manipulator.SetOrientation({0., 0., GZ_DTOR(-90.)});
 
   EXPECT_LT(0, fixture.Step(200ms));
   measurement = fixture.ReadLastMeasurement();
@@ -271,13 +271,13 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
       AreQuaternionsEqual(
           measurement.orientation,
           gz::math::Quaterniond(
-              0., 0., IGN_DTOR(90.)),
+              0., 0., GZ_DTOR(90.)),
           orientationTolerance))
       << "Last orientation estimate was "
       << measurement.orientation;
 
   // Put vehicle in a vertical position heading upwards
-  manipulator.SetOrientation({IGN_DTOR(90.), 0., 0.});
+  manipulator.SetOrientation({GZ_DTOR(90.), 0., 0.});
 
   EXPECT_LT(0, fixture.Step(200ms));
   measurement = fixture.ReadLastMeasurement();
@@ -307,13 +307,13 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
       AreQuaternionsEqual(
           measurement.orientation,
           gz::math::Quaterniond(
-              0., IGN_DTOR(90.), 0.),
+              0., GZ_DTOR(90.), 0.),
           orientationTolerance))
       << "Last orientation estimate was "
       << measurement.orientation;
 
   // Put vehicle in a vertical position heading downwards
-  manipulator.SetOrientation({IGN_DTOR(-90.), -0., 0.});
+  manipulator.SetOrientation({GZ_DTOR(-90.), -0., 0.});
 
   EXPECT_LT(0, fixture.Step(200ms));
   measurement = fixture.ReadLastMeasurement();
@@ -343,13 +343,13 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
       AreQuaternionsEqual(
           measurement.orientation,
           gz::math::Quaterniond(
-              0., IGN_DTOR(-90.), 0.),
+              0., GZ_DTOR(-90.), 0.),
           orientationTolerance))
       << "Last orientation estimate was "
       << measurement.orientation;
 
   // Make vehicle roll towards starboard
-  manipulator.SetOrientation({0., IGN_DTOR(90.), 0.});
+  manipulator.SetOrientation({0., GZ_DTOR(90.), 0.});
 
   EXPECT_LT(0, fixture.Step(200ms));
   measurement = fixture.ReadLastMeasurement();
@@ -379,13 +379,13 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
       AreQuaternionsEqual(
           measurement.orientation,
           gz::math::Quaterniond(
-              IGN_DTOR(90.), 0., 0.),
+              GZ_DTOR(90.), 0., 0.),
           orientationTolerance))
       << "Last orientation estimate was "
       << measurement.orientation;
 
   // Make vehicle roll towards port
-  manipulator.SetOrientation({0., IGN_DTOR(-90.), 0.});
+  manipulator.SetOrientation({0., GZ_DTOR(-90.), 0.});
 
   EXPECT_LT(0, fixture.Step(200ms));
   measurement = fixture.ReadLastMeasurement();
@@ -415,13 +415,13 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
     AreQuaternionsEqual(
         measurement.orientation,
         gz::math::Quaterniond(
-            IGN_DTOR(-90.), 0., 0.),
+            GZ_DTOR(-90.), 0., 0.),
         orientationTolerance))
       << "Last orientation estimate was "
       << measurement.orientation;
 
   // Make vehicle do a half barrel roll
-  manipulator.SetOrientation({0., IGN_DTOR(180.), 0.});
+  manipulator.SetOrientation({0., GZ_DTOR(180.), 0.});
 
   EXPECT_LT(0, fixture.Step(200ms));
   measurement = fixture.ReadLastMeasurement();
@@ -451,7 +451,7 @@ TEST(AHRSTest, FrameConventionsAreCorrect)
     AreQuaternionsEqual(
         measurement.orientation,
         gz::math::Quaterniond(
-            IGN_DTOR(180.), 0., 0.),
+            GZ_DTOR(180.), 0., 0.),
         orientationTolerance))
       << "Last orientation estimate was "
       << measurement.orientation;

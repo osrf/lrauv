@@ -80,13 +80,13 @@ TEST(MissionTest, PitchMass)
         // Max Pitch 20 degrees, allowing for an error of
         // up to 5 degrees to accomodate for oscillations
         // during pitch control.
-        EXPECT_LT(poses[i].Rot().Euler().X(), IGN_DTOR(25));
-        EXPECT_GT(poses[i].Rot().Euler().X(), IGN_DTOR(-5));
+        EXPECT_LT(poses[i].Rot().Euler().X(), GZ_DTOR(25));
+        EXPECT_GT(poses[i].Rot().Euler().X(), GZ_DTOR(-5));
       }
 
       // No roll or yaw
-      EXPECT_NEAR(poses[i].Rot().Euler().Y(), IGN_DTOR(0), 1e-2);
-      EXPECT_NEAR(poses[i].Rot().Euler().Z(), IGN_DTOR(0), 1e-2);
+      EXPECT_NEAR(poses[i].Rot().Euler().Y(), GZ_DTOR(0), 1e-2);
+      EXPECT_NEAR(poses[i].Rot().Euler().Z(), GZ_DTOR(0), 1e-2);
 
       // Used later for oscillation check.
       if (!firstPitch)
@@ -96,7 +96,7 @@ TEST(MissionTest, PitchMass)
       }
 
       // Check if we cross the 20 degree mark
-      if (prevPitch <= IGN_DTOR(20) && poses[i].Rot().Euler().X() >= IGN_DTOR(20))
+      if (prevPitch <= GZ_DTOR(20) && poses[i].Rot().Euler().X() >= GZ_DTOR(20))
       {
         reachedTarget = true;
       }
@@ -110,7 +110,7 @@ TEST(MissionTest, PitchMass)
   // Check for oscillation by summing over abs delta in pitch
   // Essentially \Sigma abs(f'(x)) < C. In this case C should be near 2*20
   // degrees as the vehicle first pitches down and then comes back up.
-  EXPECT_LE(totalPitchChange, IGN_DTOR(20) * 2.);
+  EXPECT_LE(totalPitchChange, GZ_DTOR(20) * 2.);
 
   // Make sure the vehicle actually pitched to 20 degrees.
   EXPECT_TRUE(reachedTarget);

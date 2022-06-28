@@ -107,7 +107,7 @@ TEST(HydrodynamicsTest, DampForwardThrust)
   gz::msgs::Double thrustCommand;
   // Vehicle is supposed to move at around 1 m/s with a 300 RPM thrust.
   // 300 RPM = 300 * 2 pi / 60 = 10 pi rad/s
-  thrustCommand.set_data(10. * IGN_PI);
+  thrustCommand.set_data(10. * GZ_PI);
   for (auto &publisher : fixture.ThrustPublishers())
   {
     using namespace std::literals::chrono_literals;

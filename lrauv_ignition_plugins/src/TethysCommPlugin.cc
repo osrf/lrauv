@@ -710,7 +710,7 @@ void TethysCommPlugin::PostUpdate(
   }
 }
 
-IGNITION_ADD_PLUGIN(
+GZ_ADD_PLUGIN(
   tethys::TethysCommPlugin,
   gz::sim::System,
   tethys::TethysCommPlugin::ISystemConfigure,

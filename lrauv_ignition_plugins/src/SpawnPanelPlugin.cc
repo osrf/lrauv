@@ -94,5 +94,5 @@ void SpawnPanel::Update(const gz::sim::UpdateInfo &,
 }
 
 // Register this plugin
-IGNITION_ADD_PLUGIN(tethys::SpawnPanel,
+GZ_ADD_PLUGIN(tethys::SpawnPanel,
                     gz::gui::Plugin)

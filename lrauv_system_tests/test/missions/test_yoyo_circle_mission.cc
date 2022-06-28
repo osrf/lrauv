@@ -62,8 +62,8 @@ TEST(MissionTest, YoYoCircle)
     for (size_t i = 0; i < times.size(); ++i)
     {
       // Pitch should be between -20 and 20 degrees
-      EXPECT_LT(IGN_DTOR(-20), poses[i].Rot().Pitch());
-      EXPECT_GT(IGN_DTOR(20), poses[i].Rot().Pitch());
+      EXPECT_LT(GZ_DTOR(-20), poses[i].Rot().Pitch());
+      EXPECT_GT(GZ_DTOR(20), poses[i].Rot().Pitch());
 
       if (times[i] > 2min)
       {
