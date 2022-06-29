@@ -66,8 +66,8 @@ void SpawnVehicle(
   const double _lat, const double _lon, const double _depth,
   const int _acommsAddr)
 {
-  gz::math::Angle lat1 = IGN_DTOR(_lat);
-  gz::math::Angle lon1 = IGN_DTOR(_lon);
+  gz::math::Angle lat1 = GZ_DTOR(_lat);
+  gz::math::Angle lon1 = GZ_DTOR(_lon);
 
   lrauv_ignition_plugins::msgs::LRAUVInit spawnMsg;
   spawnMsg.mutable_id_()->set_data(_modelName);

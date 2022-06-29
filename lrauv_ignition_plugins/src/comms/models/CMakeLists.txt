@@ -6,7 +6,7 @@
 add_library(simple_acoustic_model SHARED SimpleAcousticModel.cc)
 
 target_link_libraries(simple_acoustic_model PUBLIC
-  ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
+  gz-plugin${GZ_PLUGIN_VER}::gz-plugin${GZ_PLUGIN_VER}
   acoustic_comms_support
 )
 

@@ -389,7 +389,7 @@ float ScienceSensorsSystemPrivate::InterpolateInTime(
 bool ScienceSensorsSystemPrivate::ReadData(
     const gz::sim::EntityComponentManager &_ecm)
 {
-  IGN_PROFILE("ScienceSensorsSystemPrivate::ReadData");
+  GZ_PROFILE("ScienceSensorsSystemPrivate::ReadData");
 
   if (!this->sphericalCoordinatesInitialized)
   {
@@ -611,7 +611,7 @@ bool ScienceSensorsSystemPrivate::ReadData(
 /////////////////////////////////////////////////
 void ScienceSensorsSystemPrivate::PublishData()
 {
-  IGN_PROFILE("ScienceSensorsSystemPrivate::PublishData");
+  GZ_PROFILE("ScienceSensorsSystemPrivate::PublishData");
   this->tempPub.Publish(this->tempMsg);
   this->chlorPub.Publish(this->chlorMsg);
   this->salPub.Publish(this->salMsg);
@@ -708,8 +708,8 @@ void ScienceSensorsSystem::PreUpdate(
 void ScienceSensorsSystem::PostUpdate(const gz::sim::UpdateInfo &_info,
   const gz::sim::EntityComponentManager &_ecm)
 {
-  IGN_PROFILE_THREAD_NAME("ScienceSensorsSystem PostUpdate");
-  IGN_PROFILE("ScienceSensorsSystem::PostUpdate");
+  GZ_PROFILE_THREAD_NAME("ScienceSensorsSystem PostUpdate");
+  GZ_PROFILE("ScienceSensorsSystem::PostUpdate");
 
   this->RemoveSensorEntities(_ecm);
 
@@ -777,7 +777,7 @@ void ScienceSensorsSystem::PostUpdate(const gz::sim::UpdateInfo &_info,
   // to generate data for that sensor.
   for (auto &[entity, sensor] : this->entitySensorMap)
   {
-    IGN_PROFILE("ScienceSensorsSystem::LookupInterpolators");
+    GZ_PROFILE("ScienceSensorsSystem::LookupInterpolators");
     auto sensorPosENU = gz::sim::worldPose(entity, _ecm).Pos();
     auto spherical = gz::sim::sphericalCoordinates(entity, _ecm).value();
     auto sphericalDepthCorrected = gz::math::Vector3d{spherical.X(), spherical.Y(),
@@ -834,7 +834,7 @@ void ScienceSensorsSystem::PostUpdate(const gz::sim::UpdateInfo &_info,
 void ScienceSensorsSystem::RemoveSensorEntities(
     const gz::sim::EntityComponentManager &_ecm)
 {
-  IGN_PROFILE("ScienceSensorsSystem::RemoveSensorEntities");
+  GZ_PROFILE("ScienceSensorsSystem::RemoveSensorEntities");
 
   _ecm.EachRemoved<gz::sim::components::CustomSensor>(
     [&](const gz::sim::Entity &_entity,
@@ -891,7 +891,7 @@ bool ScienceSensorsSystemPrivate::SalinityService(
 //////////////////////////////////////////////////
 gz::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
 {
-  IGN_PROFILE("ScienceSensorsSystemPrivate::PointCloudMsg");
+  GZ_PROFILE("ScienceSensorsSystemPrivate::PointCloudMsg");
 
   gz::msgs::PointCloudPacked msg;
 
@@ -933,12 +933,12 @@ gz::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
   return msg;
 }
 
-IGNITION_ADD_PLUGIN(
+GZ_ADD_PLUGIN(
   tethys::ScienceSensorsSystem,
   gz::sim::System,
   tethys::ScienceSensorsSystem::ISystemConfigure,
   tethys::ScienceSensorsSystem::ISystemPreUpdate,
   tethys::ScienceSensorsSystem::ISystemPostUpdate)
 
-IGNITION_ADD_PLUGIN_ALIAS(tethys::ScienceSensorsSystem,
+GZ_ADD_PLUGIN_ALIAS(tethys::ScienceSensorsSystem,
     "tethys::ScienceSensorsSystem")

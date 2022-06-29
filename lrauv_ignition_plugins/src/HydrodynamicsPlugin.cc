@@ -22,7 +22,7 @@
 
 #include "HydrodynamicsPlugin.hh"
 
-#include <Eigen/Eigen>
+#include <eigen3/Eigen/Eigen>
 
 #include <gz/msgs.hh>
 
@@ -361,7 +361,7 @@ void HydrodynamicsPlugin::PreUpdate(
 
 };
 
-IGNITION_ADD_PLUGIN(
+GZ_ADD_PLUGIN(
   tethys::HydrodynamicsPlugin,
   gz::sim::System,
   tethys::HydrodynamicsPlugin::ISystemConfigure,

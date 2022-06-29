@@ -203,7 +203,7 @@ void WorldCommPlugin::SpawnCallback(
   // The robot model is facing its own -X, so with zero ENU orientation it faces
   // West. We add an extra 90 degree yaw so zero means North, to conform with
   // NED.
-  auto rotRobot = gz::math::Quaterniond(0.0, 0.0, -IGN_PI * 0.5) * rotENU;
+  auto rotRobot = gz::math::Quaterniond(0.0, 0.0, -GZ_PI * 0.5) * rotENU;
 
   gz::msgs::Set(factoryReq.mutable_pose()->mutable_orientation(), rotRobot);
 
@@ -313,7 +313,7 @@ std::string WorldCommPlugin::TethysSdfString(const lrauv_ignition_plugins::msgs:
   return sdfStr;
 }
 
-IGNITION_ADD_PLUGIN(
+GZ_ADD_PLUGIN(
   tethys::WorldCommPlugin,
   gz::sim::System,
   tethys::WorldCommPlugin::ISystemConfigure)

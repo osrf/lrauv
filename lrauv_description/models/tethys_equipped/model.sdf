@@ -144,17 +144,17 @@
           <always_on>1</always_on>
           <!-- Flip body frame to match FSK frame convention -->
           <!--
-              Also account for model being rotated 180 degrees
-              See https://github.com/osrf/lrauv/issues/80.
+            Also account for model being rotated 180 degrees
+            See https://github.com/osrf/lrauv/issues/80.
           -->
           <pose degrees="true">0 0 0 180 0 180</pose>
-          <orientation_reference_frame>
-            <localization>NED</localization>
-          </orientation_reference_frame>
-          <enable_orientation>1</enable_orientation>
-          <update_rate>10</update_rate>
-          <linear_acceleration>
-            <!--
+          <imu>
+            <orientation_reference_frame>
+              <localization>NED</localization>
+            </orientation_reference_frame>
+            <enable_orientation>1</enable_orientation>
+            <linear_acceleration>
+              <!--
                 Use zero-mean gaussian distributions for each
                 linear acceleration component and its (turn on)
                 bias.
@@ -167,28 +167,28 @@
                 Standard deviation is assumed to be the same for all
                 linear acceleration component (turn on) biases. It is
                 made equal to the reported bias stability BS = 0.07441 mg.
-            -->
-            <x>
-              <noise type="gaussian">
-                <stddev>0.00775283755402256</stddev>
-                <bias_stddev>0.007297128265</bias_stddev>
-              </noise>
-            </x>
-            <y>
-              <noise type="gaussian">
-                <stddev>0.00775283755402256</stddev>
-                <bias_stddev>0.007297128265</bias_stddev>
-              </noise>
-            </y>
-            <z>
-              <noise tzpe="gaussian">
-                <stddev>0.00775283755402256</stddev>
-                <bias_stddev>0.007297128265</bias_stddev>
-              </noise>
-            </z>
-          </linear_acceleration>
-          <angular_velocity>
-            <!--
+              -->
+              <x>
+                <noise type="gaussian">
+                  <stddev>0.00775283755402256</stddev>
+                  <bias_stddev>0.007297128265</bias_stddev>
+                </noise>
+              </x>
+              <y>
+                <noise type="gaussian">
+                  <stddev>0.00775283755402256</stddev>
+                  <bias_stddev>0.007297128265</bias_stddev>
+                </noise>
+              </y>
+              <z>
+                <noise type="gaussian">
+                  <stddev>0.00775283755402256</stddev>
+                  <bias_stddev>0.007297128265</bias_stddev>
+                </noise>
+              </z>
+            </linear_acceleration>
+            <angular_velocity>
+              <!--
                 Use zero-mean gaussian distributions for each
                 angular velocity component and its (turn on)
                 bias.
@@ -201,26 +201,28 @@
                 Standard deviation is assumed to be the same for all
                 angular velocity component (turn on) biases. It is made
                 equal to the reported bias stability BS = 6.415 °/hr.
-            -->
-            <x>
-              <noise type="gaussian">
-                <stddev>0.0022076862812880228</stddev>
-                <bias_stddev>0.0017819444444444445</bias_stddev>
-              </noise>
-            </x>
-            <y>
-              <noise type="gaussian">
-                <stddev>0.0022076862812880228</stddev>
-                <bias_stddev>0.0017819444444444445</bias_stddev>
-              </noise>
-            </y>
-            <z>
-              <noise type="gaussian">
-                <stddev>0.0022076862812880228</stddev>
-                <bias_stddev>0.0017819444444444445</bias_stddev>
-              </noise>
-            </z>
-          </angular_velocity>
+              -->
+              <x>
+                <noise type="gaussian">
+                  <stddev>0.0022076862812880228</stddev>
+                  <bias_stddev>0.0017819444444444445</bias_stddev>
+                </noise>
+              </x>
+              <y>
+                <noise type="gaussian">
+                  <stddev>0.0022076862812880228</stddev>
+                  <bias_stddev>0.0017819444444444445</bias_stddev>
+                </noise>
+              </y>
+              <z>
+                <noise type="gaussian">
+                  <stddev>0.0022076862812880228</stddev>
+                  <bias_stddev>0.0017819444444444445</bias_stddev>
+                </noise>
+              </z>
+            </angular_velocity>
+          </imu>
+          <update_rate>10</update_rate>
           <topic>/tethys/ahrs/imu</topic>
         </sensor>
         <!--Magnetometer in a Sparton AHRS-M2 -->
@@ -233,8 +235,8 @@
           <update_rate>10</update_rate>
           <!-- Flip body frame to match FSK frame convention -->
           <!--
-              Also account for model being rotated 180 degrees
-              See https://github.com/osrf/lrauv/issues/80.
+            Also account for model being rotated 180 degrees
+            See https://github.com/osrf/lrauv/issues/80.
           -->
           <pose degrees="true">0 0 0 180 0 180</pose>
           <topic>/tethys/ahrs/magnetometer</topic>

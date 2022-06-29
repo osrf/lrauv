@@ -123,6 +123,6 @@ class SimpleAcousticModel : public ICommsModel
   }
 };
 
-IGNITION_ADD_PLUGIN(SimpleAcousticModel,
+GZ_ADD_PLUGIN(SimpleAcousticModel,
     SimpleAcousticModel::ICommsModel)
 } 

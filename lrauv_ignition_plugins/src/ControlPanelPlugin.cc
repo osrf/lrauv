@@ -110,5 +110,5 @@ void ControlPanel::SetBuoyancyEngine(qreal _volume)
 }
 
 // Register this plugin
-IGNITION_ADD_PLUGIN(tethys::ControlPanel,
+GZ_ADD_PLUGIN(tethys::ControlPanel,
                     gz::gui::Plugin)
