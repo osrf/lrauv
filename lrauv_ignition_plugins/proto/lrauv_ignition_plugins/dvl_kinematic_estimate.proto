@@ -26,9 +26,10 @@ message DVLKinematicEstimate
 {
   enum ReferenceType
   {
-     DVL_REFERENCE_EARTH = 0;
-     DVL_REFERENCE_SHIP = 1;
-     DVL_REFERENCE_BEAM = 2;
+     DVL_REFERENCE_UNSPECIFIED = 0;
+     DVL_REFERENCE_EARTH = 1;
+     DVL_REFERENCE_SHIP = 2;
+     DVL_REFERENCE_BEAM = 3;
   };
   /// \brief Estimate frame of reference (incl. conventions)
   ReferenceType reference = 1;

@@ -5,11 +5,11 @@
 -->
 
 <!--
+   Tile heights calculated manually with
 
-  This world doesn't contain any vehicles. They're spawned at runtime by
-  WorldCommPlugin as it receives LRAUVInit messages.
-
--->
+   $ gdalinfo -mm PortugueseLedgeTile1_DecDeg.grd | grep -i min
+   Computed Min/Max=-98.637,-73.297
+ -->
 
 @{
 
@@ -84,6 +84,8 @@ for tile in tiles:
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
+    <!-- Brought from https://github.com/ignitionrobotics/sdformat/blob/1acea10dab1cf0c3fa2583f3e2bfd0a8d14ea340/src/World.cc#L75-L76 -->
+    <magnetic_field>5.5645e-6 22.8758e-6 -42.3884e-6</magnetic_field>
 
     <physics name="1ms" type="dart">
       <max_step_size>0.02</max_step_size>
@@ -91,15 +93,15 @@ for tile in tiles:
     </physics>
     <plugin
       filename="ignition-gazebo-physics-system"
-      name="gz::sim::systems::Physics">
+      name="ignition::gazebo::systems::Physics">
     </plugin>
     <plugin
       filename="ignition-gazebo-user-commands-system"
-      name="gz::sim::systems::UserCommands">
+      name="ignition::gazebo::systems::UserCommands">
     </plugin>
     <plugin
       filename="ignition-gazebo-scene-broadcaster-system"
-      name="gz::sim::systems::SceneBroadcaster">
+      name="ignition::gazebo::systems::SceneBroadcaster">
     </plugin>
     <plugin
       filename="ignition-gazebo-sensors-system"
@@ -111,15 +113,15 @@ for tile in tiles:
     </plugin>
     <plugin
       filename="ignition-gazebo-imu-system"
-      name="gz::sim::systems::Imu">
+      name="ignition::gazebo::systems::Imu">
     </plugin>
     <plugin
       filename="ignition-gazebo-magnetometer-system"
-      name="gz::sim::systems::Magnetometer">
+      name="ignition::gazebo::systems::Magnetometer">
     </plugin>
     <plugin
       filename="ignition-gazebo-buoyancy-system"
-      name="gz::sim::systems::Buoyancy">
+      name="ignition::gazebo::systems::Buoyancy">
       <graded_buoyancy>
         <default_density>1025</default_density>
         <density_change>
@@ -129,34 +131,13 @@ for tile in tiles:
       </graded_buoyancy>
     </plugin>
 
-    <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
-      to ParticleEmitter in Ignition G.
-      See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
-    <plugin
-      filename="ignition-gazebo-particle-emitter2-system"
-      name="gz::sim::systems::ParticleEmitter2">
-    </plugin>
-
-    <!-- Uncomment for time analysis -->
-    <!--plugin
-      filename="TimeAnalysisPlugin"
-      name="tethys::TimeAnalysisPlugin">
-    </plugin-->
-
-    <plugin
-      filename="ScienceSensorsSystem"
-      name="tethys::ScienceSensorsSystem">
-      <data_path>2003080103_mb_l3_las.csv</data_path>
-    </plugin>
-
-    <!-- Interface with LRAUV Main Vehicle Application for the world -->
     <plugin
       filename="WorldCommPlugin"
       name="tethys::WorldCommPlugin">
       <init_topic>/lrauv/init</init_topic>
     </plugin>
 
-    <plugin name="gz::sim" filename="dummy">
+    <plugin name="ignition::gazebo" filename="dummy">
 
 @[for tile in tiles]@
       <level name="level_@(tile.index)">
@@ -402,24 +383,6 @@ for tile in tiles:
         </ignition-gui>
         <fsk>tethys</fsk>
       </plugin>
-
-      <!-- Map -->
-      <plugin filename="NavSatMap" name="NavSat Map">
-        <ignition-gui>
-          <title>NavSat Map</title>
-          <property type="string" key="state">docked_collapsed</property>
-        </ignition-gui>
-        <topic>/tethys/navsat</topic>
-        <topic_picker>true</topic_picker>
-      </plugin>
-
-       <!-- Sensor Data Map -->
-      <plugin filename="WorldConfigPlugin" name="Environmental Configuration">
-        <ignition-gui>
-          <title>Environmental Configuration</title>
-          <property type="string" key="state">docked_collapsed</property>
-        </ignition-gui>
-      </plugin>
     </gui>
 
     <light type="directional" name="sun">
@@ -469,32 +432,10 @@ for tile in tiles:
     </model>
 @[end for]@
 
-
-    <!-- <!-1- This invisible plane helps with orbiting the camera, especially at large scales -1-> -->
-    <!-- <model name="horizontal_plane"> -->
-    <!--   <static>true</static> -->
-    <!--   <link name="link"> -->
-    <!--     <visual name="visual"> -->
-    <!--       <geometry> -->
-    <!--         <plane> -->
-    <!--           <normal>0 0 1</normal> -->
-    <!--           <!-1- 300 km x 300 km -1-> -->
-    <!--           <size>300000 300000</size> -->
-    <!--         </plane> -->
-    <!--       </geometry> -->
-    <!--       <transparency>1.0</transparency> -->
-    <!--     </visual> -->
-    <!--   </link> -->
-    <!-- </model> -->
-
-    <!-- Uncomment for particle effect
-      Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
-      to ParticleEmitter in Ignition G.
-      See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
-    <!--include>
-      <pose>-5 0 0 0 0 0</pose>
-      <uri>turbidity_generator</uri>
-    </include-->
+    <include>
+      <pose>0 0 0 0 0 0</pose>
+      <uri>tethys_equipped</uri>
+    </include>
 
   </world>
 </sdf>

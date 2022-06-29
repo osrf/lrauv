@@ -39,8 +39,9 @@ message DVLVelocityTracking
 
   enum DVLType
   {
-    DVL_TYPE_PISTON = 0;
-    DVL_TYPE_PHASED_ARRAY = 1;
+    DVL_TYPE_UNSPECIFIED = 0;
+    DVL_TYPE_PISTON = 1;
+    DVL_TYPE_PHASED_ARRAY = 2;
   };
   /// \brief Type of DVL
   DVLType type = 2;

@@ -264,7 +264,7 @@ class VehicleCommandTestFixture : public TestFixtureWithVehicle
     return this->commandPublisher;
   }
 
-  protected: gz::transport::Node &Node() { return this->node; }
+  public: gz::transport::Node &Node() { return this->node; }
 
   private: gz::transport::Node node;
 

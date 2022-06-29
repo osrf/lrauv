@@ -79,6 +79,57 @@
           </ignition:current>
         </sensor>
         <!--
+            Teledyne Pathfinder DVL
+
+            See https://www.manualslib.com/manual/1447288/Teledyne-Pathfinder.html
+            for further reference.
+        -->
+        <sensor
+            element_id="base_link" action="add"
+            name="teledyne_pathfinder_dvl"
+            type="custom" ignition:type="dvl">
+          <pose degrees="true">0 0 0 0 0 180</pose>
+          <always_on>1</always_on>
+          <update_rate>1</update_rate>
+          <topic>/tethys/dvl/velocity</topic>
+          <ignition:dvl>
+            <arrangement degrees="true">
+              <beam id="1">
+                <aperture>2.1</aperture>
+                <rotation>45</rotation>
+                <tilt>30</tilt>
+              </beam>
+              <beam>
+                <aperture>2.1</aperture>
+                <rotation>135</rotation>
+                <tilt>30</tilt>
+              </beam>
+              <beam>
+                <aperture>2.1</aperture>
+                <rotation>-45</rotation>
+                <tilt>30</tilt>
+              </beam>
+              <beam>
+                <aperture>2.1</aperture>
+                <rotation>-135</rotation>
+                <tilt>30</tilt>
+              </beam>
+              <resolution>0.01</resolution>
+              <visualize>false</visualize>
+            </arrangement>
+            <visualize>false</visualize>
+            <type>phased_array</type>
+            <noise type="gaussian">
+              <!-- +/- 0.5 cm/s precision within 2 stddevs -->
+              <stddev>0.0025</stddev>
+            </noise>
+            <!-- Approximate maximum range @ ~14.4v -->
+            <maximum_range>80.</maximum_range>
+            <!-- ENU to SFM -->
+            <reference_frame>0 0 0 0 0 -1.570796</reference_frame>
+          </ignition:dvl>
+        </sensor>
+        <!--
             Sparton AHRS-M2 arrangement of IMU + Magnetometer
 
             See https://www.spartonnavex.com/product/ahrs-m2 for

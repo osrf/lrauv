@@ -33,6 +33,7 @@ set(GZ_RENDERING_VER ${gz-rendering7_VERSION_MAJOR})
 
 find_package(gz-sensors7 REQUIRED)
 set(GZ_SENSORS_VER ${gz-sensors7_VERSION_MAJOR})
+set(GZ_SENSORS gz-sensors${GZ_SENSORS_VER}::gz-sensors${GZ_SENSORS_VER})
 
 find_package(gz-msgs9 REQUIRED)
 set(GZ_MSGS_VER ${gz-msgs9_VERSION_MAJOR})
@@ -56,8 +57,10 @@ add_subdirectory(proto)
 #============================================================================
 # Plugins
 
-# add_lrauv_plugin (<plugin_name>
-#              [PROTO] msg1 msg2 ... [PCL] [GUI] [RENDERING] [PRIVATE_LINK_LIBS] [INCLUDE_COMMS])
+# add_lrauv_plugin (
+#     <plugin_name>
+#     [PROTO] msg1 msg2 ... [PCL] [GUI] [RENDERING]
+#     [PRIVATE_LINK_LIBS] [INCLUDE_COMMS])
 #
 # Configure and install plugins.
 #
@@ -74,7 +77,7 @@ add_subdirectory(proto)
 #
 # [PRIVATE_LINK_LIBS]: Specify a list of libraries to be privately linked.
 function(add_lrauv_plugin PLUGIN)
-  set(options PCL GUI RENDERING INCLUDE_COMMS)
+  set(options PCL GUI RENDERING SENSORS INCLUDE_COMMS)
   set(oneValueArgs)
   set(multiValueArgs PROTO PRIVATE_LINK_LIBS)
 
@@ -158,6 +161,18 @@ add_lrauv_plugin(ControlPanelPlugin GUI
   PROTO
     lrauv_command
     lrauv_state)
+add_lrauv_plugin(DopplerVelocityLog
+  RENDERING
+  PROTO
+    dvl_beam_state
+    dvl_kinematic_estimate
+    dvl_range_estimate
+    dvl_tracking_target
+    dvl_velocity_tracking)
+target_link_libraries(DopplerVelocityLog PUBLIC ${GZ_SENSORS}-rendering)
+add_lrauv_plugin(DopplerVelocityLogSystem RENDERING)
+target_link_libraries(DopplerVelocityLogSystem PUBLIC
+  DopplerVelocityLog ${GZ_SENSORS}-rendering)
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(RangeBearingPlugin
   PROTO
@@ -170,7 +185,7 @@ add_lrauv_plugin(ReferenceAxis GUI RENDERING)
 add_lrauv_plugin(ScienceSensorsSystem
   PCL
   PRIVATE_LINK_LIBS
-    gz-sensors${GZ_SENSORS_VER}::gz-sensors${GZ_SENSORS_VER}
+    ${GZ_SENSORS}
     ${PCL_LIBRARIES})
 add_lrauv_plugin(SpawnPanelPlugin GUI
   PROTO
@@ -212,8 +227,9 @@ foreach(EXAMPLE
   set_property(TARGET ${EXAMPLE_EXEC} PROPERTY CXX_STANDARD 17)
   target_link_libraries(${EXAMPLE_EXEC} PRIVATE
     gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
-    lrauv_acoustic_message lrauv_command lrauv_init lrauv_internal_comms
-    lrauv_range_bearing_request lrauv_range_bearing_response lrauv_state)
+    dvl_velocity_tracking lrauv_acoustic_message lrauv_command lrauv_init
+    lrauv_internal_comms lrauv_range_bearing_request lrauv_range_bearing_response
+    lrauv_state)
 
   install(
     TARGETS ${EXAMPLE_EXEC}
@@ -252,27 +268,22 @@ configure_file(
 
 #============================================================================
 # World generation
-set(WORLD_NAME "portuguese_ledge")
-set(WORLD_NAME_EMPTY "empty_environment_with_tiles")
-add_custom_command(
-  OUTPUT world_gen_cmd
-  COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/worlds/empy_expander.py
-  ${CMAKE_CURRENT_SOURCE_DIR}/worlds/${WORLD_NAME}.sdf.em
-  ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME}.sdf
-  COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/worlds/empy_expander.py
-  ${CMAKE_CURRENT_SOURCE_DIR}/worlds/${WORLD_NAME_EMPTY}.sdf.em
-  ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME_EMPTY}.sdf
-)
+foreach (WORLD_NAME "portuguese_ledge" "dvl_at_portuguese_ledge" "empty_environment_with_tiles")
+  add_custom_command(
+    OUTPUT ${WORLD_NAME}_gen_cmd
+    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/worlds/empy_expander.py
+    ${CMAKE_CURRENT_SOURCE_DIR}/worlds/${WORLD_NAME}.sdf.em
+    ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME}.sdf
+  )
 
-add_custom_target(world_gen_target ALL
-  DEPENDS world_gen_cmd
-)
+  add_custom_target(${WORLD_NAME}_gen_target ALL
+    DEPENDS ${WORLD_NAME}_gen_cmd
+  )
 
-install(FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME}.sdf
-  ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME_EMPTY}.sdf
-  DESTINATION share/${PROJECT_NAME}/worlds)
-
+  install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME}.sdf
+    DESTINATION share/${PROJECT_NAME}/worlds)
+endforeach()
 #============================================================================
 # Resources
 install(
