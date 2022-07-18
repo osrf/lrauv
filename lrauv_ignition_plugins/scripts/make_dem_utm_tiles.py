@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (C) 2022 Monterey Bay Aquarium Research Institute (MBARI)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +16,7 @@
 # Research Institute (MBARI) and the David and Lucile Packard Foundation
 
 import os
+import shutil
 import subprocess
 
 import netCDF4 as nc
@@ -91,7 +90,10 @@ def mk_tiles(map_path: str, utm_zone: int, out_path: str, tile_size: int, overla
     tilesCenterFID.write('Tile, UTM_zone, Eastings, Northings, Lat, Lon\n')
 
     # Build gmt argument strings and loop through
-    gmt_grdcut = '/usr/local/bin/gmt grdcut ' + map_path + ' '
+    path_to_gmt_executable = shutil.which('gmt')
+    if path_to_gmt_executable is None:
+        raise RuntimeError('gmt executable not found')
+    gmt_grdcut = path_to_gmt_executable + ' grdcut ' + map_path + ' '
 
     for i in range(nTiles):
 
