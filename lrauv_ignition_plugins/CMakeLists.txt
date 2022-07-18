@@ -213,6 +213,7 @@ install(
 foreach(EXAMPLE
   example_buoyancy
   example_controller
+  example_dvl_velocity
   example_elevator
   example_mass_shifter
   example_rudder
