@@ -88,7 +88,8 @@
             element_id="base_link" action="add"
             name="teledyne_pathfinder_dvl"
             type="custom" ignition:type="dvl">
-          <pose degrees="true">0 0 0 0 0 180</pose>
+          <!-- Account for DVL mounting position and base link rotation -->
+          <pose degrees="true">-0.60 0 -0.16 0 0 180</pose>
           <always_on>1</always_on>
           <update_rate>1</update_rate>
           <topic>/tethys/dvl/velocity</topic>
