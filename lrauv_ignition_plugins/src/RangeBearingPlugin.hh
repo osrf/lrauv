@@ -50,7 +50,7 @@ class RangeBearingPrivateData;
 /// `/{namespace}/range_bearing/requests` for incoming requests using the 
 /// `lrauv_ignition_plugins::msgs::LRAUVRangeBearingRequest` message and will 
 /// respond using the `lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse` 
-/// message on the `/{namespace}/range_bearing/response` topic.
+/// message on the `/{namespace}/range_bearing/responses` topic.
 ///
 class RangeBearingPlugin:
   public gz::sim::System,
