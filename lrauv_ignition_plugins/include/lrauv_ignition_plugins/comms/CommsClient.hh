@@ -74,13 +74,11 @@ public: void SendPacket(const CommsMsg& _msg)
   // Populate a Dataframe msg based on the
   // CommsMsg content.
   gz::msgs::Dataframe message;
-  /* message.set_src_address( */
-  /*     std::to_string(_msg.from())); */
-  /* message.set_dst_address( */
-  /*     std::to_string(_msg.to())); */
-  /* message.set_data(_msg.data()); */
-
-  std::cout << "----- Dbg sending msg" << std::endl;
+  message.set_src_address(
+      std::to_string(_msg.from()));
+  message.set_dst_address(
+      std::to_string(_msg.to()));
+  message.set_data(_msg.data());
 
   // Publish the Dataframe message
   this->transmitter.Publish(message);
@@ -91,7 +89,6 @@ public: void SendPacket(const CommsMsg& _msg)
 /// \param[in] _msg - message received
 private: void ReceivedPacket(const gz::msgs::Dataframe& _msg)
 {
-  std::cout << "----- Dbg received msg" << std::endl;
   // Construct a CommsMsg from the received Dataframe msg.
   CommsMsg message;
   message.set_from(
