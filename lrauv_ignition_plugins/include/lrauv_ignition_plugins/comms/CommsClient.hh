@@ -25,12 +25,19 @@
 
 #include <functional>
 
+#include <gz/msgs.hh>
 #include <gz/transport/Node.hh>
 
 #include "CommsPacket.hh"
 #include "TopicDefinitions.hh"
 
 #include "lrauv_ignition_plugins/lrauv_acoustic_message.pb.h"
+
+using LRAUVAcousticMessage =
+    lrauv_ignition_plugins::msgs::LRAUVAcousticMessage;
+using MessageType = LRAUVAcousticMessage::MessageType;
+static constexpr auto LRAUVAcousticMessageType =
+    MessageType::LRAUVAcousticMessage_MessageType_Other;
 
 namespace tethys
 {
@@ -47,16 +54,13 @@ using Callback = std::function<void(const CommsMsg&)>;
 /// \param[in] _commsPrefix - Optional. Use if your public interface to acoustic
 /// comms is different. 
 public: CommsClient(uint32_t _address,
-  Callback _callback,
-  std::string _commsPrefix=EXTERNAL_COMMS_BUS) :
+  Callback _callback) :
   address(_address), callback(std::move(_callback))
 {
   this->transmitter =
-    this->node.Advertise<CommsMsg>(
-      _commsPrefix + "/" + std::to_string(address) + "/tx");
+    this->node.Advertise<gz::msgs::Dataframe>("/broker/msgs");
 
-  this->node.Subscribe(
-    _commsPrefix + "/" + std::to_string(address) + "/rx",
+  this->node.Subscribe(std::to_string(address) + "/rx",
     &CommsClient::ReceivedPacket,
     this
   );
@@ -67,15 +71,37 @@ public: CommsClient(uint32_t _address,
 /// \param[in] _msg - Comms message to be sent
 public: void SendPacket(const CommsMsg& _msg)
 {
-  this->transmitter.Publish(_msg);
+  // Populate a Dataframe msg based on the
+  // CommsMsg content.
+  gz::msgs::Dataframe message;
+  /* message.set_src_address( */
+  /*     std::to_string(_msg.from())); */
+  /* message.set_dst_address( */
+  /*     std::to_string(_msg.to())); */
+  /* message.set_data(_msg.data()); */
+
+  std::cout << "----- Dbg sending msg" << std::endl;
+
+  // Publish the Dataframe message
+  this->transmitter.Publish(message);
 }
 
 //////////////////////////////////////////////////
 /// \brief Callback handler
 /// \param[in] _msg - message received
-private: void ReceivedPacket(const CommsMsg& _msg)
+private: void ReceivedPacket(const gz::msgs::Dataframe& _msg)
 {
-  this->callback(_msg);
+  std::cout << "----- Dbg received msg" << std::endl;
+  // Construct a CommsMsg from the received Dataframe msg.
+  CommsMsg message;
+  message.set_from(
+      std::stoi(_msg.src_address()));
+  message.set_to(
+      std::stoi(_msg.dst_address()));
+  message.set_type(LRAUVAcousticMessageType);
+  message.set_data(_msg.data());
+
+  this->callback(message);
 }
 
 /// \brief Address which the client binds to

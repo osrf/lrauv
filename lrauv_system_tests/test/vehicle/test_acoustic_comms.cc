@@ -38,13 +38,13 @@
 using namespace tethys;
 using namespace lrauv_system_tests;
 
-using LRAUVAcousticMessage =
-    lrauv_ignition_plugins::msgs::LRAUVAcousticMessage;
+/* using LRAUVAcousticMessage = */
+/*     lrauv_ignition_plugins::msgs::LRAUVAcousticMessage; */
 using MessageDifferencer =
     google::protobuf::util::MessageDifferencer;
-using MessageType = LRAUVAcousticMessage::MessageType;
-static constexpr auto LRAUVAcousticMessageType =
-    MessageType::LRAUVAcousticMessage_MessageType_Other;
+/* using MessageType = LRAUVAcousticMessage::MessageType; */
+/* static constexpr auto LRAUVAcousticMessageType = */
+/*     MessageType::LRAUVAcousticMessage_MessageType_Other; */
 
 TEST(AcousticComms, PacketConversions)
 {
@@ -78,6 +78,7 @@ TEST(AcousticComms, BasicSendReceive)
   constexpr int receiverAddress = 2;
   CommsClient receiver(receiverAddress, [&](const auto message)
   {
+    std::cout << "----- Dbg received msg 2" << std::endl;
     ASSERT_EQ(message.data(), "test_message");
     {
       std::lock_guard<std::mutex> lock(messageArrivalMutex);
@@ -93,7 +94,7 @@ TEST(AcousticComms, BasicSendReceive)
   message.set_data("test_message");
   sender.SendPacket(message);
 
-  fixture.Step(50u);
+  fixture.Step(100u);
 
   using namespace std::literals::chrono_literals;
   std::unique_lock<std::mutex> lock(messageArrivalMutex);
