@@ -38,6 +38,10 @@ using LRAUVAcousticMessage =
 using MessageType = LRAUVAcousticMessage::MessageType;
 static constexpr auto LRAUVAcousticMessageType =
     MessageType::LRAUVAcousticMessage_MessageType_Other;
+auto RangeRequest =
+    MessageType::LRAUVAcousticMessage_MessageType_RangeRequest;
+auto RangeResponse =
+    MessageType::LRAUVAcousticMessage_MessageType_RangeResponse;
 
 namespace tethys
 {
@@ -80,6 +84,16 @@ public: void SendPacket(const CommsMsg& _msg)
       std::to_string(_msg.to()));
   message.set_data(_msg.data());
 
+  // Set message type
+  auto *frame = message.mutable_header()->add_data();
+  frame->set_key("msg_type");
+  if (_msg.type() == LRAUVAcousticMessageType)
+    frame->add_value("LRAUVAcousticMessageType");
+  else if (_msg.type() == RangeRequest)
+    frame->add_value("RangeRequest");
+  else if (_msg.type() == RangeResponse)
+    frame->add_value("RangeResponse");
+
   // Publish the Dataframe message
   this->transmitter.Publish(message);
 }
@@ -95,8 +109,22 @@ private: void ReceivedPacket(const gz::msgs::Dataframe& _msg)
       std::stoi(_msg.src_address()));
   message.set_to(
       std::stoi(_msg.dst_address()));
-  message.set_type(LRAUVAcousticMessageType);
   message.set_data(_msg.data());
+
+  // Set message type.
+  for (int i = 0; i < _msg.header().data_size(); i++)
+  {
+    if (_msg.header().data(i).key() == "msg_type")
+    {
+      auto type = _msg.header().data(i).value().Get(0);
+      if (type == "LRAUVAcousticMessageType")
+        message.set_type(LRAUVAcousticMessageType);
+      else if (type == "RangeResponse")
+        message.set_type(RangeResponse);
+      else if (type == "RangeRequest")
+        message.set_type(RangeRequest);
+    }
+  }
 
   this->callback(message);
 }
