@@ -103,8 +103,9 @@
         <plugin element_id="gz::sim::systems::DetachableJoint" action="modify">
           <topic>/model/tethys1/drop_weight</topic>
         </plugin>
-        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
           <address>1</address>
+          <topic>1/rx</topic>
         </plugin>
         <plugin element_id="tethys::RangeBearingPlugin" action="modify">
           <address>1</address>
@@ -144,8 +145,9 @@
         <plugin element_id="gz::sim::systems::DetachableJoint" action="modify">
           <topic>/model/tethys2/drop_weight</topic>
         </plugin>
-        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
           <address>2</address>
+          <topic>2/rx</topic>
         </plugin>
         <plugin element_id="tethys::RangeBearingPlugin" action="modify">
           <address>2</address>
@@ -185,8 +187,9 @@
         <plugin element_id="gz::sim::systems::DetachableJoint" action="modify">
           <topic>/model/tethys3/drop_weight</topic>
         </plugin>
-        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
           <address>3</address>
+          <topic>3/rx</topic>
         </plugin>
         <plugin element_id="tethys::RangeBearingPlugin" action="modify">
           <address>3</address>
@@ -226,8 +229,9 @@
         <plugin element_id="gz::sim::systems::DetachableJoint" action="modify">
           <topic>/model/tethys4/drop_weight</topic>
         </plugin>
-        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
           <address>4</address>
+          <topic>4/rx</topic>
         </plugin>
         <plugin element_id="tethys::RangeBearingPlugin" action="modify">
           <address>4</address>
