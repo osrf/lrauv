@@ -64,13 +64,13 @@ TEST(AcousticComms, BasicSendReceive)
 {
   TestFixture fixture("acoustic_comms_fixture.sdf");
 
-  constexpr int senderAddress = 2;
+  constexpr int senderAddress = 1;
   CommsClient sender(senderAddress, [](const auto){});
 
   bool messageReceived = false;
   std::mutex messageArrivalMutex;
   std::condition_variable messageArrival;
-  constexpr int receiverAddress = 3;
+  constexpr int receiverAddress = 2;
   CommsClient receiver(receiverAddress, [&](const auto message)
   {
     ASSERT_EQ(message.data(), "test_message");
@@ -81,7 +81,7 @@ TEST(AcousticComms, BasicSendReceive)
     messageArrival.notify_all();
   });
 
-  fixture.Step(1000u);
+  fixture.Step(50u);
 
   LRAUVAcousticMessage message;
   message.set_to(receiverAddress);
@@ -90,7 +90,7 @@ TEST(AcousticComms, BasicSendReceive)
   message.set_data("test_message");
   sender.SendPacket(message);
 
-  fixture.Step(1000u);
+  fixture.Step(50u);
 
   using namespace std::literals::chrono_literals;
   std::unique_lock<std::mutex> lock(messageArrivalMutex);
