@@ -15,6 +15,7 @@
  *
 */
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -30,6 +31,7 @@
 #include <gz/sim/components/Name.hh>
 #include <gz/sim/components/ParentEntity.hh>
 #include <gz/sim/components/Pose.hh>
+#include <gz/sim/components/SphericalCoordinates.hh>
 #include <gz/sim/Conversions.hh>
 #include <gz/sim/EntityComponentManager.hh>
 #include <gz/sim/EventManager.hh>
@@ -75,17 +77,24 @@ struct DestroySensor
 /// \brief A request for a world state update for sensors.
 struct SetWorldState
 {
-  WorldKinematicState worldState;
+  WorldState worldState;
+};
+
+/// \brief A request for an environmental data update for sensors.
+struct SetEnvironmentalData
+{
+  std::shared_ptr<gz::sim::components::EnvironmentalData> environmentalData;
 };
 
 /// \brief Union request type.
 using SomeRequest = std::variant<
-  CreateSensor, DestroySensor, SetWorldState>;
+  CreateSensor, DestroySensor,
+  SetWorldState, SetEnvironmentalData>;
 
 }  // namespace requests
 
 // Private data class.
-class DopplerVelocityLogSystemPrivate
+class DopplerVelocityLogSystem::Implementation
 {
   /// \brief Callback invoked in the rendering thread before a rendering update
   public: void OnPreRender();
@@ -100,13 +109,16 @@ class DopplerVelocityLogSystemPrivate
   public: void OnRenderTeardown();
 
   /// \brief Overload to handle sensor creation requests.
-  public: void Handle(const requests::CreateSensor &request);
+  public: void Handle(requests::CreateSensor _request);
 
   /// \brief Overload to handle sensor destruction requests.
-  public: void Handle(const requests::DestroySensor &request);
+  public: void Handle(requests::DestroySensor _request);
 
-  /// \brief Overload to handle world linear velocities' update requests.
-  public: void Handle(const requests::SetWorldState &request);
+  /// \brief Overload to handle world state update requests.
+  public: void Handle(requests::SetWorldState _request);
+
+  /// \brief Overload to handle environment data update requests.
+  public: void Handle(requests::SetEnvironmentalData _request);
 
   /// \brief Implementation for Configure() hook.
   public: void DoConfigure(
@@ -129,6 +141,13 @@ class DopplerVelocityLogSystemPrivate
   public: void DoPostUpdate(
       const gz::sim::UpdateInfo &_info,
       const gz::sim::EntityComponentManager &_ecm);
+
+  /// \brief State of all entities in the world in simulation thread
+  public: std::optional<WorldState> latestWorldState;
+
+  /// \brief State of all entities in the world in simulation thread
+  public: std::shared_ptr<
+    gz::sim::components::EnvironmentalData> latestEnvironmentalData;
 
   /// \brief Connection to the post-render event.
   public: gz::common::ConnectionPtr preRenderConn;
@@ -153,9 +172,6 @@ class DopplerVelocityLogSystemPrivate
 
   /// \brief Entities of known sensors (in simulation thread)
   public: std::unordered_set<gz::sim::Entity> knownSensorEntities;
-
-  /// \brief State of all entities in the world in simulation thread
-  public: WorldKinematicState worldState;
 
   /// \brief Sensor ID per sensor entity mapping in rendering thread
   public: std::unordered_map<
@@ -188,7 +204,7 @@ class DopplerVelocityLogSystemPrivate
 };
 
 //////////////////////////////////////////////////
-void DopplerVelocityLogSystemPrivate::DoConfigure(
+void DopplerVelocityLogSystem::Implementation::DoConfigure(
     const gz::sim::Entity &,
     const std::shared_ptr<const sdf::Element> &,
     gz::sim::EntityComponentManager &,
@@ -196,28 +212,40 @@ void DopplerVelocityLogSystemPrivate::DoConfigure(
 {
   this->preRenderConn =
       _eventMgr.Connect<gz::sim::events::PreRender>(
-          std::bind(&DopplerVelocityLogSystemPrivate::OnPreRender, this));
+          std::bind(&DopplerVelocityLogSystem::Implementation::OnPreRender, this));
 
   this->renderConn =
       _eventMgr.Connect<gz::sim::events::Render>(
-          std::bind(&DopplerVelocityLogSystemPrivate::OnRender, this));
+          std::bind(&DopplerVelocityLogSystem::Implementation::OnRender, this));
 
   this->postRenderConn =
       _eventMgr.Connect<gz::sim::events::PostRender>(
-          std::bind(&DopplerVelocityLogSystemPrivate::OnPostRender, this));
+          std::bind(&DopplerVelocityLogSystem::Implementation::OnPostRender, this));
 
   this->renderTeardownConn =
       _eventMgr.Connect<gz::sim::events::RenderTeardown>(
-          std::bind(&DopplerVelocityLogSystemPrivate::OnRenderTeardown, this));
+          std::bind(&DopplerVelocityLogSystem::Implementation::OnRenderTeardown, this));
 
   this->eventMgr = &_eventMgr;
 }
 
 //////////////////////////////////////////////////
-void DopplerVelocityLogSystemPrivate::DoPreUpdate(
+void DopplerVelocityLogSystem::Implementation::DoPreUpdate(
   const gz::sim::UpdateInfo &,
   gz::sim::EntityComponentManager &_ecm)
 {
+  _ecm.EachNew<gz::sim::components::Environment>(
+    [&](const gz::sim::Entity &_entity,
+        const gz::sim::components::Environment *_env) -> bool
+    {
+      if (_entity == gz::sim::worldEntity(_ecm))
+      {
+        this->perStepRequests.push_back(
+          requests::SetEnvironmentalData{_env->Data()});
+      }
+      return true;
+    });
+
   _ecm.EachNew<gz::sim::components::CustomSensor,
                gz::sim::components::ParentEntity>(
     [&](const gz::sim::Entity &_entity,
@@ -273,24 +301,10 @@ void DopplerVelocityLogSystemPrivate::DoPreUpdate(
 }
 
 //////////////////////////////////////////////////
-void DopplerVelocityLogSystemPrivate::DoPostUpdate(
+void DopplerVelocityLogSystem::Implementation::DoPostUpdate(
   const gz::sim::UpdateInfo &_info,
   const gz::sim::EntityComponentManager &_ecm)
 {
-  _ecm.Each<gz::sim::components::WorldPose,
-            gz::sim::components::WorldLinearVelocity,
-            gz::sim::components::WorldAngularVelocity>(
-      [&](const gz::sim::Entity &_entity,
-          const gz::sim::components::WorldPose *_pose,
-          const gz::sim::components::WorldLinearVelocity *_linearVelocity,
-          const gz::sim::components::WorldAngularVelocity *_angularVelocity)
-      {
-        this->worldState[_entity].pose = _pose->Data();
-        this->worldState[_entity].linearVelocity = _linearVelocity->Data();
-        this->worldState[_entity].angularVelocity = _angularVelocity->Data();
-        return true;
-      });
-
   _ecm.EachRemoved<gz::sim::components::CustomSensor>(
     [&](const gz::sim::Entity &_entity,
         const gz::sim::components::CustomSensor *)
@@ -304,13 +318,6 @@ void DopplerVelocityLogSystemPrivate::DoPostUpdate(
       return true;
     });
 
-  _ecm.EachRemoved<>(
-      [&](const gz::sim::Entity &_entity)
-      {
-        this->worldState.erase(_entity);
-        return true;
-      });
-
   const auto [sec, nsec] =
       gz::math::durationToSecNsec(_info.simTime);
   this->simTime = gz::math::secNsecToDuration(sec, nsec);
@@ -318,14 +325,34 @@ void DopplerVelocityLogSystemPrivate::DoPostUpdate(
   if (!this->perStepRequests.empty() || (
         !_info.paused && this->nextUpdateTime <= this->simTime))
   {
-    this->perStepRequests.push_back(
-        requests::SetWorldState{this->worldState});
+    requests::SetWorldState request;
+
+    request.worldState.origin = _ecm.Component<
+      gz::sim::components::SphericalCoordinates>(
+          gz::sim::worldEntity(_ecm))->Data();
+
+    _ecm.Each<gz::sim::components::WorldPose,
+              gz::sim::components::WorldLinearVelocity,
+              gz::sim::components::WorldAngularVelocity>(
+      [&](const gz::sim::Entity &_entity,
+          const gz::sim::components::WorldPose *_pose,
+          const gz::sim::components::WorldLinearVelocity *_linearVelocity,
+          const gz::sim::components::WorldAngularVelocity *_angularVelocity)
+      {
+        auto & kinematicState = request.worldState.kinematics[_entity];
+        kinematicState.pose = _pose->Data();
+        kinematicState.linearVelocity = _linearVelocity->Data();
+        kinematicState.angularVelocity = _angularVelocity->Data();
+        return true;
+      });;
+
     {
       std::lock_guard<std::mutex> lock(this->requestsMutex);
       this->queuedRequests.insert(
           this->queuedRequests.end(),
           std::make_move_iterator(this->perStepRequests.begin()),
           std::make_move_iterator(this->perStepRequests.end()));
+      this->queuedRequests.push_back(std::move(request));
       this->perStepRequests.clear();
     }
 
@@ -359,8 +386,8 @@ gz::rendering::VisualPtr findEntityVisual(
 }  // namespace
 
 //////////////////////////////////////////////////
-void DopplerVelocityLogSystemPrivate::Handle(
-    const requests::CreateSensor &_request)
+void DopplerVelocityLogSystem::Implementation::Handle(
+    requests::CreateSensor _request)
 {
   auto *sensor =
       this->sensorManager.CreateSensor<DopplerVelocityLog>(_request.sdf);
@@ -378,6 +405,16 @@ void DopplerVelocityLogSystemPrivate::Handle(
   // Set the scene so it can create the rendering sensor
   sensor->SetScene(this->scene);
   sensor->SetManualSceneUpdate(true);
+
+  if (this->latestWorldState)
+  {
+    sensor->SetWorldState(*this->latestWorldState);
+  }
+
+  if (this->latestEnvironmentalData)
+  {
+    sensor->SetEnvironmentalData(*this->latestEnvironmentalData);
+  }
 
   gz::rendering::VisualPtr parentVisual =
       findEntityVisual(this->scene, _request.parent);
@@ -406,8 +443,8 @@ void DopplerVelocityLogSystemPrivate::Handle(
 }
 
 //////////////////////////////////////////////////
-void DopplerVelocityLogSystemPrivate::Handle(
-    const requests::DestroySensor &_request)
+void DopplerVelocityLogSystem::Implementation::Handle(
+    requests::DestroySensor _request)
 {
   auto it = this->sensorIdPerEntity.find(_request.entity);
   if (it != this->sensorIdPerEntity.end())
@@ -432,22 +469,37 @@ void DopplerVelocityLogSystemPrivate::Handle(
 }
 
 //////////////////////////////////////////////////
-void DopplerVelocityLogSystemPrivate::Handle(
-    const requests::SetWorldState &_request)
+void DopplerVelocityLogSystem::Implementation::Handle(
+    requests::SetWorldState _request)
 {
+  this->latestWorldState = std::move(_request.worldState);
   for (const auto& [_, sensorId] : this->sensorIdPerEntity)
   {
     auto *sensor = dynamic_cast<DopplerVelocityLog *>(
         this->sensorManager.Sensor(sensorId));
-    sensor->SetWorldState(_request.worldState);
+    sensor->SetWorldState(*this->latestWorldState);
   }
   this->needsUpdate = true;
 }
 
 //////////////////////////////////////////////////
-void DopplerVelocityLogSystemPrivate::OnPreRender()
+void DopplerVelocityLogSystem::Implementation::Handle(
+    requests::SetEnvironmentalData _request)
 {
-  GZ_PROFILE("DopplerVelocityLogSystemPrivate::OnPreRender");
+  this->latestEnvironmentalData = std::move(_request.environmentalData);
+  for (const auto& [_, sensorId] : this->sensorIdPerEntity)
+  {
+    auto *sensor = dynamic_cast<DopplerVelocityLog *>(
+        this->sensorManager.Sensor(sensorId));
+    sensor->SetEnvironmentalData(*this->latestEnvironmentalData);
+  }
+  this->needsUpdate = true;
+}
+
+//////////////////////////////////////////////////
+void DopplerVelocityLogSystem::Implementation::OnPreRender()
+{
+  GZ_PROFILE("DopplerVelocityLogSystem::Implementation::OnPreRender");
   if (!this->scene)
   {
     this->scene = gz::rendering::sceneFromFirstRenderEngine();
@@ -463,19 +515,19 @@ void DopplerVelocityLogSystemPrivate::OnPreRender()
         std::make_move_iterator(this->queuedRequests.end()));
       this->queuedRequests.clear();
     }
-    for (const auto &request : requests)
+    for (auto &request : requests)
     {
-      std::visit([this](const auto & request) {
-        this->Handle(request);
+      std::visit([this](auto & request) {
+        this->Handle(std::move(request));
       }, request);
     }
   }
 }
 
 //////////////////////////////////////////////////
-void DopplerVelocityLogSystemPrivate::OnRender()
+void DopplerVelocityLogSystem::Implementation::OnRender()
 {
-  GZ_PROFILE("DopplerVelocityLogSystemPrivate::OnRender");
+  GZ_PROFILE("DopplerVelocityLogSystem::Implementation::OnRender");
   if (!this->scene->IsInitialized() ||
       this->scene->SensorCount() == 0)
   {
@@ -506,9 +558,9 @@ void DopplerVelocityLogSystemPrivate::OnRender()
 }
 
 //////////////////////////////////////////////////
-void DopplerVelocityLogSystemPrivate::OnPostRender()
+void DopplerVelocityLogSystem::Implementation::OnPostRender()
 {
-  GZ_PROFILE("DopplerVelocityLogSystemPrivate::OnPostRender");
+  GZ_PROFILE("DopplerVelocityLogSystem::Implementation::OnPostRender");
   for (const auto & sensorId : this->updatedSensorIds)
   {
     auto *sensor =
@@ -520,9 +572,9 @@ void DopplerVelocityLogSystemPrivate::OnPostRender()
 }
 
 //////////////////////////////////////////////////
-void DopplerVelocityLogSystemPrivate::OnRenderTeardown()
+void DopplerVelocityLogSystem::Implementation::OnRenderTeardown()
 {
-  GZ_PROFILE("DopplerVelocityLogSystemPrivate::OnRenderTeardown");
+  GZ_PROFILE("DopplerVelocityLogSystem::Implementation::OnRenderTeardown");
   for (const auto & [entityId, sensorId] : this->sensorIdPerEntity)
   {
     auto *sensor = dynamic_cast<DopplerVelocityLog *>(
@@ -546,7 +598,7 @@ void DopplerVelocityLogSystemPrivate::OnRenderTeardown()
 
 //////////////////////////////////////////////////
 DopplerVelocityLogSystem::DopplerVelocityLogSystem() :
-    dataPtr(new DopplerVelocityLogSystemPrivate())
+    dataPtr(new Implementation())
 {
 }
 

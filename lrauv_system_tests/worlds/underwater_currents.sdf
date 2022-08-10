@@ -15,6 +15,20 @@
       <grid>false</grid>
     </scene>
 
+    <plugin
+      filename="gz-sim-environment-preload-system"
+      name="gz::sim::systems::EnvironmentPreload">
+      <data>underwater_currents.csv</data>
+      <dimensions>
+        <time>elapsed_time_second</time>
+        <space reference="spherical">
+          <x>latitude_degree</x>
+          <y>longitude_degree</y>
+          <z>altitude_meter</z>
+        </space>
+      </dimensions>
+    </plugin>
+
     <physics name="1ms" type="dart">
       <max_step_size>0.02</max_step_size>
       <real_time_factor>0</real_time_factor>
@@ -23,7 +37,7 @@
       filename="ignition-gazebo-physics-system"
       name="gz::sim::systems::Physics">
     </plugin>
-    <plugin
+   <plugin
       filename="ignition-gazebo-user-commands-system"
       name="ignition::gazebo::systems::UserCommands">
     </plugin>
@@ -55,19 +69,8 @@
     <spherical_coordinates>
       <surface_model>EARTH_WGS84</surface_model>
       <world_frame_orientation>ENU</world_frame_orientation>
-
-      <!-- For 2003080103_mb_l3_las.csv -->
-      <latitude_deg>35.5999984741211</latitude_deg>
-      <longitude_deg>-121.779998779297</longitude_deg>
-
-      <!-- For 2003080103_mb_l3_las_1x1km.csv -->
-      <!--latitude_deg>36.8024781413352</latitude_deg>
-      <longitude_deg>-121.829647676843</longitude_deg-->
-
-      <!-- For simple_test.csv -->
-      <!--latitude_deg>0</latitude_deg>
-      <longitude_deg>0</longitude_deg-->
-
+      <latitude_deg>0</latitude_deg>
+      <longitude_deg>0</longitude_deg>
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
@@ -341,7 +344,7 @@
     </model>
 
     <include>
-      <pose>0 0 -80 0 0 0</pose>
+      <pose>0 0 -0.5 0 0 0</pose>
       <uri>tethys_equipped</uri>
     </include>
 

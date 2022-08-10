@@ -73,6 +73,20 @@ for tile in tiles:
       <grid>false</grid>
     </scene>
 
+    <plugin
+      filename="gz-sim-environment-preload-system"
+      name="gz::sim::systems::EnvironmentPreload">
+      <data>../data/2003080103_mb_l3_las_1x1km.modded.csv</data>
+      <dimensions>
+        <time>elapsed_time_second</time>
+        <space reference="spherical">
+          <x>latitude_degree</x>
+          <y>longitude_degree</y>
+          <z>altitude_meter</z>
+        </space>
+      </dimensions>
+    </plugin>
+
     <spherical_coordinates>
       <surface_model>EARTH_WGS84</surface_model>
       <world_frame_orientation>ENU</world_frame_orientation>

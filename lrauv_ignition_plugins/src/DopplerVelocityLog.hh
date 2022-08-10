@@ -22,7 +22,9 @@
 #include <memory>
 #include <unordered_map>
 
+#include <gz/sim/components/Environment.hh>
 #include <gz/sim/Entity.hh>
+
 #include <gz/math/Pose3.hh>
 #include <gz/math/Vector3.hh>
 #include <gz/sensors/RenderingSensor.hh>
@@ -44,7 +46,16 @@ struct EntityKinematicState
 using WorldKinematicState = std::unordered_map<
   gz::sim::Entity, EntityKinematicState>;
 
-class DopplerVelocityLogPrivate;
+/// \brief Kinematic state for all entities in the world.
+struct WorldState
+{
+  WorldKinematicState kinematics;
+  gz::math::SphericalCoordinates origin;
+};
+
+/// \brief Convenient alias
+using EnvironmentalData =
+  gz::sim::components::EnvironmentalData;
 
 /// \brief Doppler velocity log (DVL) sensor, built as a custom
 /// rendering sensor to leverage GPU shaders for speed.
@@ -62,15 +73,35 @@ class DopplerVelocityLogPrivate;
 ///         <rotation></rotation>
 ///         <tilt></tilt>
 ///       </beam>
-///       <resolution></resolution>
-///       <visualize></visualize>
 ///     </arrangement>
-///     <visualize></visualize>
-///     <noise type="gaussian">
-///       <stddev></stddev>
-///     </noise>
+///     <tracking>
+///       <bottom_mode>
+///         <when></when>
+///         <noise type="gaussian">
+///           <stddev></stddev>
+///         </noise>
+///         <visualize></visualize>
+///       </bottom_mode>
+///       <water_mass_mode>
+///         <when></when>
+///         <water_velocity>
+///           <x></x>
+///           <y></y>
+///           <z></z>
+///         </water_velocity>
+///         <boundaries>
+///           <near>20.</near>
+///           <far>60.</far>
+///         </boundaries>
+///         <bins>10</bins>
+///         <noise type="gaussian">
+///           <stddev></stddev>
+///         </noise>
+///         <visualize></visualize>
+///       </water_mass_mode>
 ///     <minimum_range></minimum_range>
 ///     <maximum_range></maximum_range>
+///     <resolution></resolution>
 ///     <reference_frame></reference_frame>
 ///   </ignition:dvl>
 /// </sensor>
@@ -94,17 +125,65 @@ class DopplerVelocityLogPrivate;
 /// the acoustic beam's symmetry axis w.r.t. the sensor frame -z
 /// axis (ie. rotation about the -y axis). Defaults to 0 degrees
 /// if left unspecified.
-/// - `<arrangement><resolution>` sets the resolution of the beam
-/// arrangement at a 1 m distance. Defaults to 1 cm if left unspecified.
 /// - `<arrangement><visualize>` enables visual aids to evaluate
 /// acoustic beam arrangements. Beam lobes' are rendered and adjusted
 /// in size to match range measurements.
-/// - `<visualize>` enables visual aids to validate acoustic beam
-/// ranging. Beam shortest reflection paths are depicted.
-/// - `<noise>` sets the noise model for range measurements.
-/// Defaults to none if left unspecified
+/// - `<tracking>` configures velocity tracking modes for the DVL.
+/// - `<tracking><bottom_mode>` configures the bottom tracking mode.
+/// - `<tracking><bottom_mode><when>` enables (or disables) the bottom
+/// tracking mode. Supported values are 'never', to disable it completely
+/// (as if no <bottom_mode> configuration had been specified), 'always' to
+/// enable it at all times, and 'best' to track at all times but only
+/// publish estimates when it performs best among all configured modes.
+/// Defaults to 'always' if left unspecified.
+/// - `<tracking><bottom_mode><noise>` sets the noise model for velocity
+/// estimates. Only 'gaussian' noise is currently supported. Defaults to
+/// none if left unspecified.
+/// - `<tracking><bottom_mode><visualize>` enables visual aids to validate
+/// bottom tracking. Acoustic beam reflection paths are depicted, where the
+/// color scales linearly in hue with measured speed and low opacity sections
+/// depict range uncertainty (+/- 2 standard deviations).
+/// - `<tracking><water_mass_mode>` configures the water-mass tracking mode.
+/// - `<tracking><water_mass_mode><when>` enables (or disables) the water-mass
+/// tracking mode. Supported values are 'never', to disable it completely
+/// (as if no <water_mass_mode> configuration had been specified), 'always'
+/// to enable it at all times, and 'best' to track at all times but only
+/// publish estimates when it performs best among all configured modes.
+/// Defaults to 'always' if left unspecified.
+/// - `<tracking><water_mass_mode><water_velocity>` set the variables in world
+/// environmental data to be used to sample water velocity w.r.t. the world frame
+/// in each axis. At least one axis must be specified.
+/// - `<tracking><water_mass_mode><water_velocity><x>` set the variable in world
+/// environmental data to be used to sample water velocity w.r.t. the world frame
+/// along the x-axis (that is, towards east). Defaults to none (and thus zero
+/// water velocity in this axis) if left unspecified.
+/// - `<tracking><water_mass_mode><water_velocity><y>` set the variable in world
+/// environmental data to be used to sample water velocity w.r.t. the world frame
+/// along the y-axis (that is, towards north). Defaults to none (and thus zero
+/// water velocity in this axis) if left unspecified.
+/// - `<tracking><water_mass_mode><water_velocity><z>` set the variable in world
+/// environmental data to be used to sample water velocity w.r.t. the world frame
+/// along the z-axis (that is, upwards). Defaults to none (and thus zero
+/// water velocity in this axis) if left unspecified.
+/// - `<tracking><water_mass_mode><boundaries>` sets water-mass layer boundaries.
+/// These boundaries are planar at given z-offsets in the sensor frame.
+/// - `<tracking><water_mass_mode><boundaries><near>` sets the water-mass layer
+/// boundary that is the closest to the sensor.
+/// - `<tracking><water_mass_mode><boundaries><far>` sets the water-mass layer
+/// boundary that is the farthest to the sensor.
+/// - `<tracking><water_mass_mode><bins>` sets the number of bins to use for
+/// water-mass velocity sampling. Each bin is a slab of water between boundaries.
+/// - `<tracking><water_mass_mode><noise>` sets the noise model for velocity
+/// estimates. Only 'gaussian' noise is currently supported. Defaults to
+/// none if left unspecified.
+/// - `<tracking><water_mass_mode><visualize>` enables visual aids to validate
+/// bottom tracking. Acoustic beam reflection paths are depicted, where the
+/// color scales linearly in hue with measured speed and low opacity sections
+/// depict range uncertainty (+/- 2 standard deviations).
 /// - `<type>` sets the sensor type, either 'piston' or 'phased_array'.
 /// Defaults to unspecified.
+/// - `<resolution>` sets the resolution of the beam for bottom
+/// tracking at a 1 m distance. Defaults to 1 cm if left unspecified.
 /// - `<minimum_range>` sets a lower bound for range measurements.
 /// Defaults to 1 cm if left unspecified.
 /// - `<maximum_range>` sets an upper bound for range measurements.
@@ -138,26 +217,20 @@ class DopplerVelocityLog : public gz::sensors::RenderingSensor
   /// \brief Set this sensor's entity ID (for world state lookup).
   public: void SetEntity(gz::sim::Entity entity);
 
-  /// \brief Provide world `_state` to support DVL velocity estimates.
-  public: void SetWorldState(const WorldKinematicState &_state);
+  /// \brief Set world `_state` to support DVL water and bottom-tracking.
+  public: void SetWorldState(const WorldState &_state);
+
+  /// \brief Set environmental `_data` to support DVL water-tracking.
+  public: void SetEnvironmentalData(const EnvironmentalData &_data);
 
   /// \brief Yield rendering sensors that underpin the implementation.
   ///
   /// \internal
   public: std::vector<gz::rendering::SensorPtr> RenderingSensors() const;
 
-  /// \brief Create rendering sensors that underpin the implementation.
-  ///
-  /// \internal
-  private: bool CreateRenderingSensors();
+  private: class Implementation;
 
-  /// \brief Callback for rendering sensor frames
-  private: void OnNewFrame(
-      const float *_scan, unsigned int _width,
-      unsigned int _height, unsigned int _channels,
-      const std::string & /*_format*/);
-
-  private: std::unique_ptr<DopplerVelocityLogPrivate> dataPtr;
+  private: std::unique_ptr<Implementation> dataPtr;
 };
 
 }  // namespace tethys
