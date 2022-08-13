@@ -34,14 +34,13 @@ using namespace std::literals::chrono_literals;
 //////////////////////////////////////////////////
 TEST(SurfaceWindsTest, WindAtSurface)
 {
-  TestFixtureWithVehicle fixture(
-      "windy_tethys.sdf", "tethys");
+  TestFixtureWithVehicle fixture("windy_tethys.sdf", "tethys");
   fixture.Step(2min);
   // Eastward velocity at the surface due to wind
   // NOTE(hidmic): reverse Y-axis velocity sign to match FSK
   const auto &observer = fixture.VehicleObserver();
   const auto &linearVelocities = observer.LinearVelocities();
-  EXPECT_GT(1e-3, -linearVelocities.back().Y());
+  EXPECT_LT(1e-3, -linearVelocities.back().Y());
 }
 
 //////////////////////////////////////////////////
