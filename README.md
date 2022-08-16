@@ -8,7 +8,7 @@ Stability is not guaranteed.
 
 Source files, models, and plugins relevant to a general audience are upstreamed
 on an irregular basis to Ignition libraries, the top-level library being
-[ign-gazebo](https://github.com/ignitionrobotics/ign-gazebo/).
+[ign-gazebo](https://github.com/gazebosim/ign-gazebo/).
 Upstreamed files may eventually be removed from this repository.
 
 Standalone, this repository contains the environment and plugins necessary to
@@ -39,7 +39,7 @@ docker/join.sh mbari_lrauv
 ## To build
 
 To run the code in this repository natively without Docker, make sure you have
-[Ignition Garden](https://ignitionrobotics.org/docs/garden) and
+[Ignition Garden](https://gazebosim.org/docs/garden) and
 [colcon](https://colcon.readthedocs.io/en/released/), on Ubuntu Focal or higher.
 
 Install dependencies
@@ -58,7 +58,7 @@ colcon build --cmake-args "-DBUILD_TESTING=ON"
 ```
 
 > You can pass `--cmake-args ' -DENABLE_PROFILER=1'` to use the profiler.
-> See more on [this tutorial](https://ignitionrobotics.org/api/common/4.4/profiler.html)
+> See more on [this tutorial](https://gazebosim.org/api/common/4.4/profiler.html)
 
 ## To test simulation in Ignition standalone (without MBARI integration)
 
@@ -492,11 +492,11 @@ for example:
 
 ## Levels
 
-Some worlds support [levels](https://ignitionrobotics.org/api/gazebo/6.7/levels.html).
+Some worlds support [levels](https://gazebosim.org/api/gazebo/6.7/levels.html).
 Levels are turned off by default, which means that all heightmap tiles will
 be loaded at all times. When levels are enabled, only the tiles containing
 vehicles (performers) spawned with `WorldCommPlugin` with an
-[lrauv_init](https://github.com/osrf/lrauv/blob/main/lrauv_ignition_plugins/proto/lrauv_init.proto)
+[lrauv_init](https://github.com/osrf/lrauv/blob/main/lrauv_gazebo_plugins/proto/lrauv_init.proto)
 message will be loaded.
 
 For example, loading without levels:
@@ -529,7 +529,7 @@ On the MBARI Main Vehicle Application side, all values during the run are
 stored to disk.
 They can be retrieved after the run and plotted for debugging purposes.
 
-See [`lrauv_ignition_plugins/plots/README.md`](https://github.com/osrf/lrauv/blob/main/lrauv_ignition_plugins/plots/README.md)
+See [`lrauv_gazebo_plugins/plots/README.md`](https://github.com/osrf/lrauv/blob/main/lrauv_gazebo_plugins/plots/README.md)
 for instructions to unserialize and scripts for plotting.
 
 ## Science data

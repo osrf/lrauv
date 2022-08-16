@@ -24,7 +24,7 @@
 
 #include <chrono>
 
-#include <lrauv_ignition_plugins/lrauv_command.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_command.pb.h>
 #include "lrauv_system_tests/TestFixture.hh"
 
 using namespace lrauv_system_tests;
@@ -46,7 +46,7 @@ TEST(MassShifterTest, DownwardTilt)
 
   // Tell the vehicle to tilt downward by moving
   // the mass forward (positive command)
-  lrauv_ignition_plugins::msgs::LRAUVCommand command;
+  lrauv_gazebo_plugins::msgs::LRAUVCommand command;
   command.set_masspositionaction_(0.01);
   command.set_buoyancyaction_(0.0005);
 

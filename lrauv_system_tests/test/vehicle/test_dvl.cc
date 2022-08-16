@@ -31,8 +31,8 @@
 #include <string>
 #include <utility>
 
-#include <lrauv_ignition_plugins/dvl_velocity_tracking.pb.h>
-#include <lrauv_ignition_plugins/dvl_tracking_target.pb.h>
+#include <lrauv_gazebo_plugins/dvl_velocity_tracking.pb.h>
+#include <lrauv_gazebo_plugins/dvl_tracking_target.pb.h>
 
 #include "lrauv_system_tests/TestFixture.hh"
 #include "lrauv_system_tests/Util.hh"
@@ -48,7 +48,7 @@ TEST(DVLTest, NoTracking)
   VehicleCommandTestFixture fixture("bottomless_pit.sdf", "tethys");
 
   using DVLVelocityTracking =
-      lrauv_ignition_plugins::msgs::DVLVelocityTracking;
+      lrauv_gazebo_plugins::msgs::DVLVelocityTracking;
   Subscription<DVLVelocityTracking> velocitySubscription;
   velocitySubscription.Subscribe(fixture.Node(), "/tethys/dvl/velocity", 1);
 
@@ -72,7 +72,7 @@ TEST(DVLTest, BottomTracking)
   VehicleCommandTestFixture fixture("flat_seabed.sdf", "tethys");
 
   using DVLVelocityTracking =
-      lrauv_ignition_plugins::msgs::DVLVelocityTracking;
+      lrauv_gazebo_plugins::msgs::DVLVelocityTracking;
   Subscription<DVLVelocityTracking> velocitySubscription;
   velocitySubscription.Subscribe(fixture.Node(), "/tethys/dvl/velocity", 1);
 
@@ -83,7 +83,7 @@ TEST(DVLTest, BottomTracking)
   // Propel vehicle forward by giving the propeller a positive
   // angular velocity. Vehicle is supposed to move at around
   // 1 m/s with 300 RPM. 300 RPM = 300 * 2 pi / 60 = 10 pi rad/s
-  lrauv_ignition_plugins::msgs::LRAUVCommand command;
+  lrauv_gazebo_plugins::msgs::LRAUVCommand command;
   command.set_propomegaaction_(10. * GZ_PI);
 
   // Rotate rudder clockwise when looking from the top,
@@ -103,7 +103,7 @@ TEST(DVLTest, BottomTracking)
   }
   ASSERT_TRUE(velocitySubscription.WaitForMessages(50, 10s));
 
-  using DVLTrackingTarget = lrauv_ignition_plugins::msgs::DVLTrackingTarget;
+  using DVLTrackingTarget = lrauv_gazebo_plugins::msgs::DVLTrackingTarget;
   const DVLVelocityTracking message = velocitySubscription.ReadLastMessage();
   // Account for slight roll and limited resolution
   constexpr double kRangeTolerance{0.2};

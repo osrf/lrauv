@@ -24,7 +24,7 @@
 
 #include <chrono>
 
-#include <lrauv_ignition_plugins/lrauv_command.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_command.pb.h>
 #include "lrauv_system_tests/TestFixture.hh"
 
 using namespace lrauv_system_tests;
@@ -40,7 +40,7 @@ TEST(BuoyancyActionTest, Sink)
   EXPECT_NEAR(-0.5, poses.back().Pos().Z(), 0.05);
 
   // Command the vehicle to sink
-  lrauv_ignition_plugins::msgs::LRAUVCommand command;
+  lrauv_gazebo_plugins::msgs::LRAUVCommand command;
   command.set_dropweightstate_(true);
   command.set_buoyancyaction_(0.0);
 

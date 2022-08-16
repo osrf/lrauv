@@ -48,7 +48,7 @@ RUN /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable
 
 # Install and upgrade the latest Ignition binaries
 RUN apt-get -qq update && apt-get -q -y install \
-  ignition-garden python3-ignition-gazebo7 python3-ignition-math7 && apt-get dist-upgrade -y
+  ignition-garden python3-gz-sim7 python3-ignition-math7 && apt-get dist-upgrade -y
 
 # Install PCL
 RUN apt-get update \

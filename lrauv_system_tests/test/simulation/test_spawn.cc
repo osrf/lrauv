@@ -33,7 +33,7 @@
 #include <gz/math/SphericalCoordinates.hh>
 #include <gz/transport/Node.hh>
 
-#include <lrauv_ignition_plugins/lrauv_init.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_init.pb.h>
 
 #include "lrauv_system_tests/Publisher.hh"
 #include "lrauv_system_tests/TestFixture.hh"
@@ -87,7 +87,7 @@ TEST(VehicleSpawnTest, Spawn)
 
   // Spawn first vehicle
   gz::transport::Node node;
-  using lrauv_ignition_plugins::msgs::LRAUVInit;
+  using lrauv_gazebo_plugins::msgs::LRAUVInit;
   gz::transport::Node::Publisher spawnPublisher =
       node.Advertise<LRAUVInit>("/lrauv/init");
   ASSERT_TRUE(WaitForConnections(spawnPublisher, 5s));
@@ -96,7 +96,7 @@ TEST(VehicleSpawnTest, Spawn)
   const gz::math::Angle lat1 = GZ_DTOR(20.0);
   const gz::math::Angle lon1 = GZ_DTOR(20.0);
   {
-    lrauv_ignition_plugins::msgs::LRAUVInit spawnMessage;
+    lrauv_gazebo_plugins::msgs::LRAUVInit spawnMessage;
     spawnMessage.mutable_id_()->set_data("vehicle1");
     spawnMessage.set_initlat_(lat1.Degree());
     spawnMessage.set_initlon_(lon1.Degree());
@@ -123,7 +123,7 @@ TEST(VehicleSpawnTest, Spawn)
   const gz::math::Angle yaw2 = GZ_DTOR(180);
   const double depth2 = 10.0;
   {
-    lrauv_ignition_plugins::msgs::LRAUVInit spawnMessage;
+    lrauv_gazebo_plugins::msgs::LRAUVInit spawnMessage;
     spawnMessage.mutable_id_()->set_data("vehicle2");
     spawnMessage.set_initlat_(lat2.Degree());
     spawnMessage.set_initlon_(lon2.Degree());

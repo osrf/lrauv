@@ -30,7 +30,7 @@
 #include <gz/math/SphericalCoordinates.hh>
 #include <gz/transport/Node.hh>
 
-#include <lrauv_ignition_plugins/lrauv_init.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_init.pb.h>
 
 #include "TestConstants.hh"
 
@@ -69,7 +69,7 @@ void SpawnVehicle(
   gz::math::Angle lat1 = GZ_DTOR(_lat);
   gz::math::Angle lon1 = GZ_DTOR(_lon);
 
-  lrauv_ignition_plugins::msgs::LRAUVInit spawnMsg;
+  lrauv_gazebo_plugins::msgs::LRAUVInit spawnMsg;
   spawnMsg.mutable_id_()->set_data(_modelName);
   spawnMsg.set_initlat_(lat1.Degree());
   spawnMsg.set_initlon_(lon1.Degree());
@@ -126,7 +126,7 @@ TEST(SensorTest, TimeInterpolation)
   int maxSleep{30};
 
   // Change the dataconfig
-  igndbg << "Switching file" <<std::endl;
+  gzdbg << "Switching file" <<std::endl;
   gz::transport::Node node;
   auto configPub = node.Advertise<gz::msgs::StringMsg>(
     "/world/science_sensor/environment_data_path");
@@ -140,7 +140,7 @@ TEST(SensorTest, TimeInterpolation)
   configPub.Publish(configMsg);
 
   // Spawn first vehicle
-  auto spawnPub = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVInit>(
+  auto spawnPub = node.Advertise<lrauv_gazebo_plugins::msgs::LRAUVInit>(
     "/lrauv/init");
   for (; !spawnPub.HasConnections() && sleep < maxSleep; ++sleep)
   {
@@ -163,7 +163,7 @@ TEST(SensorTest, TimeInterpolation)
     // Run paused so we avoid the physics moving the vehicles
     fixture->Server()->RunOnce(true);
     expectedIterations++;
-    igndbg << "Waiting for vehicles to spawn" << std::endl;
+    gzdbg << "Waiting for vehicles to spawn" << std::endl;
   }
   EXPECT_TRUE(spawnedAllVehicles);
 

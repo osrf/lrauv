@@ -34,8 +34,8 @@
 #include <gz/sim/World.hh>
 #include <gz/transport/Node.hh>
 
-#include <lrauv_ignition_plugins/lrauv_command.pb.h>
-#include <lrauv_ignition_plugins/lrauv_state.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_command.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_state.pb.h>
 
 #include "lrauv_system_tests/ModelManipulator.hh"
 #include "lrauv_system_tests/ModelObserver.hh"
@@ -253,7 +253,7 @@ class VehicleCommandTestFixture : public TestFixtureWithVehicle
       const std::string &_vehicleName)
     : TestFixtureWithVehicle(_worldName, _vehicleName)
   {
-    using lrauv_ignition_plugins::msgs::LRAUVCommand;
+    using lrauv_gazebo_plugins::msgs::LRAUVCommand;
     const std::string topicName = "/" + _vehicleName + "/command_topic";
     this->commandPublisher = this->node.Advertise<LRAUVCommand>(topicName);
   }
@@ -274,7 +274,7 @@ class VehicleCommandTestFixture : public TestFixtureWithVehicle
 /// A test fixture with a single vehicle for vehicle state testing.
 class VehicleStateTestFixture : public VehicleCommandTestFixture
 {
-  using LRAUVState = lrauv_ignition_plugins::msgs::LRAUVState;
+  using LRAUVState = lrauv_gazebo_plugins::msgs::LRAUVState;
 
   /// Constructor.
   /// \param[in] _worldName Base name of the world SDF,

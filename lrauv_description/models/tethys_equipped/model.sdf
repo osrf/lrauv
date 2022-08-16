@@ -19,64 +19,64 @@
           action="add"
           name="salinity_sensor"
           type="custom"
-          ignition:type="salinity">
+          gz:type="salinity">
           <always_on>1</always_on>
           <update_rate>2</update_rate>
           <topic>/model/tethys/salinity</topic>
-          <ignition:salinity>
+          <gz:salinity>
             <noise type="gaussian">
               <mean>0.00001</mean>
               <stddev>0.00001</stddev>
             </noise>
-          </ignition:salinity>
+          </gz:salinity>
         </sensor>
         <sensor
           element_id="base_link"
           action="add"
           name="temperature_sensor"
           type="custom"
-          ignition:type="temperature">
+          gz:type="temperature">
           <always_on>1</always_on>
           <update_rate>2</update_rate>
           <topic>/model/tethys/temperature</topic>
-          <ignition:temperature>
+          <gz:temperature>
             <noise type="gaussian">
               <mean>0.00001</mean>
               <stddev>0.00001</stddev>
             </noise>
-          </ignition:temperature>
+          </gz:temperature>
         </sensor>
         <sensor
           element_id="base_link"
           action="add"
           name="chlorophyll_sensor"
           type="custom"
-          ignition:type="chlorophyll">
+          gz:type="chlorophyll">
           <always_on>1</always_on>
           <update_rate>2</update_rate>
           <topic>/model/tethys/chlorophyll</topic>
-          <ignition:chlorophyll>
+          <gz:chlorophyll>
             <noise type="gaussian">
               <mean>0.00001</mean>
               <stddev>0.00001</stddev>
             </noise>
-          </ignition:chlorophyll>
+          </gz:chlorophyll>
         </sensor>
         <sensor
           element_id="base_link"
           action="add"
           name="current_sensor"
           type="custom"
-          ignition:type="current">
+          gz:type="current">
           <always_on>1</always_on>
           <update_rate>2</update_rate>
           <topic>/model/tethys/current</topic>
-          <ignition:current>
+          <gz:current>
             <noise type="gaussian">
               <mean>0.00001</mean>
               <stddev>0.00001</stddev>
             </noise>
-          </ignition:current>
+          </gz:current>
         </sensor>
         <!--
             Teledyne Pathfinder DVL
@@ -87,12 +87,12 @@
         <sensor
             element_id="base_link" action="add"
             name="teledyne_pathfinder_dvl"
-            type="custom" ignition:type="dvl">
+            type="custom" gz:type="dvl">
           <pose degrees="true">0 0 0 0 0 180</pose>
           <always_on>1</always_on>
           <update_rate>1</update_rate>
           <topic>/tethys/dvl/velocity</topic>
-          <ignition:dvl>
+          <gz:dvl>
             <arrangement degrees="true">
               <beam id="1">
                 <aperture>2.1</aperture>
@@ -127,7 +127,7 @@
             <maximum_range>80.</maximum_range>
             <!-- ENU to SFM -->
             <reference_frame>0 0 0 0 0 -1.570796</reference_frame>
-          </ignition:dvl>
+          </gz:dvl>
         </sensor>
         <!--
             Sparton AHRS-M2 arrangement of IMU + Magnetometer
@@ -244,19 +244,19 @@
       </experimental:params>
       <!-- Joint controllers -->
       <plugin
-        filename="ignition-gazebo-joint-position-controller-system"
+        filename="gz-sim-joint-position-controller-system"
         name="gz::sim::systems::JointPositionController">
         <joint_name>horizontal_fins_joint</joint_name>
         <p_gain>0.1</p_gain>
       </plugin>
       <plugin
-        filename="ignition-gazebo-joint-position-controller-system"
+        filename="gz-sim-joint-position-controller-system"
         name="gz::sim::systems::JointPositionController">
         <joint_name>vertical_fins_joint</joint_name>
         <p_gain>0.1</p_gain>
       </plugin>
       <plugin
-        filename="ignition-gazebo-thruster-system"
+        filename="gz-sim-thruster-system"
         name="gz::sim::systems::Thruster">
         <namespace>tethys</namespace>
         <joint_name>propeller_joint</joint_name>
@@ -268,7 +268,7 @@
         <use_angvel_cmd>true</use_angvel_cmd>
       </plugin>
       <plugin
-        filename="ignition-gazebo-joint-position-controller-system"
+        filename="gz-sim-joint-position-controller-system"
         name="gz::sim::systems::JointPositionController">
         <joint_name>battery_joint</joint_name>
         <use_velocity_commands>true</use_velocity_commands>
@@ -277,7 +277,7 @@
       <!-- Lift and drag -->
       <!-- Vertical fin -->
       <plugin
-        filename="ignition-gazebo-lift-drag-system"
+        filename="gz-sim-lift-drag-system"
         name="gz::sim::systems::LiftDrag">
         <air_density>1025</air_density>
         <cla>4.13</cla>
@@ -296,7 +296,7 @@
       </plugin>
       <!-- Horizontal fin -->
       <plugin
-        filename="ignition-gazebo-lift-drag-system"
+        filename="gz-sim-lift-drag-system"
         name="gz::sim::systems::LiftDrag">
         <air_density>1025</air_density>
         <cla>4.13</cla>
@@ -348,7 +348,7 @@
         <nR>0</nR>
       </plugin>
       <plugin
-        filename="ignition-gazebo-buoyancy-engine-system"
+        filename="gz-sim-buoyancy-engine-system"
         name="gz::sim::systems::BuoyancyEngine">
         <link_name>buoyancy_engine</link_name>
         <namespace>tethys</namespace>
@@ -364,7 +364,7 @@
         <max_inflation_rate>0.000003</max_inflation_rate>
       </plugin>
       <plugin
-        filename="ignition-gazebo-detachable-joint-system"
+        filename="gz-sim-detachable-joint-system"
         name="gz::sim::systems::DetachableJoint">
         <parent_link>base_link</parent_link>
         <child_model>__model__</child_model>
@@ -396,7 +396,7 @@
       <!-- The consists of 62 batteries of NH2034HD34 Lithium Ion batteries. -->
       <!-- Datasheet: https://github.com/osrf/lrauv/files/8614587/NH2034HD34_spec_v1.5.pdf -->
       <!-- Reference comment : https://github.com/osrf/lrauv/issues/201#issuecomment-1116729239 -->
-      <plugin filename="ignition-gazebo-linearbatteryplugin-system"
+      <plugin filename="gz-sim-linearbatteryplugin-system"
         name="gz::sim::systems::LinearBatteryPlugin">
         <battery_name>linear_battery</battery_name>
         <voltage>14.4</voltage>

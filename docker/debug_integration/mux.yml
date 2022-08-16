@@ -17,5 +17,5 @@ windows:
   - logging:
       panes:
         - read  -n 1 -p  "Press any key to export logs:" mainmenuinput;
-          sudo /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/unserialize_for_plotting.sh;
-          sudo cp -r /home/developer/lrauv_ws/src/lrauv/lrauv_ignition_plugins/plots/missions/tmp /results/
+          sudo /home/developer/lrauv_ws/src/lrauv/lrauv_gazebo_plugins/plots/unserialize_for_plotting.sh;
+          sudo cp -r /home/developer/lrauv_ws/src/lrauv/lrauv_gazebo_plugins/plots/missions/tmp /results/

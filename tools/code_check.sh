@@ -45,7 +45,7 @@ then
   CPPLINT_FILES="$CHECK_FILES"
   QUICK_TMP=`mktemp -t asdfXXXXXXXXXX`
 else
-  CHECK_DIRS="lrauv_ignition_plugins/src"
+  CHECK_DIRS="lrauv_gazebo_plugins/src"
   if [ $CPPCHECK_LT_157 -eq 1 ]; then
     # cppcheck is older than 1.57, so don't check header files (issue #907)
     CPPCHECK_FILES=`find $CHECK_DIRS -name "*.cc"`
@@ -62,7 +62,7 @@ if [ $CPPCHECK_LT_157 -eq 0 ]; then
   # use --language argument if 1.57 or greater (issue #907)
   CPPCHECK_BASE="$CPPCHECK_BASE --language=c++"
 fi
-CPPCHECK_INCLUDES="-I lrauv_ignition_plugins/src" # -I $builddir"
+CPPCHECK_INCLUDES="-I lrauv_gazebo_plugins/src" # -I $builddir"
 CPPCHECK_RULES="-UM_PI"\
 " --rule-file=./tools/cppcheck_rules/header_guard.rule"\
 " --rule-file=./tools/cppcheck_rules/namespace_AZ.rule"
