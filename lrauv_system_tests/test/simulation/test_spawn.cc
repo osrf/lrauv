@@ -149,16 +149,6 @@ TEST(VehicleSpawnTest, Spawn)
 
   std::vector<std::string> topics;
   node.TopicList(topics);
-  /* EXPECT_TRUE(std::any_of( */
-  /*     topics.begin(), topics.end(), */
-  /*     [](const std::string &s) { */
-  /*       return s == "/comms/external/201/tx"; */
-  /*     })); */
-  /* EXPECT_TRUE(std::any_of( */
-  /*     topics.begin(), topics.end(), */
-  /*     [](const std::string &s) { */
-  /*       return s == "/comms/external/202/tx"; */
-  /*     })); */
 
   constexpr double tightTol{1e-5};
 
