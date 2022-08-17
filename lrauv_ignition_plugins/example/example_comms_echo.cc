@@ -29,12 +29,12 @@
  *   $ ./LRAUV_example_comms_echo
  */
 
+#include <sstream>
 #include <unistd.h>
 #include <gz/transport/Node.hh>
 #include "lrauv_ignition_plugins/lrauv_acoustic_message.pb.h"
 
 int address = 1;
-gz::transport::Node node;
 gz::transport::Node::Publisher transmitter;
 using AcousticMsg = lrauv_ignition_plugins::msgs::LRAUVAcousticMessage;
 
@@ -63,6 +63,26 @@ void cb(const lrauv_ignition_plugins::msgs::LRAUVAcousticMessage &_msg)
 
 int main(int argc, char** argv)
 {
+  gz::transport::Node node;
+
+  if (argc > 1)
+  {
+    std::istringstream ss(argv[1]);
+    if (!(ss >> address))
+    {
+      std::cerr << "Invalid number: " << argv[1]
+          << ". Using default value 1 instead." << std::endl;
+    }
+    else
+    {
+      if (!ss.eof())
+      {
+        std::cerr << "Trailing characters after number: " << argv[1]
+            << ". Using default value 1 instead." << std::endl;
+      }
+    }
+  }
+
   transmitter = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVAcousticMessage>(
     "/comms/external/" + std::to_string(address) + "/tx");
 
@@ -71,5 +91,5 @@ int main(int argc, char** argv)
     cb
   );
 
-  while(true) { sleep(1); }
+  gz::transport::waitForShutdown();
 }

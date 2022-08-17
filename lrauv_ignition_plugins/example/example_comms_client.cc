@@ -36,7 +36,6 @@ using AcousticMsg = lrauv_ignition_plugins::msgs::LRAUVAcousticMessage;
 
 int main(int _argc, char **_argv)
 {
-
   // For sending data
   // Bind client to address 1
   CommsClient client(1, [](const auto msg){
@@ -57,5 +56,4 @@ int main(int _argc, char **_argv)
   // The data
   msg.set_data("test_message");
   client.SendPacket(msg);
-
 }
