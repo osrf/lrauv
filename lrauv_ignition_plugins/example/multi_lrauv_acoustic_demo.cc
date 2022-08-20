@@ -25,7 +25,10 @@
  * within reasonable limits, and send the command to the vehicle.
  *
  * Usage:
- *   $ LRAUV_multi_lrauv_race
+ *   * Launch gazebo sim using : 
+ *     $ gz sim -v 4 -r multi_lrauv_acoustic_demo.sdf
+ *   * In another terminal, run the demo executable:
+ *     $ LRAUV_multi_lrauv_acoustic_demo
  */
 
 #include <chrono>
