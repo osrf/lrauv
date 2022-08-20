@@ -219,7 +219,8 @@ foreach(EXAMPLE
   example_spawn
   example_thruster
   keyboard_teleop
-  multi_lrauv_race)
+  multi_lrauv_race
+  multi_lrauv_acoustic_demo)
 
   set(EXAMPLE_EXEC LRAUV_${EXAMPLE})
 
@@ -229,7 +230,7 @@ foreach(EXAMPLE
     gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
     dvl_velocity_tracking lrauv_acoustic_message lrauv_command lrauv_init
     lrauv_internal_comms lrauv_range_bearing_request lrauv_range_bearing_response
-    lrauv_state)
+    lrauv_state acoustic_comms_support)
 
   install(
     TARGETS ${EXAMPLE_EXEC}
