@@ -21,9 +21,6 @@
  */
 
 /*
- * In each iteration, for each vehicle, generate a random fin angle and thrust
- * within reasonable limits, and send the command to the vehicle.
- *
  * Usage:
  *   * Launch gazebo sim using : 
  *     $ gz sim -v 4 -r multi_lrauv_acoustic_demo.sdf
@@ -46,11 +43,11 @@ using namespace tethys;
 
 /* This is a simple demonstration of the acoustic comms plugin */
 /* when used with LRAUV vehicles. It consists of 3 vehicles, */
-/* Triton, Daphne, and Tethys floating side by side. Triton send */
+/* Triton, Daphne, and Tethys floating side by side. Triton sends */
 /* a move command using acoustic comms, to the other 2 vehicles, */
 /* which start moving on receiving the command. The speed of sound */
-/* is purposely slowed down here to shw that the middle vehicle (Daphne) */
-/* will receive the signal earlier than Tethys. */
+/* is purposely slowed down here to show that the middle vehicle (Daphne) */
+/* will receive the signal and start moving before Tethys. */
 
 /*    ┌─┐            ┌─┐           ┌─┐ */
 /*    │ │            │ │           │ │ */
