@@ -63,14 +63,14 @@ void SpawnPanel::Spawn(
 {
   if (this->acousticIds.count(commsId) > 0)
   {
-    ignerr << "Comms ID [" << commsId << "] already exists.\n";
+    gzerr << "Comms ID [" << commsId << "] already exists.\n";
     return;
   }
 
   auto vehName = name.toStdString();
   if (this->modelNames.count(vehName) > 0)
   {
-    ignerr << "Model name [" << vehName << "] already exists.\n";
+    gzerr << "Model name [" << vehName << "] already exists.\n";
     return;
   }
 

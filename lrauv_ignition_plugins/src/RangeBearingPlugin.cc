@@ -140,7 +140,7 @@ void RangeBearingPrivateData::OnReceiveCommsMsg(
     this->PublishResponse(message);
     break;
   default:
-    ignwarn << "Unable to process message type\n";
+    gzwarn << "Unable to process message type\n";
   }
 }
 
@@ -185,9 +185,9 @@ void RangeBearingPrivateData::PublishResponse(
   // Transform pose of other vehicle to local frame
   auto poseInLocalFrame = poseOffset.Inverse() * otherVehiclesPos;
 
-  igndbg << "Current pose " << poseOffset.Pose().Pos() << "R: " << poseOffset.Pose().Rot().Euler() << "\n";
-  igndbg << "Target pose (global frame)" << otherVehiclesPos << "\n";
-  igndbg << "Target pose (local frame)" << poseInLocalFrame << "\n";
+  gzdbg << "Current pose " << poseOffset.Pose().Pos() << "R: " << poseOffset.Pose().Rot().Euler() << "\n";
+  gzdbg << "Target pose (global frame)" << otherVehiclesPos << "\n";
+  gzdbg << "Target pose (local frame)" << poseInLocalFrame << "\n";
 
   // Elevation is given as a function of angle from XY plane of the vehicle 
   // with positive facing down.
@@ -200,7 +200,7 @@ void RangeBearingPrivateData::PublishResponse(
     poseInLocalFrame.Y());
   // TODO(arjo): This minus sign shouldn't be necessary.
   auto azimuth = (xyProj.Length() < 0.001) ? 0 : -atan2(xyProj.Y(), xyProj.X());
-  igndbg << "Elevation " << elev << " Azimuth " << azimuth << "\n";
+  gzdbg << "Elevation " << elev << " Azimuth " << azimuth << "\n";
 
   lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse finalAnswer;
   finalAnswer.set_range(range);
@@ -228,14 +228,14 @@ void RangeBearingPlugin::Configure(
 {
   if (!_sdf->HasElement("address"))
   {
-    ignerr << "<address> tag not found" << std::endl;
+    gzerr << "<address> tag not found" << std::endl;
     return;
   }
   this->dataPtr->BindToAddress(_sdf->Get<uint32_t>("address"));
 
   if (!_sdf->HasElement("processing_delay"))
   {
-    ignerr << "<processing_delay> not specified." << std::endl;
+    gzerr << "<processing_delay> not specified." << std::endl;
     return;
   }
   this->dataPtr->processingDelay = 
@@ -244,14 +244,14 @@ void RangeBearingPlugin::Configure(
 
   if (!_sdf->HasElement("speed_of_sound"))
   {
-    ignerr << "<speed_of_sound> not specified\n";
+    gzerr << "<speed_of_sound> not specified\n";
     return;
   }
   this->dataPtr->speedOfSound = _sdf->Get<double>("speed_of_sound");
 
   if (!_sdf->HasElement("link_name"))
   {
-    ignerr <<
+    gzerr <<
       "<link_name> - expected the link name of the receptor" << std::endl;
     return;
   }
@@ -260,7 +260,7 @@ void RangeBearingPlugin::Configure(
   this->dataPtr->linkEntity = vehicleModel.LinkByName(_ecm, linkName);
   if(this->dataPtr->linkEntity == gz::sim::kNullEntity)
   {
-    ignerr << "Link " << linkName << " was not found in "
+    gzerr << "Link " << linkName << " was not found in "
       << vehicleModel.Name(_ecm) << std::endl;
     return;
   }

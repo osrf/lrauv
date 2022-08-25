@@ -41,13 +41,13 @@ void TimeAnalysisPlugin::Configure(
   gz::sim::EntityComponentManager &_ecm,
   gz::sim::EventManager &)
 {
-  ignmsg << "TimeAnalysisPlugin::Configure" << std::endl;
+  gzmsg << "TimeAnalysisPlugin::Configure" << std::endl;
 
   // Subscribe to world stats for actual real time factor
   if (!this->node.Subscribe("/stats",
       &TimeAnalysisPlugin::RTFCallback, this))
   {
-    ignerr << "Error subscribing to topic " << "[" << "/stats" << "]. "
+    gzerr << "Error subscribing to topic " << "[" << "/stats" << "]. "
       << std::endl;
     return;
   }
@@ -56,7 +56,7 @@ void TimeAnalysisPlugin::Configure(
   gz::sim::World world(_entity);
   if (!world.Valid(_ecm))
   {
-    ignerr << "Time analysis plugin must be attached to the world."
+    gzerr << "Time analysis plugin must be attached to the world."
            << std::endl;
     return;
   }
@@ -68,7 +68,7 @@ void TimeAnalysisPlugin::Configure(
     this->physicsCmdService);
   if (this->physicsCmdService.empty())
   {
-    ignerr << "Invalid physics command service topic provided" << std::endl;
+    gzerr << "Invalid physics command service topic provided" << std::endl;
     return;
   }
 
@@ -104,20 +104,20 @@ void TimeAnalysisPlugin::PostUpdate(
     // Go to next step size. Use == to only print once.
     if (nextStepSizeIdx == std::size(this->stepSizes))
     {
-      ignmsg << "Data collection complete." << std::endl;
+      gzmsg << "Data collection complete." << std::endl;
       // Increment again so it would not come into function to keep printing
       nextStepSizeIdx++;
       return;
     }
     double nextStepSize = this->stepSizes[nextStepSizeIdx];
     nextStepSizeIdx++;
-    ignmsg << "Setting new max_step_size (dt) to " << nextStepSize << std::endl;
+    gzmsg << "Setting new max_step_size (dt) to " << nextStepSize << std::endl;
 
     std::function<void(const gz::msgs::Boolean &, const bool)> physCb =
         [](const gz::msgs::Boolean &/*_rep*/, const bool _result)
     {
       if (!_result)
-        ignerr << "Error setting physics parameters" << std::endl;
+        gzerr << "Error setting physics parameters" << std::endl;
     };
 
     // Set physics parameters dynamically

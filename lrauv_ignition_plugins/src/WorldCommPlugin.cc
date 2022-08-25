@@ -57,11 +57,11 @@ void WorldCommPlugin::Configure(
   if (!this->node.Subscribe(this->spawnTopic,
       &WorldCommPlugin::SpawnCallback, this))
   {
-    ignerr << "Error subscribing to topic " << "[" << this->spawnTopic << "]. "
+    gzerr << "Error subscribing to topic " << "[" << this->spawnTopic << "]. "
       << std::endl;
     return;
   }
-  ignmsg << "Listening to spawn messages on [" << this->spawnTopic << "]"
+  gzmsg << "Listening to spawn messages on [" << this->spawnTopic << "]"
          << std::endl;
 
   std::string worldName;
@@ -76,18 +76,18 @@ void WorldCommPlugin::Configure(
     }
     else
     {
-      ignerr << "Failed to get name for world entity [" << worldEntity
+      gzerr << "Failed to get name for world entity [" << worldEntity
              << "]" << std::endl;
     }
   }
   else
   {
-    ignerr << "Failed to get world entity" << std::endl;
+    gzerr << "Failed to get world entity" << std::endl;
   }
 
   if (worldName.empty())
   {
-    ignerr << "Failed to initialize plugin." << std::endl;
+    gzerr << "Failed to initialize plugin." << std::endl;
     return;
   }
 
@@ -96,7 +96,7 @@ void WorldCommPlugin::Configure(
       gz::transport::TopicUtils::AsValidTopic(worldName);
   if (topicWorldName.empty())
   {
-    ignerr << "Invalid world name ["
+    gzerr << "Invalid world name ["
            << worldName << "]" << std::endl;
     return;
   }
@@ -119,19 +119,19 @@ void WorldCommPlugin::ServiceResponse(const gz::msgs::Boolean &_rep,
   const bool _result)
 {
   if (!_result || !_rep.data())
-    ignerr << "Error requesting some service." << std::endl;
+    gzerr << "Error requesting some service." << std::endl;
 }
 
 /////////////////////////////////////////////////
 void WorldCommPlugin::SpawnCallback(
   const lrauv_ignition_plugins::msgs::LRAUVInit &_msg)
 {
-  igndbg << "Received spawn message: " << std::endl
+  gzdbg << "Received spawn message: " << std::endl
     << _msg.DebugString() << std::endl;
 
   if (!_msg.has_id_())
   {
-    ignerr << "Received empty ID, can't initialize vehicle." << std::endl;
+    gzerr << "Received empty ID, can't initialize vehicle." << std::endl;
     return;
   }
 
@@ -142,7 +142,7 @@ void WorldCommPlugin::SpawnCallback(
   // Center the world around the first vehicle spawned
   if (!this->hasWorldLatLon)
   {
-    igndbg << "Setting world origin coordinates to latitude [" << lat
+    gzdbg << "Setting world origin coordinates to latitude [" << lat
            << "], longitude [" << lon << "], elevation [" << ele << "]"
            << std::endl;
 
@@ -160,7 +160,7 @@ void WorldCommPlugin::SpawnCallback(
     if (!this->node.Request(this->setSphericalCoordsService, scReq,
         &WorldCommPlugin::ServiceResponse, this))
     {
-      ignerr << "Failed to request service [" << this->setSphericalCoordsService
+      gzerr << "Failed to request service [" << this->setSphericalCoordsService
              << "]" << std::endl;
     }
     else
@@ -211,7 +211,7 @@ void WorldCommPlugin::SpawnCallback(
   if (!this->node.Request(this->createService, factoryReq,
       &WorldCommPlugin::ServiceResponse, this))
   {
-    ignerr << "Failed to request service [" << this->createService
+    gzerr << "Failed to request service [" << this->createService
            << "]" << std::endl;
   }
   else
@@ -222,7 +222,7 @@ void WorldCommPlugin::SpawnCallback(
     if (!this->node.Request(this->performerService, performerReq,
         &WorldCommPlugin::ServiceResponse, this))
     {
-      ignerr << "Failed to request service [" << this->performerService
+      gzerr << "Failed to request service [" << this->performerService
              << "]" << std::endl;
     }
   }

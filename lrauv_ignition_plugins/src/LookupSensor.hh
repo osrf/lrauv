@@ -91,7 +91,7 @@ bool LookupSensor<DataType, typeStr>::Load(const sdf::Sensor &_sdf)
   auto type = gz::sensors::customType(_sdf);
   if (kTypeStr != type)
   {
-    ignerr << "Trying to load [" << kTypeStr << "] sensor, but got type ["
+    gzerr << "Trying to load [" << kTypeStr << "] sensor, but got type ["
            << type << "] instead." << std::endl;
     return false;
   }
@@ -116,7 +116,7 @@ bool LookupSensor<DataType, typeStr>::Load(const sdf::Sensor &_sdf)
   std::string elementStr("ignition:" + std::string(kTypeStr));
   if (!_sdf.Element()->HasElement(elementStr))
   {
-    igndbg << "No custom configuration for [" << this->Topic() << "]"
+    gzdbg << "No custom configuration for [" << this->Topic() << "]"
            << std::endl;
     return true;
   }
@@ -126,7 +126,7 @@ bool LookupSensor<DataType, typeStr>::Load(const sdf::Sensor &_sdf)
 
   if (!customElem->HasElement("noise"))
   {
-    igndbg << "No noise for [" << this->Topic() << "]" << std::endl;
+    gzdbg << "No noise for [" << this->Topic() << "]" << std::endl;
     return true;
   }
 
@@ -135,7 +135,7 @@ bool LookupSensor<DataType, typeStr>::Load(const sdf::Sensor &_sdf)
   this->noise = gz::sensors::NoiseFactory::NewNoiseModel(noiseSdf);
   if (nullptr == this->noise)
   {
-    ignerr << "Failed to load noise." << std::endl;
+    gzerr << "Failed to load noise." << std::endl;
     return false;
   }
 

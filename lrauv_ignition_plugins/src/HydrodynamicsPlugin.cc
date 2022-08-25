@@ -214,7 +214,7 @@ void HydrodynamicsPlugin::Configure(
 
   if (gz::sim::kNullEntity == this->dataPtr->linkEntity)
   {
-    ignerr << "Failed to find link named [" << link_name << "] in model ["
+    gzerr << "Failed to find link named [" << link_name << "] in model ["
            << model.Name(_ecm) << "]. Plugin failed to initialize." << std::endl;
     return;
   }
@@ -276,7 +276,7 @@ void HydrodynamicsPlugin::PreUpdate(
 
   if(!linearVelocity)
   {
-    ignerr <<"no linear vel" <<"\n";
+    gzerr <<"no linear vel" <<"\n";
     return;
   }
 

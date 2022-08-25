@@ -162,7 +162,7 @@ void AcousticCommsPlugin::Configure(
 
   if (!_sdf->HasElement("address"))
   {
-    ignerr << "No address was defined for the element " << 
+    gzerr << "No address was defined for the element " << 
       model.Name(_ecm) << " \n";
   }
   this->dataPtr->address = _sdf->Get<uint32_t>("address");
@@ -202,7 +202,7 @@ void AcousticCommsPlugin::Configure(
   this->dataPtr->linkEntity = vehicleModel.LinkByName(_ecm, linkName);
   if(this->dataPtr->linkEntity == gz::sim::kNullEntity)
   {
-    ignerr << "Link " << linkName << " was not found in "
+    gzerr << "Link " << linkName << " was not found in "
       << vehicleModel.Name(_ecm) << std::endl;
     return;
   }
@@ -221,7 +221,7 @@ void AcousticCommsPlugin::Configure(
 
   if (!_sdf->HasElement("model_plugin_file"))
   {
-    ignerr << "No <model_plugin_file> found." 
+    gzerr << "No <model_plugin_file> found." 
       << "Please specify library to load pluginfrom." 
       << std::endl;
     return;
@@ -231,7 +231,7 @@ void AcousticCommsPlugin::Configure(
   auto pluginPath = paths.FindSharedLibrary(pluginFileName);
   if (pluginPath.empty())
   {
-    ignerr << "Unable to load model " << pluginFileName 
+    gzerr << "Unable to load model " << pluginFileName 
       << "file not found" << std::endl;
     return;
   }
@@ -244,7 +244,7 @@ void AcousticCommsPlugin::Configure(
 
   if (!_sdf->HasElement("model_name"))
   {
-    ignerr << "No <model_name> found. Which model do you want to use?"
+    gzerr << "No <model_name> found. Which model do you want to use?"
       << std::endl;
     return;
   }
@@ -254,7 +254,7 @@ void AcousticCommsPlugin::Configure(
 
   if (commsModels.count(modelName) == 0)
   {
-    ignerr << modelName 
+    gzerr << modelName 
       << " does not implement tethys::ICommsModel" << std::endl;
   }
 
@@ -264,17 +264,17 @@ void AcousticCommsPlugin::Configure(
 
   if (this->dataPtr->commsModel == nullptr)
   {
-    ignerr << "Failed to load comms model plugin " << modelName 
+    gzerr << "Failed to load comms model plugin " << modelName 
       <<  " from " << pluginPath;
     return;
   }
-  igndbg << "Loaded comms model" << modelName << " from " 
+  gzdbg << "Loaded comms model" << modelName << " from " 
     << pluginPath << std::endl;
   this->dataPtr->commsModel->Configure(_entity, _sdf, _ecm);
 
   if (!_sdf->HasElement("link_name"))
   {
-    ignerr << "No <link_name> was found. Please specify a link to use as "
+    gzerr << "No <link_name> was found. Please specify a link to use as "
      << "a reciever" << std::endl;
     return;
   }
@@ -322,7 +322,7 @@ void AcousticCommsPlugin::PreUpdate(
     static bool warn = false;
     if(!warn)
     {
-      ignerr << "Failed to load Comms model.\n"; 
+      gzerr << "Failed to load Comms model.\n"; 
       warn = true;
     }
     return;

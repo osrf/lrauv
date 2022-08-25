@@ -132,7 +132,7 @@ void ReferenceAxisPrivate::Initialize()
         std::get<bool>(cam->UserData("user-camera")))
     {
       this->camera = cam;
-      igndbg << "Video Recorder plugin is recoding camera ["
+      gzdbg << "Video Recorder plugin is recoding camera ["
              << this->camera->Name() << "]" << std::endl;
       break;
     }
@@ -140,7 +140,7 @@ void ReferenceAxisPrivate::Initialize()
 
   if (!this->camera)
   {
-    ignerr << "Camera is not available" << std::endl;
+    gzerr << "Camera is not available" << std::endl;
   }
 }
 

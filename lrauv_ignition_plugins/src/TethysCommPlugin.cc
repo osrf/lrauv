@@ -63,7 +63,7 @@ double pressureFromDepthLatitude(double _depth, double _lat)
   }
   if (_lat < -90 || _lat > 90)
   {
-    ignerr << "Latitude range is [-90, 90]. Received [" << _lat << "]"
+    gzerr << "Latitude range is [-90, 90]. Received [" << _lat << "]"
            << std::endl;
     return -1.0;
   }
@@ -232,7 +232,7 @@ void TethysCommPlugin::Configure(
   if (!this->node.Subscribe(this->commandTopic,
       &TethysCommPlugin::CommandCallback, this))
   {
-    ignerr << "Error subscribing to topic " << "[" << this->commandTopic
+    gzerr << "Error subscribing to topic " << "[" << this->commandTopic
       << "]. " << std::endl;
     return;
   }
@@ -242,7 +242,7 @@ void TethysCommPlugin::Configure(
     this->stateTopic);
   if (!this->statePub)
   {
-    ignerr << "Error advertising topic [" << this->stateTopic << "]"
+    gzerr << "Error advertising topic [" << this->stateTopic << "]"
       << std::endl;
   }
 
@@ -251,7 +251,7 @@ void TethysCommPlugin::Configure(
     this->node.Advertise<gz::msgs::NavSat>(navSatTopic);
   if (!this->navSatPub)
   {
-    ignerr << "Error advertising topic [" << navSatTopic << "]" << std::endl;
+    gzerr << "Error advertising topic [" << navSatTopic << "]" << std::endl;
   }
 
   SetupControlTopics(ns);
@@ -266,7 +266,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
     this->node.Advertise<gz::msgs::Double>(this->thrusterTopic);
   if (!this->thrusterPub)
   {
-    ignerr << "Error advertising topic [" << this->thrusterTopic << "]"
+    gzerr << "Error advertising topic [" << this->thrusterTopic << "]"
       << std::endl;
   }
 
@@ -276,7 +276,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
     this->node.Advertise<gz::msgs::Double>(this->rudderTopic);
   if (!this->rudderPub)
   {
-    ignerr << "Error advertising topic [" << this->rudderTopic << "]"
+    gzerr << "Error advertising topic [" << this->rudderTopic << "]"
       << std::endl;
   }
 
@@ -286,7 +286,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
     this->node.Advertise<gz::msgs::Double>(this->elevatorTopic);
   if (!this->elevatorPub)
   {
-    ignerr << "Error advertising topic [" << this->elevatorTopic << "]"
+    gzerr << "Error advertising topic [" << this->elevatorTopic << "]"
       << std::endl;
   }
 
@@ -296,7 +296,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
     this->node.Advertise<gz::msgs::Double>(this->massShifterTopic);
   if (!this->massShifterPub)
   {
-    ignerr << "Error advertising topic [" << this->massShifterTopic << "]"
+    gzerr << "Error advertising topic [" << this->massShifterTopic << "]"
       << std::endl;
   }
 
@@ -307,7 +307,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
     this->node.Advertise<gz::msgs::Double>(this->buoyancyEngineCmdTopic);
   if (!this->buoyancyEnginePub)
   {
-    ignerr << "Error advertising topic [" << this->buoyancyEngineCmdTopic << "]"
+    gzerr << "Error advertising topic [" << this->buoyancyEngineCmdTopic << "]"
       << std::endl;
   }
 
@@ -317,7 +317,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   if (!this->node.Subscribe(this->buoyancyEngineStateTopic,
       &TethysCommPlugin::BuoyancyStateCallback, this))
   {
-    ignerr << "Error subscribing to topic " << "["
+    gzerr << "Error subscribing to topic " << "["
       << this->buoyancyEngineStateTopic << "]. " << std::endl;
   }
 
@@ -327,7 +327,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
     this->node.Advertise<gz::msgs::Empty>(this->dropWeightTopic);
   if(!this->dropWeightPub)
   {
-    ignerr << "Error advertising topic [" << this->dropWeightTopic << "]"
+    gzerr << "Error advertising topic [" << this->dropWeightTopic << "]"
       << std::endl;
   }
 
@@ -337,7 +337,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   if (!this->node.Subscribe(this->salinityTopic,
       &TethysCommPlugin::SalinityCallback, this))
   {
-    ignerr << "Error subscribing to topic " << "["
+    gzerr << "Error subscribing to topic " << "["
       << this->salinityTopic << "]. " << std::endl;
   }
 
@@ -346,7 +346,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   if (!this->node.Subscribe(this->temperatureTopic,
       &TethysCommPlugin::TemperatureCallback, this))
   {
-    ignerr << "Error subscribing to topic " << "["
+    gzerr << "Error subscribing to topic " << "["
       << this->temperatureTopic << "]. " << std::endl;
   }
 
@@ -355,7 +355,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   if (!this->node.Subscribe(this->batteryTopic,
       &TethysCommPlugin::BatteryCallback, this))
   {
-    ignerr << "Error subscribing to topic " << "["
+    gzerr << "Error subscribing to topic " << "["
       << this->batteryTopic << "]. " << std::endl;
   }
 
@@ -364,7 +364,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   if (!this->node.Subscribe(this->chlorophyllTopic,
       &TethysCommPlugin::ChlorophyllCallback, this))
   {
-    ignerr << "Error subscribing to topic " << "["
+    gzerr << "Error subscribing to topic " << "["
       << this->chlorophyllTopic << "]. " << std::endl;
   }
 
@@ -373,7 +373,7 @@ void TethysCommPlugin::SetupControlTopics(const std::string &_ns)
   if (!this->node.Subscribe(this->currentTopic,
       &TethysCommPlugin::CurrentCallback, this))
   {
-    ignerr << "Error subscribing to topic " << "["
+    gzerr << "Error subscribing to topic " << "["
       << this->currentTopic << "]. " << std::endl;
   }
 }
@@ -440,7 +440,7 @@ void TethysCommPlugin::CommandCallback(
 {
   if (this->debugPrintout)
   {
-    igndbg << "[" << this->ns << "] Received command: " << std::endl
+    gzdbg << "[" << this->ns << "] Received command: " << std::endl
       << _msg.DebugString() << std::endl;
   }
 
@@ -543,7 +543,7 @@ void TethysCommPlugin::PostUpdate(
     _ecm.Component<gz::sim::components::JointVelocity>(thrusterJoint);
   if (propAngVelComp->Data().size() != 1)
   {
-    ignerr << "Propeller joint has wrong size\n";
+    gzerr << "Propeller joint has wrong size\n";
     return;
   }
   stateMsg.set_propomega_(propAngVelComp->Data()[0]);
@@ -553,7 +553,7 @@ void TethysCommPlugin::PostUpdate(
     _ecm.Component<gz::sim::components::JointPosition>(rudderJoint);
   if (rudderPosComp->Data().size() != 1)
   {
-    ignerr << "Rudder joint has wrong size\n";
+    gzerr << "Rudder joint has wrong size\n";
     return;
   }
   stateMsg.set_rudderangle_(rudderPosComp->Data()[0]);
@@ -563,7 +563,7 @@ void TethysCommPlugin::PostUpdate(
     _ecm.Component<gz::sim::components::JointPosition>(elevatorJoint);
   if (elevatorPosComp->Data().size() != 1)
   {
-    ignerr << "Elavator joint has wrong size\n";
+    gzerr << "Elavator joint has wrong size\n";
     return;
   }
   stateMsg.set_elevatorangle_(elevatorPosComp->Data()[0]);
@@ -574,7 +574,7 @@ void TethysCommPlugin::PostUpdate(
     massShifterJoint);
   if (massShifterPosComp->Data().size() != 1)
   {
-    ignerr << "Mass shifter joint component has the wrong size ("
+    gzerr << "Mass shifter joint component has the wrong size ("
       << massShifterPosComp->Data().size() << "), expected 1\n";
     return;
   }
@@ -680,7 +680,7 @@ void TethysCommPlugin::PostUpdate(
   if (this->debugPrintout &&
     _info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
   {
-    igndbg << "[" << this->ns << "] Published state to " << this->stateTopic
+    gzdbg << "[" << this->ns << "] Published state to " << this->stateTopic
       << " at time: " << stateMsg.header().stamp().sec()
       << "." << stateMsg.header().stamp().nsec() << std::endl
       << "\tLat / lon (deg): " << stateMsg.latitudedeg_() << " / "

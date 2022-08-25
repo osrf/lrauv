@@ -56,7 +56,7 @@ class tethys::ScienceSensorsSystemPrivate
   /// \param[in] _filepath Path to file to reload.
   public: void OnReloadData(const gz::msgs::StringMsg &_filepath)
   {
-    igndbg << "Reloading file " << _filepath.data() << "\n";
+    gzdbg << "Reloading file " << _filepath.data() << "\n";
 
     // Trigger reload and reread data
     std::lock_guard<std::mutex> lock(this->dataMutex);
@@ -146,7 +146,7 @@ class tethys::ScienceSensorsSystemPrivate
   ////////////////////////////
   // Fields for bookkeeping
 
-  /// \brief Input data file name, relative to a path Ignition can find in its
+  /// \brief Input data file name, relative to a path Gazebo can find in its
   /// environment variables.
   public: std::string dataPath {"2003080103_mb_l3_las.csv"};
 
@@ -294,7 +294,7 @@ void createSensor(ScienceSensorsSystem *_system,
   auto sensor = sensorFactory.CreateSensor<SensorType>(data);
   if (nullptr == sensor)
   {
-    ignerr << "Failed to create sensor [" << sensorScopedName << "]"
+    gzerr << "Failed to create sensor [" << sensorScopedName << "]"
            << std::endl;
     return;
   }
@@ -312,7 +312,7 @@ void createSensor(ScienceSensorsSystem *_system,
   _system->entitySensorMap.insert(std::make_pair(_entity,
       std::move(sensor)));
 
-  igndbg << "Created sensor [" << sensorScopedName << "]"
+  gzdbg << "Created sensor [" << sensorScopedName << "]"
          << std::endl;
 }
 
@@ -393,7 +393,7 @@ bool ScienceSensorsSystemPrivate::ReadData(
 
   if (!this->sphericalCoordinatesInitialized)
   {
-    ignerr << "Trying to read data before spherical coordinates were "
+    gzerr << "Trying to read data before spherical coordinates were "
            << "initialized." << std::endl;
     return false;
   }
@@ -413,7 +413,7 @@ bool ScienceSensorsSystemPrivate::ReadData(
 
   if (!fs.is_open())
   {
-    ignerr << "Failed to open file [" << this->dataPath << "]" << std::endl;
+    gzerr << "Failed to open file [" << this->dataPath << "]" << std::endl;
     return false;
   }
 
@@ -466,13 +466,13 @@ bool ScienceSensorsSystemPrivate::ReadData(
       }
       catch (const std::invalid_argument &ia)
       {
-        ignerr << "Line [" << line << "] contains invalid word. Skipping. "
+        gzerr << "Line [" << line << "] contains invalid word. Skipping. "
                << ia.what() << std::endl;
         continue;
       }
       catch (const std::out_of_range &oor)
       {
-        ignerr << "Line [" << line << "] contains invalid word. Skipping. "
+        gzerr << "Line [" << line << "] contains invalid word. Skipping. "
                << oor.what() << std::endl;
         continue;
       }
@@ -549,7 +549,7 @@ bool ScienceSensorsSystemPrivate::ReadData(
       }
       else
       {
-        ignerr << "Unrecognized science data field name [" << fieldnames[i]
+        gzerr << "Unrecognized science data field name [" << fieldnames[i]
                << "]. Skipping column." << std::endl;
       }
 
@@ -560,7 +560,7 @@ bool ScienceSensorsSystemPrivate::ReadData(
     // If no timestamp was provided for this line, cannot index the datum.
     if (lineTimeIdx == -1)
     {
-      ignerr << "Line [" << line << "] timestamp invalid. Skipping."
+      gzerr << "Line [" << line << "] timestamp invalid. Skipping."
              << std::endl;
       continue;
     }
@@ -589,7 +589,7 @@ bool ScienceSensorsSystemPrivate::ReadData(
       // If spatial coordinates invalid, cannot use to index this datum
       else
       {
-        ignerr << "Line [" << line << "] has invalid spatial coordinates "
+        gzerr << "Line [" << line << "] has invalid spatial coordinates "
                << "(latitude, longitude, and/or depth). Skipping." << std::endl;
         continue;
       }
@@ -639,14 +639,14 @@ void ScienceSensorsSystem::Configure(
   std::string fullPath = sysPaths.FindFile(this->dataPtr->dataPath);
   if (fullPath.empty())
   {
-     ignerr << "Data file [" << this->dataPtr->dataPath << "] not found."
+     gzerr << "Data file [" << this->dataPtr->dataPath << "] not found."
             << std::endl;
      return;
   }
   else
   {
     this->dataPtr->dataPath = fullPath;
-    ignmsg << "Loading science data from [" << this->dataPtr->dataPath << "]"
+    gzmsg << "Loading science data from [" << this->dataPtr->dataPath << "]"
            << std::endl;
   }
 
@@ -731,7 +731,7 @@ void ScienceSensorsSystem::PostUpdate(const gz::sim::UpdateInfo &_info,
     else
     {
       // TODO(chapulina) Throttle if it becomes spammy
-      ignwarn << "Science sensor data won't be published because spherical "
+      gzwarn << "Science sensor data won't be published because spherical "
               << "coordinates are unknown." << std::endl;
       return;
     }
@@ -822,7 +822,7 @@ void ScienceSensorsSystem::PostUpdate(const gz::sim::UpdateInfo &_info,
     }
     else
     {
-      ignerr << "Unsupported sensor type, failed to set data" << std::endl;
+      gzerr << "Unsupported sensor type, failed to set data" << std::endl;
     }
 
     // Update all the sensors
@@ -843,14 +843,14 @@ void ScienceSensorsSystem::RemoveSensorEntities(
         auto sensorId = this->entitySensorMap.find(_entity);
         if (sensorId == this->entitySensorMap.end())
         {
-          ignerr << "Internal error, missing sensor for entity ["
+          gzerr << "Internal error, missing sensor for entity ["
                  << _entity << "]" << std::endl;
           return true;
         }
 
         this->entitySensorMap.erase(sensorId);
 
-        igndbg << "Removed sensor entity [" << _entity << "]" << std::endl;
+        gzdbg << "Removed sensor entity [" << _entity << "]" << std::endl;
 
         return true;
       });
@@ -897,7 +897,7 @@ gz::msgs::PointCloudPacked ScienceSensorsSystemPrivate::PointCloudMsg()
 
   if (this->timeIdx < 0 || this->timeIdx >= this->timestamps.size())
   {
-    ignerr << "Invalid time index [" << this->timeIdx << "]."
+    gzerr << "Invalid time index [" << this->timeIdx << "]."
            << std::endl;
     return msg;
   }
