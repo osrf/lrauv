@@ -70,6 +70,7 @@ TEST(DVLTest, NoTracking)
 TEST(DVLTest, BottomTracking)
 {
   VehicleCommandTestFixture fixture("flat_seabed.sdf", "tethys");
+  constexpr gz::math::Vector3d sensorPositionInSFMFrame{0., 0.6, -0.16};
 
   using DVLVelocityTracking =
       lrauv_ignition_plugins::msgs::DVLVelocityTracking;
@@ -108,7 +109,10 @@ TEST(DVLTest, BottomTracking)
   // Account for slight roll and limited resolution
   constexpr double kRangeTolerance{0.2};
   // Assume zero roll and arbitrary resolution
-  constexpr double expectedBeamRange = 20. / std::cos(GZ_PI / 6.);
+  constexpr double seaBedDepth{20.};
+  constexpr double beamInclination{GZ_PI / 6.};
+  const double expectedBeamRange =
+      (seaBedDepth + sensorPositionInSFMFrame.Z()) / std::cos(beamInclination);
   ASSERT_TRUE(message.has_target());
   EXPECT_EQ(message.target().type(), DVLTrackingTarget::DVL_TARGET_BOTTOM);
   EXPECT_NEAR(message.target().range().mean(),
@@ -126,14 +130,20 @@ TEST(DVLTest, BottomTracking)
   ASSERT_TRUE(message.has_velocity());
   const gz::math::Vector3d linearVelocityEstimate =
       gz::msgs::Convert(message.velocity().mean());
+
   const auto &linearVelocities =
       fixture.VehicleObserver().LinearVelocities();
+  const auto &angularVelocities =
+      fixture.VehicleObserver().AngularVelocities();
   const auto &poses = fixture.VehicleObserver().Poses();
+
   // Linear velocities w.r.t. to sea bottom are reported
   // in a sensor affixed, SFM frame.
-  const auto &sensorRotation = poses.back().Rot();
   const gz::math::Vector3d expectedLinearVelocityEstimate =
-      sensorRotation.RotateVectorReverse(linearVelocities.back());
+      poses.back().Rot().RotateVectorReverse(
+          linearVelocities.back() + angularVelocities.back().Cross(
+              poses.back().Rot().RotateVector(sensorPositionInSFMFrame)));
+
   EXPECT_NEAR(linearVelocityEstimate.X(),
               expectedLinearVelocityEstimate.X(),
               kVelocityTolerance);
