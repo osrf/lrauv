@@ -28,7 +28,7 @@
 #include <gz/msgs.hh>
 #include <gz/transport/Node.hh>
 
-#include "CommsPacket.hh"
+/* #include "CommsPacket.hh" */
 
 #include "lrauv_ignition_plugins/lrauv_acoustic_message.pb.h"
 
