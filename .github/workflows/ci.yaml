@@ -24,11 +24,23 @@ jobs:
       if: github.event_name != 'workflow_dispatch'
     - name: Inject slug/short variables
       uses: rlespinasse/github-slug-action@v4
+    - name: Get branch name
+      id: branch-name
+      uses: tj-actions/branch-names@v6
+    - name: Compute last successfully built commit
+      uses: nrwl/last-successful-commit-action@v1
+      id: last-commit
+      with:
+        branch: ${{ steps.branch-name.outputs.current_branch }}
+        workflow_id: 'ci.yaml'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+      if: github.event_name != 'workflow_dispatch'
     - name: Check base image files for changes since last commit
       id: base-image-files-in-last-commit
       uses: tj-actions/changed-files@v28.0.0
       with:
         files: docker/base/*
+        base_sha: ${{ steps.last-commit.outputs.commit_hash }}
       if: github.event_name != 'workflow_dispatch'
     - name: Check if base image needs to be (re)built
       id: should-build-base-image
@@ -47,7 +59,7 @@ jobs:
       id: compute-base-image
       run: |
         suffix="latest"
-        if [[ "${{ github.ref_name }}" != "${{ github.event.repository.default_branch }}" ]]; then
+        if ! ${{ steps.branch-name.outputs.is_default }}; then
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             suffix="$GITHUB_REF_SLUG"
           fi
