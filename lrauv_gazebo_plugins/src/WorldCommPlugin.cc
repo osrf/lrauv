@@ -300,8 +300,9 @@ std::string WorldCommPlugin::TethysSdfString(const lrauv_gazebo_plugins::msgs::L
           <topic>/model/)" + _id + R"(/drop_weight</topic>
         </plugin>
 
-        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
           <address>)" + _acommsAddress + R"(</address>
+          <topic>)" + _acommsAddress + R"(/rx</topic>
         </plugin>
 
         <plugin element_id="tethys::RangeBearingPlugin" action="modify">

@@ -3,8 +3,6 @@
 # Research Institute (MBARI) and the David and Lucile Packard Foundation
 #
 
-add_subdirectory(models/)
-
 add_library(acoustic_comms_support SHARED CommsPacket.cc)
 
 target_link_libraries(acoustic_comms_support PUBLIC

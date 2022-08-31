@@ -151,12 +151,6 @@ endfunction()
 
 add_subdirectory(src/comms/)
 
-add_lrauv_plugin(AcousticCommsPlugin
-  PROTO
-    lrauv_acoustic_message
-    lrauv_internal_comms
-  PRIVATE_LINK_LIBS
-    acoustic_comms_support)
 add_lrauv_plugin(ControlPanelPlugin GUI
   PROTO
     lrauv_command

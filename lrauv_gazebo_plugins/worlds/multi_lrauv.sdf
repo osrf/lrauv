@@ -43,6 +43,12 @@
       name="gz::sim::systems::Buoyancy">
       <uniform_fluid_density>1025</uniform_fluid_density>
     </plugin>
+    <plugin
+      filename="gz-sim-acoustic-comms-system"
+      name="gz::sim::systems::AcousticComms">
+      <max_range>2500</max_range>
+      <speed_of_sound>1500</speed_of_sound>
+    </plugin>
 
     <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
       to ParticleEmitter in Ignition G.
@@ -145,8 +151,9 @@
         <plugin element_id="gz::sim::systems::DetachableJoint" action="modify">
           <topic>/model/triton/drop_weight</topic>
         </plugin>
-        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
           <address>2</address>
+          <topic>2/rx</topic>
         </plugin>
         <plugin element_id="tethys::RangeBearingPlugin" action="modify">
           <address>2</address>
@@ -188,8 +195,9 @@
         <plugin element_id="gz::sim::systems::DetachableJoint" action="modify">
           <topic>/model/daphne/drop_weight</topic>
         </plugin>
-        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
           <address>3</address>
+          <topic>3/rx</topic>
         </plugin>
         <plugin element_id="tethys::RangeBearingPlugin" action="modify">
           <address>3</address>
