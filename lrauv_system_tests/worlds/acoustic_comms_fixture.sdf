@@ -51,6 +51,13 @@
       </graded_buoyancy>
     </plugin>
 
+    <plugin
+      filename="gz-sim-acoustic-comms-system"
+      name="gz::sim::systems::AcousticComms">
+      <max_range>2500</max_range>
+      <speed_of_sound>1500</speed_of_sound>
+    </plugin>
+
     <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
       to ParticleEmitter in Ignition G.
       See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
@@ -394,15 +401,10 @@
         </collision>
       </link>
       <plugin
-        filename="AcousticCommsPlugin"
-        name="tethys::AcousticCommsPlugin">
+        filename="gz-sim-comms-endpoint-system"
+        name="gz::sim::systems::CommsEndpoint">
         <address>2</address>
-        <model_plugin_file>simple_acoustic_model</model_plugin_file>
-        <model_name>tethys::SimpleAcousticModel</model_name>
-        <link_name>base_link</link_name>
-        <max_range>2500</max_range>
-        <speed_of_sound>1500</speed_of_sound>
-        <timestep>0.000001</timestep>
+        <topic>2/rx</topic>
       </plugin>
       <plugin
         filename="RangeBearingPlugin"
@@ -443,15 +445,10 @@
         </collision>
       </link>
       <plugin
-        filename="AcousticCommsPlugin"
-        name="tethys::AcousticCommsPlugin">
+        filename="gz-sim-comms-endpoint-system"
+        name="gz::sim::systems::CommsEndpoint">
         <address>3</address>
-        <model_plugin_file>simple_acoustic_model</model_plugin_file>
-        <model_name>tethys::SimpleAcousticModel</model_name>
-        <link_name>base_link</link_name>
-        <max_range>2500</max_range>
-        <speed_of_sound>1500</speed_of_sound>
-        <timestep>0.000001</timestep>
+        <topic>3/rx</topic>
       </plugin>
       <plugin
         filename="RangeBearingPlugin"
@@ -492,15 +489,10 @@
         </collision>
       </link>
       <plugin
-        filename="AcousticCommsPlugin"
-        name="tethys::AcousticCommsPlugin">
+        filename="gz-sim-comms-endpoint-system"
+        name="gz::sim::systems::CommsEndpoint">
         <address>4</address>
-        <model_plugin_file>simple_acoustic_model</model_plugin_file>
-        <model_name>tethys::SimpleAcousticModel</model_name>
-        <link_name>base_link</link_name>
-        <max_range>2500</max_range>
-        <speed_of_sound>1500</speed_of_sound>
-        <timestep>0.000001</timestep>
+        <topic>4/rx</topic>
       </plugin>
       <plugin
         filename="RangeBearingPlugin"
