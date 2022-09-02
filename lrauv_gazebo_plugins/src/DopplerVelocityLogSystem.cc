@@ -234,7 +234,7 @@ void DopplerVelocityLogSystemPrivate::DoPreUpdate(
       sdf::ElementPtr root = sdf.Element();
       if (!root->HasAttribute("gz:type"))
       {
-        gzmsg << "No 'igntion:type' attribute in custom sensor "
+        gzmsg << "No 'gz:type' attribute in custom sensor "
                << "[" << sensorScopedName << "]. Ignoring."
                << std::endl;
         return true;

@@ -164,7 +164,7 @@ void ReferenceAxisPrivate::OnPreRender()
   }
 
   // Calculate current HFOV because the API is always giving the initial value.
-  // https://github.com/gazebosim/ign-rendering/issues/500
+  // https://github.com/gazebosim/gz-rendering/issues/500
   double hFOV = 2.0 * atan(tan(vFOV / 2.0) / aspectRatio);
 
   // TODO(chapulina) Let user choose distance from camera
@@ -186,7 +186,7 @@ void ReferenceAxisPrivate::OnPreRender()
     this->enuVis->SetLocalScale(0.25, 0.25, 0.25);
 
     // Ogre2 doesn't support text yet
-    // https://github.com/gazebosim/ign-rendering/issues/487
+    // https://github.com/gazebosim/gz-rendering/issues/487
     auto textGeom = this->scene->CreateText();
     if (nullptr != textGeom)
     {

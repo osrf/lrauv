@@ -81,7 +81,7 @@ class Client
     auto it = this->responsePromises.find(response.req_id());
     if (it == this->responsePromises.end())
     {
-      ignwarn << "Received response with unknown request id: "
+      gzwarn << "Received response with unknown request id: "
               << response.req_id() << std::endl;
       return;
     }

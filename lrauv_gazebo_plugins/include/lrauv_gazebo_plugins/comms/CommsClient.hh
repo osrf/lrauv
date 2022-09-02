@@ -33,7 +33,7 @@
 #include "lrauv_gazebo_plugins/lrauv_acoustic_message.pb.h"
 
 using LRAUVAcousticMessage =
-    lrauv_ignition_plugins::msgs::LRAUVAcousticMessage;
+    lrauv_gazebo_plugins::msgs::LRAUVAcousticMessage;
 using MessageType = LRAUVAcousticMessage::MessageType;
 static constexpr auto LRAUVAcousticMessageType =
     MessageType::LRAUVAcousticMessage_MessageType_Other;

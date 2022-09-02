@@ -731,8 +731,8 @@ void ScienceSensorsSystem::PostUpdate(const gz::sim::UpdateInfo &_info,
     else
     {
       // TODO(chapulina) Throttle if it becomes spammy
-      ignwarn << "Science sensor data won't be published because spherical "
-              << "coordinates are unknown." << std::endl;
+      gzwarn << "Science sensor data won't be published because spherical "
+             << "coordinates are unknown." << std::endl;
       return;
     }
   }

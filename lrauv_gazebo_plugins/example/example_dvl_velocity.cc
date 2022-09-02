@@ -23,7 +23,7 @@
 /**
  * Subscribe to DVL velocity tracking estimates.
  *
- * An ``ign topic -e`` command equivalent that can subscribe
+ * An ``gz topic -e`` command equivalent that can subscribe
  * and print DVL velocity tracking messages to console.
  *
  * Usage:

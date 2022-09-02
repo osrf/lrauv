@@ -1182,9 +1182,9 @@ void DopplerVelocityLog::PostUpdate(const std::chrono::steady_clock::duration &_
         timeout_ms, reply, result);
     if (!outcome || !result || !reply.data())
     {
-      ignwarn << "Failed to render beam lobes' visual "
-              << "aids for [" << this->Name() << "] sensor."
-              << std::endl;
+      gzwarn << "Failed to render beam lobes' visual "
+             << "aids for [" << this->Name() << "] sensor."
+             << std::endl;
     }
   }
 
@@ -1203,9 +1203,9 @@ void DopplerVelocityLog::PostUpdate(const std::chrono::steady_clock::duration &_
         timeout_ms, reply, result);
     if (!outcome || !result || !reply.data())
     {
-      ignwarn << "Failed to render beam reflections' visual "
-              << "aids for [" << this->Name() << "] sensor."
-              << std::endl;
+      gzwarn << "Failed to render beam reflections' visual "
+             << "aids for [" << this->Name() << "] sensor."
+             << std::endl;
     }
   }
 }

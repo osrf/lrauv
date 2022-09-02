@@ -87,7 +87,7 @@
         <sensor
             element_id="base_link" action="add"
             name="teledyne_pathfinder_dvl"
-            type="custom" ignition:type="dvl">
+            type="custom" gz:type="dvl">
           <!-- Account for DVL mounting position and base link rotation -->
           <pose degrees="true">-0.60 0 -0.16 0 0 180</pose>
           <always_on>1</always_on>

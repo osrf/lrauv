@@ -32,8 +32,8 @@
       name="gz::sim::systems::SceneBroadcaster">
     </plugin>
     <plugin
-      filename="ignition-gazebo-sensors-system"
-      name="ignition::gazebo::systems::Sensors">
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
     </plugin>
     <plugin
       filename="DopplerVelocityLogSystem"
@@ -60,7 +60,7 @@
     </plugin>
 
     <!-- Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
-      to ParticleEmitter in Ignition G.
+      to ParticleEmitter in Gazebo G.
       See https://github.com/gazebosim/gz-sim/pull/730 -->
     <!--<plugin
       filename="gz-sim-particle-emitter2-system"
@@ -366,7 +366,7 @@
 
     <!-- Uncomment for particle effect
       Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
-      to ParticleEmitter in Ignition G.
+      to ParticleEmitter in Gazebo G.
       See https://github.com/gazebosim/gz-sim/pull/730 -->
     <!--include>
       <pose>-5 0 0 0 0 0</pose>

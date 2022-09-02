@@ -5,9 +5,9 @@
 -->
 <sdf version="1.6">
 
-  <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
-    to ParticleEmitter in Ignition G.
-    See https://github.com/gazebosim/ign-gazebo/pull/730 -->
+  <!-- Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
+    to ParticleEmitter in Gazebo Ggarden.
+    See https://github.com/gazebosim/gz-sim/pull/730 -->
   <model name="turbidity_generator">
     <pose>0 0 0 0 0 0</pose>
     <static>true</static>

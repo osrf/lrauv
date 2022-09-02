@@ -129,9 +129,9 @@ for tile in tiles:
       </graded_buoyancy>
     </plugin>
 
-    <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
-      to ParticleEmitter in Ignition G.
-      See https://github.com/gazebosim/ign-gazebo/pull/730 -->
+    <!-- Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
+      to ParticleEmitter in Gazebo G.
+      See https://github.com/gazebosim/gz-sim/pull/730 -->
     <plugin
       filename="gz-sim-particle-emitter2-system"
       name="gz::sim::systems::ParticleEmitter2">
@@ -488,9 +488,9 @@ for tile in tiles:
     <!-- </model> -->
 
     <!-- Uncomment for particle effect
-      Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
-      to ParticleEmitter in Ignition G.
-      See https://github.com/gazebosim/ign-gazebo/pull/730 -->
+      Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
+      to ParticleEmitter in Gazebo G.
+      See https://github.com/gazebosim/gz-sim/pull/730 -->
     <!--include>
       <pose>-5 0 0 0 0 0</pose>
       <uri>turbidity_generator</uri>

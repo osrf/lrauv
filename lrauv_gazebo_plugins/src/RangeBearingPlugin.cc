@@ -140,7 +140,7 @@ void RangeBearingPrivateData::OnReceiveCommsMsg(
     this->PublishResponse(message);
     break;
   default:
-    ignwarn << "Unable to process message type\n";
+    gzwarn << "Unable to process message type\n";
   }
 }
 
