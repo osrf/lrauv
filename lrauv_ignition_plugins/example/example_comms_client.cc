@@ -34,26 +34,51 @@
 using namespace tethys;
 using AcousticMsg = lrauv_ignition_plugins::msgs::LRAUVAcousticMessage;
 
+using namespace std::literals::chrono_literals;
+
 int main(int _argc, char **_argv)
 {
   // For sending data
-  // Bind client to address 1
-  CommsClient client(1, [](const auto msg){
+  // Bind sender to address 1
+  constexpr int senderAddress = 1;
+  CommsClient sender(senderAddress, [](const auto){});
+
+  bool messageReceived = false;
+  std::mutex messageArrivalMutex;
+  std::condition_variable messageArrival;
+
+  // For receiving data
+  // Bind receiver to address 2
+  constexpr int receiverAddress = 2;
+  CommsClient receiver(receiverAddress, [&](const auto msg)
+  {
     // Your callback function
     // To get who the message is from
-    std::cout << "From: " << msg.from();
+    std::cout << "From: " << msg.from() << std::endl;
     // To get the data call
-    std::cout << "Data: " << msg.data();
+    std::cout << "Data: " << msg.data() << std::endl;
+
+    std::lock_guard<std::mutex> lock(messageArrivalMutex);
+    messageReceived = true;
+    messageArrival.notify_all();
   });
 
   AcousticMsg msg;
   // Who to send to
-  msg.set_to(2);
+  msg.set_to(receiverAddress);
   // From who
-  msg.set_from(1);
-  // `LRAUVAcousticMessage_MessageType_Other` means its a data packet
+  msg.set_from(senderAddress);
+  // Message type
   msg.set_type(AcousticMsg::MessageType::LRAUVAcousticMessage_MessageType_Other);
-  // The data
+  // Adding the data
   msg.set_data("test_message");
-  client.SendPacket(msg);
+  sender.SendPacket(msg);
+
+  using namespace std::literals::chrono_literals;
+  std::unique_lock<std::mutex> lock(messageArrivalMutex);
+  if (!messageArrival.wait_for(
+      lock, 5s, [&] { return messageReceived; }))
+  {
+    std::cout << "5s timeout, message not received." << std::endl;
+  }
 }
