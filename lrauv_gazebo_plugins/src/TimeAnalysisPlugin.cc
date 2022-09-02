@@ -23,8 +23,10 @@
 #include <chrono>
 
 #include <gz/sim/World.hh>
+#include <gz/msgs/boolean.pb.h>
 #include <gz/msgs/double.pb.h>
 #include <gz/msgs/header.pb.h>
+#include <gz/msgs/physics.pb.h>
 #include <gz/msgs/time.pb.h>
 #include <gz/msgs/world_stats.pb.h>
 #include <gz/plugin/Register.hh>
