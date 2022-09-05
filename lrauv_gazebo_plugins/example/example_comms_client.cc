@@ -32,7 +32,7 @@
 #include <lrauv_gazebo_plugins/comms/CommsClient.hh>
 
 using namespace tethys;
-using AcousticMsg = lrauv_ignition_plugins::msgs::LRAUVAcousticMessage;
+using AcousticMsg = lrauv_gazebo_plugins::msgs::LRAUVAcousticMessage;
 
 using namespace std::literals::chrono_literals;
 

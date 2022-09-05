@@ -36,15 +36,15 @@
 
 int address = 1;
 gz::transport::Node::Publisher transmitter;
-using AcousticMsg = lrauv_ignition_plugins::msgs::LRAUVAcousticMessage;
+using AcousticMsg = lrauv_gazebo_plugins::msgs::LRAUVAcousticMessage;
 
 //////////////////////////////////////////////////
 /// \brief Function called each time a message is recieved by the comms subsystem.
-void cb(const lrauv_ignition_plugins::msgs::LRAUVAcousticMessage &_msg)
+void cb(const AcousticMsg &_msg)
 {
   std::cout << _msg.from() << ": " << _msg.data();
 
-  lrauv_ignition_plugins::msgs::LRAUVAcousticMessage returnMsg;
+  AcousticMsg returnMsg;
   // Who to send to
   returnMsg.set_to(_msg.from());
 
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     }
   }
 
-  transmitter = node.Advertise<lrauv_ignition_plugins::msgs::LRAUVAcousticMessage>(
+  transmitter = node.Advertise<AcousticMsg>(
     "/comms/external/" + std::to_string(address) + "/tx");
 
   node.Subscribe(
