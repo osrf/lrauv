@@ -32,7 +32,7 @@
 #include <sstream>
 #include <unistd.h>
 #include <gz/transport/Node.hh>
-#include "lrauv_ignition_plugins/lrauv_acoustic_message.pb.h"
+#include "lrauv_gazebo_plugins/lrauv_acoustic_message.pb.h"
 
 int address = 1;
 gz::transport::Node::Publisher transmitter;

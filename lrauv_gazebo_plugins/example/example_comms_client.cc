@@ -29,7 +29,7 @@
  *   $ ./LRAUV_example_comms_client
  */
 
-#include <lrauv_ignition_plugins/comms/CommsClient.hh>
+#include <lrauv_gazebo_plugins/comms/CommsClient.hh>
 
 using namespace tethys;
 using AcousticMsg = lrauv_ignition_plugins::msgs::LRAUVAcousticMessage;
