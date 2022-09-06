@@ -278,6 +278,10 @@ std::string WorldCommPlugin::TethysSdfString(const lrauv_ignition_plugins::msgs:
           <topic>/)" + _id + R"(/ahrs/magnetometer</topic>
         </sensor>
 
+        <sensor element_id="base_link::teledyne_pathfinder_dvl" action="modify">
+          <topic>/)" + _id + R"(/dvl/velocity</topic>
+        </sensor>
+
         <plugin element_id="gz::sim::systems::Thruster" action="modify">
           <namespace>)" + _id + R"(</namespace>
         </plugin>
@@ -296,8 +300,9 @@ std::string WorldCommPlugin::TethysSdfString(const lrauv_ignition_plugins::msgs:
           <topic>/model/)" + _id + R"(/drop_weight</topic>
         </plugin>
 
-        <plugin element_id="tethys::AcousticCommsPlugin" action="modify">
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
           <address>)" + _acommsAddress + R"(</address>
+          <topic>)" + _acommsAddress + R"(/rx</topic>
         </plugin>
 
         <plugin element_id="tethys::RangeBearingPlugin" action="modify">

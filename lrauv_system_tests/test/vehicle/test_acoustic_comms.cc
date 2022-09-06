@@ -38,13 +38,8 @@
 using namespace tethys;
 using namespace lrauv_system_tests;
 
-using LRAUVAcousticMessage =
-    lrauv_ignition_plugins::msgs::LRAUVAcousticMessage;
 using MessageDifferencer =
     google::protobuf::util::MessageDifferencer;
-using MessageType = LRAUVAcousticMessage::MessageType;
-static constexpr auto LRAUVAcousticMessageType =
-    MessageType::LRAUVAcousticMessage_MessageType_Other;
 
 TEST(AcousticComms, PacketConversions)
 {
@@ -85,6 +80,8 @@ TEST(AcousticComms, BasicSendReceive)
     }
     messageArrival.notify_all();
   });
+
+  fixture.Step(50u);
 
   LRAUVAcousticMessage message;
   message.set_to(receiverAddress);

@@ -151,12 +151,6 @@ endfunction()
 
 add_subdirectory(src/comms/)
 
-add_lrauv_plugin(AcousticCommsPlugin
-  PROTO
-    lrauv_acoustic_message
-    lrauv_internal_comms
-  PRIVATE_LINK_LIBS
-    acoustic_comms_support)
 add_lrauv_plugin(ControlPanelPlugin GUI
   PROTO
     lrauv_command
@@ -213,6 +207,9 @@ install(
 foreach(EXAMPLE
   example_buoyancy
   example_controller
+  example_comms_client
+  example_comms_echo
+  example_dvl_velocity
   example_elevator
   example_mass_shifter
   example_rudder
@@ -225,6 +222,7 @@ foreach(EXAMPLE
 
   add_executable(${EXAMPLE_EXEC} example/${EXAMPLE}.cc)
   set_property(TARGET ${EXAMPLE_EXEC} PROPERTY CXX_STANDARD 17)
+  target_include_directories(${EXAMPLE_EXEC} PUBLIC include)
   target_link_libraries(${EXAMPLE_EXEC} PRIVATE
     gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
     dvl_velocity_tracking lrauv_acoustic_message lrauv_command lrauv_init

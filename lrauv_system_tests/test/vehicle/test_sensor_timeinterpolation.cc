@@ -24,6 +24,7 @@
 #include <thread>
 #include <gtest/gtest.h>
 
+#include <gz/msgs/double.pb.h>
 #include <gz/sim/TestFixture.hh>
 #include <gz/sim/Util.hh>
 #include <gz/sim/World.hh>

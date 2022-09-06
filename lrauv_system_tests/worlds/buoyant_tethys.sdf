@@ -31,7 +31,14 @@
       filename="ignition-gazebo-scene-broadcaster-system"
       name="gz::sim::systems::SceneBroadcaster">
     </plugin>
-
+    <plugin
+      filename="ignition-gazebo-sensors-system"
+      name="ignition::gazebo::systems::Sensors">
+    </plugin>
+    <plugin
+      filename="DopplerVelocityLogSystem"
+      name="tethys::DopplerVelocityLogSystem">
+    </plugin>
     <plugin
       filename="ignition-gazebo-imu-system"
       name="gz::sim::systems::Imu">

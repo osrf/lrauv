@@ -86,7 +86,7 @@ TEST(MissionTest, YoYoCircle)
         // Once the vehicle achieves its full velocity the vehicle should have
         // a nominal yaw rate of around 0.037-0.038rad/s. This means that the
         // vehicle should keep spinning in a circle.
-        EXPECT_NEAR(angularVelocities[i].Z(), 0.037, 0.0022)
+        EXPECT_NEAR(angularVelocities[i].Z(), 0.037, 0.0023)
             << i << " yaw rate: " << angularVelocities[i].Z();
 
         // At the same time the roll rate should be near zero

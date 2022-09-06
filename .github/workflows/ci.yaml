@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - 'main'
+  pull_request:
+    branches:
+    - 'main'
+  workflow_dispatch:
+
+jobs:
+  configure:
+    name: Configure
+    runs-on: ubuntu-20.04
+    outputs:
+      base_image: ${{ steps.compute-base-image.outputs.base_image }}
+      build_base_image: ${{ steps.should-build-base-image.outputs.answer }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+      if: github.event_name != 'workflow_dispatch'
+    - name: Inject slug/short variables
+      uses: rlespinasse/github-slug-action@v4
+    - name: Get branch name
+      id: branch-name
+      uses: tj-actions/branch-names@v6
+    - name: Compute last successfully built commit
+      uses: nrwl/last-successful-commit-action@v1
+      id: last-commit
+      with:
+        branch: ${{ steps.branch-name.outputs.current_branch }}
+        workflow_id: 'ci.yaml'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+      if: github.event_name != 'workflow_dispatch'
+    - name: Check base image files for changes since last commit
+      id: base-image-files-in-last-commit
+      uses: tj-actions/changed-files@v28.0.0
+      with:
+        files: docker/base/*
+        base_sha: ${{ steps.last-commit.outputs.commit_hash }}
+      if: github.event_name != 'workflow_dispatch'
+    - name: Check if base image needs to be (re)built
+      id: should-build-base-image
+      run: echo '::set-output name=answer::true'
+      if: |
+        ${{ github.event_name }} == 'workflow_dispatch' ||
+        ${{ steps.base-image-files-in-last-commit.outputs.any_changed }}
+    - name: Check base image files for changes since branching
+      id: base-image-files-full-diff
+      uses: tj-actions/changed-files@v28.0.0
+      with:
+        files: docker/base/*
+        since_last_remote_commit: true
+      if: github.event_name != 'workflow_dispatch'
+    - name: Compute base image name
+      id: compute-base-image
+      run: |
+        suffix="latest"
+        if ! ${{ steps.branch-name.outputs.is_default }}; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            suffix="$GITHUB_REF_SLUG"
+          fi
+          if [[ "${{ steps.base-image-files-full-diff.outputs.any_changed }}" ]]; then
+            suffix="$GITHUB_REF_SLUG"
+          fi
+        fi
+        echo "::set-output name=base_image::osrf/lrauv:gz-garden-${suffix}"
+  build-base-image:
+    name: Build Gazebo Garden image
+    runs-on: ubuntu-20.04
+    needs: configure
+    steps:
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_READ_WRITE }}
+    - name: Build and push Gazebo Garden image
+      uses: docker/build-push-action@v3
+      with:
+        file: docker/base/Dockerfile
+        tags: ${{ needs.configure.outputs.base_image }}
+        push: true
+    if: ${{ needs.configure.outputs.build_base_image }}
+  build-and-test:
+    name: Build and test lrauv code
+    needs: [configure, build-base-image]
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v3
+    - name: Build packages
+      uses: docker/build-push-action@v3
+      with:
+        build-args: BASE_IMAGE=${{ needs.configure.outputs.base_image }}
+        file: docker/tests/Dockerfile
+        tags: mbari_lrauv
+    - name: Run tests
+      run: docker run -t mbari_lrauv
+    if: always()
