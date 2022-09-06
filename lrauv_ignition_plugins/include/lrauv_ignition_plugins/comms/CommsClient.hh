@@ -37,9 +37,9 @@ using LRAUVAcousticMessage =
 using MessageType = LRAUVAcousticMessage::MessageType;
 static constexpr auto LRAUVAcousticMessageType =
     MessageType::LRAUVAcousticMessage_MessageType_Other;
-auto RangeRequest =
+static constexpr auto RangeRequest =
     MessageType::LRAUVAcousticMessage_MessageType_RangeRequest;
-auto RangeResponse =
+static constexpr auto RangeResponse =
     MessageType::LRAUVAcousticMessage_MessageType_RangeResponse;
 
 namespace tethys
