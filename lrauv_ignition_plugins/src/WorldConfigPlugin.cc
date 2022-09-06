@@ -22,6 +22,7 @@
 
 #include "WorldConfigPlugin.hh"
 #include <gz/common/Console.hh>
+#include <gz/msgs/stringmsg.pb.h>
 #include <gz/plugin/Register.hh>
 
 #include <gz/gui/Application.hh>
