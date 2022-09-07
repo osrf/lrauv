@@ -266,7 +266,6 @@
         <nRR>-632.698957</nRR>
         <nR>0</nR>
       </plugin>
-
     </include>
 
     <include>
@@ -368,9 +367,7 @@
         <nRR>-632.698957</nRR>
         <nR>0</nR>
       </plugin>
-
     </include>
-
 
   </world>
 </sdf>
