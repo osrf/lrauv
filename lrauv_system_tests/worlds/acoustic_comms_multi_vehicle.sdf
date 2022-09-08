@@ -1,10 +1,15 @@
 <?xml version="1.0" ?>
-
-<sdf version="1.6">
+<!--
+  Development of this module has been funded by the Monterey Bay Aquarium
+  Research Institute (MBARI) and the David and Lucile Packard Foundation
+-->
+<sdf version="1.9">
   <world name="multi_lrauv">
     <scene>
       <!-- For turquoise ambient to match particle effect -->
       <ambient>0.0 1.0 1.0</ambient>
+      <!-- For default gray ambient -->
+      <!--background>0.8 0.8 0.8</background-->
       <background>0.0 0.7 0.8</background>
     </scene>
 
@@ -24,27 +29,30 @@
       filename="gz-sim-scene-broadcaster-system"
       name="gz::sim::systems::SceneBroadcaster">
     </plugin>
-    <plugin
-      filename="gz-sim-contact-system"
-      name="gz::sim::systems::Contact">
-    </plugin>
 
+    <plugin
+      filename="gz-sim-imu-system"
+      name="gz::sim::systems::Imu">
+    </plugin>
+    <plugin
+      filename="gz-sim-magnetometer-system"
+      name="gz::sim::systems::Magnetometer">
+    </plugin>
     <plugin
       filename="gz-sim-buoyancy-system"
       name="gz::sim::systems::Buoyancy">
-      <uniform_fluid_density>1000</uniform_fluid_density>
+      <uniform_fluid_density>1025</uniform_fluid_density>
     </plugin>
-
-    <plugin
-      filename="gz-sim-particle-emitter-system"
-      name="gz::sim::systems::ParticleEmitter">
-    </plugin>
-
     <plugin
       filename="gz-sim-acoustic-comms-system"
       name="gz::sim::systems::AcousticComms">
       <max_range>2500</max_range>
       <speed_of_sound>1000</speed_of_sound>
+    </plugin>
+
+    <plugin
+      filename="gz-sim-particle-emitter2-system"
+      name="gz::sim::systems::ParticleEmitter2">
     </plugin>
 
     <light type="directional" name="sun">
@@ -63,310 +71,46 @@
 
     <include>
       <pose>-5 0 0 0 0 0</pose>
-      <uri>https://fuel.ignitionrobotics.org/1.0/mabelzhang/models/Turquoise turbidity generator</uri>
+      <uri>turbidity_generator</uri>
     </include>
 
     <include>
-      <pose>0 0 1 0 0 1.57</pose>
-      <uri>https://fuel.ignitionrobotics.org/1.0/accurrent/models/MBARI Tethys LRAUV</uri>
-
-      <!-- Acoustic comms endpoint -->
-      <plugin
-        filename="gz-sim-comms-endpoint-system"
-        name="gz::sim::systems::CommsEndpoint">
-        <address>2</address>
-        <topic>2/rx</topic>
-      </plugin>
-
-      <!-- Joint controllers -->
-      <plugin
-        filename="gz-sim-joint-position-controller-system"
-        name="gz::sim::systems::JointPositionController">
-        <joint_name>horizontal_fins_joint</joint_name>
-        <p_gain>0.1</p_gain>
-      </plugin>
-
-      <plugin
-        filename="gz-sim-joint-position-controller-system"
-        name="gz::sim::systems::JointPositionController">
-        <joint_name>vertical_fins_joint</joint_name>
-        <p_gain>0.1</p_gain>
-      </plugin>
-
-      <plugin
-        filename="gz-sim-thruster-system"
-        name="gz::sim::systems::Thruster">
-        <namespace>tethys</namespace>
-        <joint_name>propeller_joint</joint_name>
-        <thrust_coefficient>0.004422</thrust_coefficient>
-        <fluid_density>1000</fluid_density>
-        <propeller_diameter>0.2</propeller_diameter>
-      </plugin>
-
-      <!-- Lift and drag -->
-
-      <!-- Vertical fin -->
-      <plugin
-        filename="gz-sim-lift-drag-system"
-        name="gz::sim::systems::LiftDrag">
-        <air_density>1000</air_density>
-        <cla>4.13</cla>
-        <cla_stall>-1.1</cla_stall>
-        <cda>0.2</cda>
-        <cda_stall>0.03</cda_stall>
-        <alpha_stall>0.17</alpha_stall>
-        <a0>0</a0>
-        <area>0.0244</area>
-        <upward>0 1 0</upward>
-        <forward>1 0 0</forward>
-        <link_name>vertical_fins</link_name>
-        <cp>0 0 0</cp>
-      </plugin>
-
-      <!-- Horizontal fin -->
-      <plugin
-        filename="gz-sim-lift-drag-system"
-        name="gz::sim::systems::LiftDrag">
-        <air_density>1000</air_density>
-        <cla>4.13</cla>
-        <cla_stall>-1.1</cla_stall>
-        <cda>0.2</cda>
-        <cda_stall>0.03</cda_stall>
-        <alpha_stall>0.17</alpha_stall>
-        <a0>0</a0>
-        <area>0.0244</area>
-        <upward>0 0 1</upward>
-        <forward>1 0 0</forward>
-        <link_name>horizontal_fins</link_name>
-        <cp>0 0 0</cp>
-      </plugin>
-
-      <plugin
-        filename="gz-sim-hydrodynamics-system"
-        name="gz::sim::systems::Hydrodynamics">
-        <link_name>base_link</link_name>
-        <xDotU>-4.876161</xDotU>
-        <yDotV>-126.324739</yDotV>
-        <zDotW>-126.324739</zDotW>
-        <kDotP>0</kDotP>
-        <mDotQ>-33.46</mDotQ>
-        <nDotR>-33.46</nDotR>
-        <xUU>-6.2282</xUU>
-        <xU>0</xU>
-        <yVV>-601.27</yVV>
-        <yV>0</yV>
-        <zWW>-601.27</zWW>
-        <zW>0</zW>
-        <kPP>-0.1916</kPP>
-        <kP>0</kP>
-        <mQQ>-632.698957</mQQ>
-        <mQ>0</mQ>
-        <nRR>-632.698957</nRR>
-        <nR>0</nR>
-      </plugin>
-
-    </include>
-
-    <include>
-      <pose>15 0 1 0 0 1.57</pose>
-      <uri>https://fuel.ignitionrobotics.org/1.0/accurrent/models/MBARI Tethys LRAUV</uri>
+      <pose>-15 0 1 0 0 0</pose>
+      <uri>tethys_equipped</uri>
       <name>triton</name>
 
-      <!-- Acoustic comms endpoint -->
-      <plugin
-        filename="gz-sim-comms-endpoint-system"
-        name="gz::sim::systems::CommsEndpoint">
-        <address>1</address>
-        <topic>1/rx</topic>
-      </plugin>
-
-      <!-- Joint controllers -->
-      <plugin
-        filename="gz-sim-joint-position-controller-system"
-        name="gz::sim::systems::JointPositionController">
-        <joint_name>horizontal_fins_joint</joint_name>
-        <p_gain>0.1</p_gain>
-      </plugin>
-
-      <plugin
-        filename="gz-sim-joint-position-controller-system"
-        name="gz::sim::systems::JointPositionController">
-        <joint_name>vertical_fins_joint</joint_name>
-        <p_gain>0.1</p_gain>
-      </plugin>
-
-      <plugin
-        filename="gz-sim-thruster-system"
-        name="gz::sim::systems::Thruster">
-        <namespace>triton</namespace>
-        <joint_name>propeller_joint</joint_name>
-        <thrust_coefficient>0.004422</thrust_coefficient>
-        <fluid_density>1000</fluid_density>
-        <propeller_diameter>0.2</propeller_diameter>
-      </plugin>
-
-      <!-- Lift and drag -->
-
-      <!-- Vertical fin -->
-      <plugin
-        filename="gz-sim-lift-drag-system"
-        name="gz::sim::systems::LiftDrag">
-        <air_density>1000</air_density>
-        <cla>4.13</cla>
-        <cla_stall>-1.1</cla_stall>
-        <cda>0.2</cda>
-        <cda_stall>0.03</cda_stall>
-        <alpha_stall>0.17</alpha_stall>
-        <a0>0</a0>
-        <area>0.0244</area>
-        <upward>0 1 0</upward>
-        <forward>1 0 0</forward>
-        <link_name>vertical_fins</link_name>
-        <cp>0 0 0</cp>
-      </plugin>
-
-      <!-- Horizontal fin -->
-      <plugin
-        filename="gz-sim-lift-drag-system"
-        name="gz::sim::systems::LiftDrag">
-        <air_density>1000</air_density>
-        <cla>4.13</cla>
-        <cla_stall>-1.1</cla_stall>
-        <cda>0.2</cda>
-        <cda_stall>0.03</cda_stall>
-        <alpha_stall>0.17</alpha_stall>
-        <a0>0</a0>
-        <area>0.0244</area>
-        <upward>0 0 1</upward>
-        <forward>1 0 0</forward>
-        <link_name>horizontal_fins</link_name>
-        <cp>0 0 0</cp>
-      </plugin>
-
-      <plugin
-        filename="gz-sim-hydrodynamics-system"
-        name="gz::sim::systems::Hydrodynamics">
-        <link_name>base_link</link_name>
-        <xDotU>-4.876161</xDotU>
-        <yDotV>-126.324739</yDotV>
-        <zDotW>-126.324739</zDotW>
-        <kDotP>0</kDotP>
-        <mDotQ>-33.46</mDotQ>
-        <nDotR>-33.46</nDotR>
-        <xUU>-6.2282</xUU>
-        <xU>0</xU>
-        <yVV>-601.27</yVV>
-        <yV>0</yV>
-        <zWW>-601.27</zWW>
-        <zW>0</zW>
-        <kPP>-0.1916</kPP>
-        <kP>0</kP>
-        <mQQ>-632.698957</mQQ>
-        <mQ>0</mQ>
-        <nRR>-632.698957</nRR>
-        <nR>0</nR>
-      </plugin>
+      <experimental:params>
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
+          <address>1</address>
+          <topic>1/rx</topic>
+        </plugin>
+      </experimental:params>
     </include>
 
     <include>
-      <pose>-15 0 1 0 0 1.57</pose>
-      <uri>https://fuel.ignitionrobotics.org/1.0/accurrent/models/MBARI Tethys LRAUV</uri>
+      <pose>0 0 1 0 0 0</pose>
+      <uri>tethys_equipped</uri>
+      <name>tethys</name>
+
+      <experimental:params>
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
+          <address>2</address>
+          <topic>2/rx</topic>
+        </plugin>
+      </experimental:params>
+    </include>
+
+    <include>
+      <pose>15 0 1 0 0 0</pose>
+      <uri>tethys_equipped</uri>
       <name>daphne</name>
 
-      <!-- Acoustic comms endpoint -->
-      <plugin
-        filename="gz-sim-comms-endpoint-system"
-        name="gz::sim::systems::CommsEndpoint">
-        <address>3</address>
-        <topic>3/rx</topic>
-      </plugin>
-
-      <!-- Joint controllers -->
-      <plugin
-        filename="gz-sim-joint-position-controller-system"
-        name="gz::sim::systems::JointPositionController">
-        <joint_name>horizontal_fins_joint</joint_name>
-        <p_gain>0.1</p_gain>
-      </plugin>
-
-      <plugin
-        filename="gz-sim-joint-position-controller-system"
-        name="gz::sim::systems::JointPositionController">
-        <joint_name>vertical_fins_joint</joint_name>
-        <p_gain>0.1</p_gain>
-      </plugin>
-
-      <plugin
-        filename="gz-sim-thruster-system"
-        name="gz::sim::systems::Thruster">
-        <namespace>daphne</namespace>
-        <joint_name>propeller_joint</joint_name>
-        <thrust_coefficient>0.004422</thrust_coefficient>
-        <fluid_density>1000</fluid_density>
-        <propeller_diameter>0.2</propeller_diameter>
-      </plugin>
-
-      <!-- Lift and drag -->
-
-      <!-- Vertical fin -->
-      <plugin
-        filename="gz-sim-lift-drag-system"
-        name="gz::sim::systems::LiftDrag">
-        <air_density>1000</air_density>
-        <cla>4.13</cla>
-        <cla_stall>-1.1</cla_stall>
-        <cda>0.2</cda>
-        <cda_stall>0.03</cda_stall>
-        <alpha_stall>0.17</alpha_stall>
-        <a0>0</a0>
-        <area>0.0244</area>
-        <upward>0 1 0</upward>
-        <forward>1 0 0</forward>
-        <link_name>vertical_fins</link_name>
-        <cp>0 0 0</cp>
-      </plugin>
-
-      <!-- Horizontal fin -->
-      <plugin
-        filename="gz-sim-lift-drag-system"
-        name="gz::sim::systems::LiftDrag">
-        <air_density>1000</air_density>
-        <cla>4.13</cla>
-        <cla_stall>-1.1</cla_stall>
-        <cda>0.2</cda>
-        <cda_stall>0.03</cda_stall>
-        <alpha_stall>0.17</alpha_stall>
-        <a0>0</a0>
-        <area>0.0244</area>
-        <upward>0 0 1</upward>
-        <forward>1 0 0</forward>
-        <link_name>horizontal_fins</link_name>
-        <cp>0 0 0</cp>
-      </plugin>
-
-      <plugin
-        filename="gz-sim-hydrodynamics-system"
-        name="gz::sim::systems::Hydrodynamics">
-        <link_name>base_link</link_name>
-        <xDotU>-4.876161</xDotU>
-        <yDotV>-126.324739</yDotV>
-        <zDotW>-126.324739</zDotW>
-        <kDotP>0</kDotP>
-        <mDotQ>-33.46</mDotQ>
-        <nDotR>-33.46</nDotR>
-        <xUU>-6.2282</xUU>
-        <xU>0</xU>
-        <yVV>-601.27</yVV>
-        <yV>0</yV>
-        <zWW>-601.27</zWW>
-        <zW>0</zW>
-        <kPP>-0.1916</kPP>
-        <kP>0</kP>
-        <mQQ>-632.698957</mQQ>
-        <mQ>0</mQ>
-        <nRR>-632.698957</nRR>
-        <nR>0</nR>
-      </plugin>
+      <experimental:params>
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
+          <address>3</address>
+          <topic>3/rx</topic>
+        </plugin>
+      </experimental:params>
     </include>
 
   </world>
