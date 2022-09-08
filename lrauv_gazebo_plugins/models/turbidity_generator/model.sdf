@@ -6,7 +6,7 @@
 <sdf version="1.6">
 
   <!-- Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
-    to ParticleEmitter in Gazebo Ggarden.
+    to ParticleEmitter in Gazebo Garden.
     See https://github.com/gazebosim/gz-sim/pull/730 -->
   <model name="turbidity_generator">
     <pose>0 0 0 0 0 0</pose>
