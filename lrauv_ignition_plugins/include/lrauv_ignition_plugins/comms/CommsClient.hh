@@ -24,11 +24,11 @@
 #define __LRAUV_IGNITION_PLUGINS_COMMS_COMMSCLIENT_HH__
 
 #include <functional>
+#include <unordered_map>
 
 #include <gz/msgs.hh>
 #include <gz/transport/Node.hh>
 
-/* #include "CommsPacket.hh" */
 
 #include "lrauv_ignition_plugins/lrauv_acoustic_message.pb.h"
 
@@ -37,10 +37,24 @@ using LRAUVAcousticMessage =
 using MessageType = LRAUVAcousticMessage::MessageType;
 static constexpr auto LRAUVAcousticMessageType =
     MessageType::LRAUVAcousticMessage_MessageType_Other;
-auto RangeRequest =
+static constexpr auto RangeRequest =
     MessageType::LRAUVAcousticMessage_MessageType_RangeRequest;
-auto RangeResponse =
+static constexpr auto RangeResponse =
     MessageType::LRAUVAcousticMessage_MessageType_RangeResponse;
+
+std::unordered_map<MessageType, std::string>
+msgToString = {
+  {LRAUVAcousticMessageType, "LRAUVAcousticMessageType"},
+  {RangeRequest, "RangeRequest"},
+  {RangeResponse, "RangeResponse"}
+};
+
+std::unordered_map<std::string, MessageType>
+stringToMsg = {
+  {"LRAUVAcousticMessageType", LRAUVAcousticMessageType},
+  {"RangeRequest", RangeRequest},
+  {"RangeResponse", RangeResponse}
+};
 
 namespace tethys
 {
@@ -86,12 +100,15 @@ public: void SendPacket(const CommsMsg& _msg)
   // Set message type
   auto *frame = message.mutable_header()->add_data();
   frame->set_key("msg_type");
-  if (_msg.type() == LRAUVAcousticMessageType)
-    frame->add_value("LRAUVAcousticMessageType");
-  else if (_msg.type() == RangeRequest)
-    frame->add_value("RangeRequest");
-  else if (_msg.type() == RangeResponse)
-    frame->add_value("RangeResponse");
+  if (msgToString.count(_msg.type()) != 0)
+  {
+    frame->add_value(msgToString[_msg.type()]);
+  }
+  else
+  {
+    std::cerr << "Message being sent does not contain a type"
+      << std::endl;
+  }
 
   // Publish the Dataframe message
   this->transmitter.Publish(message);
@@ -116,12 +133,15 @@ private: void ReceivedPacket(const gz::msgs::Dataframe& _msg)
     if (_msg.header().data(i).key() == "msg_type")
     {
       auto type = _msg.header().data(i).value().Get(0);
-      if (type == "LRAUVAcousticMessageType")
-        message.set_type(LRAUVAcousticMessageType);
-      else if (type == "RangeResponse")
-        message.set_type(RangeResponse);
-      else if (type == "RangeRequest")
-        message.set_type(RangeRequest);
+      if (stringToMsg.count(type) != 0)
+      {
+        message.set_type(stringToMsg[type]);
+      }
+      else
+      {
+        std::cerr << "Received message does not contain a type"
+          << std::endl;
+      }
     }
   }
 
