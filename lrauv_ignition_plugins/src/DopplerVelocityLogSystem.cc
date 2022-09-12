@@ -326,10 +326,13 @@ void DopplerVelocityLogSystem::Implementation::DoPostUpdate(
         !_info.paused && this->nextUpdateTime <= this->simTime))
   {
     requests::SetWorldState request;
-
-    request.worldState.origin = _ecm.Component<
-      gz::sim::components::SphericalCoordinates>(
-          gz::sim::worldEntity(_ecm))->Data();
+    auto component = _ecm.Component<
+      gz::sim::components::SphericalCoordinates
+    >(gz::sim::worldEntity(_ecm));
+    if (component)
+    {
+      request.worldState.origin = component->Data();
+    }
 
     _ecm.Each<gz::sim::components::WorldPose,
               gz::sim::components::WorldLinearVelocity,
