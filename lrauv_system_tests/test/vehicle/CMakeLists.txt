@@ -10,6 +10,18 @@ target_link_libraries(test_acoustic_comms
 )
 gtest_discover_tests(test_acoustic_comms)
 
+add_executable(test_acoustic_comms_multi_vehicle test_acoustic_comms_multi_vehicle.cc)
+target_include_directories(test_acoustic_comms_multi_vehicle
+  PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(test_acoustic_comms_multi_vehicle
+  PUBLIC gtest_main
+  PRIVATE
+    ${PROJECT_NAME}_support ${IGN_GAZEBO_TARGET}
+    lrauv_ignition_plugins::acoustic_comms_support
+    lrauv_ignition_plugins::lrauv_acoustic_message
+)
+gtest_discover_tests(test_acoustic_comms_multi_vehicle)
+
 add_executable(test_ahrs test_ahrs.cc)
 target_link_libraries(test_ahrs
   PUBLIC gtest_main

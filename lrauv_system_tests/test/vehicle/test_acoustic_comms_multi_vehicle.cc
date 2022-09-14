@@ -26,10 +26,10 @@
 #include <condition_variable>
 #include <mutex>
 
-#include <lrauv_gazebo_plugins/lrauv_acoustic_message.pb.h>
+#include <lrauv_ignition_plugins/lrauv_acoustic_message.pb.h>
 
-#include <lrauv_gazebo_plugins/comms/CommsClient.hh>
-#include <lrauv_gazebo_plugins/comms/CommsPacket.hh>
+#include <lrauv_ignition_plugins/comms/CommsClient.hh>
+#include <lrauv_ignition_plugins/comms/CommsPacket.hh>
 
 #include <google/protobuf/util/message_differencer.h>
 
@@ -40,63 +40,6 @@ using namespace lrauv_system_tests;
 
 using MessageDifferencer =
     google::protobuf::util::MessageDifferencer;
-
-TEST(AcousticComms, PacketConversions)
-{
-  LRAUVAcousticMessage message;
-  message.set_to(20);
-  message.set_from(30);
-  message.set_type(LRAUVAcousticMessageType);
-  message.set_data("test");
-
-  const auto now = std::chrono::steady_clock::now();
-  const auto vector = gz::math::Vector3d(0, 0, 1);
-  const auto packet = CommsPacket::make(message, vector, now);
-  const auto encoded = packet.ToInternalMsg();
-  const auto packet2 = CommsPacket::make(encoded);
-  EXPECT_EQ(packet, packet2);
-
-  const auto decoded = packet.ToExternalMsg();
-  EXPECT_TRUE(MessageDifferencer::Equals(decoded, message));
-}
-
-TEST(AcousticComms, BasicSendReceive)
-{
-  TestFixture fixture("acoustic_comms_fixture.sdf");
-
-  constexpr int senderAddress = 1;
-  CommsClient sender(senderAddress, [](const auto){});
-
-  bool messageReceived = false;
-  std::mutex messageArrivalMutex;
-  std::condition_variable messageArrival;
-  constexpr int receiverAddress = 2;
-  CommsClient receiver(receiverAddress, [&](const auto message)
-  {
-    ASSERT_EQ(message.data(), "test_message");
-    {
-      std::lock_guard<std::mutex> lock(messageArrivalMutex);
-      messageReceived = true;
-    }
-    messageArrival.notify_all();
-  });
-
-  fixture.Step(50u);
-
-  LRAUVAcousticMessage message;
-  message.set_to(receiverAddress);
-  message.set_from(senderAddress);
-  message.set_type(LRAUVAcousticMessageType);
-  message.set_data("test_message");
-  sender.SendPacket(message);
-
-  fixture.Step(50u);
-
-  using namespace std::literals::chrono_literals;
-  std::unique_lock<std::mutex> lock(messageArrivalMutex);
-  EXPECT_TRUE(messageArrival.wait_for(
-      lock, 5s, [&] { return messageReceived; }));
-}
 
 TEST(AcousticComms, MultiVehicleTest)
 {
@@ -174,4 +117,3 @@ TEST(AcousticComms, MultiVehicleTest)
   // should be in the same ratio.
   EXPECT_NEAR(diffDaphne.count() / diffTethys.count(), 2.0, 0.1);
 }
-
