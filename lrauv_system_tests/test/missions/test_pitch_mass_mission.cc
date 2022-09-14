@@ -54,7 +54,7 @@ TEST(MissionTest, PitchMass)
     // Force neutral buoyancy to prevent the vehicle
     // from surfacing during controller startup
     "configSet VerticalControl.buoyancyDefault 500 cc",
-    "run RegressionTests/IgnitionTests/testPitchMass.xml quitAtEnd"
+    "run RegressionTests/GazeboTests/testPitchMass.xml quitAtEnd"
   });
 
   double totalPitchChange = 0, prevPitch = 0;

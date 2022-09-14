@@ -55,7 +55,7 @@ TEST(MissionTest, PitchDepthVBS)
   //   Pitch.depth = 10 m
   //   Pitch.elevatorAngle = 0
   auto controller = LRAUVController::Execute({
-    "run RegressionTests/IgnitionTests/testPitchAndDepthMassVBS.xml quitAtEnd"});
+    "run RegressionTests/GazeboTests/testPitchAndDepthMassVBS.xml quitAtEnd"});
 
   bool targetReached = false, firstSample = true;
   double prevZ = 0, totalDepthChange = 0;

@@ -100,7 +100,7 @@ LRAUVController::Execute(const std::vector<std::string> &_commands)
 {
   const char *executable = LRAUV_APP_PATH "/bin/LRAUV";
   std::vector<std::string> cmd = {
-    executable, "-c", "regressionTests/ignitionTests"};
+    executable, "-c", "regressionTests/gazeboTests"};
   for (const auto &command : _commands)
   {
     cmd.push_back("-x");

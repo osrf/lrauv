@@ -54,7 +54,7 @@ TEST(MissionTest, YoYoCircle)
   //   DepthEnvelope.downPitch: -20 deg
   //   DepthEnvelope.upPitch: 20 deg
   auto controller = LRAUVController::Execute({
-    "run RegressionTests/IgnitionTests/testYoYoCircle.xml quitAtEnd"});
+    "run RegressionTests/GazeboTests/testYoYoCircle.xml quitAtEnd"});
 
   for (size_t _ = 0; _ < 5; ++_)
   {
