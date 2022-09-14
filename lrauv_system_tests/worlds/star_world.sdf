@@ -18,28 +18,28 @@
       <real_time_factor>0</real_time_factor>
     </physics>
     <plugin
-      filename="ignition-gazebo-physics-system"
+      filename="gz-sim-physics-system"
       name="gz::sim::systems::Physics">
     </plugin>
     <plugin
-      filename="ignition-gazebo-user-commands-system"
+      filename="gz-sim-user-commands-system"
       name="gz::sim::systems::UserCommands">
     </plugin>
     <plugin
-      filename="ignition-gazebo-scene-broadcaster-system"
+      filename="gz-sim-scene-broadcaster-system"
       name="gz::sim::systems::SceneBroadcaster">
     </plugin>
 
     <plugin
-      filename="ignition-gazebo-imu-system"
+      filename="gz-sim-imu-system"
       name="gz::sim::systems::Imu">
     </plugin>
     <plugin
-      filename="ignition-gazebo-magnetometer-system"
+      filename="gz-sim-magnetometer-system"
       name="gz::sim::systems::Magnetometer">
     </plugin>
     <plugin
-      filename="ignition-gazebo-buoyancy-system"
+      filename="gz-sim-buoyancy-system"
       name="gz::sim::systems::Buoyancy">
       <uniform_fluid_density>1025</uniform_fluid_density>
     </plugin>
@@ -50,11 +50,11 @@
       <speed_of_sound>1500</speed_of_sound>
     </plugin>
 
-    <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
+    <!-- Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
       to ParticleEmitter in Ignition G.
-      See https://github.com/ignitionrobotics/ign-gazebo/pull/730 -->
+      See https://github.com/gazebosim/gz-sim/pull/730 -->
     <plugin
-      filename="ignition-gazebo-particle-emitter2-system"
+      filename="gz-sim-particle-emitter2-system"
       name="gz::sim::systems::ParticleEmitter2">
     </plugin>
 

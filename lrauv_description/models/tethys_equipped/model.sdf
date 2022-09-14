@@ -19,64 +19,64 @@
           action="add"
           name="salinity_sensor"
           type="custom"
-          ignition:type="salinity">
+          gz:type="salinity">
           <always_on>1</always_on>
           <update_rate>2</update_rate>
           <topic>/model/tethys/salinity</topic>
-          <ignition:salinity>
+          <gz:salinity>
             <noise type="gaussian">
               <mean>0.00001</mean>
               <stddev>0.00001</stddev>
             </noise>
-          </ignition:salinity>
+          </gz:salinity>
         </sensor>
         <sensor
           element_id="base_link"
           action="add"
           name="temperature_sensor"
           type="custom"
-          ignition:type="temperature">
+          gz:type="temperature">
           <always_on>1</always_on>
           <update_rate>2</update_rate>
           <topic>/model/tethys/temperature</topic>
-          <ignition:temperature>
+          <gz:temperature>
             <noise type="gaussian">
               <mean>0.00001</mean>
               <stddev>0.00001</stddev>
             </noise>
-          </ignition:temperature>
+          </gz:temperature>
         </sensor>
         <sensor
           element_id="base_link"
           action="add"
           name="chlorophyll_sensor"
           type="custom"
-          ignition:type="chlorophyll">
+          gz:type="chlorophyll">
           <always_on>1</always_on>
           <update_rate>2</update_rate>
           <topic>/model/tethys/chlorophyll</topic>
-          <ignition:chlorophyll>
+          <gz:chlorophyll>
             <noise type="gaussian">
               <mean>0.00001</mean>
               <stddev>0.00001</stddev>
             </noise>
-          </ignition:chlorophyll>
+          </gz:chlorophyll>
         </sensor>
         <sensor
           element_id="base_link"
           action="add"
           name="current_sensor"
           type="custom"
-          ignition:type="current">
+          gz:type="current">
           <always_on>1</always_on>
           <update_rate>2</update_rate>
           <topic>/model/tethys/current</topic>
-          <ignition:current>
+          <gz:current>
             <noise type="gaussian">
               <mean>0.00001</mean>
               <stddev>0.00001</stddev>
             </noise>
-          </ignition:current>
+          </gz:current>
         </sensor>
         <!--
             Teledyne Pathfinder DVL
@@ -87,13 +87,13 @@
         <sensor
             element_id="base_link" action="add"
             name="teledyne_pathfinder_dvl"
-            type="custom" ignition:type="dvl">
+            type="custom" gz:type="dvl">
           <!-- Account for DVL mounting position and base link rotation -->
           <pose degrees="true">-0.60 0 -0.16 0 0 180</pose>
           <always_on>1</always_on>
           <update_rate>1</update_rate>
           <topic>/tethys/dvl/velocity</topic>
-          <ignition:dvl>
+          <gz:dvl>
             <arrangement degrees="true">
               <beam id="1">
                 <aperture>2.1</aperture>
@@ -128,7 +128,7 @@
             <maximum_range>80.</maximum_range>
             <!-- ENU to SFM -->
             <reference_frame>0 0 0 0 0 -1.570796</reference_frame>
-          </ignition:dvl>
+          </gz:dvl>
         </sensor>
         <!--
             Sparton AHRS-M2 arrangement of IMU + Magnetometer

@@ -1,0 +1,96 @@
+/*
+ * Copyright (C) 2021 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+/*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
+
+syntax = "proto3";
+package lrauv_gazebo_plugins.msgs;
+option java_package = "lrauv_gazebo_plugins.msgs";
+option java_outer_classname = "LRAUVCommandProtos";
+
+/// \ingroup lrauv_gazebo_plugins.msgs
+/// \interface LRAUVCommand
+/// \brief Aggregated information about the LRAUV and the world
+
+import "gz/msgs/header.proto";
+
+// Mirrors SimRunStruct
+message LRAUVCommand
+{
+  /// \brief Optional header data
+  gz.msgs.Header header  = 1;
+
+  /// \brief Angular velocity that the controller believes the propeller is currently at.
+  /// Unit: rad / s. Positive values rotate the propeller clockwise when looking from the
+  /// back, and propel the vehicle forward.
+  float propOmega_             = 2;
+
+  /// \brief Angle that the controller believes the rudder is currently at. Unit: radians.
+  /// Higher values have the vertical fins rotated more clockwise when looking from the
+  /// top (i.e. to starboard)
+  float rudderAngle_           = 3;
+
+  /// \brief Angle that the controller believes the elevator is currently at. Unit: radians.
+  /// Higher values have the horizontal fins rotated more counter-clockwise when looking
+  /// from starboard, which tilts the nose downward when moving forward.
+  float elevatorAngle_         = 4;
+
+  /// \brief Position where the controller believes the mass shifter's joint is in. Unit:
+  /// meters. Positive values have the battery forward, tilting the nose downward.
+  float massPosition_          = 5;
+
+  /// \brief Volume that the controller believes the VBS currently has. Unit: cubic meters.
+  /// Volumes higher than the neutral volume push the vehicle upward.
+  float buoyancyPosition_      = 6;
+
+  /// \brief Indicator "dropweight OK". 1 = in place, 0 = dropped
+  bool dropWeightState_        = 7;
+
+  /// \brief Target angular velocity for the propeller. Unit: rad / s. Positive
+  /// values rotate the propeller clockwise when looking from the back, and propel
+  /// the vehicle forward.
+  float propOmegaAction_       = 8;
+
+  /// \brief Target angle for rudder joint. Unit: radians. Higher values rotate the
+  /// vertical fins clockwise when looking from the top (i.e. to starboard)
+  float rudderAngleAction_     = 9;
+
+  /// \brief Target angle for the elevator joint. Unit: radians. Higher values rotate
+  /// vertical fins more counter-clockwise when looking from starboard, which tilts
+  /// the nose downward when moving forward.
+  float elevatorAngleAction_   = 10;
+
+  /// \brief Target position for the battery's joint. Unit: meters. Positive values move the
+  /// battery forward, tilting the nose downward.
+  float massPositionAction_    = 11;
+
+  /// \brief Target volume for the VBS (Variable Buoyancy System). Unit: cubic meters.
+  /// Volumes higher than the neutral volume make the vehicle float.
+  float buoyancyAction_        = 12;
+
+  /// \brief Not used
+  float density_               = 13;
+
+  /// \brief Not used
+  float dt_                    = 14;
+
+  /// \brief Not used
+  double time_                 = 15;
+}
