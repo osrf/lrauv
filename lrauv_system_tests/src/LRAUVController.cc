@@ -107,7 +107,7 @@ LRAUVController::Execute(const std::vector<std::string> &_commands)
     cmd.push_back(command);
   }
   const std::string cmd_string = gz::common::Join(cmd, " ");
-  igndbg << "Running command [" << cmd_string << "]" << std::endl;
+  gzdbg << "Running command [" << cmd_string << "]" << std::endl;
   FILE * stdout = nullptr;
   std::vector<char *> argv = BorrowAsArgv(cmd);
   int pid = detail::popen(
@@ -128,11 +128,11 @@ LRAUVController::LRAUVController(int _pid, FILE *_stdout) : pid(_pid)
     char buffer[512];
     while (fgets(buffer, 512, _stdout))
     {
-      igndbg << "CMD OUTPUT: " << buffer;
+      gzdbg << "CMD OUTPUT: " << buffer;
 
       if (strstr(buffer, "FAULT") || strstr(buffer, "CRITICAL"))
       {
-        ignerr << buffer;
+        gzerr << buffer;
       }
     }
     fclose(_stdout);
@@ -150,7 +150,7 @@ LRAUVController::~LRAUVController()
   }
   catch(const std::system_error &e)
   {
-    ignerr << e.what() << std::endl;
+    gzerr << e.what() << std::endl;
   }
 }
 

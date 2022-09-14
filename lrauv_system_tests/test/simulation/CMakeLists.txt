@@ -4,7 +4,7 @@ target_include_directories(test_spawn
 target_link_libraries(test_spawn
   PUBLIC gtest_main
   PRIVATE
-    lrauv_ignition_plugins::lrauv_init
+    lrauv_gazebo_plugins::lrauv_init
     ${PROJECT_NAME}_support
 )
 gtest_discover_tests(test_spawn)
@@ -15,8 +15,8 @@ target_include_directories(test_state
 target_link_libraries(test_state
   PUBLIC gtest_main
   PRIVATE
-    lrauv_ignition_plugins::lrauv_command
-    lrauv_ignition_plugins::lrauv_state
+    lrauv_gazebo_plugins::lrauv_command
+    lrauv_gazebo_plugins::lrauv_state
     ${PROJECT_NAME}_support
 )
 gtest_discover_tests(test_state)

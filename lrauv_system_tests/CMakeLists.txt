@@ -10,7 +10,12 @@ project(lrauv_system_tests)
 find_package(gz-sim7 REQUIRED)
 find_package(gz-math7 REQUIRED)
 find_package(gz-transport12 REQUIRED)
-find_package(lrauv_ignition_plugins REQUIRED)
+find_package(lrauv_gazebo_plugins REQUIRED)
+
+# Add option to build without LRAUV integration
+option(ENABLE_MISSION_TESTS
+  "Enable mission tests. (Requires integration with MBARI's controllers)"
+  ON)
 
 # Build-time constants
 set(PROJECT_BINARY_PATH ${CMAKE_CURRENT_BINARY_DIR})
@@ -40,8 +45,8 @@ target_link_libraries(${PROJECT_NAME}_support PUBLIC
   gz-sim7::gz-sim7
   gz-math7::gz-math7
   gz-transport12::gz-transport12
-  lrauv_ignition_plugins::lrauv_command
-  lrauv_ignition_plugins::lrauv_state
+  lrauv_gazebo_plugins::lrauv_command
+  lrauv_gazebo_plugins::lrauv_state
   gtest)
 target_compile_features(${PROJECT_NAME}_support PUBLIC cxx_std_17)
 #============================================================================
@@ -49,6 +54,5 @@ target_compile_features(${PROJECT_NAME}_support PUBLIC cxx_std_17)
 include(CTest)
 if(BUILD_TESTING)
   enable_testing()
-
   add_subdirectory(test)
 endif()

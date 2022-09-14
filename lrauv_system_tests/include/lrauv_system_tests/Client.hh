@@ -70,18 +70,18 @@ class Client
       this->responsePromises[request_id] = std::move(promise);
     }
     this->requestsPublisher.Publish(_request);
-    igndbg << "Published request" << "\n";
+    gzdbg << "Published request" << "\n";
     return future;
   }
 
   private: void OnResponse(const ResponseMessageT& response)
   {
-    igndbg << "Received response\n";
+    gzdbg << "Received response\n";
     std::lock_guard<std::mutex> lock(this->mutex);
     auto it = this->responsePromises.find(response.req_id());
     if (it == this->responsePromises.end())
     {
-      ignwarn << "Received response with unknown request id: "
+      gzwarn << "Received response with unknown request id: "
               << response.req_id() << std::endl;
       return;
     }

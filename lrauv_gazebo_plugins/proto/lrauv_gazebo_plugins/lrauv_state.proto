@@ -1,0 +1,182 @@
+/*
+ * Copyright (C) 2021 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+/*
+ * Development of this module has been funded by the Monterey Bay Aquarium
+ * Research Institute (MBARI) and the David and Lucile Packard Foundation
+ */
+
+syntax = "proto3";
+package lrauv_gazebo_plugins.msgs;
+option java_package = "lrauv_gazebo_plugins.msgs";
+option java_outer_classname = "LRAUVStateProtos";
+
+/// \ingroup lrauv_gazebo_plugins.msgs
+/// \interface LRAUVState
+/// \brief Aggregated information about the LRAUV and the world
+
+import "gz/msgs/header.proto";
+import "gz/msgs/vector3d.proto";
+
+// Mirrors SimResultStruct
+//
+// Coordinate frame conventions:
+//
+// Reference frames:
+//
+// * World frame: NED
+//     * X: North
+//     * Y: East
+//     * Z: Down
+//     * Roll: Right-hand rotation about North
+//     * Pitch: Right-hand rotation about East
+//     * Yaw: Right-hand rotation about Down
+//
+// * Vehicle frame: FSK
+//     * X: Fore or forward
+//     * Y: Starboard or right
+//     * Z: Keel or down
+//     * Roll: Clockwise rotation when looking from the back.
+//     * Pitch: Positive angles bring the nose up.
+//     * Yaw: Positive angles bring the nose to the right / starboard.
+//
+message LRAUVState
+{
+  /// \brief Optional header data
+  /// Stamped with simulation time.
+  gz.msgs.Header header     = 1;
+
+  /// \brief Not populated
+  int32 errorPad_                 = 2;
+
+  /// \brief Not populated
+  int32 utmZone_                  = 3;
+
+  /// \brief Not populated
+  int32 northernHemi_             = 4;
+
+  /// \brief Current angular velocity of the propeller. Unit: rad / s. Positive
+  /// values rotate the propeller clockwise when looking from the back,
+  /// and propel the vehicle forward.
+  float propOmega_                = 5;
+
+  /// \brief Not populated
+  float propThrust_               = 6;
+
+  /// \brief Not populated
+  float propTorque_               = 7;
+
+  /// \brief Angle that the rudder joint is currently at. Unit: radians.
+  /// Higher values have the vertical fins rotated more clockwise when looking
+  /// from the top (i.e. to starboard)
+  float rudderAngle_              = 8;
+
+  /// \brief Angle that the elevator joint is currently at. Unit: radians.
+  /// Higher values have the horizontal fins rotated more counter-clockwise when
+  /// looking from starboard, which tilts the nose downward when moving forward.
+  float elevatorAngle_            = 9;
+
+  /// \brief Position of the battery's joint. Unit: meters. Positive values have
+  /// the battery forward, tilting the nose downward.
+  float massPosition_             = 10;
+
+  /// \brief Volume of the VBS. Unit: cubic meters. Volumes higher than the
+  /// neutral volume push the vehicle upwards.
+  float buoyancyPosition_         = 11;
+
+  /// \brief Vertical position of the vehicle with respect to sea level. Higher
+  /// values are deeper, negative values are above water. Unit: meters.
+  float depth_                    = 12;
+
+  /// \brief Duplicate of posRPH_
+  gz.msgs.Vector3d rph_     = 13;
+
+  /// \brief Magnitude of vehicle's linear velocity in the world frame.
+  /// It's always positive. Unit: m/s
+  float speed_                    = 14;
+
+  /// \brief Latitude in degrees
+  double latitudeDeg_             = 15;
+
+  /// \brief Longitude in degrees
+  double longitudeDeg_            = 16;
+
+  /// \brief Net buoyancy forces applied to the vehicle. Unit: Newtons. Currently not populated.
+  float netBuoy_                  = 17;
+
+  /// \brief Not populated
+  gz.msgs.Vector3d force_   = 18;
+
+  /// \brief Vehicle's position in "world frame" (see above) Unit: meters
+  gz.msgs.Vector3d pos_     = 19;
+
+  /// \brief Vehicle's orientation in "world frame" (see above) Unit: rad
+  gz.msgs.Vector3d posRPH_  = 20;
+
+  /// \brief Vehicle's instantaneous linear velocity in "world frame"
+  /// (see above). Units: m / s
+  gz.msgs.Vector3d posDot_  = 21;
+
+  /// \brief Vehicle's instantaneous linear velocity in "vehicle frame" (see above).
+  /// Units: m / s
+  gz.msgs.Vector3d rateUVW_ = 22;
+
+  /// \brief Vehicle's instantaneous angular velocity in "vehicle frame" (see above).
+  /// Units: rad / s
+  gz.msgs.Vector3d ratePQR_ = 23;
+
+  /// \brief Northward sea water velocity collected from current sensor. Unit: m/s.
+  float northCurrent_             = 24;
+
+  /// \brief Eastward sea water velocity collected from current sensor. Unit: m/s.
+  float eastCurrent_              = 25;
+
+  /// \brief Not populated
+  float vertCurrent_              = 26;
+
+  /// \brief Not populated
+  float magneticVariation_        = 27;
+
+  /// \brief Not populated
+  float soundSpeed_               = 28;
+
+  /// \brief Data collected from temperature sensor. Unit: Celsius
+  float temperature_              = 29;
+
+  /// \brief Data collected from salinity sensor. Unit: PSU
+  float salinity_                 = 30;
+
+  /// \brief Density of the surrounding water in kg / m ^ 3
+  float density_                  = 31;
+
+  /// \brief Size 4
+  // 0: Data collected from Chlorophyll sensor. Unit: ug / L
+  // 1: Pressure calculated from current depth and latitude. Unit: Pa
+  repeated float values_          = 32;
+
+  /// \brief Voltage of the battery.
+  double batteryVoltage_           = 33;
+
+  /// \brief Current supplied by the battery in A.
+  double batteryCurrent_           = 34;
+
+  /// \brief Current charge in the battery in Ah.
+  double batteryCharge_            = 35;
+
+  /// \brief Percentage of battery remaining.
+  double batteryPercentage_         = 36;
+}

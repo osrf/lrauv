@@ -24,7 +24,7 @@
 
 #include <chrono>
 
-#include <lrauv_ignition_plugins/lrauv_command.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_command.pb.h>
 #include "lrauv_system_tests/TestFixture.hh"
 
 using namespace lrauv_system_tests;
@@ -44,7 +44,7 @@ TEST(DropWeightTest, ReleaseWeight)
   EXPECT_NEAR(startZ, poses.back().Pos().Z(), 0.05);
 
   // Tell the vehicle to release the weight
-  lrauv_ignition_plugins::msgs::LRAUVCommand command;
+  lrauv_gazebo_plugins::msgs::LRAUVCommand command;
   command.set_dropweightstate_(false);
 
   // Neutral buoyancy

@@ -19,7 +19,7 @@
 
 #include <chrono>
 
-#include <lrauv_ignition_plugins/lrauv_command.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_command.pb.h>
 #include "lrauv_system_tests/TestFixture.hh"
 
 using namespace lrauv_system_tests;
@@ -38,7 +38,7 @@ TEST(ElevatorActionTest, Sink)
   EXPECT_NEAR(-0.5, poses.back().Pos().Z(), 2e-2);
 
   // Propel vehicle
-  lrauv_ignition_plugins::msgs::LRAUVCommand command;
+  lrauv_gazebo_plugins::msgs::LRAUVCommand command;
 
   // Move forward
   command.set_propomegaaction_(30);

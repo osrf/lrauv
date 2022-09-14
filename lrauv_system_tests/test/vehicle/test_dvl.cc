@@ -31,8 +31,8 @@
 #include <string>
 #include <utility>
 
-#include <lrauv_ignition_plugins/dvl_velocity_tracking.pb.h>
-#include <lrauv_ignition_plugins/dvl_tracking_target.pb.h>
+#include <lrauv_gazebo_plugins/dvl_velocity_tracking.pb.h>
+#include <lrauv_gazebo_plugins/dvl_tracking_target.pb.h>
 
 #include "lrauv_system_tests/TestFixture.hh"
 #include "lrauv_system_tests/Util.hh"
@@ -42,9 +42,9 @@
 using namespace lrauv_system_tests;
 using namespace std::literals::chrono_literals;
 
-using DVLBeamState = lrauv_ignition_plugins::msgs::DVLBeamState;
-using DVLTrackingTarget = lrauv_ignition_plugins::msgs::DVLTrackingTarget;
-using DVLVelocityTracking = lrauv_ignition_plugins::msgs::DVLVelocityTracking;
+using DVLBeamState = lrauv_gazebo_plugins::msgs::DVLBeamState;
+using DVLTrackingTarget = lrauv_gazebo_plugins::msgs::DVLTrackingTarget;
+using DVLVelocityTracking = lrauv_gazebo_plugins::msgs::DVLVelocityTracking;
 
 static constexpr double beamInclination{GZ_PI / 6.};
 static constexpr gz::math::Vector3d sensorPositionInSFMFrame{0., 0.6, -0.16};
@@ -119,7 +119,7 @@ TEST(DVLTest, BottomTracking)
   // Propel vehicle forward by giving the propeller a positive
   // angular velocity. Vehicle is supposed to move at around
   // 1 m/s with 300 RPM. 300 RPM = 300 * 2 pi / 60 = 10 pi rad/s
-  lrauv_ignition_plugins::msgs::LRAUVCommand command;
+  lrauv_gazebo_plugins::msgs::LRAUVCommand command;
   command.set_propomegaaction_(10. * GZ_PI);
 
   // Rotate rudder clockwise when looking from the top,
