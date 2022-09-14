@@ -26,10 +26,10 @@
 #include <condition_variable>
 #include <mutex>
 
-#include <lrauv_ignition_plugins/lrauv_acoustic_message.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_acoustic_message.pb.h>
 
-#include <lrauv_ignition_plugins/comms/CommsClient.hh>
-#include <lrauv_ignition_plugins/comms/CommsPacket.hh>
+#include <lrauv_gazebo_plugins/comms/CommsClient.hh>
+#include <lrauv_gazebo_plugins/comms/CommsPacket.hh>
 
 #include <google/protobuf/util/message_differencer.h>
 

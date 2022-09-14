@@ -4,7 +4,7 @@ target_include_directories(test_acoustic_comms
 target_link_libraries(test_acoustic_comms
   PUBLIC gtest_main
   PRIVATE
-    ${PROJECT_NAME}_support ${IGN_GAZEBO_TARGET}
+    ${PROJECT_NAME}_support
     lrauv_gazebo_plugins::acoustic_comms_support
     lrauv_gazebo_plugins::lrauv_acoustic_message
 )
@@ -16,16 +16,16 @@ target_include_directories(test_acoustic_comms_multi_vehicle
 target_link_libraries(test_acoustic_comms_multi_vehicle
   PUBLIC gtest_main
   PRIVATE
-    ${PROJECT_NAME}_support ${IGN_GAZEBO_TARGET}
-    lrauv_ignition_plugins::acoustic_comms_support
-    lrauv_ignition_plugins::lrauv_acoustic_message
+    ${PROJECT_NAME}_support
+    lrauv_gazebo_plugins::acoustic_comms_support
+    lrauv_gazebo_plugins::lrauv_acoustic_message
 )
 gtest_discover_tests(test_acoustic_comms_multi_vehicle)
 
 add_executable(test_ahrs test_ahrs.cc)
 target_link_libraries(test_ahrs
   PUBLIC gtest_main
-  PRIVATE ${PROJECT_NAME}_support ${IGN_GAZEBO_TARGET}
+  PRIVATE ${PROJECT_NAME}_support
   )
 gtest_discover_tests(test_ahrs)
 
@@ -33,7 +33,7 @@ add_executable(test_dvl test_dvl.cc)
 target_link_libraries(test_dvl
   PUBLIC gtest_main
   PRIVATE
-    ${PROJECT_NAME}_support ${IGN_GAZEBO_TARGET}
+    ${PROJECT_NAME}_support
     lrauv_gazebo_plugins::dvl_velocity_tracking)
 gtest_discover_tests(test_dvl)
 
@@ -53,7 +53,7 @@ foreach(_test
   target_link_libraries(${_test}
     PUBLIC gtest_main
     PRIVATE
-      ${PROJECT_NAME}_support ${IGN_GAZEBO_TARGET}
+      ${PROJECT_NAME}_support
       lrauv_gazebo_plugins::lrauv_command
       lrauv_gazebo_plugins::lrauv_init)
   gtest_discover_tests(${_test})
@@ -63,7 +63,7 @@ add_executable(test_range_bearing test_range_bearing.cc)
 target_link_libraries(test_range_bearing
   PUBLIC gtest_main
   PRIVATE
-    ${PROJECT_NAME}_support ${IGN_GAZEBO_TARGET}
+    ${PROJECT_NAME}_support
     lrauv_gazebo_plugins::lrauv_range_bearing_request
     lrauv_gazebo_plugins::lrauv_range_bearing_response)
 gtest_discover_tests(test_range_bearing)
