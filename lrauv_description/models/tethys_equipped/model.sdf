@@ -94,6 +94,7 @@
           <update_rate>1</update_rate>
           <topic>/tethys/dvl/velocity</topic>
           <gz:dvl>
+            <type>phased_array</type>
             <arrangement degrees="true">
               <beam id="1">
                 <aperture>2.1</aperture>
@@ -115,17 +116,39 @@
                 <rotation>-135</rotation>
                 <tilt>30</tilt>
               </beam>
-              <resolution>0.01</resolution>
-              <visualize>false</visualize>
             </arrangement>
-            <visualize>false</visualize>
-            <type>phased_array</type>
-            <noise type="gaussian">
-              <!-- +/- 0.5 cm/s precision within 2 stddevs -->
-              <stddev>0.0025</stddev>
-            </noise>
+            <tracking>
+              <bottom_mode>
+                <when>best</when>
+                <noise type="gaussian">
+                  <!-- +/- 0.4 cm/s precision at 10 m/s within 2 stddevs -->
+                  <stddev>0.002</stddev>
+                </noise>
+                <visualize>false</visualize>
+              </bottom_mode>
+              <water_mass_mode>
+                <when>best</when>
+                <water_velocity>
+                  <x>eastward_sea_water_velocity_meter_per_sec</x>
+                  <y>northward_sea_water_velocity_meter_per_sec</y>
+                </water_velocity>
+                <boundaries>
+                  <near>20.</near>
+                  <far>60.</far>
+                </boundaries>
+                <bins>10</bins>
+                <noise type="gaussian">
+                  <!-- +/- 0.7 cm/s precision at 10 m/s within 2 stddevs -->
+                  <stddev>0.0035</stddev>
+                </noise>
+                <visualize>false</visualize>
+              </water_mass_mode>
+            </tracking>
+            <!-- Roughly 1 m resolution at a 100m -->
+            <resolution>0.01</resolution>
             <!-- Approximate maximum range @ ~14.4v -->
             <maximum_range>80.</maximum_range>
+            <minimum_range>0.1</minimum_range>
             <!-- ENU to SFM -->
             <reference_frame>0 0 0 0 0 -1.570796</reference_frame>
           </gz:dvl>

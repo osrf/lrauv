@@ -23,8 +23,6 @@
 namespace tethys
 {
 
-class DopplerVelocityLogSystemPrivate;
-
 /// \brief System that creates and updates DopplerVelocityLog (DVL) sensors.
 class DopplerVelocityLogSystem :
   public gz::sim::System,
@@ -54,7 +52,9 @@ class DopplerVelocityLogSystem :
       const gz::sim::UpdateInfo &_info,
       const gz::sim::EntityComponentManager &_ecm) override;
 
-  private: std::unique_ptr<DopplerVelocityLogSystemPrivate> dataPtr;
+  private: class Implementation;
+
+  private: std::unique_ptr<Implementation> dataPtr;
 };
 
 }  // namespace tethys
