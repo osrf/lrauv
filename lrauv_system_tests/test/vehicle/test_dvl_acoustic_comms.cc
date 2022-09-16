@@ -47,18 +47,23 @@ using DVLBeamState = lrauv_gazebo_plugins::msgs::DVLBeamState;
 using DVLTrackingTarget = lrauv_gazebo_plugins::msgs::DVLTrackingTarget;
 using DVLVelocityTracking = lrauv_gazebo_plugins::msgs::DVLVelocityTracking;
 
-static constexpr double beamInclination{GZ_PI / 6.};
-static constexpr gz::math::Vector3d sensorPositionInSFMFrame{0., 0.6, -0.16};
-
-// Account for slight roll and limited resolution
-static constexpr double kRangeTolerance{0.2};
+/* In this test, 2 LRAUVs : Tethys (acoustic address : 1) and */
+/* Daphne (acoustic address: 2) are placed next to each other. */
+/* Tethys is sent a command to move with some propeller speed. */
+/* The speed os Tethys w.r.t seabed is observed using the DVL sensor, */
+/* and sent to Daphne using acoustic comms. Dapne copies that speed and */
+/* tries to catch up with Tethys. */
 
 //////////////////////////////////////////////////
 TEST(DVLTest, BottomTrackingAcousticComms)
 {
-  TestFixture fixture("flat_seabed_two_vehicles.sdf");
+  VehicleCommandTestFixture fixture("flat_seabed_two_vehicles.sdf", "daphne");
 
   gz::transport::Node node;
+
+  // Acoustic comms publisher.
+  auto commsPub = node.Advertise<gz::msgs::Dataframe>(
+      "/broker/msgs");
 
   // Command publishers for both vehicles.
   auto cmdPubTethys =
@@ -74,20 +79,40 @@ TEST(DVLTest, BottomTrackingAcousticComms)
   std::function<void(const DVLVelocityTracking &)> dvlCbTethys =
     [&](const DVLVelocityTracking &_msg)
     {
-      std::cout << "DBG " << _msg.has_velocity() << std::endl;
-      auto linearVelocity = gz::msgs::Convert(_msg.velocity().mean());
-      std::cout << linearVelocity.X() << std::endl;
-      std::cout << linearVelocity.Y() << std::endl;
-      std::cout << linearVelocity.Z() << std::endl;
+      // Send the current velocity of tethys to daphne using acoustic comms.
+      auto yVelocity = gz::msgs::Convert(_msg.velocity().mean()).Y();
+      gz::msgs::Dataframe msg;
+      msg.set_src_address("1");
+      msg.set_dst_address("2");
+      double scalingFactor = 100;
+      msg.set_data(std::to_string(yVelocity * scalingFactor));
+      std::cout << "Tethys DVL speed :" << yVelocity << std::endl;
+      std::cout << "Tethys publishing via ac comms :" << yVelocity * scalingFactor << std::endl;
+      commsPub.Publish(msg);
     };
   node.Subscribe("/tethys/dvl/velocity", dvlCbTethys);
 
+  // Acoustic comms callback for daphne.
+  std::function<void(const gz::msgs::Dataframe &)> acousticCbDaphne =
+    [&](const gz::msgs::Dataframe &_msg)
+    {
+      // The "command" for speed is received via acoustic comms.
+      gz::msgs::Double cmdMsg;
+      cmdMsg.set_data(std::stod(_msg.data()));
+      std::cout << "Daphne received from ac comms:" <<  _msg.data() << std::endl;
+      cmdPubDaphne.Publish(cmdMsg);
+    };
+  node.Subscribe("/3/rx", acousticCbDaphne);
+
   // Send move command to tethys and run the simulation.
-  for (int _ = 0; _ < 20; _++)
+  for (int _ = 0; _ < 10; _++)
   {
     gz::msgs::Double cmdMsg;
     cmdMsg.set_data(2);
     cmdPubTethys.Publish(cmdMsg);
     fixture.Step(10s);
   }
+
+  std::cout << fixture.VehicleObserver().Poses().front() << std::endl;
+  std::cout << fixture.VehicleObserver().Poses().back() << std::endl;
 }

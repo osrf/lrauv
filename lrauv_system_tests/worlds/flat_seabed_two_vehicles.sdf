@@ -343,21 +343,28 @@
     <include>
       <pose>0 0 -80 0 0 0</pose>
       <uri>tethys_equipped</uri>
+      <name>tethys</name>
+
+      <experimental:params>
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
+          <address>1</address>
+          <topic>1/rx</topic>
+        </plugin>
+      </experimental:params>
     </include>
 
-    <!-- <include> -->
-    <!--   <pose>10 0 0 0 0 0</pose> -->
-    <!--   <uri>tethys_equipped</uri> -->
-    <!--   <name>daphne</name> -->
+    <include>
+      <pose>5 0 -80 0 0 0</pose>
+      <uri>tethys_equipped</uri>
+      <name>daphne</name>
 
-    <!--   <experimental:params> -->
-    <!--     <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify"> -->
-    <!--       <address>2</address> -->
-    <!--       <topic>2/rx</topic> -->
-    <!--     </plugin> -->
-    <!--   </experimental:params> -->
-
-    <!-- </include> -->
+      <experimental:params>
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
+          <address>2</address>
+          <topic>2/rx</topic>
+        </plugin>
+      </experimental:params>
+    </include>
 
   </world>
 </sdf>
