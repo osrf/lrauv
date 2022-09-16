@@ -48,7 +48,7 @@ RUN sudo /bin/sh -c 'echo "deb [arch=amd64,arm64] http://repo.ros2.org/ubuntu/ma
 
 USER $USERNAME
 
-# Check out Ignition source
+# Check out Gazebo source
 ENV GZ_WS /home/$USERNAME/gz_ws
 COPY docker/base/gz-garden.yaml ${GZ_WS}/gz-garden.yaml
 RUN mkdir -p ${GZ_WS}/src && cd ${GZ_WS} && \
@@ -78,3 +78,4 @@ USER $USERNAME
 
 RUN cd ${GZ_WS} \
  && colcon build --merge-install --cmake-args -DBUILD_TESTING=OFF
+ENV PYTHONPATH ${GZ_WS}/install/lib/python
