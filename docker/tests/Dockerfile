@@ -32,7 +32,7 @@ RUN rm -rf build log install src/lrauv
 COPY . src/lrauv
 
 # Build image
-RUN [ "/bin/bash" , "-c" , ". ~/ign_ws/install/setup.sh; colcon build --cmake-args='-DBUILD_TESTING=true'" ]
+RUN [ "/bin/bash" , "-c" , ". ~/gz_ws/install/setup.sh; colcon build --cmake-args='-DBUILD_TESTING=true'" ]
 
 # Drop entrypoint
 ENTRYPOINT []
