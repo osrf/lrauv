@@ -50,8 +50,8 @@ using DVLVelocityTracking = lrauv_gazebo_plugins::msgs::DVLVelocityTracking;
 /* In this test, 2 LRAUVs : Tethys (acoustic address : 1) and */
 /* Daphne (acoustic address: 2) are placed next to each other. */
 /* Tethys is sent a command to move with some propeller speed. */
-/* The speed os Tethys w.r.t seabed is observed using the DVL sensor, */
-/* and sent to Daphne using acoustic comms. Dapne copies that speed and */
+/* The speed of Tethys w.r.t seabed is observed using the DVL sensor, */
+/* and sent to Daphne using acoustic comms. Daphne copies that speed and */
 /* tries to catch up with Tethys. */
 
 //////////////////////////////////////////////////
@@ -84,10 +84,8 @@ TEST(DVLTest, BottomTrackingAcousticComms)
       gz::msgs::Dataframe msg;
       msg.set_src_address("1");
       msg.set_dst_address("2");
-      double scalingFactor = 100;
+      double scalingFactor = 150;
       msg.set_data(std::to_string(yVelocity * scalingFactor));
-      std::cout << "Tethys DVL speed :" << yVelocity << std::endl;
-      std::cout << "Tethys publishing via ac comms :" << yVelocity * scalingFactor << std::endl;
       commsPub.Publish(msg);
     };
   node.Subscribe("/tethys/dvl/velocity", dvlCbTethys);
@@ -99,10 +97,9 @@ TEST(DVLTest, BottomTrackingAcousticComms)
       // The "command" for speed is received via acoustic comms.
       gz::msgs::Double cmdMsg;
       cmdMsg.set_data(std::stod(_msg.data()));
-      std::cout << "Daphne received from ac comms:" <<  _msg.data() << std::endl;
       cmdPubDaphne.Publish(cmdMsg);
     };
-  node.Subscribe("/3/rx", acousticCbDaphne);
+  node.Subscribe("/2/rx", acousticCbDaphne);
 
   // Send move command to tethys and run the simulation.
   for (int _ = 0; _ < 10; _++)
@@ -113,6 +110,7 @@ TEST(DVLTest, BottomTrackingAcousticComms)
     fixture.Step(10s);
   }
 
-  std::cout << fixture.VehicleObserver().Poses().front() << std::endl;
-  std::cout << fixture.VehicleObserver().Poses().back() << std::endl;
+  auto posInitialDaphne = fixture.VehicleObserver().Poses().front().Y();
+  auto posFinalDaphne = fixture.VehicleObserver().Poses().back().Y();
+  EXPECT_NEAR(posFinalDaphne - posInitialDaphne, 0.25, 0.05);
 }
