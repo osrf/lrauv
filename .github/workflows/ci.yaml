@@ -55,8 +55,7 @@ jobs:
       uses: tj-actions/changed-files@v28.0.0
       with:
         files: docker/base/*
-        sha: ${{ github.event.pull_request.head.sha || github.sha }}
-        since_last_remote_commit: true
+        use_fork_point: true
       if: github.event_name != 'workflow_dispatch'
     - name: Compute base image name
       id: compute-base-image
