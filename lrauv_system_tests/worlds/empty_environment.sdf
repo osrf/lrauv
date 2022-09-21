@@ -71,9 +71,23 @@
     </plugin-->
 
     <plugin
-      filename="ScienceSensorsSystem"
-      name="tethys::ScienceSensorsSystem">
-      <data_path>2003080103_mb_l3_las.csv</data_path>
+      filename="gz-sim-environmental-sensor-system"
+      name="gz::sim::systems::EnvironmentalSystem">
+    </plugin>
+
+    <plugin
+    filename="gz-sim-environment-preload-system"
+    name="gz::sim::systems::EnvironmentPreload">
+      <data>2003080103_mb_l3_las.csv</data>
+      <dimensions>
+        <ignore_time>true</ignore_time>
+        <time>elapsed_time_second</time>
+        <space reference="spherical" units="degrees">
+          <x>latitude_degree</x>
+          <y>longitude_degree</y>
+          <z>depth_meter</z>
+        </space>
+      </dimensions>
     </plugin>
 
     <!-- Interface with LRAUV Main Vehicle Application for the world -->

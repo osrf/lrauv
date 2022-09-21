@@ -15,54 +15,36 @@
       <!-- Sensors -->
       <experimental:params>
         <sensor
-          element_id="base_link"
-          action="add"
+          element_id="base_link" action="add"
           name="salinity_sensor"
           type="custom"
-          ignition:type="salinity">
+          gz:type="environmental_sensor/salinity">
           <always_on>1</always_on>
-          <update_rate>2</update_rate>
+          <update_rate>30</update_rate>
+          <csv_column>sea_water_salinity_psu</csv_column>
           <topic>/model/tethys/salinity</topic>
-          <ignition:salinity>
-            <noise type="gaussian">
-              <mean>0.00001</mean>
-              <stddev>0.00001</stddev>
-            </noise>
-          </ignition:salinity>
         </sensor>
         <sensor
-          element_id="base_link"
-          action="add"
+          element_id="base_link" action="add"
           name="temperature_sensor"
           type="custom"
-          ignition:type="temperature">
+          gz:type="environmental_sensor/temperature">
           <always_on>1</always_on>
-          <update_rate>2</update_rate>
+          <update_rate>30</update_rate>
+          <csv_column>sea_water_temperature_degC</csv_column>
           <topic>/model/tethys/temperature</topic>
-          <ignition:temperature>
-            <noise type="gaussian">
-              <mean>0.00001</mean>
-              <stddev>0.00001</stddev>
-            </noise>
-          </ignition:temperature>
         </sensor>
         <sensor
-          element_id="base_link"
-          action="add"
+          element_id="base_link" action="add"
           name="chlorophyll_sensor"
           type="custom"
-          ignition:type="chlorophyll">
+          gz:type="environmental_sensor/chlorophyll">
           <always_on>1</always_on>
-          <update_rate>2</update_rate>
+          <update_rate>30</update_rate>
+          <csv_column>mass_concentration_of_chlorophyll_in_sea_water_ugram_per_liter</csv_column>
           <topic>/model/tethys/chlorophyll</topic>
-          <ignition:chlorophyll>
-            <noise type="gaussian">
-              <mean>0.00001</mean>
-              <stddev>0.00001</stddev>
-            </noise>
-          </ignition:chlorophyll>
         </sensor>
-        <sensor
+        <!--<sensor
           element_id="base_link"
           action="add"
           name="current_sensor"
@@ -77,7 +59,7 @@
               <stddev>0.00001</stddev>
             </noise>
           </ignition:current>
-        </sensor>
+        </sensor>-->
         <!--
             Teledyne Pathfinder DVL
 
@@ -87,7 +69,7 @@
         <sensor
             element_id="base_link" action="add"
             name="teledyne_pathfinder_dvl"
-            type="custom" ignition:type="dvl">
+            type="custom" gz:type="dvl">
           <!-- Account for DVL mounting position and base link rotation -->
           <pose degrees="true">-0.60 0 -0.16 0 0 180</pose>
           <always_on>1</always_on>

@@ -176,11 +176,6 @@ add_lrauv_plugin(RangeBearingPlugin
   PRIVATE_LINK_LIBS
     acoustic_comms_support)
 add_lrauv_plugin(ReferenceAxis GUI RENDERING)
-add_lrauv_plugin(ScienceSensorsSystem
-  PCL
-  PRIVATE_LINK_LIBS
-    ${GZ_SENSORS}
-    ${PCL_LIBRARIES})
 add_lrauv_plugin(SpawnPanelPlugin GUI
   PROTO
     lrauv_init)

@@ -487,7 +487,7 @@ void TethysCommPlugin::BuoyancyStateCallback(
 }
 
 void TethysCommPlugin::SalinityCallback(
-  const gz::msgs::Float &_msg)
+  const gz::msgs::Double &_msg)
 {
   this->latestSalinity = _msg.data();
 }
@@ -508,7 +508,7 @@ void TethysCommPlugin::BatteryCallback(
 }
 
 void TethysCommPlugin::ChlorophyllCallback(
-  const gz::msgs::Float &_msg)
+  const gz::msgs::Double &_msg)
 {
   this->latestChlorophyll = _msg.data();
 }

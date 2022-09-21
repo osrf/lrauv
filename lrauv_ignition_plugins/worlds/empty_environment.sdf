@@ -55,6 +55,11 @@
         </density_change>
       </graded_buoyancy>
     </plugin>
+    <plugin
+      filename="gz-sim-environmental-sensor-system"
+      name="gz::sim::systems::EnvironmentalSystem">
+    </plugin>
+
 
     <!-- Requires ParticleEmitter2 in ign-gazebo 4.8.0, which will be copied
       to ParticleEmitter in Ignition G.
@@ -69,13 +74,6 @@
       filename="TimeAnalysisPlugin"
       name="tethys::TimeAnalysisPlugin">
     </plugin-->
-
-    <plugin
-      filename="ScienceSensorsSystem"
-      name="tethys::ScienceSensorsSystem">
-      <data_path>2003080103_mb_l3_las.csv</data_path>
-    </plugin>
-
     <!-- Interface with LRAUV Main Vehicle Application for the world -->
     <plugin
       filename="WorldCommPlugin"

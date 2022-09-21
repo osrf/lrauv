@@ -64,7 +64,7 @@ namespace tethys
     /// Callback function for salinity sensor data.
     /// \param[in] _msg Sensor data
     public: void SalinityCallback(
-                const gz::msgs::Float &_msg);
+                const gz::msgs::Double &_msg);
 
     /// Callback function for temperature sensor data.
     /// \param[in] _msg Sensor data
@@ -79,7 +79,7 @@ namespace tethys
     /// Callback function for chlorophyll sensor data.
     /// \param[in] _msg Sensor data
     public: void ChlorophyllCallback(
-                const gz::msgs::Float &_msg);
+                const gz::msgs::Double &_msg);
 
     /// Callback function for current sensor data.
     /// \param[in] _msg Sensor data

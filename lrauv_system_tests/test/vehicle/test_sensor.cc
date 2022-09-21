@@ -24,7 +24,7 @@
 #include <thread>
 #include <gtest/gtest.h>
 
-#include <gz/msgs/float.pb.h>
+#include <gz/msgs/double.pb.h>
 #include <gz/sim/TestFixture.hh>
 #include <gz/sim/Util.hh>
 #include <gz/sim/World.hh>
@@ -39,21 +39,21 @@ using namespace std::chrono_literals;
 
 std::atomic<bool> received_msg[4] = {false};
 
-void ChlorophyllVeh1Cb(const gz::msgs::Float &_msg)
+void ChlorophyllVeh1Cb(const gz::msgs::Double &_msg)
 {
   // 0.22934943324714 is the value at this point. Allow some noise.
   EXPECT_NEAR(_msg.data(), 0.229, 0.001);
   received_msg[0] = true;
 }
 
-void ChlorophyllVeh2Cb(const gz::msgs::Float &_msg)
+void ChlorophyllVeh2Cb(const gz::msgs::Double &_msg)
 {
   // 0.3935107401546 is the value at this point. Allow some noise.
-  EXPECT_NEAR(_msg.data(), 0.393, 0.001);
+  EXPECT_NEAR(_msg.data(), 0.393, 0.01);
   received_msg[1] = true;
 }
 
-void ChlorophyllVeh3Cb(const gz::msgs::Float &_msg)
+void ChlorophyllVeh3Cb(const gz::msgs::Double &_msg)
 {
   // Nearest readings are:
   // Chlorophyll sensor: 0.935823@36.8 -122.72 40
@@ -66,13 +66,13 @@ void ChlorophyllVeh3Cb(const gz::msgs::Float &_msg)
   received_msg[2] = true;
 }
 
-void ChlorophyllVeh4Cb(const gz::msgs::Float &_msg)
+void ChlorophyllVeh4Cb(const gz::msgs::Double &_msg)
 {
   // Nearest readings are:
   // Chlorophyll sensor: 0.935823@36.8 -122.72 40
-  //Chlorophyll sensor: 0.229349@36.8 -122.72 50
-  //Chlorophyll sensor: 0.576666@36.8 -122.7 40
-  //Chlorophyll sensor: 0.946913@36.8 -122.7 50
+  // Chlorophyll sensor: 0.229349@36.8 -122.72 50
+  // Chlorophyll sensor: 0.576666@36.8 -122.7 40
+  // Chlorophyll sensor: 0.946913@36.8 -122.7 50
   // Therefore value should lie between 0.95 and 0.229
   EXPECT_GT(_msg.data(), 0.229);
   EXPECT_LT(_msg.data(), 0.95);

@@ -266,9 +266,9 @@ std::string WorldCommPlugin::TethysSdfString(const lrauv_ignition_plugins::msgs:
           <topic>/model/)" + _id + R"(/chlorophyll</topic>
         </sensor>
 
-        <sensor element_id="base_link::current_sensor" action="modify">
+        <!--<sensor element_id="base_link::current_sensor" action="modify">
           <topic>/model/)" + _id + R"(/current</topic>
-        </sensor>
+        </sensor>-->
 
         <sensor element_id="base_link::sparton_ahrs_m2_imu" action="modify">
           <topic>/)" + _id + R"(/ahrs/imu</topic>
