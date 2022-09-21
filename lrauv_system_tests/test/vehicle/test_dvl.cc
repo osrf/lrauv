@@ -31,8 +31,8 @@
 #include <string>
 #include <utility>
 
-#include <lrauv_ignition_plugins/dvl_velocity_tracking.pb.h>
-#include <lrauv_ignition_plugins/dvl_tracking_target.pb.h>
+#include <lrauv_gazebo_plugins/dvl_velocity_tracking.pb.h>
+#include <lrauv_gazebo_plugins/dvl_tracking_target.pb.h>
 
 #include "lrauv_system_tests/TestFixture.hh"
 #include "lrauv_system_tests/Util.hh"
@@ -42,13 +42,21 @@
 using namespace lrauv_system_tests;
 using namespace std::literals::chrono_literals;
 
+using DVLBeamState = lrauv_gazebo_plugins::msgs::DVLBeamState;
+using DVLTrackingTarget = lrauv_gazebo_plugins::msgs::DVLTrackingTarget;
+using DVLVelocityTracking = lrauv_gazebo_plugins::msgs::DVLVelocityTracking;
+
+static constexpr double beamInclination{GZ_PI / 6.};
+static constexpr gz::math::Vector3d sensorPositionInSFMFrame{0., 0.6, -0.16};
+
+// Account for slight roll and limited resolution
+static constexpr double kRangeTolerance{0.2};
+
 //////////////////////////////////////////////////
 TEST(DVLTest, NoTracking)
 {
   VehicleCommandTestFixture fixture("bottomless_pit.sdf", "tethys");
 
-  using DVLVelocityTracking =
-      lrauv_ignition_plugins::msgs::DVLVelocityTracking;
   Subscription<DVLVelocityTracking> velocitySubscription;
   velocitySubscription.Subscribe(fixture.Node(), "/tethys/dvl/velocity", 1);
 
@@ -56,7 +64,8 @@ TEST(DVLTest, NoTracking)
 
   ASSERT_TRUE(velocitySubscription.WaitForMessages(10, 10s));
 
-  const DVLVelocityTracking message = velocitySubscription.ReadLastMessage();
+  const DVLVelocityTracking message =
+      velocitySubscription.ReadLastMessage();
   EXPECT_FALSE(message.has_target());
   EXPECT_FALSE(message.has_velocity());
   for (int i = 0; i < message.beams_size(); ++i)
@@ -70,21 +79,47 @@ TEST(DVLTest, NoTracking)
 TEST(DVLTest, BottomTracking)
 {
   VehicleCommandTestFixture fixture("flat_seabed.sdf", "tethys");
-  constexpr gz::math::Vector3d sensorPositionInSFMFrame{0., 0.6, -0.16};
+  constexpr double seaBedDepth{20.};
+  // Assume zero roll and arbitrary resolution
+  const double expectedBeamRange =
+      (seaBedDepth + sensorPositionInSFMFrame.Z()) /
+      std::cos(beamInclination);
 
-  using DVLVelocityTracking =
-      lrauv_ignition_plugins::msgs::DVLVelocityTracking;
   Subscription<DVLVelocityTracking> velocitySubscription;
   velocitySubscription.Subscribe(fixture.Node(), "/tethys/dvl/velocity", 1);
 
   // Step a few iterations for simulation to setup itself
-  uint64_t iterations = fixture.Step(100u);
-  EXPECT_EQ(100u, iterations);
+  fixture.Step(2s);
+
+  ASSERT_TRUE(velocitySubscription.WaitForMessages(1, 10s));
+  {
+    const DVLVelocityTracking message =
+        velocitySubscription.ReadLastMessage();
+    ASSERT_TRUE(message.has_target());
+    const DVLTrackingTarget & target = message.target();
+    EXPECT_EQ(target.type(), DVLTrackingTarget::DVL_TARGET_BOTTOM);
+    EXPECT_NEAR(target.range().mean(), expectedBeamRange, kRangeTolerance);
+    for (int i = 0; i < message.beams_size(); ++i)
+    {
+      const DVLBeamState & beam = message.beams(i);
+      EXPECT_EQ(beam.id(), i + 1);
+      EXPECT_TRUE(beam.locked()) << "Beam #" << beam.id() << " not locked";
+      EXPECT_NEAR(beam.range().mean(), expectedBeamRange, kRangeTolerance)
+          << "Beam #" << beam.id() << " range is off";
+    }
+    ASSERT_TRUE(message.has_velocity());
+    const gz::math::Vector3d linearVelocityEstimate =
+        gz::msgs::Convert(message.velocity().mean());
+    constexpr double kVelocityTolerance{1e-2};  // account for noise
+    EXPECT_NEAR(linearVelocityEstimate.X(), 0., kVelocityTolerance);
+    EXPECT_NEAR(linearVelocityEstimate.Y(), 0., kVelocityTolerance);
+    EXPECT_NEAR(linearVelocityEstimate.Z(), 0., kVelocityTolerance);
+  }
 
   // Propel vehicle forward by giving the propeller a positive
   // angular velocity. Vehicle is supposed to move at around
   // 1 m/s with 300 RPM. 300 RPM = 300 * 2 pi / 60 = 10 pi rad/s
-  lrauv_ignition_plugins::msgs::LRAUVCommand command;
+  lrauv_gazebo_plugins::msgs::LRAUVCommand command;
   command.set_propomegaaction_(10. * GZ_PI);
 
   // Rotate rudder clockwise when looking from the top,
@@ -104,53 +139,145 @@ TEST(DVLTest, BottomTracking)
   }
   ASSERT_TRUE(velocitySubscription.WaitForMessages(50, 10s));
 
-  using DVLTrackingTarget = lrauv_ignition_plugins::msgs::DVLTrackingTarget;
-  const DVLVelocityTracking message = velocitySubscription.ReadLastMessage();
-  // Account for slight roll and limited resolution
-  constexpr double kRangeTolerance{0.2};
-  // Assume zero roll and arbitrary resolution
-  constexpr double seaBedDepth{20.};
-  constexpr double beamInclination{GZ_PI / 6.};
-  const double expectedBeamRange =
-      (seaBedDepth + sensorPositionInSFMFrame.Z()) / std::cos(beamInclination);
-  ASSERT_TRUE(message.has_target());
-  EXPECT_EQ(message.target().type(), DVLTrackingTarget::DVL_TARGET_BOTTOM);
-  EXPECT_NEAR(message.target().range().mean(),
-              expectedBeamRange, kRangeTolerance);
-  for (int i = 0; i < message.beams_size(); ++i)
   {
-    EXPECT_EQ(message.beams(i).id(), i + 1);
-    EXPECT_TRUE(message.beams(i).locked())
-        << "Beam #" << message.beams(i).id() << " not locked";
-    EXPECT_NEAR(message.beams(i).range().mean(),
-                expectedBeamRange, kRangeTolerance)
-        << "Beam #" << message.beams(i).id() << " range is off";
+    const DVLVelocityTracking message =
+        velocitySubscription.ReadLastMessage();
+    ASSERT_TRUE(message.has_target());
+    const DVLTrackingTarget & target = message.target();
+    EXPECT_EQ(target.type(), DVLTrackingTarget::DVL_TARGET_BOTTOM);
+    EXPECT_NEAR(target.range().mean(), expectedBeamRange, kRangeTolerance);
+    for (int i = 0; i < message.beams_size(); ++i)
+    {
+      const DVLBeamState & beam = message.beams(i);
+      EXPECT_EQ(beam.id(), i + 1);
+      EXPECT_TRUE(beam.locked()) << "Beam #" << beam.id() << " not locked";
+      EXPECT_NEAR(beam.range().mean(), expectedBeamRange, kRangeTolerance)
+          << "Beam #" << beam.id() << " range is off";
+    }
+    ASSERT_TRUE(message.has_velocity());
+    const gz::math::Vector3d linearVelocityEstimate =
+        gz::msgs::Convert(message.velocity().mean());
+
+    const auto &linearVelocities =
+        fixture.VehicleObserver().LinearVelocities();
+    const auto &angularVelocities =
+        fixture.VehicleObserver().AngularVelocities();
+    const auto &poses = fixture.VehicleObserver().Poses();
+
+    // Linear velocities w.r.t. to sea bottom are reported
+    // in a sensor affixed, SFM frame.
+    const gz::math::Vector3d expectedLinearVelocityEstimate =
+        poses.back().Rot().RotateVectorReverse(
+            linearVelocities.back() + angularVelocities.back().Cross(
+                poses.back().Rot().RotateVector(sensorPositionInSFMFrame)));
+
+    constexpr double kVelocityTolerance{1e-2};  // account for noise
+    EXPECT_NEAR(expectedLinearVelocityEstimate.X(),
+                linearVelocityEstimate.X(), kVelocityTolerance);
+    EXPECT_NEAR(expectedLinearVelocityEstimate.Y(),
+                linearVelocityEstimate.Y(), kVelocityTolerance);
+    EXPECT_NEAR(expectedLinearVelocityEstimate.Z(),
+                linearVelocityEstimate.Z(), kVelocityTolerance);
   }
-  constexpr double kVelocityTolerance{1e-2};  // account for noise
-  ASSERT_TRUE(message.has_velocity());
-  const gz::math::Vector3d linearVelocityEstimate =
-      gz::msgs::Convert(message.velocity().mean());
+}
 
-  const auto &linearVelocities =
-      fixture.VehicleObserver().LinearVelocities();
-  const auto &angularVelocities =
-      fixture.VehicleObserver().AngularVelocities();
-  const auto &poses = fixture.VehicleObserver().Poses();
+//////////////////////////////////////////////////
+TEST(DVLTest, WaterMassTracking)
+{
+  VehicleCommandTestFixture fixture("underwater_currents.sdf", "tethys");
+  constexpr gz::math::Vector3d waterCurrentVelocity{-1., 0.5, 0.};
 
-  // Linear velocities w.r.t. to sea bottom are reported
-  // in a sensor affixed, SFM frame.
-  const gz::math::Vector3d expectedLinearVelocityEstimate =
-      poses.back().Rot().RotateVectorReverse(
-          linearVelocities.back() + angularVelocities.back().Cross(
-              poses.back().Rot().RotateVector(sensorPositionInSFMFrame)));
+  Subscription<DVLVelocityTracking> velocitySubscription;
+  velocitySubscription.Subscribe(fixture.Node(), "/tethys/dvl/velocity", 1);
 
-  EXPECT_NEAR(linearVelocityEstimate.X(),
-              expectedLinearVelocityEstimate.X(),
-              kVelocityTolerance);
-  EXPECT_NEAR(linearVelocityEstimate.Y(),
-              expectedLinearVelocityEstimate.Y(),
-              kVelocityTolerance);
-  EXPECT_NEAR(linearVelocityEstimate.Z(),
-              expectedLinearVelocityEstimate.Z(),
-              kVelocityTolerance);
+  // Step a few iterations for simulation to setup itself
+  fixture.Step(2s);
+
+  ASSERT_TRUE(velocitySubscription.WaitForMessages(1, 10s));
+  {
+    const DVLVelocityTracking message =
+        velocitySubscription.ReadLastMessage();
+    ASSERT_TRUE(message.has_target());
+    const DVLTrackingTarget & target = message.target();
+    EXPECT_EQ(target.type(), DVLTrackingTarget::DVL_TARGET_WATER_MASS);
+    for (int i = 0; i < message.beams_size(); ++i)
+    {
+      const DVLBeamState & beam = message.beams(i);
+      EXPECT_EQ(beam.id(), i + 1);
+      EXPECT_TRUE(beam.locked())
+          << "Beam #" << beam.id() << " not locked";
+    }
+    ASSERT_TRUE(message.has_velocity());
+    const gz::math::Vector3d linearVelocityEstimate =
+        gz::msgs::Convert(message.velocity().mean());
+    constexpr double kVelocityTolerance{1e-1};  // account for noise
+    EXPECT_NEAR(linearVelocityEstimate.X(),
+                -waterCurrentVelocity.X(), kVelocityTolerance);
+    EXPECT_NEAR(linearVelocityEstimate.Y(),
+                -waterCurrentVelocity.Y(), kVelocityTolerance);
+    EXPECT_NEAR(linearVelocityEstimate.Z(),
+                -waterCurrentVelocity.Z(), kVelocityTolerance);
+  }
+
+  // Propel vehicle forward by giving the propeller a positive
+  // angular velocity. Vehicle is supposed to move at around
+  // 1 m/s with 300 RPM. 300 RPM = 300 * 2 pi / 60 = 10 pi rad/s
+  lrauv_gazebo_plugins::msgs::LRAUVCommand command;
+  command.set_propomegaaction_(10. * GZ_PI);
+
+  // Rotate rudder clockwise when looking from the top,
+  // which causes the vehicle to move in a counter-clockwise arch
+  command.set_rudderangleaction_(0.8);
+
+  // Neutral buoyancy
+  command.set_dropweightstate_(true);
+  command.set_buoyancyaction_(0.0005);
+
+  // Step simulation for some time for DVL estimates to estabilize
+  auto & publisher = fixture.CommandPublisher();
+  for (int _ = 0; _ < 5; ++_)
+  {
+    publisher.Publish(command);
+    fixture.Step(10s);
+  }
+  ASSERT_TRUE(velocitySubscription.WaitForMessages(50, 10s));
+
+  {
+    const DVLVelocityTracking message =
+        velocitySubscription.ReadLastMessage();
+    ASSERT_TRUE(message.has_target());
+    const DVLTrackingTarget & target = message.target();
+    EXPECT_EQ(target.type(), DVLTrackingTarget::DVL_TARGET_WATER_MASS);
+    for (int i = 0; i < message.beams_size(); ++i)
+    {
+      const DVLBeamState & beam = message.beams(i);
+      EXPECT_EQ(beam.id(), i + 1);
+      EXPECT_TRUE(beam.locked())
+          << "Beam #" << beam.id() << " not locked";
+    }
+    ASSERT_TRUE(message.has_velocity());
+    const gz::math::Vector3d linearVelocityEstimate =
+        gz::msgs::Convert(message.velocity().mean());
+
+    const auto &linearVelocities =
+        fixture.VehicleObserver().LinearVelocities();
+    const auto &angularVelocities =
+        fixture.VehicleObserver().AngularVelocities();
+    const auto &poses = fixture.VehicleObserver().Poses();
+
+    // Linear velocities w.r.t. to underwater currents
+    // are reported in a sensor affixed, SFM frame.
+    const gz::math::Vector3d expectedLinearVelocityEstimate =
+        poses.back().Rot().RotateVectorReverse(
+            linearVelocities.back() - waterCurrentVelocity +
+            angularVelocities.back().Cross(
+                poses.back().Rot().RotateVector(sensorPositionInSFMFrame)));
+    constexpr double kVelocityTolerance{1e-1};  // account for noise
+    EXPECT_NEAR(expectedLinearVelocityEstimate.X(),
+                linearVelocityEstimate.X(), kVelocityTolerance);
+    EXPECT_NEAR(expectedLinearVelocityEstimate.Y(),
+                linearVelocityEstimate.Y(), kVelocityTolerance);
+    EXPECT_NEAR(expectedLinearVelocityEstimate.Z(),
+                linearVelocityEstimate.Z(), kVelocityTolerance);
+  }
 }

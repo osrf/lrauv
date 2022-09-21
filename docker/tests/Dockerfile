@@ -38,4 +38,4 @@ RUN [ "/bin/bash" , "-c" , ". ~/ign_ws/install/setup.sh; colcon build --cmake-ar
 ENTRYPOINT []
 
 # Run tests
-CMD [ "/bin/bash" , "-c" , ". ~/lrauv_ws/install/setup.sh; colcon test --event-handlers console_direct+" ]
+CMD [ "/bin/bash" , "-c" , ". ~/lrauv_ws/install/setup.sh; colcon test --event-handlers console_direct+ && colcon test-result" ]

@@ -24,7 +24,7 @@
 
 #include <chrono>
 
-#include <lrauv_ignition_plugins/lrauv_command.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_command.pb.h>
 #include "lrauv_system_tests/TestFixture.hh"
 
 using namespace lrauv_system_tests;
@@ -43,7 +43,7 @@ TEST(PropellerActionTest, ForwardThrust)
   // Propel vehicle forward by giving the propeller a positive
   // angular velocity. Vehicle is supposed to move at around
   // 1 m/s with 300 RPM. 300 RPM = 300 * 2 pi / 60 = 10 pi rad/s
-  lrauv_ignition_plugins::msgs::LRAUVCommand command;
+  lrauv_gazebo_plugins::msgs::LRAUVCommand command;
   command.set_propomegaaction_(10. * GZ_PI);
 
   // Neutral buoyancy

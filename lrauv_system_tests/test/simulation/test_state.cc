@@ -26,8 +26,8 @@
 
 #include <gz/math/Angle.hh>
 
-#include <lrauv_ignition_plugins/lrauv_command.pb.h>
-#include <lrauv_ignition_plugins/lrauv_state.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_command.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_state.pb.h>
 
 #include "lrauv_system_tests/TestFixture.hh"
 
@@ -52,7 +52,7 @@ class VehicleStateTest : public ::testing::Test
 };
 
 // Checks that don't change throughout the test
-void CheckInvariants(const lrauv_ignition_plugins::msgs::LRAUVState &_msg)
+void CheckInvariants(const lrauv_gazebo_plugins::msgs::LRAUVState &_msg)
 {
   // Check actuators that don't change throughout the test
   EXPECT_NEAR(0.0, _msg.elevatorangle_(), 1e-4);
@@ -119,7 +119,7 @@ TEST_F(VehicleStateTest, InitialState)
 //////////////////////////////////////////////////
 TEST_F(VehicleStateTest, ThrustState)
 {
-  lrauv_ignition_plugins::msgs::LRAUVCommand command;
+  lrauv_gazebo_plugins::msgs::LRAUVCommand command;
 
   // Propel vehicle forward by giving the propeller a positive
   // angular velocity. Vehicle is supposed to move at around
@@ -191,7 +191,7 @@ TEST_F(VehicleStateTest, ThrustState)
 //////////////////////////////////////////////////
 TEST_F(VehicleStateTest, ThrustAndTurnState)
 {
-  lrauv_ignition_plugins::msgs::LRAUVCommand command;
+  lrauv_gazebo_plugins::msgs::LRAUVCommand command;
 
   // Propel vehicle forward by giving the propeller a positive
   // angular velocity. Vehicle is supposed to move at around
@@ -274,7 +274,7 @@ TEST_F(VehicleStateTest, ThrustAndTurnState)
 //////////////////////////////////////////////////
 TEST_F(VehicleStateTest, SinkState)
 {
-  lrauv_ignition_plugins::msgs::LRAUVCommand command;
+  lrauv_gazebo_plugins::msgs::LRAUVCommand command;
   // Volume below neutral for vehicle to sink
   command.set_buoyancyaction_(0.0002);
   command.set_dropweightstate_(true);

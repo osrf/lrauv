@@ -28,8 +28,8 @@
 #include <string>
 #include <unordered_map>
 
-#include <lrauv_ignition_plugins/lrauv_range_bearing_request.pb.h>
-#include <lrauv_ignition_plugins/lrauv_range_bearing_response.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_range_bearing_request.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_range_bearing_response.pb.h>
 
 #include "lrauv_system_tests/Client.hh"
 
@@ -39,12 +39,12 @@ namespace lrauv_system_tests
 /// Client to ease range bearing requests
 /// over acoustic communication channels.
 class RangeBearingClient : public Client<
-  lrauv_ignition_plugins::msgs::LRAUVRangeBearingRequest,
-  lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse>
+  lrauv_gazebo_plugins::msgs::LRAUVRangeBearingRequest,
+  lrauv_gazebo_plugins::msgs::LRAUVRangeBearingResponse>
 {
   public: using Base = Client<
-    lrauv_ignition_plugins::msgs::LRAUVRangeBearingRequest,
-    lrauv_ignition_plugins::msgs::LRAUVRangeBearingResponse>;
+    lrauv_gazebo_plugins::msgs::LRAUVRangeBearingRequest,
+    lrauv_gazebo_plugins::msgs::LRAUVRangeBearingResponse>;
 
   /// Constructor.
   /// \param[in] _node Node to be used for topic advertisement and subscription.
@@ -62,7 +62,7 @@ class RangeBearingClient : public Client<
   /// \return a future response
   public: auto RequestRange(uint32_t _address)
   {
-    lrauv_ignition_plugins::msgs::LRAUVRangeBearingRequest request;
+    lrauv_gazebo_plugins::msgs::LRAUVRangeBearingRequest request;
     request.set_to(_address);
     return Base::Request(std::move(request));
   }

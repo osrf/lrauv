@@ -24,7 +24,7 @@
 
 #include <chrono>
 
-#include <lrauv_ignition_plugins/lrauv_command.pb.h>
+#include <lrauv_gazebo_plugins/lrauv_command.pb.h>
 
 #include "lrauv_system_tests/TestFixture.hh"
 
@@ -42,7 +42,7 @@ TEST(RudderActionTest, LeftTurn)
   EXPECT_NEAR(0.0, poses.back().Pos().Y(), 1e-6);
 
   // Propel vehicle
-  lrauv_ignition_plugins::msgs::LRAUVCommand command;
+  lrauv_gazebo_plugins::msgs::LRAUVCommand command;
 
   // Move forward
   command.set_propomegaaction_(30);
