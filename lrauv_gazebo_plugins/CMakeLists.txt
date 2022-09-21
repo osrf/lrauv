@@ -152,17 +152,10 @@ endfunction()
 add_subdirectory(src/comms/)
 
 add_lrauv_plugin(ControlPanelPlugin GUI
-  PROTO
-    lrauv_command
-    lrauv_state)
+  PROTO lrauv_gazebo_messages)
 add_lrauv_plugin(DopplerVelocityLog
   RENDERING
-  PROTO
-    dvl_beam_state
-    dvl_kinematic_estimate
-    dvl_range_estimate
-    dvl_tracking_target
-    dvl_velocity_tracking)
+  PROTO lrauv_gazebo_messages)
 target_link_libraries(DopplerVelocityLog PUBLIC ${GZ_SENSORS}-rendering)
 add_lrauv_plugin(DopplerVelocityLogSystem RENDERING)
 target_link_libraries(DopplerVelocityLogSystem PUBLIC
@@ -170,9 +163,7 @@ target_link_libraries(DopplerVelocityLogSystem PUBLIC
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(RangeBearingPlugin
   PROTO
-    lrauv_range_bearing_request
-    lrauv_range_bearing_response
-    lrauv_acoustic_message
+    lrauv_gazebo_messages
   PRIVATE_LINK_LIBS
     acoustic_comms_support)
 add_lrauv_plugin(ReferenceAxis GUI RENDERING)
@@ -182,16 +173,12 @@ add_lrauv_plugin(ScienceSensorsSystem
     ${GZ_SENSORS}
     ${PCL_LIBRARIES})
 add_lrauv_plugin(SpawnPanelPlugin GUI
-  PROTO
-    lrauv_init)
+  PROTO lrauv_gazebo_messages)
 add_lrauv_plugin(TethysCommPlugin
-  PROTO
-    lrauv_command
-    lrauv_state)
+  PROTO lrauv_gazebo_messages)
 add_lrauv_plugin(TimeAnalysisPlugin)
 add_lrauv_plugin(WorldCommPlugin
-  PROTO
-    lrauv_init)
+  PROTO lrauv_gazebo_messages)
 add_lrauv_plugin(WorldConfigPlugin GUI)
 
 #============================================================================
@@ -225,9 +212,8 @@ foreach(EXAMPLE
   target_include_directories(${EXAMPLE_EXEC} PUBLIC include)
   target_link_libraries(${EXAMPLE_EXEC} PRIVATE
     gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
-    dvl_velocity_tracking lrauv_acoustic_message lrauv_command lrauv_init
-    lrauv_internal_comms lrauv_range_bearing_request lrauv_range_bearing_response
-    lrauv_state)
+    acoustic_comms_support
+    lrauv_gazebo_messages)
 
   install(
     TARGETS ${EXAMPLE_EXEC}

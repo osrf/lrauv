@@ -45,8 +45,7 @@ target_link_libraries(${PROJECT_NAME}_support PUBLIC
   gz-sim7::gz-sim7
   gz-math7::gz-math7
   gz-transport12::gz-transport12
-  lrauv_gazebo_plugins::lrauv_command
-  lrauv_gazebo_plugins::lrauv_state
+  lrauv_gazebo_plugins::lrauv_gazebo_messages
   gtest)
 target_compile_features(${PROJECT_NAME}_support PUBLIC cxx_std_17)
 #============================================================================
