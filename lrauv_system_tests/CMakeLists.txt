@@ -12,11 +12,6 @@ find_package(gz-math7 REQUIRED)
 find_package(gz-transport12 REQUIRED)
 find_package(lrauv_gazebo_plugins REQUIRED)
 
-# Add option to build without LRAUV integration
-option(ENABLE_MISSION_TESTS
-  "Enable mission tests. (Requires integration with MBARI's controllers)"
-  ON)
-
 # Build-time constants
 set(PROJECT_BINARY_PATH ${CMAKE_CURRENT_BINARY_DIR})
 set(PROJECT_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
@@ -34,7 +29,6 @@ include(GoogleTest)
 
 # Build test support library
 add_library(${PROJECT_NAME}_support
-  src/LRAUVController.cc
   src/ModelManipulator.cc
   src/ModelObserver.cc
   src/Publisher.cc

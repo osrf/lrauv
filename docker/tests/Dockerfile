@@ -19,7 +19,7 @@
 # Research Institute (MBARI) and the David and Lucile Packard Foundation
 #
 
-ARG BASE_IMAGE=mbari/lrauv-ignition-sim:unstable
+ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 ENV LRAUV_WS /home/$USERNAME/lrauv_ws
