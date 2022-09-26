@@ -10,6 +10,7 @@
 [._]s[a-rt-v][a-z]
 [._]ss[a-gi-z]
 [._]sw[a-p]
+*.kate-swp
 
 # Session
 Session.vim
