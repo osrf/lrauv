@@ -83,7 +83,7 @@ WORKDIR /home/$USERNAME
 
 # Check out Gazebo source
 ENV GZ_WS /home/$USERNAME/gz_ws
-COPY docker/base/gz-garden.yaml ${GZ_WS}/gz-garden.yaml
+COPY --chown=$USERNAME docker/base/gz-garden.yaml ${GZ_WS}/gz-garden.yaml
 RUN mkdir -p ${GZ_WS}/src && cd ${GZ_WS} && \
  vcs import src < gz-garden.yaml && vcs pull src
 
