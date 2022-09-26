@@ -68,7 +68,18 @@ RUN apt-get -qq update && apt-get -q -y install \
   && rm -rf /var/lib/apt/lists/* \
   && apt-get -qq clean
 
+# Add a user with the same user_id as the user outside the container
+ENV USERNAME developer
+RUN useradd -U -ms /bin/bash $USERNAME \
+ && echo "$USERNAME:$USERNAME" | chpasswd \
+ && adduser $USERNAME sudo \
+ && echo "$USERNAME ALL=NOPASSWD: ALL" >> /etc/sudoers.d/$USERNAME
+
+# Commands below run as the developer user
 USER $USERNAME
+
+# When running a container start in the developer's home folder
+WORKDIR /home/$USERNAME
 
 # Check out Gazebo source
 ENV GZ_WS /home/$USERNAME/gz_ws
