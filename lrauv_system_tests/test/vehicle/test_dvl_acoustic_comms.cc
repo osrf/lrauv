@@ -66,26 +66,36 @@ TEST(DVLTest, BottomTrackingAcousticComms)
       "/broker/msgs");
 
   // Command publishers for both vehicles.
-  auto cmdPubTethys =
+  auto cmdPubVelTethys =
     node.Advertise<gz::msgs::Double>(
       gz::transport::TopicUtils::AsValidTopic(
       "/model/tethys/joint/propeller_joint/cmd_vel"));
-  auto cmdPubDaphne =
+  auto cmdPubAngleTethys =
+    node.Advertise<gz::msgs::Double>(
+      gz::transport::TopicUtils::AsValidTopic(
+      "/model/tethys/joint/vertical_fins_joint/0/cmd_pos"));
+
+  auto cmdPubVelDaphne =
     node.Advertise<gz::msgs::Double>(
       gz::transport::TopicUtils::AsValidTopic(
       "/model/daphne/joint/propeller_joint/cmd_vel"));
+  auto cmdPubAngleDaphne =
+    node.Advertise<gz::msgs::Double>(
+      gz::transport::TopicUtils::AsValidTopic(
+      "/model/daphne/joint/vertical_fins_joint/0/cmd_pos"));
 
   // DVL sensor callback setup for tethys
   std::function<void(const DVLVelocityTracking &)> dvlCbTethys =
     [&](const DVLVelocityTracking &_msg)
     {
       // Send the current velocity of tethys to daphne using acoustic comms.
-      auto yVelocity = gz::msgs::Convert(_msg.velocity().mean()).Y();
+      auto speed = gz::msgs::Convert(_msg.velocity().mean()).Length();
       gz::msgs::Dataframe msg;
       msg.set_src_address("1");
       msg.set_dst_address("2");
       double scalingFactor = 150;
-      msg.set_data(std::to_string(yVelocity * scalingFactor));
+      // Format for the msg -> rudder_angle : speed
+      msg.set_data("0.78:" + std::to_string(speed * scalingFactor));
       commsPub.Publish(msg);
     };
   node.Subscribe("/tethys/dvl/velocity", dvlCbTethys);
@@ -95,22 +105,34 @@ TEST(DVLTest, BottomTrackingAcousticComms)
     [&](const gz::msgs::Dataframe &_msg)
     {
       // The "command" for speed is received via acoustic comms.
-      gz::msgs::Double cmdMsg;
-      cmdMsg.set_data(std::stod(_msg.data()));
-      cmdPubDaphne.Publish(cmdMsg);
+      gz::msgs::Double cmdVelMsg;
+      std::string msgString = _msg.data();
+
+      cmdVelMsg.set_data(std::stod(msgString.substr(5)));
+      cmdPubVelDaphne.Publish(cmdVelMsg);
+
+      gz::msgs::Double cmdAngleMsg;
+      cmdAngleMsg.set_data(std::stod(msgString.substr(0,4)));
+      cmdPubAngleDaphne.Publish(cmdAngleMsg);
     };
   node.Subscribe("/2/rx", acousticCbDaphne);
 
   // Send move command to tethys and run the simulation.
   for (int _ = 0; _ < 10; _++)
   {
-    gz::msgs::Double cmdMsg;
-    cmdMsg.set_data(2);
-    cmdPubTethys.Publish(cmdMsg);
-    fixture.Step(10s);
+    gz::msgs::Double cmdVelMsg;
+    cmdVelMsg.set_data(2);
+    cmdPubVelTethys.Publish(cmdVelMsg);
+
+    gz::msgs::Double cmdAngleMsg;
+    cmdAngleMsg.set_data(0.78);
+    cmdPubAngleTethys.Publish(cmdAngleMsg);
+
+    fixture.Step(20s);
   }
 
-  auto posInitialDaphne = fixture.VehicleObserver().Poses().front().Y();
-  auto posFinalDaphne = fixture.VehicleObserver().Poses().back().Y();
-  EXPECT_NEAR(posFinalDaphne - posInitialDaphne, 0.25, 0.05);
+  auto posInitialDaphne = fixture.VehicleObserver().Poses().front();
+  auto posFinalDaphne = fixture.VehicleObserver().Poses().back();
+  EXPECT_GT(posFinalDaphne.Y() - posInitialDaphne.Y(), 4);
+  EXPECT_LT(posFinalDaphne.X() - posInitialDaphne.X(), -0.03);
 }
