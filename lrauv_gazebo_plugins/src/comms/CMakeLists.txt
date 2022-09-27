@@ -8,8 +8,7 @@ add_library(acoustic_comms_support SHARED CommsPacket.cc)
 target_link_libraries(acoustic_comms_support PUBLIC
   gz-plugin${GZ_PLUGIN_VER}::gz-plugin${GZ_PLUGIN_VER}
   gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
-  lrauv_acoustic_message
-  lrauv_internal_comms
+  lrauv_gazebo_messages
 )
 target_include_directories(acoustic_comms_support PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

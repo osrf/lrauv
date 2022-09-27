@@ -55,7 +55,8 @@ static constexpr double kRangeTolerance{0.2};
 //////////////////////////////////////////////////
 TEST(DVLTest, NoTracking)
 {
-  VehicleCommandTestFixture fixture("bottomless_pit.sdf", "tethys");
+  VehicleCommandTestFixture fixture(
+      worldPath("bottomless_pit.sdf"), "tethys");
 
   Subscription<DVLVelocityTracking> velocitySubscription;
   velocitySubscription.Subscribe(fixture.Node(), "/tethys/dvl/velocity", 1);
@@ -78,7 +79,8 @@ TEST(DVLTest, NoTracking)
 //////////////////////////////////////////////////
 TEST(DVLTest, BottomTracking)
 {
-  VehicleCommandTestFixture fixture("flat_seabed.sdf", "tethys");
+  VehicleCommandTestFixture fixture(
+      worldPath("flat_seabed.sdf"), "tethys");
   constexpr double seaBedDepth{20.};
   // Assume zero roll and arbitrary resolution
   const double expectedBeamRange =
@@ -184,7 +186,8 @@ TEST(DVLTest, BottomTracking)
 //////////////////////////////////////////////////
 TEST(DVLTest, WaterMassTracking)
 {
-  VehicleCommandTestFixture fixture("underwater_currents.sdf", "tethys");
+  VehicleCommandTestFixture fixture(
+      worldPath("underwater_currents.sdf"), "tethys");
   constexpr gz::math::Vector3d waterCurrentVelocity{-1., 0.5, 0.};
 
   Subscription<DVLVelocityTracking> velocitySubscription;

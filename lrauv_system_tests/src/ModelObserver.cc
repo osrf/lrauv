@@ -1,7 +1,5 @@
 #include "lrauv_system_tests/ModelObserver.hh"
 
-#include <gtest/gtest.h>
-
 #include <gz/sim/Link.hh>
 #include <gz/sim/Model.hh>
 #include <gz/sim/Util.hh>
@@ -48,7 +46,6 @@ void ModelObserver::Update(
     gz::sim::Model model(modelEntity);
     const gz::sim::Entity linkEntity =
         model.LinkByName(_ecm, this->baseLinkName);
-    ASSERT_NE(gz::sim::kNullEntity, linkEntity);
     gz::sim::Link link(linkEntity);
 
     auto linearVelocity = link.WorldLinearVelocity(_ecm);

@@ -32,12 +32,15 @@
 #include "lrauv_system_tests/ModelObserver.hh"
 #include "lrauv_system_tests/Publisher.hh"
 
+#include "TestConstants.hh"
+
 using namespace lrauv_system_tests;
 using namespace std::literals::chrono_literals;
 
 class HydrodynamicsTestFixture : public TestFixture
 {
-  public: HydrodynamicsTestFixture() : TestFixture("star_world.sdf")
+  public: HydrodynamicsTestFixture() :
+    TestFixture(worldPath("star_world.sdf"))
   {
     for (size_t i = 0; i < 4; ++i)
     {

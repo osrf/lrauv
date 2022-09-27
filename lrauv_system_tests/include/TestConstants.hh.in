@@ -1,8 +1,15 @@
 #ifndef __TEST_CONSTANTS_HH__
 #define __TEST_CONSTANTS_HH__
+
+#include <string>
+#include <gz/common/Filesystem.hh>
+
 #define PROJECT_BINARY_PATH "@PROJECT_BINARY_PATH@"
 #define PROJECT_SOURCE_PATH "@PROJECT_SOURCE_PATH@"
 
-// Hardcode path, assume lrauv-application is a sibling of lrauv
-#define LRAUV_APP_PATH "@PROJECT_SOURCE_PATH@/../../lrauv-application"
+inline std::string worldPath(const std::string &_basename)
+{
+  return gz::common::joinPaths(PROJECT_SOURCE_PATH "/worlds", _basename);
+}
+
 #endif

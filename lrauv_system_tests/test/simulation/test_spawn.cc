@@ -39,15 +39,14 @@
 #include "lrauv_system_tests/TestFixture.hh"
 #include "lrauv_system_tests/Util.hh"
 
+#include "TestConstants.hh"
+
 using namespace lrauv_system_tests;
 using namespace std::literals::chrono_literals;
 
 class DynamicTestFixture : public TestFixture
 {
-  public: DynamicTestFixture(const std::string &_worldName)
-    : TestFixture(_worldName)
-  {
-  }
+  using TestFixture::TestFixture;
 
   public: ModelObserver &Observe(const std::string &_modelName)
   {
@@ -72,7 +71,7 @@ class DynamicTestFixture : public TestFixture
 //////////////////////////////////////////////////
 TEST(VehicleSpawnTest, Spawn)
 {
-  DynamicTestFixture fixture("empty_environment.sdf");
+  DynamicTestFixture fixture(worldPath("empty_environment.sdf"));
   auto &observer1 = fixture.Observe("vehicle1");
   auto &observer2 = fixture.Observe("vehicle2");
 

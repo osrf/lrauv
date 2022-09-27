@@ -27,12 +27,15 @@
 #include <lrauv_gazebo_plugins/lrauv_command.pb.h>
 #include "lrauv_system_tests/TestFixture.hh"
 
+#include "TestConstants.hh"
+
 using namespace lrauv_system_tests;
 
 //////////////////////////////////////////////////
 TEST(BuoyancyActionTest, Sink)
 {
-  VehicleCommandTestFixture fixture("buoyant_tethys.sdf", "tethys");
+  VehicleCommandTestFixture fixture(
+      worldPath("buoyant_tethys.sdf"), "tethys");
   EXPECT_EQ(100u, fixture.Step(100u));
 
   // Vehicle is at the surface

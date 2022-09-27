@@ -31,11 +31,14 @@
 
 #include "lrauv_system_tests/TestFixture.hh"
 
+#include "TestConstants.hh"
+
 using namespace std::literals::chrono_literals;
 
 class VehicleStateTest : public ::testing::Test
 {
-  public: VehicleStateTest() : fixture("buoyant_tethys.sdf", "tethys")
+  public: VehicleStateTest()
+    : fixture(worldPath("buoyant_tethys.sdf"), "tethys")
   {
   }
 

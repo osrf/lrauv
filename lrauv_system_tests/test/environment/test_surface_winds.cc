@@ -34,7 +34,8 @@ using namespace std::literals::chrono_literals;
 //////////////////////////////////////////////////
 TEST(SurfaceWindsTest, WindAtSurface)
 {
-  TestFixtureWithVehicle fixture("windy_tethys.sdf", "tethys");
+  TestFixtureWithVehicle fixture(
+      worldPath("windy_tethys.sdf"), "tethys");
   fixture.Step(2min);
   // Eastward velocity at the surface due to wind
   // NOTE(hidmic): reverse Y-axis velocity sign to match FSK
@@ -47,7 +48,7 @@ TEST(SurfaceWindsTest, WindAtSurface)
 TEST(SurfaceWindsTest, NoWindAtDepth)
 {
   TestFixtureWithVehicle fixture(
-      "windy_tethys_at_depth.sdf", "tethys");
+      worldPath("windy_tethys_at_depth.sdf"), "tethys");
   fixture.Step(2min);
   // No eastward velocity at a depth due to wind
   const auto &observer = fixture.VehicleObserver();

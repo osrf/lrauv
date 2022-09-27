@@ -40,7 +40,7 @@ using namespace lrauv_system_tests;
 TEST(HydrostaticStability, NeutralBuoyancy)
 {
   TestFixtureWithVehicle fixture(
-    "flat_tethys_no_damping.sdf", "tethys");
+    worldPath("flat_tethys_no_damping.sdf"), "tethys");
   fixture.Step(10000u);
 
   auto &observer = fixture.VehicleObserver();
@@ -63,7 +63,7 @@ TEST(HydrostaticStability, NeutralBuoyancy)
 TEST(HydrostaticStability, RestoringMoment)
 {
   TestFixtureWithVehicle fixture(
-    "tilted_tethys_no_damping.sdf", "tethys");
+    worldPath("tilted_tethys_no_damping.sdf"), "tethys");
 
   fixture.Step(10000u);
 

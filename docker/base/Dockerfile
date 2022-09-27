@@ -19,9 +19,7 @@
 # Research Institute (MBARI) and the David and Lucile Packard Foundation
 #
 
-FROM mbari/lrauv-ignition-sim:unstable
-
-USER root
+FROM nvidia/opengl:1.0-glvnd-devel-ubuntu20.04
 
 # This avoids keyboard interaction when asked for geographic area
 ARG DEBIAN_FRONTEND=noninteractive
@@ -32,27 +30,62 @@ RUN echo 'Etc/UTC' > /etc/timezone && \
 
 RUN apt-get update \
  && apt-get install -y \
-        build-essential \
+        cmake \
+        cppcheck \
         curl \
+        gdb \
+        git \
         gnupg2 \
+        libbluetooth-dev \
+        libcwiid-dev \
+        libgoogle-glog-dev \
+        libpcl-dev \
+        libspnav-dev \
+        libusb-dev \
         lsb-release \
-        tzdata \
-        wget \
+        mercurial \
+        python3-dbg \
         python3-empy \
-        python3-numpy
+        python3-numpy \
+        python3-pip \
+        python3-venv \
+        software-properties-common \
+        sudo \
+        tzdata \
+        vim \
+ && apt-get clean
 
-RUN sudo /bin/sh -c 'echo "deb [arch=amd64,arm64] http://repo.ros2.org/ubuntu/main `lsb_release -cs` main" > /etc/apt/sources.list.d/ros2-latest.list' \
- && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add - \
- && sudo apt-get update \
- && sudo apt-get install -y python3-vcstool python3-colcon-common-extensions
+# Install Ignition build tools
+# https://colcon.readthedocs.io/en/released/user/installation.html
+RUN /bin/sh -c 'echo "deb [arch=amd64,arm64] http://repo.ros2.org/ubuntu/main `lsb_release -cs` main" > /etc/apt/sources.list.d/ros2-latest.list' \
+ && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
+RUN apt-get -qq update && apt-get -q -y install \
+  build-essential \
+  wget \
+  python3-vcstool \
+  python3-colcon-common-extensions \
+  && apt-get dist-upgrade -y \
+  && rm -rf /var/lib/apt/lists/* \
+  && apt-get -qq clean
 
+# Add a user with the same user_id as the user outside the container
+ENV USERNAME developer
+RUN useradd -U -ms /bin/bash $USERNAME \
+ && echo "$USERNAME:$USERNAME" | chpasswd \
+ && adduser $USERNAME sudo \
+ && echo "$USERNAME ALL=NOPASSWD: ALL" >> /etc/sudoers.d/$USERNAME
+
+# Commands below run as the developer user
 USER $USERNAME
 
-# Check out Ignition source
-ENV IGN_WS /home/$USERNAME/ign_ws
-COPY docker/base/gz-garden.yaml ${IGN_WS}/gz-garden.yaml
-RUN mkdir -p ${IGN_WS}/src && cd ${IGN_WS} \ 
- && vcs import src < gz-garden.yaml
+# When running a container start in the developer's home folder
+WORKDIR /home/$USERNAME
+
+# Check out Gazebo source
+ENV GZ_WS /home/$USERNAME/gz_ws
+COPY --chown=$USERNAME docker/base/gz-garden.yaml ${GZ_WS}/gz-garden.yaml
+RUN mkdir -p ${GZ_WS}/src && cd ${GZ_WS} && \
+ vcs import src < gz-garden.yaml && vcs pull src
 
 USER root
 
@@ -76,5 +109,6 @@ RUN rm -rf /var/lib/apt/lists/* \
 
 USER $USERNAME
 
-RUN cd ${IGN_WS} \
+RUN cd ${GZ_WS} \
  && colcon build --merge-install --cmake-args -DBUILD_TESTING=OFF
+ENV PYTHONPATH ${GZ_WS}/install/lib/python

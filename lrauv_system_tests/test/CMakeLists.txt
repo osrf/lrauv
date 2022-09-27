@@ -1,7 +1,4 @@
 add_subdirectory(dynamics)
 add_subdirectory(environment)
-if(ENABLE_MISSION_TESTS)
-    add_subdirectory(missions)
-endif(ENABLE_MISSION_TESTS)
 add_subdirectory(simulation)
 add_subdirectory(vehicle)
