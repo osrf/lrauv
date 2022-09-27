@@ -49,9 +49,9 @@ using namespace std::literals::chrono_literals;
 class AHRSTestFixture : public TestFixtureWithVehicle
 {
   public: AHRSTestFixture(
-      const std::string &_worldName,
+      const std::string &_worldPath,
       const std::string &_vehicleName)
-    : TestFixtureWithVehicle(_worldName, _vehicleName)
+    : TestFixtureWithVehicle(_worldPath, _vehicleName)
   {
     constexpr size_t historyDepth = 1u;
     const std::string imuTopicName =
@@ -131,7 +131,8 @@ inline bool AreQuaternionsEqual(
 //////////////////////////////////////////////////
 TEST(AHRSTest, FrameConventionsAreCorrect)
 {
-  AHRSTestFixture fixture("buoyant_tethys.sdf", "tethys");
+  AHRSTestFixture fixture(
+      worldPath("buoyant_tethys.sdf"), "tethys");
 
   EXPECT_LT(0, fixture.Step(200ms));
 

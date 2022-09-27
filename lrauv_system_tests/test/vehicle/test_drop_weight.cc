@@ -27,12 +27,15 @@
 #include <lrauv_gazebo_plugins/lrauv_command.pb.h>
 #include "lrauv_system_tests/TestFixture.hh"
 
+#include "TestConstants.hh"
+
 using namespace lrauv_system_tests;
 
 //////////////////////////////////////////////////
 TEST(DropWeightTest, ReleaseWeight)
 {
-  VehicleCommandTestFixture fixture("buoyant_tethys_at_depth.sdf", "tethys");
+  VehicleCommandTestFixture fixture(
+      worldPath("buoyant_tethys_at_depth.sdf"), "tethys");
   EXPECT_EQ(100u, fixture.Step(100u));
 
   // Starting point of the vehicle
