@@ -19,7 +19,7 @@
 # Research Institute (MBARI) and the David and Lucile Packard Foundation
 #
 
-ARG BASE_IMAGE=mbari/lrauv-ignition-sim:unstable
+ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 ENV LRAUV_WS /home/$USERNAME/lrauv_ws
@@ -32,7 +32,7 @@ RUN rm -rf build log install src/lrauv
 COPY . src/lrauv
 
 # Build image
-RUN [ "/bin/bash" , "-c" , ". ~/ign_ws/install/setup.sh; colcon build --cmake-args='-DBUILD_TESTING=true'" ]
+RUN [ "/bin/bash" , "-c" , ". ~/gz_ws/install/setup.sh; colcon build --cmake-args='-DBUILD_TESTING=true'" ]
 
 # Drop entrypoint
 ENTRYPOINT []

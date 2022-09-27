@@ -15,7 +15,7 @@
 
 import math
 from dataclasses import dataclass
-from gz.math import SphericalCoordinates, Vector3d, Angle
+from gz.math7 import SphericalCoordinates, Vector3d, Angle
 
 fuel_model_url = "https://fuel.gazebosim.org/1.0/OpenRobotics/models/Portuguese Ledge"
 

@@ -96,7 +96,7 @@ TEST(AcousticComms, MultiVehicleTest)
 
   auto startTime = std::chrono::system_clock::now();
 
-  fixture.Step(50u);
+  fixture.Step(100u);
 
   // Check if the messages were received
   using namespace std::literals::chrono_literals;
