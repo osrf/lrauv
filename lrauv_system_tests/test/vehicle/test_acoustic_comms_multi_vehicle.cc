@@ -35,6 +35,8 @@
 
 #include "lrauv_system_tests/TestFixture.hh"
 
+#include "TestConstants.hh"
+
 using namespace tethys;
 using namespace lrauv_system_tests;
 
@@ -43,7 +45,7 @@ using MessageDifferencer =
 
 TEST(AcousticComms, MultiVehicleTest)
 {
-  TestFixture fixture("acoustic_comms_multi_vehicle.sdf");
+  TestFixture fixture(worldPath("acoustic_comms_multi_vehicle.sdf"));
 
   constexpr int senderAddressTriton = 1;
   CommsClient senderTriton(senderAddressTriton, [](const auto){});

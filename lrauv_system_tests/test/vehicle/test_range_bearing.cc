@@ -31,6 +31,8 @@
 #include "lrauv_system_tests/TestFixture.hh"
 #include "lrauv_system_tests/Util.hh"
 
+#include "TestConstants.hh"
+
 using namespace lrauv_system_tests;
 using namespace std::literals::chrono_literals;
 
@@ -39,7 +41,7 @@ TEST(RangeBearingTest, BearingIsCorrect)
 {
   // This world has the robot start at a certain depth
   // and 3 acoustic comms nodes
-  TestFixture fixture("acoustic_comms_fixture.sdf");
+  TestFixture fixture(worldPath("acoustic_comms_fixture.sdf"));
   // Needs to have the server call configure on
   // the RangeBearing plugin before any attempt
   // to request an estimate.

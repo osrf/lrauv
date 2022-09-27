@@ -10,6 +10,7 @@ project(lrauv_system_tests)
 find_package(gz-sim7 REQUIRED)
 find_package(gz-math7 REQUIRED)
 find_package(gz-transport12 REQUIRED)
+find_package(gz-common5 REQUIRED)
 find_package(lrauv_gazebo_plugins REQUIRED)
 
 # Build-time constants
@@ -34,14 +35,51 @@ add_library(${PROJECT_NAME}_support
   src/Publisher.cc
 )
 target_include_directories(${PROJECT_NAME}_support PUBLIC
-  include ${CMAKE_CURRENT_BINARY_DIR}/include)
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
 target_link_libraries(${PROJECT_NAME}_support PUBLIC
   gz-sim7::gz-sim7
   gz-math7::gz-math7
   gz-transport12::gz-transport12
+  gz-common5::gz-common5
   lrauv_gazebo_plugins::lrauv_gazebo_messages
   gtest)
 target_compile_features(${PROJECT_NAME}_support PUBLIC cxx_std_17)
+#============================================================================
+# Install
+install(
+  DIRECTORY include/
+  DESTINATION include
+  FILES_MATCHING
+  PATTERN "*.hh"
+)
+
+install(
+  TARGETS ${PROJECT_NAME}_support
+  EXPORT ${PROJECT_NAME}
+  DESTINATION lib
+)
+
+#============================================================================
+# Exports
+install(
+  EXPORT ${PROJECT_NAME}
+  FILE ${PROJECT_NAME}-targets.cmake
+  NAMESPACE ${PROJECT_NAME}::
+  DESTINATION share/${PROJECT_NAME}/cmake)
+
+include(CMakePackageConfigHelpers)
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION "share/${PROJECT_NAME}/cmake"
+  NO_SET_AND_CHECK_MACRO
+  NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+  DESTINATION share/${PROJECT_NAME}/cmake)
+
 #============================================================================
 # Tests
 include(CTest)

@@ -35,7 +35,7 @@ using namespace std::literals::chrono_literals;
 TEST(CurrentsTest, TestGlobalCurrent)
 {
   TestFixtureWithVehicle fixture(
-      "buoyant_tethys_at_depth.sdf", "tethys");
+      worldPath("buoyant_tethys_at_depth.sdf"), "tethys");
   gz::transport::Node node;
   auto pub = node.Advertise<gz::msgs::Vector3d>("/ocean_current");
   gz::msgs::Vector3d vec;

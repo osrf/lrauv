@@ -28,6 +28,8 @@
 
 #include "lrauv_system_tests/TestFixture.hh"
 
+#include "TestConstants.hh"
+
 using namespace gz;
 using namespace std::literals::chrono_literals;
 
@@ -37,7 +39,7 @@ using namespace std::literals::chrono_literals;
 TEST(BatteryTest, TestDischargeFullCharged)
 {
   using TestFixture = lrauv_system_tests::TestFixtureWithVehicle;
-  TestFixture fixture("buoyant_tethys.sdf", "tethys");
+  TestFixture fixture(worldPath("buoyant_tethys.sdf"), "tethys");
   uint64_t iterations = fixture.Step(100u);
 
   transport::Node node;

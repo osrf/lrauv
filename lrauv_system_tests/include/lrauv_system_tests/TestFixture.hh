@@ -41,8 +41,6 @@
 #include "lrauv_system_tests/ModelObserver.hh"
 #include "lrauv_system_tests/Subscription.hh"
 
-#include "TestConstants.hh"
-
 namespace lrauv_system_tests
 {
 
@@ -52,11 +50,9 @@ namespace lrauv_system_tests
 class TestFixture
 {
   /// Constructor.
-  /// \param[in] _worldName Base name of the world SDF,
-  /// to be found among this package's ``worlds``.
-  public: TestFixture(const std::string &_worldName)
-    : fixture(gz::common::joinPaths(
-          PROJECT_SOURCE_PATH, "worlds", _worldName))
+  /// \param[in] _worldPath Paht to world SDF.
+  public: TestFixture(const std::string &_worldPath)
+    : fixture(_worldPath)
   {
     gz::common::Console::SetVerbosity(4);
   }
@@ -189,13 +185,12 @@ class TestFixture
 class TestFixtureWithVehicle : public TestFixture
 {
   /// Constructor.
-  /// \param[in] _worldName Base name of the world SDF,
-  /// to be found among this package's ``worlds``.
+  /// \param[in] _worldPath Path to world SDF.
   /// \param[in] _vehicleName Name of the vehicle model.
   public: TestFixtureWithVehicle(
-      const std::string &_worldName,
+      const std::string &_worldPath,
       const std::string &_vehicleName)
-    : TestFixture(_worldName),
+    : TestFixture(_worldPath),
       vehicleManipulator(_vehicleName),
       vehicleObserver(_vehicleName),
       vehicleName(_vehicleName)
@@ -245,13 +240,12 @@ class TestFixtureWithVehicle : public TestFixture
 class VehicleCommandTestFixture : public TestFixtureWithVehicle
 {
   /// Constructor.
-  /// \param[in] _worldName Base name of the world SDF,
-  /// to be found among this package's ``worlds``.
+  /// \param[in] _worldPath Path to world SDF.
   /// \param[in] _vehicleName Name of the vehicle model.
   public: VehicleCommandTestFixture(
-      const std::string &_worldName,
+      const std::string &_worldPath,
       const std::string &_vehicleName)
-    : TestFixtureWithVehicle(_worldName, _vehicleName)
+    : TestFixtureWithVehicle(_worldPath, _vehicleName)
   {
     using lrauv_gazebo_plugins::msgs::LRAUVCommand;
     const std::string topicName = "/" + _vehicleName + "/command_topic";
@@ -277,13 +271,12 @@ class VehicleStateTestFixture : public VehicleCommandTestFixture
   using LRAUVState = lrauv_gazebo_plugins::msgs::LRAUVState;
 
   /// Constructor.
-  /// \param[in] _worldName Base name of the world SDF,
-  /// to be found among this package's ``worlds``.
+  /// \param[in] _worldPath Path to world SDF.
   /// \param[in] _vehicleName Name of the vehicle model.
   public: VehicleStateTestFixture(
-      const std::string &_worldName,
+      const std::string &_worldPath,
       const std::string &_vehicleName)
-    : VehicleCommandTestFixture(_worldName, _vehicleName)
+    : VehicleCommandTestFixture(_worldPath, _vehicleName)
   {
     const std::string topicName = "/" + _vehicleName + "/state_topic";
     this->stateSubscription.Subscribe(this->Node(), topicName, 1);
