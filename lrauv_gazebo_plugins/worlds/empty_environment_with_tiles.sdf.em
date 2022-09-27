@@ -142,11 +142,9 @@ for tile in tiles:
       filename="TimeAnalysisPlugin"
       name="tethys::TimeAnalysisPlugin">
     </plugin-->
-
     <plugin
-      filename="ScienceSensorsSystem"
-      name="tethys::ScienceSensorsSystem">
-      <data_path>2003080103_mb_l3_las.csv</data_path>
+      filename="gz-sim-environmental-sensor-system"
+      name="gz::sim::systems::EnvironmentalSystem">
     </plugin>
 
     <!-- Interface with LRAUV Main Vehicle Application for the world -->

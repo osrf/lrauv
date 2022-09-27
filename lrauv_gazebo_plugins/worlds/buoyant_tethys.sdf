@@ -92,11 +92,8 @@
     <magnetic_field>5.5645e-6 22.8758e-6 -42.3884e-6</magnetic_field>
 
     <plugin
-      filename="ScienceSensorsSystem"
-      name="tethys::ScienceSensorsSystem">
-      <data_path>2003080103_mb_l3_las.csv</data_path>
-      <!--data_path>2003080103_mb_l3_las_1x1km.csv</data_path-->
-      <!--data_path>simple_test.csv</data_path-->
+      filename="gz-sim-environmental-sensor-system"
+      name="gz::sim::systems::EnvironmentalSystem">
     </plugin>
 
     <gui fullscreen="0">

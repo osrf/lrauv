@@ -89,15 +89,6 @@
     <!-- Brought from https://github.com/gazebosim/sdformat/blob/1acea10dab1cf0c3fa2583f3e2bfd0a8d14ea340/src/World.cc#L75-L76 -->
     <magnetic_field>5.5645e-6 22.8758e-6 -42.3884e-6</magnetic_field>
 
-    <!-- No science sensors, to speed up tests -->
-    <!-- <plugin -->
-    <!--   filename="ScienceSensorsSystem" -->
-    <!--   name="tethys::ScienceSensorsSystem"> -->
-    <!--   <data_path>2003080103_mb_l3_las.csv</data_path> -->
-    <!--   <!-\-data_path>2003080103_mb_l3_las_1x1km.csv</data_path-\-> -->
-    <!--   <!-\-data_path>simple_test.csv</data_path-\-> -->
-    <!-- </plugin> -->
-
     <gui fullscreen="0">
 
       <!-- 3D scene -->

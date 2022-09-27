@@ -93,12 +93,10 @@
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
+    
     <plugin
-      filename="ScienceSensorsSystem"
-      name="tethys::ScienceSensorsSystem">
-      <data_path>2003080103_mb_l3_las.csv</data_path>
-      <!--data_path>2003080103_mb_l3_las_1x1km.csv</data_path-->
-      <!--data_path>simple_test.csv</data_path-->
+      filename="gz-sim-environmental-sensor-system"
+      name="gz::sim::systems::EnvironmentalSystem">
     </plugin>
 
     <gui fullscreen="0">
