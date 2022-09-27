@@ -174,7 +174,7 @@ add_lrauv_plugin(TethysCommPlugin
 add_lrauv_plugin(TimeAnalysisPlugin)
 add_lrauv_plugin(WorldCommPlugin
   PROTO
-    lrauv_init)
+    lrauv_gazebo_messages)
 
 #============================================================================
 # Install public headers
