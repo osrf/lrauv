@@ -39,7 +39,7 @@ target_link_libraries(test_dvl_acoustic_comms
   PUBLIC gtest_main
   PRIVATE
     ${PROJECT_NAME}_support
-    lrauv_gazebo_plugins::lrauv::gazebo_messages)
+    lrauv_gazebo_plugins::lrauv_gazebo_messages)
 gtest_discover_tests(test_dvl_acoustic_comms)
 
 foreach(_test
