@@ -513,6 +513,9 @@ class DopplerVelocityLog::Implementation
   /// are to be defined in.
   public: EnvironmentalData::ReferenceT waterVelocityReference;
 
+  /// \brief Whether water velocity was updated since last use.
+  public: bool waterVelocityUpdated{true};
+
   /// \brief Depth sensor (i.e. a GPU raytracing sensor).
   public: gz::rendering::GpuRaysPtr depthSensor;
 
@@ -1351,6 +1354,7 @@ void DopplerVelocityLog::SetEnvironmentalData(const EnvironmentalData &_data)
 
     this->dataPtr->waterVelocity = VectorFieldT(xData, yData, zData);
     this->dataPtr->waterVelocityReference = _data.reference;
+    this->dataPtr->waterVelocityUpdated = true;
 
     gzmsg << "Water velocity data updated for "
           << "[" << this->Name() << "] sensor."
@@ -1857,12 +1861,13 @@ void DopplerVelocityLog::PostUpdate(
       waterMassModeMessage =
           this->dataPtr->TrackWaterMass(_now, &waterMassModeInfo);
     }
-    else
+    else if (this->dataPtr->waterVelocityUpdated)
     {
       gzwarn << "No water velocity available, "
              << "skipping water-mass tracking."
              << std::endl;
     }
+    this->dataPtr->waterVelocityUpdated = false;
   }
 
   double bottomModeScore, waterMassModeScore;
