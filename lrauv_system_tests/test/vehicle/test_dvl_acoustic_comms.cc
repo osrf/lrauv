@@ -57,7 +57,8 @@ using DVLVelocityTracking = lrauv_gazebo_plugins::msgs::DVLVelocityTracking;
 //////////////////////////////////////////////////
 TEST(DVLTest, BottomTrackingAcousticComms)
 {
-  VehicleCommandTestFixture fixture("flat_seabed_two_vehicles.sdf", "daphne");
+  VehicleCommandTestFixture fixture(
+      worldPath("flat_seabed_two_vehicles.sdf"), "daphne");
 
   gz::transport::Node node;
 
