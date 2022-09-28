@@ -28,11 +28,14 @@
 
 #include "lrauv_system_tests/TestFixture.hh"
 
+#include "TestConstants.hh"
+
 //////////////////////////////////////////////////
 TEST(RudderActionTest, LeftTurn)
 {
   using TestFixture = lrauv_system_tests::VehicleCommandTestFixture;
-  TestFixture fixture("buoyant_tethys_at_depth.sdf", "tethys");
+  TestFixture fixture(
+      worldPath("buoyant_tethys_at_depth.sdf"), "tethys");
   uint64_t iterations = fixture.Step(100u);
   EXPECT_EQ(100u, iterations);
 

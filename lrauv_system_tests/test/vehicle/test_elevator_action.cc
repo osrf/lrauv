@@ -22,13 +22,15 @@
 #include <lrauv_gazebo_plugins/lrauv_command.pb.h>
 #include "lrauv_system_tests/TestFixture.hh"
 
+#include "TestConstants.hh"
+
 using namespace lrauv_system_tests;
 
 //////////////////////////////////////////////////
 TEST(ElevatorActionTest, Sink)
 {
   VehicleCommandTestFixture fixture(
-      "buoyant_tethys.sdf", "tethys");
+      worldPath("buoyant_tethys.sdf"), "tethys");
   uint64_t iterations = fixture.Step(100u);
   EXPECT_EQ(100u, iterations);
 
