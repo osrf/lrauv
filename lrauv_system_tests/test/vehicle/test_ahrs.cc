@@ -115,7 +115,7 @@ static constexpr double Bn{22.8758e-6};   // T
 static constexpr double Bu{-42.3884e-6};  // T
 
 static constexpr double angularVelocityTolerance{3e-2};
-static constexpr double linearAccelerationTolerance{3e-2};
+static constexpr double linearAccelerationTolerance{6e-2};
 static constexpr double magneticFieldTolerance{1e-8};
 static constexpr double orientationTolerance{1e-4};
 
