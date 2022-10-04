@@ -98,7 +98,7 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         build-args: BASE_IMAGE=${{ needs.configure.outputs.base_image }}
-        file: docker/tests/Dockerfile
+        file: docker/test/Dockerfile
         tags: mbari_lrauv
     - name: Run tests
       run: docker run -t mbari_lrauv
