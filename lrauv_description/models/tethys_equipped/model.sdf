@@ -348,8 +348,8 @@
         <ocean_density>1025</ocean_density>
       </plugin>
       <plugin
-        filename="HydrodynamicsPlugin"
-        name="tethys::HydrodynamicsPlugin">
+        filename="ignition-gazebo-hydrodynamics-system"
+        name="ignition::gazebo::systems::Hydrodynamics">
         <link_name>base_link</link_name>
         <enable_coriolis>false</enable_coriolis>
         <xDotU>-4.876161</xDotU>

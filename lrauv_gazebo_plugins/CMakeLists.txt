@@ -160,7 +160,6 @@ target_link_libraries(DopplerVelocityLog PUBLIC ${GZ_SENSORS}-rendering)
 add_lrauv_plugin(DopplerVelocityLogSystem RENDERING)
 target_link_libraries(DopplerVelocityLogSystem PUBLIC
   DopplerVelocityLog ${GZ_SENSORS}-rendering)
-add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(RangeBearingPlugin
   PROTO
     lrauv_gazebo_messages
