@@ -126,11 +126,11 @@ USER $USERNAME
 
 ENV LRAUV_WS=/home/$USERNAME/lrauv_ws
 RUN mkdir -p $LRAUV_WS/src
-COPY . $LRAUV_WS/src/lrauv
+COPY --chown=$USERNAME . $LRAUV_WS/src/lrauv
 WORKDIR $LRAUV_WS
 
 # Run tests by default
-COPY tools/setup/build-then-test.sh $LRAUV_WS/build-then-test.sh
+COPY --chown=$USERNAME tools/setup/build-then-test.sh $LRAUV_WS/build-then-test.sh
 CMD $LRAUV_WS/build-then-test.sh
 
 ############################################################

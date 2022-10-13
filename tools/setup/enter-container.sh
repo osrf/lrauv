@@ -52,4 +52,3 @@ if [ -z "$CONTAINER_ID" ]; then
 else
     docker exec --privileged -e DISPLAY -it $CONTAINER_ID bash
 fi
-
