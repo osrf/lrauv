@@ -51,6 +51,11 @@ find_package (Eigen3 3.3 REQUIRED)
 
 find_package(PCL 1.2 REQUIRED)
 
+find_package(
+  Python3
+  REQUIRED
+  COMPONENTS Interpreter)
+
 # Build protobuf messages
 add_subdirectory(proto)
 
@@ -252,22 +257,35 @@ configure_file(
 
 #============================================================================
 # World generation
-foreach (WORLD_NAME "portuguese_ledge" "dvl_at_portuguese_ledge" "empty_environment_with_tiles")
-  add_custom_command(
-    OUTPUT ${WORLD_NAME}_gen_cmd
-    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/worlds/empy_expander.py
-    ${CMAKE_CURRENT_SOURCE_DIR}/worlds/${WORLD_NAME}.sdf.em
-    ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME}.sdf
-  )
+execute_process(
+    COMMAND Python3::Interpreter -c "import gz"
+    RESULT_VARIABLE EXIT_CODE
+    OUTPUT_QUIET
+)
 
-  add_custom_target(${WORLD_NAME}_gen_target ALL
-    DEPENDS ${WORLD_NAME}_gen_cmd
-  )
+if (${EXIT_CODE} EQUAL 0)
+  foreach (WORLD_NAME "portuguese_ledge" "dvl_at_portuguese_ledge" "empty_environment_with_tiles")
+    add_custom_command(
+      OUTPUT ${WORLD_NAME}_gen_cmd
+      COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/worlds/empy_expander.py
+      ${CMAKE_CURRENT_SOURCE_DIR}/worlds/${WORLD_NAME}.sdf.em
+      ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME}.sdf
+    )
 
-  install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME}.sdf
-    DESTINATION share/${PROJECT_NAME}/worlds)
-endforeach()
+    add_custom_target(${WORLD_NAME}_gen_target ALL
+      DEPENDS ${WORLD_NAME}_gen_cmd
+    )
+
+    install(FILES
+      ${CMAKE_CURRENT_BINARY_DIR}/worlds/${WORLD_NAME}.sdf
+      DESTINATION share/${PROJECT_NAME}/worlds)
+  endforeach()
+else()
+  message(
+    WARNING "Could not find the Gazebo Python bindings, some worlds will not be generated.\
+    If you installed gazebo from source, make sure you set the PYTHON_PATH like so\
+    \n\t export PYTHONPATH=$PYTHONPATH:<path to ws>/install/lib/python")
+endif()
 #============================================================================
 # Resources
 install(
