@@ -25,6 +25,6 @@ fi
 
 cd $WORKSPACE_DIR/src/lrauv
 IMAGE_NAME="$(basename $WORKSPACE_DIR):latest"
-docker build --target lrauv -t $IMAGE_NAME -f tools/setup/Dockerfile .
+docker build --target lrauv-base -t $IMAGE_NAME -f tools/setup/Dockerfile .
 echo "$IMAGE_NAME" > $WORKSPACE_DIR/.image
 cp -p tools/setup/enter-container.sh $WORKSPACE_DIR/enter

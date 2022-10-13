@@ -98,18 +98,20 @@ RUN apt-get -qq update && apt-get -q install -y \
 
 USER $USERNAME
 RUN cd $GZ_WS && colcon build --merge-install --cmake-args -DBUILD_TESTING=OFF
-COPY tools/setup/underlay.sh $GZ_WS/underlay.sh
 
 USER root
-RUN ln -sT $GZ_WS/underlay.sh /entrypoint.sh
+RUN echo ". $GZ_WS/install/setup.sh" >> /setup.sh && \
+  echo "export PYTHONPATH=$GZ_WS/install/lib/python" >> /setup.sh && \
+  chmod 0644 /setup.sh
+COPY tools/setup/entrypoint.sh /entrypoint.sh
 ENTRYPOINT [ "/entrypoint.sh" ]
 
 USER $USERNAME
 
 ############################################################
-###                  LRAUV simulation stage              ###
+###             LRAUV simulation baseline stage          ###
 ############################################################
-FROM ${BASE_IMAGE} AS lrauv
+FROM ${BASE_IMAGE} AS lrauv-base
 
 USER root
 RUN apt-get -qq update && apt-get -q install -y \
@@ -130,3 +132,18 @@ WORKDIR $LRAUV_WS
 # Run tests by default
 COPY tools/setup/build-then-test.sh $LRAUV_WS/build-then-test.sh
 CMD $LRAUV_WS/build-then-test.sh
+
+############################################################
+###                  LRAUV simulation stage              ###
+############################################################
+FROM lrauv-base AS lrauv
+
+RUN cd $LRAUV_WS && . /setup.sh && \
+  colcon build --merge-install --cmake-args -DBUILD_TESTING=OFF
+
+USER root
+RUN echo ". $LRAUV_WS/install/setup.sh" >> /setup.sh
+
+# Run simulation by default
+USER $USERNAME
+CMD gz sim -v4 buoyant_tethys.sdf
