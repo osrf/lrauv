@@ -44,6 +44,26 @@
           <csv_column>mass_concentration_of_chlorophyll_in_sea_water_ugram_per_liter</csv_column>
           <topic>/model/tethys/chlorophyll</topic>
         </sensor>
+        <sensor
+          element_id="base_link" action="add"
+          name="current_east"
+          type="custom"
+          gz:type="environmental_sensor/current_east">
+          <always_on>1</always_on>
+          <update_rate>30</update_rate>
+          <csv_column>eastward_sea_water_velocity_meter_per_sec</csv_column>
+          <topic>/model/tethys/current/east</topic>
+        </sensor>
+        <sensor
+          element_id="base_link" action="add"
+          name="current_north"
+          type="custom"
+          gz:type="environmental_sensor/current_north">
+          <always_on>1</always_on>
+          <update_rate>30</update_rate>
+          <csv_column>northward_sea_water_velocity_meter_per_sec</csv_column>
+          <topic>/model/tethys/current/north</topic>
+        </sensor>
         <!--<sensor
           element_id="base_link"
           action="add"
