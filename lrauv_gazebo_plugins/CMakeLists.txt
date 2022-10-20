@@ -259,7 +259,7 @@ configure_file(
 
 if (${Python3_FOUND})
   execute_process(
-      COMMAND Python3::Interpreter -c "import gz"
+      COMMAND ${Python3_EXECUTABLE} -c "import gz"
       RESULT_VARIABLE EXIT_CODE
       OUTPUT_QUIET
   )
