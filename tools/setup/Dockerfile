@@ -62,8 +62,8 @@ RUN apt-get -qq update && apt-get -q -y install \
 
 # Add a user with the same user_id as the user outside the container
 ENV USERNAME developer
-RUN addgroup --gid 1001 $USERNAME && \
-  adduser --uid 1001 --ingroup $USERNAME \
+RUN addgroup --gid 1000 $USERNAME && \
+  adduser --uid 1000 --ingroup $USERNAME \
     --home /home/$USERNAME --shell /bin/bash $USERNAME && \
   echo "$USERNAME:$USERNAME" | chpasswd && \
   adduser $USERNAME sudo && \
