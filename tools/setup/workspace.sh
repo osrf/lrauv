@@ -18,12 +18,16 @@ mkdir -p $WORKSPACE_DIR/src
 LRAUV_REPOSITORY_DIRNAME=$(dirname $(dirname $(dirname -- "${BASH_SOURCE[0]}")))
 LRAUV_REPOSITORY_DIR=$( cd -- "$LRAUV_REPOSITORY_DIRNAME" &> /dev/null && pwd )
 if git -C $LRAUV_REPOSITORY_DIR rev-parse --is-inside-work-tree 1>/dev/null 2>&1; then
-    git clone $LRAUV_REPOSITORY_DIR $WORKSPACE_DIR/src/lrauv
+    if [ "$(dirname $LRAUV_REPOSITORY_DIR)" != "$WORKSPACE_DIR/src" ]; then
+        git clone $LRAUV_REPOSITORY_DIR $WORKSPACE_DIR/src/lrauv
+        LRAUV_REPOSITORY_DIR=$WORKSPACE_DIR/src/lrauv
+    fi
 else
-    git clone https://github.com/osrf/lrauv.git $WORKSPACE_DIR/src/lrauv
+    LRAUV_REPOSITORY_DIR=$WORKSPACE_DIR/src/lrauv
+    git clone https://github.com/osrf/lrauv.git $LRAUV_REPOSITORY_DIR
 fi
 
-cd $WORKSPACE_DIR/src/lrauv
+cd $LRAUV_REPOSITORY_DIR
 IMAGE_NAME="$(basename $WORKSPACE_DIR):latest"
 docker build --target lrauv-base -t $IMAGE_NAME -f tools/setup/Dockerfile .
 echo "$IMAGE_NAME" > $WORKSPACE_DIR/.image
