@@ -95,13 +95,14 @@ jobs:
     steps:
     - name: Check out repo
       uses: actions/checkout@v3
-    - name: Build packages
+    - name: Build LRAUV image
       uses: docker/build-push-action@v3
       with:
         build-args: BASE_IMAGE=${{ needs.configure.outputs.base_image }}
         file: tools/setup/Dockerfile
-        tags: lrauv
+        target: lrauv-base
+        tags: lrauv-base
         push: false
-    - name: Run tests
-      run: docker run --rm -t lrauv
+    - name: Build and run tests
+      run: docker run --rm -t lrauv-base
     if: always()
