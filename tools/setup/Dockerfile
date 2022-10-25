@@ -30,6 +30,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 # Install basic dependencies
 RUN apt-get -qq update && apt-get -q install -y \
+    curl \
     git \
     gnupg2 \
     lsb-release \
@@ -60,13 +61,23 @@ RUN apt-get -qq update && apt-get -q -y install \
   && apt-get -qq clean
 
 # Add a user with the same user_id as the user outside the container
-ARG USERID=1000
 ENV USERNAME developer
-RUN useradd -U --uid $USERID -ms /bin/bash $USERNAME \
- && echo "$USERNAME:$USERNAME" | chpasswd \
- && adduser $USERNAME sudo \
- && echo "$USERNAME ALL=NOPASSWD: ALL" >> /etc/sudoers.d/$USERNAME
-ENV WORKSPACE=/home/
+RUN addgroup --gid 1000 $USERNAME && \
+  adduser --uid 1000 --ingroup $USERNAME \
+    --home /home/$USERNAME --shell /bin/bash $USERNAME && \
+  echo "$USERNAME:$USERNAME" | chpasswd && \
+  adduser $USERNAME sudo && \
+  echo "$USERNAME ALL=NOPASSWD: ALL" >> /etc/sudoers.d/$USERNAME
+
+RUN curl -SsL https://github.com/boxboat/fixuid/releases/download/v0.5.1/fixuid-0.5.1-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf - && \
+    chown root:root /usr/local/bin/fixuid && \
+    chmod 4755 /usr/local/bin/fixuid && \
+    mkdir -p /etc/fixuid && \
+    printf "user: $USERNAME\ngroup: $USERNAME\n" > /etc/fixuid/config.yml
+
+RUN touch /setup.sh && chmod 0644 /setup.sh
+COPY tools/setup/entrypoint.sh /entrypoint.sh
+ENTRYPOINT [ "/entrypoint.sh" ]
 
 # Commands below run as the developer user
 USER $USERNAME
@@ -101,10 +112,7 @@ RUN cd $GZ_WS && colcon build --merge-install --cmake-args -DBUILD_TESTING=OFF
 
 USER root
 RUN echo ". $GZ_WS/install/setup.sh" >> /setup.sh && \
-  echo "export PYTHONPATH=$GZ_WS/install/lib/python" >> /setup.sh && \
-  chmod 0644 /setup.sh
-COPY tools/setup/entrypoint.sh /entrypoint.sh
-ENTRYPOINT [ "/entrypoint.sh" ]
+  echo "export PYTHONPATH=$GZ_WS/install/lib/python" >> /setup.sh
 
 USER $USERNAME
 
@@ -129,6 +137,10 @@ RUN mkdir -p $LRAUV_WS/src
 COPY --chown=$USERNAME . $LRAUV_WS/src/lrauv
 WORKDIR $LRAUV_WS
 
+USER root
+RUN printf "user: $USERNAME\ngroup: $USERNAME\npaths: [$LRAUV_WS]" > /etc/fixuid/config.yml
+USER $USERNAME
+
 # Run tests by default
 COPY --chown=$USERNAME tools/setup/build-then-test.sh $LRAUV_WS/build-then-test.sh
 CMD $LRAUV_WS/build-then-test.sh
@@ -138,7 +150,7 @@ CMD $LRAUV_WS/build-then-test.sh
 ############################################################
 FROM lrauv-base AS lrauv
 
-RUN cd $LRAUV_WS && . /setup.sh && \
+RUN cd $LRAUV_WS; . /setup.sh; \
   colcon build --merge-install --cmake-args -DBUILD_TESTING=OFF
 
 USER root
