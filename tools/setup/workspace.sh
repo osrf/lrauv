@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 if [ $# -gt 1 ]; then
     echo "Usage: $0 [path/to/workspace]"
