@@ -34,6 +34,14 @@ target_link_libraries(test_dvl
     lrauv_gazebo_plugins::lrauv_gazebo_messages)
 gtest_discover_tests(test_dvl)
 
+add_executable(test_dvl_acoustic_comms test_dvl_acoustic_comms.cc)
+target_link_libraries(test_dvl_acoustic_comms
+  PUBLIC gtest_main
+  PRIVATE
+    ${PROJECT_NAME}_support
+    lrauv_gazebo_plugins::lrauv_gazebo_messages)
+gtest_discover_tests(test_dvl_acoustic_comms)
+
 foreach(_test
     test_battery_full_charge
     test_battery_half_charge
