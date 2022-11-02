@@ -21,7 +21,7 @@
           gz:type="environmental_sensor/salinity">
           <always_on>1</always_on>
           <update_rate>30</update_rate>
-          <csv_column>sea_water_salinity_psu</csv_column>
+          <environment_variable>sea_water_salinity_psu</environment_variable>
           <topic>/model/tethys/salinity</topic>
         </sensor>
         <sensor
@@ -31,7 +31,7 @@
           gz:type="environmental_sensor/temperature">
           <always_on>1</always_on>
           <update_rate>30</update_rate>
-          <csv_column>sea_water_temperature_degC</csv_column>
+          <environment_variable>sea_water_temperature_degC</environment_variable>
           <topic>/model/tethys/temperature</topic>
         </sensor>
         <sensor
@@ -41,7 +41,7 @@
           gz:type="environmental_sensor/chlorophyll">
           <always_on>1</always_on>
           <update_rate>30</update_rate>
-          <csv_column>mass_concentration_of_chlorophyll_in_sea_water_ugram_per_liter</csv_column>
+          <environment_variable>mass_concentration_of_chlorophyll_in_sea_water_ugram_per_liter</environment_variable>
           <topic>/model/tethys/chlorophyll</topic>
         </sensor>
 

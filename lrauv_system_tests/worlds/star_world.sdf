@@ -92,9 +92,6 @@
         <sensor element_id="base_link::chlorophyll_sensor" action="modify">
           <topic>/model/tethys1/chlorophyll</topic>
         </sensor>
-        <sensor element_id="base_link::current_sensor" action="modify">
-          <topic>/model/tethys1/current</topic>
-        </sensor>
         <plugin element_id="gz::sim::systems::Thruster" action="modify">
           <namespace>tethys1</namespace>
         </plugin>
@@ -134,9 +131,9 @@
         <sensor element_id="base_link::chlorophyll_sensor" action="modify">
           <topic>/model/tethys2/chlorophyll</topic>
         </sensor>
-        <sensor element_id="base_link::current_sensor" action="modify">
+        <!--<sensor element_id="base_link::current_sensor" action="modify">
           <topic>/model/tethys2/current</topic>
-        </sensor>
+        </sensor>-->
         <plugin element_id="gz::sim::systems::Thruster" action="modify">
           <namespace>tethys2</namespace>
         </plugin>
@@ -176,9 +173,9 @@
         <sensor element_id="base_link::chlorophyll_sensor" action="modify">
           <topic>/model/tethys3/chlorophyll</topic>
         </sensor>
-        <sensor element_id="base_link::current_sensor" action="modify">
+        <!--<sensor element_id="base_link::current_sensor" action="modify">
           <topic>/model/tethys3/current</topic>
-        </sensor>
+        </sensor>-->
         <plugin element_id="gz::sim::systems::Thruster" action="modify">
           <namespace>tethys3</namespace>
         </plugin>
@@ -218,9 +215,9 @@
         <sensor element_id="base_link::chlorophyll_sensor" action="modify">
           <topic>/model/tethys4/chlorophyll</topic>
         </sensor>
-        <sensor element_id="base_link::current_sensor" action="modify">
+        <!--<sensor element_id="base_link::current_sensor" action="modify">
           <topic>/model/tethys4/current</topic>
-        </sensor>
+        </sensor>-->
         <plugin element_id="gz::sim::systems::Thruster" action="modify">
           <namespace>tethys4</namespace>
         </plugin>
