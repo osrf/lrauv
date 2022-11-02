@@ -44,6 +44,7 @@
           <csv_column>mass_concentration_of_chlorophyll_in_sea_water_ugram_per_liter</csv_column>
           <topic>/model/tethys/chlorophyll</topic>
         </sensor>
+
         <!--<sensor
           element_id="base_link"
           action="add"
