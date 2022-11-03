@@ -117,5 +117,5 @@ TEST(AcousticComms, MultiVehicleTest)
   // Since the distance between Triton and Daphne is twice the distance between
   // Triton and Tethys, the ratio of time taken by the comms signal to reach them
   // should be in the same ratio.
-  EXPECT_NEAR(diffDaphne.count() / diffTethys.count(), 2.0, 0.1);
+  EXPECT_NEAR(diffDaphne.count() / diffTethys.count(), 2.0, 0.5);
 }
