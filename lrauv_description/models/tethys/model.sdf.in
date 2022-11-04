@@ -308,13 +308,11 @@
       <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
       <child>acoustic_transponder</child>
-      <namespace>tethys</namespace>
     </joint>
     <joint name="buoyancy_engine_joint" type="fixed">
       <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
       <child>buoyancy_engine</child>
-      <namespace>tethys</namespace>
     </joint>
     <joint name="horizontal_fins_joint" type="revolute">
       <pose>0 0 0 0 0 0</pose>
