@@ -113,6 +113,7 @@ RUN cd $GZ_WS && colcon build --merge-install --cmake-args -DBUILD_TESTING=OFF
 USER root
 RUN echo ". $GZ_WS/install/setup.sh" >> /setup.sh && \
   echo "export PYTHONPATH=$GZ_WS/install/lib/python" >> /setup.sh
+RUN chown -R root:root ${GZ_WS}
 
 USER $USERNAME
 
@@ -137,10 +138,6 @@ RUN mkdir -p $LRAUV_WS/src
 COPY --chown=$USERNAME . $LRAUV_WS/src/lrauv
 WORKDIR $LRAUV_WS
 
-USER root
-RUN printf "user: $USERNAME\ngroup: $USERNAME\npaths: [$LRAUV_WS]" > /etc/fixuid/config.yml
-USER $USERNAME
-
 # Run tests by default
 COPY --chown=$USERNAME tools/setup/build-then-test.sh $LRAUV_WS/build-then-test.sh
 CMD $LRAUV_WS/build-then-test.sh
@@ -155,6 +152,7 @@ RUN cd $LRAUV_WS; . /setup.sh; \
 
 USER root
 RUN echo ". $LRAUV_WS/install/setup.sh" >> /setup.sh
+RUN chown -R root:root ${LRAUV_WS}
 
 # Run simulation by default
 USER $USERNAME

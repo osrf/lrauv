@@ -36,10 +36,10 @@ CONTAINER_IMAGE=${1:-$(cat $WORKSPACE_DIR/.image)}
 CONTAINER_ID=$(docker ps -aqf "ancestor=${CONTAINER_IMAGE}")
 if [ -z "$CONTAINER_ID" ]; then
     CONTAINER_NAME="$(basename $WORKSPACE_DIR)_$(date +%s)"
-    docker run --rm --privileged --net=host \
+    docker run --rm --privileged --net=host -u $(id -u):$(id -g) \
            --name $CONTAINER_NAME --security-opt seccomp=unconfined \
-           -e DISPLAY -e XAUTHORITY=$XAUTH $DOCKER_OPTS \
-           -e PULSE_SERVER=unix:$XDG_RUNTIME_DIR/pulse/native \
+           -e DISPLAY -e MESA_GL_VERSION_OVERRIDE=3.3 -e XAUTHORITY=$XAUTH \
+           $DOCKER_OPTS -e PULSE_SERVER=unix:$XDG_RUNTIME_DIR/pulse/native \
            -v $XDG_RUNTIME_DIR/pulse/native:$XDG_RUNTIME_DIR/pulse/native \
            -v $HOME/.config/pulse/cookie:$HOME/.config/pulse/cookie \
            -v "$XAUTH:$XAUTH" -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
