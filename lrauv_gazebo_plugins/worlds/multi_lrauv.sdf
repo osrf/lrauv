@@ -17,52 +17,6 @@
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1.0</real_time_factor>
     </physics>
-    <plugin
-      filename="gz-sim-physics-system"
-      name="gz::sim::systems::Physics">
-    </plugin>
-    <plugin
-      filename="gz-sim-user-commands-system"
-      name="gz::sim::systems::UserCommands">
-    </plugin>
-    <plugin
-      filename="gz-sim-scene-broadcaster-system"
-      name="gz::sim::systems::SceneBroadcaster">
-    </plugin>
-
-    <plugin
-      filename="gz-sim-imu-system"
-      name="gz::sim::systems::Imu">
-    </plugin>
-    <plugin
-      filename="gz-sim-magnetometer-system"
-      name="gz::sim::systems::Magnetometer">
-    </plugin>
-    <plugin
-      filename="gz-sim-buoyancy-system"
-      name="gz::sim::systems::Buoyancy">
-      <uniform_fluid_density>1025</uniform_fluid_density>
-    </plugin>
-    <plugin
-      filename="gz-sim-acoustic-comms-system"
-      name="gz::sim::systems::AcousticComms">
-      <max_range>2500</max_range>
-      <speed_of_sound>1500</speed_of_sound>
-    </plugin>
-
-    <!-- Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
-      to ParticleEmitter in Gazebo G.
-      See https://github.com/gazebosim/gz-sim/pull/730 -->
-    <plugin
-      filename="gz-sim-particle-emitter2-system"
-      name="gz::sim::systems::ParticleEmitter2">
-    </plugin>
-
-    <!-- Uncomment for time analysis -->
-    <!--plugin
-      filename="TimeAnalysisPlugin"
-      name="tethys::TimeAnalysisPlugin">
-    </plugin-->
 
     <light type="directional" name="sun">
       <cast_shadows>true</cast_shadows>

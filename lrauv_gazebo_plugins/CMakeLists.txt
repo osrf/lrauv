@@ -265,7 +265,7 @@ if (${Python3_FOUND})
   )
 
   if (${EXIT_CODE} EQUAL 0)
-    foreach (WORLD_NAME "portuguese_ledge" "dvl_at_portuguese_ledge" "empty_environment_with_tiles")
+    foreach (WORLD_NAME "portuguese_ledge" "tethys_at_portuguese_ledge")
       add_custom_command(
         OUTPUT ${WORLD_NAME}_gen_cmd
         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/worlds/empy_expander.py
@@ -294,6 +294,7 @@ endif()
 # Resources
 install(
   DIRECTORY
+    config
     data
     models
     worlds

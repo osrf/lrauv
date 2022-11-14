@@ -6,8 +6,7 @@
 
 <!--
 
-  This world doesn't contain any vehicles. They're spawned at runtime by
-  WorldCommPlugin as it receives LRAUVInit messages.
+  This world contains a single LRAUV vehicle, tethys.
 
 -->
 <sdf version="1.6">
@@ -18,16 +17,7 @@
 
       <grid>false</grid>
     </scene>
-    
-    <!-- Interface with LRAUV Main Vehicle Application for the world -->
-    <plugin
-      entity_name="*"
-      entity_type="world"
-      filename="WorldCommPlugin"
-      name="tethys::WorldCommPlugin">
-      <init_topic>/lrauv/init</init_topic>
-    </plugin>
-    
+       
     <physics name="1ms" type="dart">
       <max_step_size>0.02</max_step_size>
       <real_time_factor>0</real_time_factor>
@@ -73,5 +63,9 @@
       <uri>turbidity_generator</uri>
     </include-->
 
+    <include>
+      <pose>0 0 0 0 0 0</pose>
+      <uri>tethys_equipped</uri>
+    </include>
   </world>
 </sdf>

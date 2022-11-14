@@ -6,8 +6,7 @@
 
 <!--
 
-  This world doesn't contain any vehicles. They're spawned at runtime by
-  WorldCommPlugin as it receives LRAUVInit messages.
+  This world contains a single LRAUV vehicle, tethys.
 
 -->
 
@@ -72,11 +71,11 @@ for tile in tiles:
 
       <grid>false</grid>
     </scene>
-  
+    
     <physics name="1ms" type="dart">
       <max_step_size>0.02</max_step_size>
       <real_time_factor>0</real_time_factor>
-    </physics>
+    </physics> 
 
     <spherical_coordinates>
       <surface_model>EARTH_WGS84</surface_model>
@@ -89,13 +88,6 @@ for tile in tiles:
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
-
-    <!-- Interface with LRAUV Main Vehicle Application for the world -->
-    <plugin
-      filename="WorldCommPlugin"
-      name="tethys::WorldCommPlugin">
-      <init_topic>/lrauv/init</init_topic>
-    </plugin>
 
     <plugin
       filename="gz-sim-environment-preload-system"
@@ -116,6 +108,11 @@ for tile in tiles:
       name="tethys::ScienceSensorsSystem">
       <data_path>2003080103_mb_l3_las.csv</data_path>
     </plugin>
+
+    <include>
+      <pose>0 0 0 0 0 0</pose>
+      <uri>tethys_equipped</uri>
+    </include>
 
     <plugin name="gz::sim" filename="dummy">
 @[for tile in tiles]@
@@ -186,6 +183,5 @@ for tile in tiles:
       <pose>-5 0 0 0 0 0</pose>
       <uri>turbidity_generator</uri>
     </include-->
-
   </world>
 </sdf>
