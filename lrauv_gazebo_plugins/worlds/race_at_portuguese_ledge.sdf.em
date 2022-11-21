@@ -63,18 +63,19 @@ for tile in tiles:
 
 }@
 
-<sdf version="1.6">
+<sdf version="1.9">
   <world name="portuguese_ledge">
     <scene>
+      <!-- For turquoise ambient to match particle effect -->
       <ambient>0.0 1.0 1.0</ambient>
+      <!-- For default gray ambient -->
+      <!--background>0.8 0.8 0.8</background-->
       <background>0.0 0.7 0.8</background>
-
-      <grid>false</grid>
     </scene>
-    
-    <physics name="1ms" type="dart">
-      <max_step_size>0.02</max_step_size>
-      <real_time_factor>0</real_time_factor>
+
+    <physics name="1ms" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
     </physics>
 
     <spherical_coordinates>
@@ -88,6 +89,20 @@ for tile in tiles:
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>0.5 0.5 0.5 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
 
     <plugin
       filename="gz-sim-physics-system"
@@ -115,8 +130,7 @@ for tile in tiles:
       filename="gz-sim-scene-broadcaster-system"
       name="gz::sim::systems::SceneBroadcaster">
     </plugin>
-    
-    <plugin
+       <plugin
       filename="gz-sim-sensors-system"
       name="gz::sim::systems::Sensors">
     </plugin>
@@ -396,11 +410,6 @@ for tile in tiles:
       </plugin>
     </gui>
 
-    <include>
-      <pose>0 0 0 0 0 0</pose>
-      <uri>tethys_equipped</uri>
-    </include>
-
     <plugin name="gz::sim" filename="dummy">
 @[for tile in tiles]@
       <level name="level_@(tile.index)">
@@ -414,20 +423,6 @@ for tile in tiles:
       </level>
 @[end for]@
     </plugin>
-
-    <light type="directional" name="sun">
-      <cast_shadows>true</cast_shadows>
-      <pose>0 0 10 0 0 0</pose>
-      <diffuse>1 1 1 1</diffuse>
-      <specular>0.5 0.5 0.5 1</specular>
-      <attenuation>
-        <range>1000</range>
-        <constant>0.9</constant>
-        <linear>0.01</linear>
-        <quadratic>0.001</quadratic>
-      </attenuation>
-      <direction>-0.5 0.1 -0.9</direction>
-    </light>
 
 @[for tile in tiles]@
     <model name="portuguese_ledge_tile_@(tile.index)">
@@ -462,7 +457,34 @@ for tile in tiles:
     </model>
 @[end for]@
 
-    <!-- Uncomment for particle effect
+    <!-- Uncomment if you need a ground plane -->
+    <!-- <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.8 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model> -->
+
+    <!-- Particle effect
       Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
       to ParticleEmitter in Gazebo G.
       See https://github.com/gazebosim/gz-sim/pull/730 -->
@@ -470,5 +492,111 @@ for tile in tiles:
       <pose>-5 0 0 0 0 0</pose>
       <uri>turbidity_generator</uri>
     </include-->
+
+    <include>
+      <pose>0 0 0 0 0 3.14</pose>
+      <uri>tethys_equipped</uri>
+    </include>
+
+    <include>
+      <pose>5 0 0 0 0 3.14</pose>
+      <uri>tethys_equipped</uri>
+      <name>triton</name>
+
+      <experimental:params>
+        <sensor element_id="base_link::salinity_sensor" action="modify">
+          <topic>/model/triton/salinity</topic>
+        </sensor>
+        <sensor element_id="base_link::temperature_sensor" action="modify">
+          <topic>/model/triton/temperature</topic>
+        </sensor>
+        <sensor element_id="base_link::chlorophyll_sensor" action="modify">
+          <topic>/model/triton/chlorophyll</topic>
+        </sensor>
+        <sensor element_id="base_link::current_sensor" action="modify">
+          <topic>/model/triton/current</topic>
+        </sensor>
+        <plugin element_id="gz::sim::systems::Thruster" action="modify">
+          <namespace>triton</namespace>
+        </plugin>
+        <plugin element_id="tethys::TethysCommPlugin" action="modify">
+          <namespace>triton</namespace>
+          <command_topic>triton/command_topic</command_topic>
+          <state_topic>triton/state_topic</state_topic>
+        </plugin>
+        <plugin element_id="gz::sim::systems::BuoyancyEngine" action="modify">
+          <namespace>triton</namespace>
+        </plugin>
+        <plugin element_id="gz::sim::systems::DetachableJoint" action="modify">
+          <topic>/model/triton/drop_weight</topic>
+        </plugin>
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
+          <address>2</address>
+          <topic>2/rx</topic>
+        </plugin>
+        <plugin element_id="tethys::RangeBearingPlugin" action="modify">
+          <address>2</address>
+          <namespace>triton</namespace>
+        </plugin>
+      </experimental:params>
+
+    </include>
+
+    <include>
+      <pose>-5 0 0 0 0 3.14</pose>
+      <uri>tethys_equipped</uri>
+      <name>daphne</name>
+
+      <experimental:params>
+        <sensor element_id="base_link::salinity_sensor" action="modify">
+          <topic>/model/daphne/salinity</topic>
+        </sensor>
+        <sensor element_id="base_link::temperature_sensor" action="modify">
+          <topic>/model/daphne/temperature</topic>
+        </sensor>
+        <sensor element_id="base_link::chlorophyll_sensor" action="modify">
+          <topic>/model/daphne/chlorophyll</topic>
+        </sensor>
+        <sensor element_id="base_link::current_sensor" action="modify">
+          <topic>/model/daphne/current</topic>
+        </sensor>
+        <plugin element_id="gz::sim::systems::Thruster" action="modify">
+          <namespace>daphne</namespace>
+        </plugin>
+        <plugin element_id="tethys::TethysCommPlugin" action="modify">
+          <namespace>daphne</namespace>
+          <command_topic>daphne/command_topic</command_topic>
+          <state_topic>daphne/state_topic</state_topic>
+        </plugin>
+        <plugin element_id="gz::sim::systems::BuoyancyEngine" action="modify">
+          <namespace>daphne</namespace>
+        </plugin>
+        <plugin element_id="gz::sim::systems::DetachableJoint" action="modify">
+          <topic>/model/daphne/drop_weight</topic>
+        </plugin>
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
+          <address>3</address>
+          <topic>3/rx</topic>
+        </plugin>
+        <plugin element_id="tethys::RangeBearingPlugin" action="modify">
+          <address>3</address>
+          <namespace>daphne</namespace>
+        </plugin>
+      </experimental:params>
+
+    </include>
+
+    <!-- Swimming race lane signs -->
+    <include>
+      <pose>0 0 -1 0 0 3.1415926</pose>
+      <uri>ABCSign_5m</uri>
+      <name>start_line</name>
+    </include>
+    <include>
+      <pose>0 -25 -1 0 0 3.1415926</pose>
+      <uri>ABCSign_5m</uri>
+      <name>finish_line</name>
+    </include>
+
   </world>
 </sdf>
