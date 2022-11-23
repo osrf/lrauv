@@ -7,7 +7,7 @@ repositories:
   gz-common:
     type: git
     url: https://github.com/gazebosim/gz-common
-    version: mbari/gz-common5
+    version: gz-common5
   gz-fuel-tools:
     type: git
     url: https://github.com/gazebosim/gz-fuel-tools
@@ -15,7 +15,7 @@ repositories:
   gz-sim:
     type: git
     url: https://github.com/gazebosim/gz-sim
-    version: mbari/gz-sim7
+    version: gz-sim7
   gz-gui:
     type: git
     url: https://github.com/gazebosim/gz-gui
