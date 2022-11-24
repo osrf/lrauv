@@ -11,13 +11,6 @@
 
 -->
 
-<!--
-   Tile heights calculated manually with
-
-   $ gdalinfo -mm PortugueseLedgeTile1_DecDeg.grd | grep -i min
-   Computed Min/Max=-98.637,-73.297
- -->
-
 @{
 
 import math
@@ -72,13 +65,18 @@ for tile in tiles:
 }@
 
 <sdf version="1.6">
-  <world name="LRAUV">
+  <world name="portuguese_ledge">
     <scene>
       <ambient>0.0 1.0 1.0</ambient>
       <background>0.0 0.7 0.8</background>
 
       <grid>false</grid>
     </scene>
+  
+    <physics name="1ms" type="dart">
+      <max_step_size>0.02</max_step_size>
+      <real_time_factor>0</real_time_factor>
+    </physics>
 
     <spherical_coordinates>
       <surface_model>EARTH_WGS84</surface_model>
@@ -92,57 +90,112 @@ for tile in tiles:
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
 
-    <physics name="1ms" type="dart">
-      <max_step_size>0.02</max_step_size>
-      <real_time_factor>0</real_time_factor>
-    </physics>
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>0.5 0.5 0.5 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
     <plugin
       filename="gz-sim-physics-system"
       name="gz::sim::systems::Physics">
     </plugin>
+    
+    <plugin
+      filename="gz-sim-buoyancy-system"
+      name="gz::sim::systems::Buoyancy">
+      <graded_buoyancy>
+        <default_density>1025</default_density>
+        <density_change>
+          <above_depth>0.5</above_depth>
+          <density>1.125</density>
+        </density_change>
+      </graded_buoyancy>
+    </plugin>
+    
     <plugin
       filename="gz-sim-user-commands-system"
       name="gz::sim::systems::UserCommands">
     </plugin>
+    
     <plugin
       filename="gz-sim-scene-broadcaster-system"
       name="gz::sim::systems::SceneBroadcaster">
     </plugin>
-
+    
     <plugin
-      filename="gz-sim-buoyancy-system"
-      name="gz::sim::systems::Buoyancy">
-      <uniform_fluid_density>1025</uniform_fluid_density>
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
     </plugin>
-
+    
+    <plugin
+      filename="gz-sim-acoustic-comms-system"
+      name="gz::sim::systems::AcousticComms">
+      <max_range>2500</max_range>
+      <speed_of_sound>1500</speed_of_sound>
+    </plugin>
+    
+    <plugin
+      filename="DopplerVelocityLogSystem"
+      name="tethys::DopplerVelocityLogSystem">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-imu-system"
+      name="gz::sim::systems::Imu">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-magnetometer-system"
+      name="gz::sim::systems::Magnetometer">
+    </plugin>
+    
+    <!--
+      Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
+      to ParticleEmitter in Gazebo G.
+      See https://github.com/gazebosim/gz-sim/pull/730
+    -->
     <plugin
       filename="gz-sim-particle-emitter2-system"
       name="gz::sim::systems::ParticleEmitter2">
     </plugin>
 
+    <!-- Interface with LRAUV Main Vehicle Application for the world -->
     <plugin
       filename="WorldCommPlugin"
       name="tethys::WorldCommPlugin">
       <init_topic>/lrauv/init</init_topic>
     </plugin>
 
-    <plugin name="gz::sim" filename="dummy">
+    <plugin
+      filename="gz-sim-environment-preload-system"
+      name="gz::sim::systems::EnvironmentPreload">
+      <data>../data/2003080103_mb_l3_las_1x1km.modded.csv</data>
+      <dimensions>
+        <time>elapsed_time_second</time>
+        <space reference="spherical">
+          <x>latitude_degree</x>
+          <y>longitude_degree</y>
+          <z>altitude_meter</z>
+        </space>
+      </dimensions>
+    </plugin>
 
-@[for tile in tiles]@
-      <level name="level_@(tile.index)">
-        <pose>@(tile.pos_enu.x()) @(tile.pos_enu.y()) @(tile.pos_enu.z()) 0 0 0</pose>
-        <geometry>
-          <box>
-            <size>1000 1000 1000</size>
-          </box>
-        </geometry>
-        <ref>portuguese_ledge_tile_@(tile.index)</ref>
-      </level>
-@[end for]@
+    <plugin
+      filename="ScienceSensorsSystem"
+      name="tethys::ScienceSensorsSystem">
+      <data_path>2003080103_mb_l3_las.csv</data_path>
     </plugin>
 
     <gui fullscreen="0">
-
       <!-- 3D scene -->
       <plugin filename="MinimalScene" name="3D View">
         <gz-gui>
@@ -150,7 +203,6 @@ for tile in tiles:
           <property type="bool" key="showTitleBar">false</property>
           <property type="string" key="state">docked</property>
         </gz-gui>
-
         <engine>ogre2</engine>
         <scene>scene</scene>
         <ambient_light>0.4 0.4 0.4</ambient_light>
@@ -167,7 +219,6 @@ for tile in tiles:
           <far>3000000</far>
         </camera_clip>
       </plugin>
-
       <!-- Plugins that add functionality to the scene -->
       <plugin filename="EntityContextMenuPlugin" name="Entity context menu">
         <gz-gui>
@@ -256,7 +307,6 @@ for tile in tiles:
           <property key="showTitleBar" type="bool">false</property>
         </gz-gui>
       </plugin>
-
       <!-- World control -->
       <plugin filename="WorldControl" name="World control">
         <gz-gui>
@@ -266,19 +316,16 @@ for tile in tiles:
           <property type="double" key="height">72</property>
           <property type="double" key="width">121</property>
           <property type="double" key="z">1</property>
-
           <property type="string" key="state">floating</property>
           <anchors target="3D View">
             <line own="left" target="left"/>
             <line own="bottom" target="bottom"/>
           </anchors>
         </gz-gui>
-
         <play_pause>true</play_pause>
         <step>true</step>
         <start_paused>true</start_paused>
       </plugin>
-
       <!-- World statistics -->
       <plugin filename="WorldStats" name="World stats">
         <gz-gui>
@@ -288,20 +335,17 @@ for tile in tiles:
           <property type="double" key="height">110</property>
           <property type="double" key="width">290</property>
           <property type="double" key="z">1</property>
-
           <property type="string" key="state">floating</property>
           <anchors target="3D View">
             <line own="right" target="right"/>
             <line own="bottom" target="bottom"/>
           </anchors>
         </gz-gui>
-
         <sim_time>true</sim_time>
         <real_time>true</real_time>
         <real_time_factor>true</real_time_factor>
         <iterations>true</iterations>
       </plugin>
-
       <plugin filename="Plot3D" name="Plot 3D">
         <gz-gui>
           <title>Plot Tethys 3D path</title>
@@ -359,13 +403,6 @@ for tile in tiles:
           <property type="string" key="state">docked_collapsed</property>
         </gz-gui>
       </plugin>
-      <!-- Sensor Data Map -->
-      <plugin filename="WorldConfigPlugin" name="Environmental Configuration">
-        <gz-gui>
-          <title>Environmental Configuration</title>
-          <property type="string" key="state">docked_collapsed</property>
-        </gz-gui>
-      </plugin>
       <plugin filename="SpawnPanelPlugin" name="Spawn LRAUV Panel">
         <gz-gui>
           <title>Spawn LRAUVs</title>
@@ -381,19 +418,19 @@ for tile in tiles:
       </plugin>
     </gui>
 
-    <light type="directional" name="sun">
-      <cast_shadows>true</cast_shadows>
-      <pose>0 0 10 0 0 0</pose>
-      <diffuse>1 1 1 1</diffuse>
-      <specular>0.5 0.5 0.5 1</specular>
-      <attenuation>
-        <range>1000</range>
-        <constant>0.9</constant>
-        <linear>0.01</linear>
-        <quadratic>0.001</quadratic>
-      </attenuation>
-      <direction>-0.5 0.1 -0.9</direction>
-    </light>
+    <plugin name="gz::sim" filename="dummy">
+@[for tile in tiles]@
+      <level name="level_@(tile.index)">
+        <pose>@(tile.pos_enu.x()) @(tile.pos_enu.y()) @(tile.pos_enu.z()) 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_@(tile.index)</ref>
+      </level>
+@[end for]@
+    </plugin>
 
 @[for tile in tiles]@
     <model name="portuguese_ledge_tile_@(tile.index)">
@@ -427,6 +464,15 @@ for tile in tiles:
       </link>
     </model>
 @[end for]@
+
+    <!-- Uncomment for particle effect
+      Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
+      to ParticleEmitter in Gazebo G.
+      See https://github.com/gazebosim/gz-sim/pull/730 -->
+    <!--include>
+      <pose>-5 0 0 0 0 0</pose>
+      <uri>turbidity_generator</uri>
+    </include-->
 
   </world>
 </sdf>
