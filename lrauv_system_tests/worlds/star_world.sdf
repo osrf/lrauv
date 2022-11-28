@@ -131,9 +131,9 @@
         <sensor element_id="base_link::chlorophyll_sensor" action="modify">
           <topic>/model/tethys2/chlorophyll</topic>
         </sensor>
-        <!--<sensor element_id="base_link::current_sensor" action="modify">
+        <sensor element_id="base_link::current_sensor" action="modify">
           <topic>/model/tethys2/current</topic>
-        </sensor>-->
+        </sensor>
         <plugin element_id="gz::sim::systems::Thruster" action="modify">
           <namespace>tethys2</namespace>
         </plugin>
