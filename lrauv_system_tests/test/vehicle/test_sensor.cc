@@ -48,9 +48,12 @@ void ChlorophyllVeh1Cb(const gz::msgs::Double &_msg)
 
 void ChlorophyllVeh2Cb(const gz::msgs::Double &_msg)
 {
-  // 0.3935107401546 is the value at this point. Allow some noise.
-  EXPECT_NEAR(_msg.data(), 0.393, 0.01);
-  received_msg[1] = true;
+  if (!received_msg[1]) // Only check the first time as the vehicle might drift.
+  {
+    // 0.3935107401546 is the value at this point. Allow some noise.
+    EXPECT_NEAR(_msg.data(), 0.393, 0.01);
+    received_msg[1] = true;
+  }
 }
 
 void ChlorophyllVeh3Cb(const gz::msgs::Double &_msg)
@@ -187,7 +190,7 @@ TEST(SensorTest, PositionInterpolation)
   }
   EXPECT_TRUE(spawnedAllVehicles);
 
-  fixture->Server()->Run(true, 10, false);
+  fixture->Server()->Run(true, 20, false);
 
   for (auto &msg: received_msg)
   {
