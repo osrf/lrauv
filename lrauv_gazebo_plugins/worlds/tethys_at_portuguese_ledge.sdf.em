@@ -5,47 +5,95 @@
 -->
 
 <!--
-  This file is essentially identical to windy_world, except the vehicle
-  starts at a depth of -10m instead of 0m. This is for tests that require the
-  vehicle to be fully submerged.
+
+  This world contains a single LRAUV vehicle, tethys.
+
 -->
+
+@{
+
+import math
+from dataclasses import dataclass
+from gz.math7 import SphericalCoordinates, Vector3d, Angle
+
+fuel_model_url = "https://fuel.gazebosim.org/1.0/OpenRobotics/models/Portuguese Ledge"
+
+@dataclass
+class Tile:
+    index: int
+    lat_deg: float
+    lon_deg: float
+    height: float
+    pos_enu: Vector3d = Vector3d()
+
+# Center of all 18 tiles in degrees
+tiles = [
+    Tile(1, 36.693509, -121.936568, 25.34),
+    Tile(2, 36.693583, -121.944962, 27.094),
+    Tile(3, 36.693658, -121.953356, 11.602),
+    Tile(4, 36.693731, -121.961751, 6.781),
+    Tile(5, 36.693804, -121.970145, 6.689),
+    Tile(6, 36.693876, -121.978539, 30.707),
+    Tile(7, 36.700269, -121.936475, 20.746),
+    Tile(8, 36.700343, -121.944870, 29.343),
+    Tile(9, 36.700418, -121.953265, 6.851),
+    Tile(10, 36.700491, -121.961660, 6.462),
+    Tile(11, 36.700564, -121.970055, 29.339),
+    Tile(12, 36.700636, -121.978450, 148.439),
+    Tile(13, 36.707029, -121.936382, 6.799),
+    Tile(14, 36.707103, -121.944777, 6.814),
+    Tile(15, 36.707178, -121.953173, 8.834),
+    Tile(16, 36.707251, -121.961569, 11.934),
+    Tile(17, 36.707324, -121.969965, 75.378),
+    Tile(18, 36.707396, -121.978360, 229.765)]
+
+# Convert to world ENU coordinates
+sc = SphericalCoordinates(
+    SphericalCoordinates.EARTH_WGS84,
+    Angle(math.radians(tiles[0].lat_deg)),
+    Angle(math.radians(tiles[0].lon_deg)),
+    0, Angle(0))
+
+for tile in tiles:
+    vec = Vector3d(math.radians(tile.lat_deg), math.radians(tile.lon_deg), 0)
+    pos_enu = sc.position_transform(vec,
+        SphericalCoordinates.SPHERICAL,
+        SphericalCoordinates.LOCAL2)
+    tile.pos_enu = pos_enu
+
+}@
+
 <sdf version="1.6">
-  <world name="buoyant_tethys">
+  <world name="portuguese_ledge">
     <scene>
-      <!-- For turquoise ambient to match particle effect -->
       <ambient>0.0 1.0 1.0</ambient>
-      <!-- For default gray ambient -->
-      <!--background>0.8 0.8 0.8</background-->
       <background>0.0 0.7 0.8</background>
 
       <grid>false</grid>
     </scene>
-
+    
     <physics name="1ms" type="dart">
       <max_step_size>0.02</max_step_size>
       <real_time_factor>0</real_time_factor>
     </physics>
+
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+
+      <!-- Center of Tile 1 -->
+      <latitude_deg>@(tiles[0].lat_deg)</latitude_deg>
+      <longitude_deg>@(tiles[0].lon_deg)</longitude_deg>
+
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
     <plugin
       filename="gz-sim-physics-system"
       name="gz::sim::systems::Physics">
     </plugin>
-    <plugin
-      filename="gz-sim-user-commands-system"
-      name="gz::sim::systems::UserCommands">
-    </plugin>
-    <plugin
-      filename="gz-sim-scene-broadcaster-system"
-      name="gz::sim::systems::SceneBroadcaster">
-    </plugin>
-
-    <plugin
-      filename="gz-sim-imu-system"
-      name="gz::sim::systems::Imu">
-    </plugin>
-    <plugin
-      filename="gz-sim-magnetometer-system"
-      name="gz::sim::systems::Magnetometer">
-    </plugin>
+    
     <plugin
       filename="gz-sim-buoyancy-system"
       name="gz::sim::systems::Buoyancy">
@@ -57,63 +105,74 @@
         </density_change>
       </graded_buoyancy>
     </plugin>
-
-    <!-- Spawn by default in a location with science data in csv -->
-    <spherical_coordinates>
-      <surface_model>EARTH_WGS84</surface_model>
-      <world_frame_orientation>ENU</world_frame_orientation>
-
-      <!-- For 2003080103_mb_l3_las.csv -->
-      <latitude_deg>35.5999984741211</latitude_deg>
-      <longitude_deg>-121.779998779297</longitude_deg>
-
-      <!-- For 2003080103_mb_l3_las_1x1km.csv -->
-      <!--latitude_deg>36.8024781413352</latitude_deg>
-      <longitude_deg>-121.829647676843</longitude_deg-->
-
-      <!-- For simple_test.csv -->
-      <!--latitude_deg>0</latitude_deg>
-      <longitude_deg>0</longitude_deg-->
-
-      <elevation>0</elevation>
-      <heading_deg>0</heading_deg>
-    </spherical_coordinates>
+    
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-acoustic-comms-system"
+      name="gz::sim::systems::AcousticComms">
+      <max_range>2500</max_range>
+      <speed_of_sound>1500</speed_of_sound>
+    </plugin>
+    
+    <plugin
+      filename="DopplerVelocityLogSystem"
+      name="tethys::DopplerVelocityLogSystem">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-imu-system"
+      name="gz::sim::systems::Imu">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-magnetometer-system"
+      name="gz::sim::systems::Magnetometer">
+    </plugin>
+    
+    <!--
+      Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
+      to ParticleEmitter in Gazebo G.
+      See https://github.com/gazebosim/gz-sim/pull/730
+    -->
+    <plugin
+      filename="gz-sim-particle-emitter2-system"
+      name="gz::sim::systems::ParticleEmitter2">
+    </plugin>
 
     <plugin
-      filename="gz-sim-wind-effects-system"
-      name="gz::sim::systems::WindEffects">
-      <force_approximation_scaling_factor>
-        <!-- No wind below sea surface -->
-        <when zlt="-0.5">0</when>
-        <!-- NOTE(hidmic): enable wind forces slightly
-             below sea surface for the partially submerged
-             vehicle hull to be affected by them -->
-        <when zge="-0.5">0.1</when>
-      </force_approximation_scaling_factor>
-      <horizontal>
-        <magnitude>
-          <time_for_rise>1</time_for_rise>
-          <sin>
-            <amplitude_percent>0.05</amplitude_percent>
-            <period>60</period>
-          </sin>
-        </magnitude>
-        <direction>
-          <time_for_rise>1</time_for_rise>
-          <sin>
-            <amplitude>5</amplitude>
-            <period>20</period>
-          </sin>
-        </direction>
-      </horizontal>
+      filename="gz-sim-environment-preload-system"
+      name="gz::sim::systems::EnvironmentPreload">
+      <data>../data/2003080103_mb_l3_las_1x1km.modded.csv</data>
+      <dimensions>
+        <time>elapsed_time_second</time>
+        <space reference="spherical">
+          <x>latitude_degree</x>
+          <y>longitude_degree</y>
+          <z>altitude_meter</z>
+        </space>
+      </dimensions>
     </plugin>
-    <wind>
-      <!-- Wind is calm, blowing East -->
-      <linear_velocity>1 0 0</linear_velocity>
-    </wind>
+
+    <plugin
+      filename="gz-sim-environmental-sensor-system"
+      name="gz::sim::systems::EnvironmentalSystem">
+    </plugin>
 
     <gui fullscreen="0">
-
       <!-- 3D scene -->
       <plugin filename="MinimalScene" name="3D View">
         <gz-gui>
@@ -121,13 +180,12 @@
           <property type="bool" key="showTitleBar">false</property>
           <property type="string" key="state">docked</property>
         </gz-gui>
-
         <engine>ogre2</engine>
         <scene>scene</scene>
         <ambient_light>0.4 0.4 0.4</ambient_light>
         <background_color>0.8 0.8 0.8</background_color>
         <!-- looking at robot -->
-        <camera_pose>4.5 0 4  0 0.45 3.14</camera_pose>
+        <camera_pose>0 6 6 0 0.5 -1.57</camera_pose>
         <!-- looking at all science data for 2003080103_mb_l3_las.csv -->
         <!--camera_pose>-50000 -30000 250000 0 1.1 1.58</camera_pose-->
         <camera_clip>
@@ -138,7 +196,6 @@
           <far>3000000</far>
         </camera_clip>
       </plugin>
-
       <!-- Plugins that add functionality to the scene -->
       <plugin filename="EntityContextMenuPlugin" name="Entity context menu">
         <gz-gui>
@@ -227,7 +284,6 @@
           <property key="showTitleBar" type="bool">false</property>
         </gz-gui>
       </plugin>
-
       <!-- World control -->
       <plugin filename="WorldControl" name="World control">
         <gz-gui>
@@ -237,19 +293,16 @@
           <property type="double" key="height">72</property>
           <property type="double" key="width">121</property>
           <property type="double" key="z">1</property>
-
           <property type="string" key="state">floating</property>
           <anchors target="3D View">
             <line own="left" target="left"/>
             <line own="bottom" target="bottom"/>
           </anchors>
         </gz-gui>
-
         <play_pause>true</play_pause>
         <step>true</step>
         <start_paused>true</start_paused>
       </plugin>
-
       <!-- World statistics -->
       <plugin filename="WorldStats" name="World stats">
         <gz-gui>
@@ -259,20 +312,17 @@
           <property type="double" key="height">110</property>
           <property type="double" key="width">290</property>
           <property type="double" key="z">1</property>
-
           <property type="string" key="state">floating</property>
           <anchors target="3D View">
             <line own="right" target="right"/>
             <line own="bottom" target="bottom"/>
           </anchors>
         </gz-gui>
-
         <sim_time>true</sim_time>
         <real_time>true</real_time>
         <real_time_factor>true</real_time_factor>
         <iterations>true</iterations>
       </plugin>
-
       <plugin filename="Plot3D" name="Plot 3D">
         <gz-gui>
           <title>Plot Tethys 3D path</title>
@@ -330,6 +380,12 @@
           <property type="string" key="state">docked_collapsed</property>
         </gz-gui>
       </plugin>
+      <plugin filename="SpawnPanelPlugin" name="Spawn LRAUV Panel">
+        <gz-gui>
+          <title>Spawn LRAUVs</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </gz-gui>
+      </plugin>
       <plugin filename="ReferenceAxis" name="Reference axis">
         <gz-gui>
           <title>Reference axis</title>
@@ -338,6 +394,25 @@
         <fsk>tethys</fsk>
       </plugin>
     </gui>
+
+    <include>
+      <pose>0 0 0 0 0 0</pose>
+      <uri>tethys_equipped</uri>
+    </include>
+
+    <plugin name="gz::sim" filename="dummy">
+@[for tile in tiles]@
+      <level name="level_@(tile.index)">
+        <pose>@(tile.pos_enu.x()) @(tile.pos_enu.y()) @(tile.pos_enu.z()) 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_@(tile.index)</ref>
+      </level>
+@[end for]@
+    </plugin>
 
     <light type="directional" name="sun">
       <cast_shadows>true</cast_shadows>
@@ -353,28 +428,46 @@
       <direction>-0.5 0.1 -0.9</direction>
     </light>
 
-
-    <!-- This invisible plane helps with orbiting the camera, especially at large scales -->
-    <model name="horizontal_plane">
+@[for tile in tiles]@
+    <model name="portuguese_ledge_tile_@(tile.index)">
       <static>true</static>
       <link name="link">
+        <!-- Collisions seem to be misbehaving at the moment. Revisit if they're ever needed -->
+        <!--collision name="collision">
+          <geometry>
+            <heightmap>
+              <pos>@(tile.pos_enu)</pos>
+              <uri>@(fuel_model_url)/tip/files/meshes/PortugueseLedgeTile@(tile.index)_DecDeg.nc</uri>
+              <size>1000 1000 @(tile.height)</size>
+            </heightmap>
+          </geometry>
+        </collision-->
         <visual name="visual">
           <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <!-- 300 km x 300 km -->
-              <size>300000 300000</size>
-            </plane>
+            <heightmap>
+              <pos>@(tile.pos_enu.x()) @(tile.pos_enu.y()) @(tile.pos_enu.z()) 0 0 0</pos>
+              <use_terrain_paging>true</use_terrain_paging>
+              <texture>
+                <diffuse>@(fuel_model_url)/tip/files/materials/textures/dirt_diffusespecular.png</diffuse>
+                <normal>@(fuel_model_url)/tip/files/materials/textures/flat_normal.png</normal>
+                <size>10</size>
+              </texture>
+              <uri>@(fuel_model_url)/tip/files/meshes/PortugueseLedgeTile@(tile.index)_DecDeg.nc</uri>
+              <size>1000 1000 @(tile.height)</size>
+            </heightmap>
           </geometry>
-          <transparency>1.0</transparency>
         </visual>
       </link>
     </model>
+@[end for]@
 
-    <include>
-      <pose>0 0 -10 0 0 0</pose>
-      <uri>tethys_equipped</uri>
-    </include>
-
+    <!-- Uncomment for particle effect
+      Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
+      to ParticleEmitter in Gazebo G.
+      See https://github.com/gazebosim/gz-sim/pull/730 -->
+    <!--include>
+      <pose>-5 0 0 0 0 0</pose>
+      <uri>turbidity_generator</uri>
+    </include-->
   </world>
 </sdf>

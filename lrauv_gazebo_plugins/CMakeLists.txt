@@ -254,13 +254,13 @@ configure_file(
 
 if (${Python3_FOUND})
   execute_process(
-      COMMAND Python3::Interpreter -c "import gz"
+      COMMAND ${Python3_EXECUTABLE} -c "import gz"
       RESULT_VARIABLE EXIT_CODE
       OUTPUT_QUIET
   )
 
   if (${EXIT_CODE} EQUAL 0)
-    foreach (WORLD_NAME "portuguese_ledge" "dvl_at_portuguese_ledge" "empty_environment_with_tiles")
+    foreach (WORLD_NAME "portuguese_ledge" "tethys_at_portuguese_ledge" "race_at_portuguese_ledge")
       add_custom_command(
         OUTPUT ${WORLD_NAME}_gen_cmd
         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/worlds/empy_expander.py
