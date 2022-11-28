@@ -45,22 +45,20 @@
           <topic>/model/tethys/chlorophyll</topic>
         </sensor>
 
-        <!--<sensor
-          element_id="base_link"
-          action="add"
+        <sensor
+          element_id="base_link" action="add"
           name="current_sensor"
           type="custom"
-          gz:type="current">
+          gz:type="environmental_sensor/current">
           <always_on>1</always_on>
           <update_rate>2</update_rate>
+          <transform_type>ADD_VELOCITY_LOCAL</transform_type>
+          <field_type>vector2</field_type>
+          <x_variable>eastward_sea_water_velocity_meter_per_sec</x_variable>
+          <y_variable>northward_sea_water_velocity_meter_per_sec</y_variable>
           <topic>/model/tethys/current</topic>
-          <gz:current>
-            <noise type="gaussian">
-              <mean>0.00001</mean>
-              <stddev>0.00001</stddev>
-            </noise>
-          </ignition:current>
-        </sensor>-->
+        </sensor>
+
         <!--
             Teledyne Pathfinder DVL
 
