@@ -6,8 +6,7 @@
 
 <!--
 
-  This world doesn't contain any vehicles. They're spawned at runtime by
-  WorldCommPlugin as it receives LRAUVInit messages.
+  This world contains a single LRAUV vehicle, tethys.
 
 -->
 
@@ -64,14 +63,20 @@ for tile in tiles:
 
 }@
 
-<sdf version="1.6">
-  <world name="LRAUV">
+<sdf version="1.9">
+  <world name="portuguese_ledge">
     <scene>
+      <!-- For turquoise ambient to match particle effect -->
       <ambient>0.0 1.0 1.0</ambient>
+      <!-- For default gray ambient -->
+      <!--background>0.8 0.8 0.8</background-->
       <background>0.0 0.7 0.8</background>
-
-      <grid>false</grid>
     </scene>
+
+    <physics name="1ms" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
 
     <spherical_coordinates>
       <surface_model>EARTH_WGS84</surface_model>
@@ -85,38 +90,25 @@ for tile in tiles:
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
 
-    <physics name="1ms" type="dart">
-      <max_step_size>0.02</max_step_size>
-      <real_time_factor>0</real_time_factor>
-    </physics>
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>0.5 0.5 0.5 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
     <plugin
       filename="gz-sim-physics-system"
       name="gz::sim::systems::Physics">
     </plugin>
-    <plugin
-      filename="gz-sim-user-commands-system"
-      name="gz::sim::systems::UserCommands">
-    </plugin>
-    <plugin
-      filename="gz-sim-scene-broadcaster-system"
-      name="gz::sim::systems::SceneBroadcaster">
-    </plugin>
-    <plugin
-      filename="gz-sim-sensors-system"
-      name="gz::sim::systems::Sensors">
-    </plugin>
-    <plugin
-      filename="DopplerVelocityLogSystem"
-      name="tethys::DopplerVelocityLogSystem">
-    </plugin>
-    <plugin
-      filename="gz-sim-imu-system"
-      name="gz::sim::systems::Imu">
-    </plugin>
-    <plugin
-      filename="gz-sim-magnetometer-system"
-      name="gz::sim::systems::Magnetometer">
-    </plugin>
+    
     <plugin
       filename="gz-sim-buoyancy-system"
       name="gz::sim::systems::Buoyancy">
@@ -128,20 +120,66 @@ for tile in tiles:
         </density_change>
       </graded_buoyancy>
     </plugin>
-
-    <!-- Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
+    
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+       <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-acoustic-comms-system"
+      name="gz::sim::systems::AcousticComms">
+      <max_range>2500</max_range>
+      <speed_of_sound>1500</speed_of_sound>
+    </plugin>
+    
+    <plugin
+      filename="DopplerVelocityLogSystem"
+      name="tethys::DopplerVelocityLogSystem">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-imu-system"
+      name="gz::sim::systems::Imu">
+    </plugin>
+    
+    <plugin
+      filename="gz-sim-magnetometer-system"
+      name="gz::sim::systems::Magnetometer">
+    </plugin>
+    
+    <!--
+      Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
       to ParticleEmitter in Gazebo G.
-      See https://github.com/gazebosim/gz-sim/pull/730 -->
+      See https://github.com/gazebosim/gz-sim/pull/730
+    -->
     <plugin
       filename="gz-sim-particle-emitter2-system"
       name="gz::sim::systems::ParticleEmitter2">
     </plugin>
 
-    <!-- Uncomment for time analysis -->
-    <!--plugin
-      filename="TimeAnalysisPlugin"
-      name="tethys::TimeAnalysisPlugin">
-    </plugin-->
+    <plugin
+      filename="gz-sim-environment-preload-system"
+      name="gz::sim::systems::EnvironmentPreload">
+      <data>../data/2003080103_mb_l3_las_1x1km.modded.csv</data>
+      <dimensions>
+        <time>elapsed_time_second</time>
+        <space reference="spherical">
+          <x>latitude_degree</x>
+          <y>longitude_degree</y>
+          <z>altitude_meter</z>
+        </space>
+      </dimensions>
+    </plugin>
 
     <plugin
       filename="ScienceSensorsSystem"
@@ -149,30 +187,7 @@ for tile in tiles:
       <data_path>2003080103_mb_l3_las.csv</data_path>
     </plugin>
 
-    <!-- Interface with LRAUV Main Vehicle Application for the world -->
-    <plugin
-      filename="WorldCommPlugin"
-      name="tethys::WorldCommPlugin">
-      <init_topic>/lrauv/init</init_topic>
-    </plugin>
-
-    <plugin name="gz::sim" filename="dummy">
-
-@[for tile in tiles]@
-      <level name="level_@(tile.index)">
-        <pose>@(tile.pos_enu.x()) @(tile.pos_enu.y()) @(tile.pos_enu.z()) 0 0 0</pose>
-        <geometry>
-          <box>
-            <size>1000 1000 1000</size>
-          </box>
-        </geometry>
-        <ref>portuguese_ledge_tile_@(tile.index)</ref>
-      </level>
-@[end for]@
-    </plugin>
-
     <gui fullscreen="0">
-
       <!-- 3D scene -->
       <plugin filename="MinimalScene" name="3D View">
         <gz-gui>
@@ -180,7 +195,6 @@ for tile in tiles:
           <property type="bool" key="showTitleBar">false</property>
           <property type="string" key="state">docked</property>
         </gz-gui>
-
         <engine>ogre2</engine>
         <scene>scene</scene>
         <ambient_light>0.4 0.4 0.4</ambient_light>
@@ -197,7 +211,6 @@ for tile in tiles:
           <far>3000000</far>
         </camera_clip>
       </plugin>
-
       <!-- Plugins that add functionality to the scene -->
       <plugin filename="EntityContextMenuPlugin" name="Entity context menu">
         <gz-gui>
@@ -286,7 +299,6 @@ for tile in tiles:
           <property key="showTitleBar" type="bool">false</property>
         </gz-gui>
       </plugin>
-
       <!-- World control -->
       <plugin filename="WorldControl" name="World control">
         <gz-gui>
@@ -296,19 +308,16 @@ for tile in tiles:
           <property type="double" key="height">72</property>
           <property type="double" key="width">121</property>
           <property type="double" key="z">1</property>
-
           <property type="string" key="state">floating</property>
           <anchors target="3D View">
             <line own="left" target="left"/>
             <line own="bottom" target="bottom"/>
           </anchors>
         </gz-gui>
-
         <play_pause>true</play_pause>
         <step>true</step>
         <start_paused>true</start_paused>
       </plugin>
-
       <!-- World statistics -->
       <plugin filename="WorldStats" name="World stats">
         <gz-gui>
@@ -318,20 +327,17 @@ for tile in tiles:
           <property type="double" key="height">110</property>
           <property type="double" key="width">290</property>
           <property type="double" key="z">1</property>
-
           <property type="string" key="state">floating</property>
           <anchors target="3D View">
             <line own="right" target="right"/>
             <line own="bottom" target="bottom"/>
           </anchors>
         </gz-gui>
-
         <sim_time>true</sim_time>
         <real_time>true</real_time>
         <real_time_factor>true</real_time_factor>
         <iterations>true</iterations>
       </plugin>
-
       <plugin filename="Plot3D" name="Plot 3D">
         <gz-gui>
           <title>Plot Tethys 3D path</title>
@@ -402,39 +408,21 @@ for tile in tiles:
         </gz-gui>
         <fsk>tethys</fsk>
       </plugin>
-
-      <!-- Map -->
-      <plugin filename="NavSatMap" name="NavSat Map">
-        <gz-gui>
-          <title>NavSat Map</title>
-          <property type="string" key="state">docked_collapsed</property>
-        </gz-gui>
-        <topic>/tethys/navsat</topic>
-        <topic_picker>true</topic_picker>
-      </plugin>
-
-       <!-- Sensor Data Map -->
-      <plugin filename="WorldConfigPlugin" name="Environmental Configuration">
-        <gz-gui>
-          <title>Environmental Configuration</title>
-          <property type="string" key="state">docked_collapsed</property>
-        </gz-gui>
-      </plugin>
     </gui>
 
-    <light type="directional" name="sun">
-      <cast_shadows>true</cast_shadows>
-      <pose>0 0 10 0 0 0</pose>
-      <diffuse>1 1 1 1</diffuse>
-      <specular>0.5 0.5 0.5 1</specular>
-      <attenuation>
-        <range>1000</range>
-        <constant>0.9</constant>
-        <linear>0.01</linear>
-        <quadratic>0.001</quadratic>
-      </attenuation>
-      <direction>-0.5 0.1 -0.9</direction>
-    </light>
+    <plugin name="gz::sim" filename="dummy">
+@[for tile in tiles]@
+      <level name="level_@(tile.index)">
+        <pose>@(tile.pos_enu.x()) @(tile.pos_enu.y()) @(tile.pos_enu.z()) 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1000 1000 1000</size>
+          </box>
+        </geometry>
+        <ref>portuguese_ledge_tile_@(tile.index)</ref>
+      </level>
+@[end for]@
+    </plugin>
 
 @[for tile in tiles]@
     <model name="portuguese_ledge_tile_@(tile.index)">
@@ -469,25 +457,34 @@ for tile in tiles:
     </model>
 @[end for]@
 
+    <!-- Uncomment if you need a ground plane -->
+    <!-- <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.8 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model> -->
 
-    <!-- <!-1- This invisible plane helps with orbiting the camera, especially at large scales -1-> -->
-    <!-- <model name="horizontal_plane"> -->
-    <!--   <static>true</static> -->
-    <!--   <link name="link"> -->
-    <!--     <visual name="visual"> -->
-    <!--       <geometry> -->
-    <!--         <plane> -->
-    <!--           <normal>0 0 1</normal> -->
-    <!--           <!-1- 300 km x 300 km -1-> -->
-    <!--           <size>300000 300000</size> -->
-    <!--         </plane> -->
-    <!--       </geometry> -->
-    <!--       <transparency>1.0</transparency> -->
-    <!--     </visual> -->
-    <!--   </link> -->
-    <!-- </model> -->
-
-    <!-- Uncomment for particle effect
+    <!-- Particle effect
       Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
       to ParticleEmitter in Gazebo G.
       See https://github.com/gazebosim/gz-sim/pull/730 -->
@@ -495,6 +492,111 @@ for tile in tiles:
       <pose>-5 0 0 0 0 0</pose>
       <uri>turbidity_generator</uri>
     </include-->
+
+    <include>
+      <pose>0 0 0 0 0 3.14</pose>
+      <uri>tethys_equipped</uri>
+    </include>
+
+    <include>
+      <pose>5 0 0 0 0 3.14</pose>
+      <uri>tethys_equipped</uri>
+      <name>triton</name>
+
+      <experimental:params>
+        <sensor element_id="base_link::salinity_sensor" action="modify">
+          <topic>/model/triton/salinity</topic>
+        </sensor>
+        <sensor element_id="base_link::temperature_sensor" action="modify">
+          <topic>/model/triton/temperature</topic>
+        </sensor>
+        <sensor element_id="base_link::chlorophyll_sensor" action="modify">
+          <topic>/model/triton/chlorophyll</topic>
+        </sensor>
+        <sensor element_id="base_link::current_sensor" action="modify">
+          <topic>/model/triton/current</topic>
+        </sensor>
+        <plugin element_id="gz::sim::systems::Thruster" action="modify">
+          <namespace>triton</namespace>
+        </plugin>
+        <plugin element_id="tethys::TethysCommPlugin" action="modify">
+          <namespace>triton</namespace>
+          <command_topic>triton/command_topic</command_topic>
+          <state_topic>triton/state_topic</state_topic>
+        </plugin>
+        <plugin element_id="gz::sim::systems::BuoyancyEngine" action="modify">
+          <namespace>triton</namespace>
+        </plugin>
+        <plugin element_id="gz::sim::systems::DetachableJoint" action="modify">
+          <topic>/model/triton/drop_weight</topic>
+        </plugin>
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
+          <address>2</address>
+          <topic>2/rx</topic>
+        </plugin>
+        <plugin element_id="tethys::RangeBearingPlugin" action="modify">
+          <address>2</address>
+          <namespace>triton</namespace>
+        </plugin>
+      </experimental:params>
+
+    </include>
+
+    <include>
+      <pose>-5 0 0 0 0 3.14</pose>
+      <uri>tethys_equipped</uri>
+      <name>daphne</name>
+
+      <experimental:params>
+        <sensor element_id="base_link::salinity_sensor" action="modify">
+          <topic>/model/daphne/salinity</topic>
+        </sensor>
+        <sensor element_id="base_link::temperature_sensor" action="modify">
+          <topic>/model/daphne/temperature</topic>
+        </sensor>
+        <sensor element_id="base_link::chlorophyll_sensor" action="modify">
+          <topic>/model/daphne/chlorophyll</topic>
+        </sensor>
+        <sensor element_id="base_link::current_sensor" action="modify">
+          <topic>/model/daphne/current</topic>
+        </sensor>
+        <plugin element_id="gz::sim::systems::Thruster" action="modify">
+          <namespace>daphne</namespace>
+        </plugin>
+        <plugin element_id="tethys::TethysCommPlugin" action="modify">
+          <namespace>daphne</namespace>
+          <command_topic>daphne/command_topic</command_topic>
+          <state_topic>daphne/state_topic</state_topic>
+        </plugin>
+        <plugin element_id="gz::sim::systems::BuoyancyEngine" action="modify">
+          <namespace>daphne</namespace>
+        </plugin>
+        <plugin element_id="gz::sim::systems::DetachableJoint" action="modify">
+          <topic>/model/daphne/drop_weight</topic>
+        </plugin>
+        <plugin element_id="gz::sim::systems::CommsEndpoint" action="modify">
+          <address>3</address>
+          <topic>3/rx</topic>
+        </plugin>
+        <plugin element_id="tethys::RangeBearingPlugin" action="modify">
+          <address>3</address>
+          <namespace>daphne</namespace>
+        </plugin>
+      </experimental:params>
+
+    </include>
+
+    <!-- Swimming race lane signs -->
+    <include>
+      <pose>0 0 -1 0 0 3.1415926</pose>
+      <uri>ABCSign_5m</uri>
+      <name>start_line</name>
+    </include>
+    <include>
+      <pose>0 -25 -1 0 0 3.1415926</pose>
+      <uri>ABCSign_5m</uri>
+      <name>finish_line</name>
+    </include>
 
   </world>
 </sdf>

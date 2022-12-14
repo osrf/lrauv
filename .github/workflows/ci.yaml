@@ -39,7 +39,7 @@ jobs:
       id: base-image-files-in-last-commit
       uses: tj-actions/changed-files@v28.0.0
       with:
-        files: docker/base/*
+        files: tools/setup/*
         base_sha: ${{ steps.last-commit.outputs.commit_hash }}
         sha: ${{ github.event.pull_request.head.sha || github.sha }}
       if: github.event_name != 'workflow_dispatch'
@@ -54,7 +54,7 @@ jobs:
       id: base-image-files-full-diff
       uses: tj-actions/changed-files@v28.0.0
       with:
-        files: docker/base/*
+        files: tools/setup/*
         use_fork_point: true
       if: github.event_name != 'workflow_dispatch'
     - name: Compute base image name
@@ -83,7 +83,8 @@ jobs:
     - name: Build and push Gazebo Garden image
       uses: docker/build-push-action@v3
       with:
-        file: docker/base/Dockerfile
+        file: tools/setup/Dockerfile
+        target: garden
         tags: ${{ needs.configure.outputs.base_image }}
         push: true
     if: ${{ needs.configure.outputs.build_base_image }}
@@ -94,12 +95,14 @@ jobs:
     steps:
     - name: Check out repo
       uses: actions/checkout@v3
-    - name: Build packages
+    - name: Build LRAUV image
       uses: docker/build-push-action@v3
       with:
         build-args: BASE_IMAGE=${{ needs.configure.outputs.base_image }}
-        file: docker/tests/Dockerfile
-        tags: mbari_lrauv
-    - name: Run tests
-      run: docker run -t mbari_lrauv
+        file: tools/setup/Dockerfile
+        target: lrauv-base
+        tags: lrauv-base
+        push: false
+    - name: Build and run tests
+      run: docker run --rm -t lrauv-base
     if: always()
