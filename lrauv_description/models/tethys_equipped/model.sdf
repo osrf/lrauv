@@ -354,10 +354,14 @@
         <enable_coriolis>false</enable_coriolis>
         <xDotU>-4.876161</xDotU>
         <yDotV>-126.324739</yDotV>
+        <yDotR>-7.117842</yDotR>
+        <zDotQ>7.117842</zDotQ>
         <zDotW>-126.324739</zDotW>
         <kDotP>0</kDotP>
         <mDotQ>-33.46</mDotQ>
+        <mDotW>7.117842</mDotW>
         <nDotR>-33.46</nDotR>
+        <nDotV>-7.117842</nDotV>
         <xUU>-6.2282</xUU>
         <xU>0</xU>
         <yVV>-601.27</yVV>
