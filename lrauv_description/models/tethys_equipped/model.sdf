@@ -374,6 +374,24 @@
         <mQ>0</mQ>
         <nRR>-632.698957</nRR>
         <nR>0</nR>
+        <mPR>33.463086</mPR>
+        <mUQ>-61.182063</mUQ>
+        <mUW>105.660262</mUW>
+        <nPQ>-33.463086</nPQ>
+        <nUR>-61.182063</nUR>
+        <nUV>-105.660262</nUV>
+        <xQQ>7.117842</xQQ>
+        <xRR>7.117842</xRR>
+        <xVR>126.324739</xVR>
+        <xVV>-54.370919</xVV>
+        <xWQ>-126.324739</xWQ>
+        <xWW>-54.370919</xWW>
+        <yUR>8.719853</yUR>
+        <yUV>-23.954759</yUV>
+        <yWP>126.324739</yWP>
+        <zUQ>-8.719853</zUQ>
+        <zUW>-23.954759</zUW>
+        <zVP>-126.324739</zVP>
       </plugin>
       <plugin
         filename="gz-sim-buoyancy-engine-system"
