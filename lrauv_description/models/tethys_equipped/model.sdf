@@ -53,7 +53,7 @@
           <always_on>1</always_on>
           <update_rate>2</update_rate>
           <transform_type>ADD_VELOCITY_LOCAL</transform_type>
-          <field_type>vector2</field_type>
+          <output_format>vector3</output_format>
           <x_variable>eastward_sea_water_velocity_meter_per_sec</x_variable>
           <y_variable>northward_sea_water_velocity_meter_per_sec</y_variable>
           <topic>/model/tethys/current</topic>
