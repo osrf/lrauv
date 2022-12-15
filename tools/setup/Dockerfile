@@ -92,8 +92,8 @@ FROM base AS garden
 
 ENV GZ_WS=/home/$USERNAME/gz_ws
 RUN mkdir -p $GZ_WS/src
-COPY tools/setup/gz-garden.yaml $GZ_WS/gz-garden.yaml
-RUN cd $GZ_WS && vcs import src < gz-garden.yaml && vcs pull src
+RUN cd $GZ_WS && wget https://raw.githubusercontent.com/gazebo-tooling/gazebodistro/master/collection-garden.yaml
+RUN cd $GZ_WS && vcs import src < collection-garden.yaml && vcs pull src
 
 USER root
 
