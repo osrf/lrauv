@@ -86,20 +86,6 @@ class AHRSTestFixture : public TestFixtureWithVehicle
     };
   }
 
-  protected: void OnConfigure(
-      const gz::sim::Entity &,
-      const std::shared_ptr<const sdf::Element> &,
-      gz::sim::EntityComponentManager &_ecm,
-      gz::sim::EventManager &) override
-  {
-    gz::sim::World world(
-        gz::sim::worldEntity(_ecm));
-    gz::sim::Entity vehicleEntity =
-        world.ModelByName(_ecm, this->VehicleName());
-    using gz::sim::components::Static;
-    _ecm.CreateComponent(vehicleEntity, Static(true));
-  }
-
   private: gz::transport::Node node;
 
   private: Subscription<gz::msgs::IMU> imuSubscription;
@@ -132,7 +118,7 @@ inline bool AreQuaternionsEqual(
 TEST(AHRSTest, FrameConventionsAreCorrect)
 {
   AHRSTestFixture fixture(
-      worldPath("buoyant_tethys.sdf"), "tethys");
+      worldPath("static_buoyant_tethys.sdf"), "tethys");
 
   EXPECT_LT(0, fixture.Step(200ms));
 

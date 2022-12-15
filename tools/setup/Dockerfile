@@ -156,4 +156,4 @@ RUN chown -R root:root ${LRAUV_WS}
 
 # Run simulation by default
 USER $USERNAME
-CMD gz sim -v4 buoyant_tethys.sdf
+CMD gz sim -v4 tethys_at_empty_environment.sdf
