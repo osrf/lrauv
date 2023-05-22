@@ -4,6 +4,7 @@
   <name>lrauv_gazebo_plugins</name>
   <version>1.0.0</version>
   <description>lrauv_gazebo_plugins</description>
-  <license>Apache V2</license>
+  <license>Apache 2.0</license>
+  <maintainer email="hid.michel@gmail.com">Michel Hidalgo</maintainer>
 
 </package>
