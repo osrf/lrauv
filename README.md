@@ -12,4 +12,6 @@ Source files, models, and plugins relevant to a general audience are upstreamed 
 
 Standalone, the repository contains the environment and plugins necessary to simulate an underwater vehicle in Gazebo. Integrated with the real-world LRAUV controller code, the binaries of which are provided to the public on MBARI's DockerHub, the simulated robot can be controlled using the same code executed on the real robot. This enables the validation of scientific missions for oceanography research.
 
-DISCLAIMER: The repository is in active development. Stability is not guaranteed.
+If you use this simulator for your project, please cite our paper:
+
+Timothy R. Player, Arjo Chakravarty, Mabel M. Zhang, Ben Yair Raanan, Brian Kieft, Yanwu Zhang, and Brett Hobson, "From Concept to Field Tests: Accelerated Development of Multi-AUV Missions Using a High-Fidelity Faster-than-Real-Time Simulator," in *IEEE International Conference on Robotics and Automation (ICRA)*, May 2023.
